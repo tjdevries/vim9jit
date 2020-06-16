@@ -25,10 +25,17 @@ local letter = patterns.branch(
   patterns.range('A', 'Z')
 )
 
+local _addition_operator = patterns.capture(patterns.literal("+"))
+
 local identifier = patterns.any_amount(letter)
 
 local grammar = token.define(function(_ENV)
   START "vim9script"
+
+  SUPPRESS(
+    "ArithmeticTokens"
+    , "ArithmeticExpression"
+  )
 
   vim9script = patterns.capture(patterns.concat(
     patterns.literal("vim9script"), EOL,
@@ -36,15 +43,51 @@ local grammar = token.define(function(_ENV)
   ))
 
   Number = patterns.capture(patterns.one_or_more(digit))
+  VariableIdentifier = patterns.capture(identifier)
+
+  AdditionOperator = patterns.capture(patterns.concat(
+    patterns.any_amount(whitespace),
+    _addition_operator,
+    patterns.any_amount(whitespace)
+  ))
+
+  ArithmeticTokens = patterns.optional_surrounding_parenths(
+    patterns.branch(
+      V("Number"),
+      V("VariableIdentifier")
+    )
+  )
+
+  ArithmeticExpression = patterns.concat(
+    V("ArithmeticTokens"),
+    patterns.one_or_more(
+      patterns.concat(
+        V("AdditionOperator"),
+        V("ArithmeticTokens")
+      )
+    )
+  )
+
+  Expression = patterns.branch(
+    V("ArithmeticExpression"),
+    V("Number")
+  )
+
+  TypeDefinition = patterns.capture(patterns.concat(
+    patterns.literal(":"),
+    patterns.any_amount(whitespace),
+    patterns.any_amount(letter)
+  ))
 
   Let = patterns.capture(patterns.concat(
     patterns.literal("let"),
     patterns.any_amount(whitespace),
-    identifier,
+    V("VariableIdentifier"),
+    patterns.one_or_no(V("TypeDefinition")),
     patterns.any_amount(whitespace),
     patterns.literal("="),
     patterns.any_amount(whitespace),
-    V("Number"),
+    V("Expression"),
     EOL
   ))
 

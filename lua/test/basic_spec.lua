@@ -24,4 +24,28 @@ describe('parser', function()
 
     eq(let.id, 'Let')
   end)
+
+  it('should parse simple addition statements', function()
+    local parsed = token.parsestring(grammar, make_vim9script("let x = 1 + 2"))
+    neq(nil, parsed)
+
+    local let = get_item(parsed, 'id', 'Let')
+
+    eq(let.id, 'Let')
+    eq(let.value, 'let x = 1 + 2')
+  end)
+
+  it('should parse simple type definitions', function()
+    local parsed = token.parsestring(grammar, make_vim9script("let x: number = 1 + 2"))
+    neq(nil, parsed)
+
+    local let = get_item(parsed, 'id', 'Let')
+
+    eq(let.id, 'Let')
+    eq(let.value, 'let x: number = 1 + 2')
+
+    local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+    neq(nil, type_definition)
+    eq(type_definition.value, ': number')
+  end)
 end)
