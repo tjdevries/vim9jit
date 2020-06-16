@@ -27,3 +27,7 @@ Well, it would be pretty funny if luajit outperformed native vim9script. We'll h
 I don't think I want to write all the code that actually does the type checking and what not that is now going to be included in vim9script. I think I'll just pass that off to testing your code in vim9 (at least for now).
 
 I will at least attempt to parse and keep that information for use later if desired.
+
+## Examples
+
+You can see the results in `./vim9_scripts/` where there are `*.vim` files and corresponding `*.lua` files that I've generated. I'll be adding more examples there later.
