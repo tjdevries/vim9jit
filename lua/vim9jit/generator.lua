@@ -125,7 +125,6 @@ local _assignment = function(match, local_prefix)
 
   -- This handles things like `let x: number`
   if expression == nil and type_definition then
-    -- expression = 
     expression = string.format([[vim9jit.DefaultForType("%s")]], type_definition)
   end
 
