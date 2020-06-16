@@ -3,6 +3,8 @@ local token = require('vim9jit.token')
 
 local inspect = require('inspect') or vim.inspect
 
+local STRICT = false
+
 local generator = {}
 
 local get_item
@@ -54,17 +56,8 @@ local get_item_with_id = function(match, id)
   return get_item(match, 'id', id)
 end
 
-
-generator.generate = function(str)
-  local parsed = token.parsestring(grammar, str)
-  -- print(inspect(parsed))
-
-  local output = ''
-  for _, v in ipairs(parsed) do
-    output = output .. generator.match[v.id](v)
-  end
-
-  return output
+local id_exists = function(match, id)
+  return get_item(match, 'id', id) ~= nil
 end
 
 local get_result = function(match)
@@ -80,13 +73,53 @@ end
 
 local _ret_value = function(match) return match.value end
 
+
+generator.generate = function(str, strict)
+  STRICT = strict
+
+  local parsed = token.parsestring(grammar, str)
+  -- print(inspect(parsed))
+
+  local output = ''
+  for _, v in ipairs(parsed) do
+    output = output .. generator.match[v.id](v)
+  end
+
+  return output
+end
+
 generator.match = {}
 
 generator.match.Let = function(match, ...)
+  local is_global = id_exists(match, 'GlobalVariableIdentifier')
+
+  local identifier = get_result(get_item_with_id(match, 'VariableIdentifier'))
+  local expression = get_result(get_item_with_id(match, 'Expression'))
+
+  if STRICT then
+    local type_definition = get_item_with_id(match, 'TypeDefinition')
+
+    if type_definition then
+      return string.format(
+        [[local %s = vim9jit.AssertType("%s", %s)]],
+        identifier,
+        get_result(type_definition),
+        expression
+      )
+    end
+  end
+
+  local prefix
+  if is_global then
+    prefix = string.format('vim.g[\"%s\"]', identifier)
+  else
+    prefix = string.format("local %s", identifier)
+  end
+
   return string.format(
-    [[local %s = %s]],
-    get_result(get_item_with_id(match, 'VariableIdentifier')),
-    get_result(get_item_with_id(match, 'Expression'))
+    [[%s = %s]],
+    prefix,
+    expression
   )
 end
 
@@ -99,6 +132,7 @@ generator.match.Expression = function(match)
   return output
 end
 
+generator.match.TypeDefinition = _ret_value
 generator.match.AdditionOperator = _ret_value
 generator.match.VariableIdentifier = _ret_value
 generator.match.Number = _ret_value

@@ -46,6 +46,21 @@ describe('parser', function()
 
     local type_definition = get_item(parsed, 'id', 'TypeDefinition')
     neq(nil, type_definition)
-    eq(type_definition.value, ': number')
+    eq(type_definition.value, 'number')
+  end)
+
+  it('should parse handle global variables', function()
+    local parsed = token.parsestring(grammar, make_vim9script("let g:glob_var = 1"))
+    neq(nil, parsed)
+
+    local let = get_item(parsed, 'id', 'Let')
+    eq(let.id, 'Let')
+
+    local global_var = get_item(let, 'id', 'GlobalVariableIdentifier')
+    neq(nil, global_var)
+    eq(global_var.value, 'g:glob_var')
+
+    local var = get_item(global_var, 'id', 'VariableIdentifier')
+    eq(var.value, 'glob_var')
   end)
 end)

@@ -27,4 +27,24 @@ describe('generator', function()
 
     eq('local x = 1 + 2', result)
   end)
+
+  it('should ignore type statements?', function()
+    -- Our other option would be do something like `local x = assert_type(1 + 2, 'number')
+    local result = generate(make_vim9script("let x: number = 1 + 2"))
+
+    eq('local x = 1 + 2', result)
+  end)
+
+  it('should not ignore type statements when in strict mode', function()
+    -- Our other option would be do something like `local x = assert_type(1 + 2, 'number')
+    local result = generate(make_vim9script("let x: number = 1 + 2"), true)
+
+    eq('local x = vim9jit.AssertType("number", 1 + 2)', result)
+  end)
+
+  it('should not use vim.g for declaring globals', function()
+    local result = generate(make_vim9script("let g:glob_var = 1 + 2"))
+
+    eq('vim.g["glob_var"] = 1 + 2', result)
+  end)
 end)
