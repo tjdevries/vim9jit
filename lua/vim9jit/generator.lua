@@ -3,6 +3,9 @@ local token = require('vim9jit.token')
 
 local inspect = require('inspect') or vim.inspect
 
+-- TODO: Need to extend this further and make the corresponding vim9jit functions to
+--          actually do the type checking. That's for another day though.
+--          Currently it seems *possible* to do it given the information we've got when parsing at least.
 local STRICT = false
 
 local generator = {}
@@ -61,6 +64,10 @@ local id_exists = function(match, id)
 end
 
 local get_result = function(match)
+  if match == nil then
+    return nil
+  end
+
   local match_id = match.id
   assert(match_id, string.format("%s:%s malformed object", match_id, match))
 
@@ -82,7 +89,8 @@ generator.generate = function(str, strict)
 
   local output = ''
   for _, v in ipairs(parsed) do
-    output = output .. generator.match[v.id](v)
+    local g =  assert(generator.match[v.id], v.id)
+    output = output .. g(v)
   end
 
   return output
@@ -90,20 +98,19 @@ end
 
 generator.match = {}
 
-generator.match.Let = function(match, ...)
+local _assignment = function(match, local_prefix)
   local is_global = id_exists(match, 'GlobalVariableIdentifier')
 
   local identifier = get_result(get_item_with_id(match, 'VariableIdentifier'))
   local expression = get_result(get_item_with_id(match, 'Expression'))
+  local type_definition = get_result(get_item_with_id(match, 'TypeDefinition'))
 
-  if STRICT then
-    local type_definition = get_item_with_id(match, 'TypeDefinition')
-
+  if STRICT and local_prefix then
     if type_definition then
       return string.format(
         [[local %s = vim9jit.AssertType("%s", %s)]],
         identifier,
-        get_result(type_definition),
+        type_definition,
         expression
       )
     end
@@ -113,14 +120,28 @@ generator.match.Let = function(match, ...)
   if is_global then
     prefix = string.format('vim.g[\"%s\"]', identifier)
   else
-    prefix = string.format("local %s", identifier)
+    prefix = string.format("%s%s", local_prefix and 'local ' or '', identifier)
+  end
+
+  -- This handles things like `let x: number`
+  if expression == nil and type_definition then
+    -- expression = 
+    expression = string.format([[vim9jit.DefaultForType("%s")]], type_definition)
   end
 
   return string.format(
-    [[%s = %s]],
+    [[%s = %s%s]],
     prefix,
-    expression
+    expression,
+    "\n"
   )
+end
+generator.match.Assign = function(match)
+  return _assignment(match, false)
+end
+
+generator.match.Let = function(match)
+  return _assignment(match, true)
 end
 
 generator.match.Expression = function(match)

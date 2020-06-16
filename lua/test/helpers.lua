@@ -5,7 +5,17 @@ local assert = require('luassert')
 local token = require('vim9jit.token')
 token.print_error = false
 
+local function trim(s)
+  return s:match('^%s*(.*%S)') or ''
+end
+
 local eq = function(exp, act)
+  -- It's annoying to always check for line endings...
+  if type(exp) == 'string' and type(act) == 'string' then
+    exp = trim(exp)
+    act = trim(act)
+  end
+
   return assert.are.same(exp, act)
 end
 

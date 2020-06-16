@@ -49,6 +49,20 @@ describe('parser', function()
     eq(type_definition.value, 'number')
   end)
 
+  it('should allow for type definition with no assign', function()
+    local parsed = token.parsestring(grammar, make_vim9script("let x: number"))
+    neq(nil, parsed)
+
+    local let = get_item(parsed, 'id', 'Let')
+
+    eq(let.id, 'Let')
+    eq(let.value, 'let x: number')
+
+    local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+    neq(nil, type_definition)
+    eq(type_definition.value, 'number')
+  end)
+
   it('should parse handle global variables', function()
     local parsed = token.parsestring(grammar, make_vim9script("let g:glob_var = 1"))
     neq(nil, parsed)
@@ -62,5 +76,37 @@ describe('parser', function()
 
     local var = get_item(global_var, 'id', 'VariableIdentifier')
     eq(var.value, 'glob_var')
+  end)
+
+  it('should allow updating an existing variable', function()
+    local parsed = token.parsestring(grammar, make_vim9script([[
+      let this_var: number = 1
+      this_var = 3
+    ]]))
+    neq(nil, parsed)
+
+    local var = get_item(get_item(parsed, 'id', 'Let'), 'id', 'VariableIdentifier')
+    eq(var.id, 'VariableIdentifier')
+    eq(var.value, 'this_var')
+
+    local assign = get_item(get_item(parsed, 'id', 'Assign'), 'id', 'VariableIdentifier')
+    eq(assign.id, 'VariableIdentifier')
+    eq(assign.value, 'this_var')
+
+    neq(var, assign)
+  end)
+
+  describe('primitive dicts', function()
+    for _, primitive in ipairs({"b", "t", "w"}) do
+      it(string.format('Should handle: %s', primitive), function()
+        local parsed = token.parsestring(
+          grammar,
+          make_vim9script(string.format("let %s:glob_var = 1", primitive))
+        )
+
+        local primitive_identifier = get_item(parsed, 'id', 'PrimitivesDictIdentifier')
+        eq(primitive_identifier.value, primitive)
+      end)
+    end
   end)
 end)

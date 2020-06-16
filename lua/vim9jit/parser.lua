@@ -39,11 +39,21 @@ local grammar = token.define(function(_ENV)
   SUPPRESS(
     "ArithmeticTokens"
     , "ArithmeticExpression"
+
+    , "_VarName"
   )
 
   vim9script = patterns.capture(patterns.concat(
     patterns.literal("vim9script"), EOL,
-    patterns.any_amount(V("Let"))
+    patterns.any_amount(
+      patterns.concat(
+        patterns.branch(
+          V("Let"),
+          V("Assign")
+        ),
+        patterns.one_or_no(EOL)
+      )
+    )
   ))
 
   Number = patterns.capture(patterns.one_or_more(digit))
@@ -51,6 +61,21 @@ local grammar = token.define(function(_ENV)
   VariableIdentifier = patterns.capture(identifier)
   GlobalVariableIdentifier = patterns.capture(patterns.concat(
     patterns.literal("g:"),
+    V("VariableIdentifier")
+  ))
+  VimVariableIdentifier = patterns.capture(patterns.concat(
+    patterns.literal("v:"),
+    V("VariableIdentifier")
+  ))
+
+  PrimitivesDictIdentifier = patterns.capture(patterns.branch(
+    patterns.literal("b"),
+    patterns.literal("t"),
+    patterns.literal("w")
+  ))
+  PrimitivesVariableIdentifier = patterns.capture(patterns.concat(
+    V("PrimitivesDictIdentifier"),
+    patterns.literal(":"),
     V("VariableIdentifier")
   ))
 
@@ -88,19 +113,43 @@ local grammar = token.define(function(_ENV)
     patterns.capture(patterns.any_amount(letter))
   )
 
+  _VarName = patterns.branch(
+    V("GlobalVariableIdentifier"),
+    V("VimVariableIdentifier"),
+    V("PrimitivesVariableIdentifier"),
+    V("VariableIdentifier")
+  )
+
   Let = patterns.capture(patterns.concat(
+    patterns.any_amount(whitespace),
     patterns.literal("let"),
-    patterns.any_amount(whitespace),
-    patterns.branch(
-      V("GlobalVariableIdentifier"),
-      V("VariableIdentifier")
-    ),
+    patterns.one_or_more(whitespace),
+    V("_VarName"),
     patterns.one_or_no(V("TypeDefinition")),
+    patterns.one_or_no(patterns.concat(
+      patterns.one_or_more(whitespace),
+      patterns.literal("="),
+      patterns.any_amount(whitespace),
+      V("Expression")
+    )),
+    EOL
+  ))
+
+  Assign = patterns.capture(patterns.concat(
+    -- TODO: Maybe could put this whitespace into the resulting lua so it isn't so ugly...
     patterns.any_amount(whitespace),
+    V("_VarName"),
+    patterns.one_or_more(whitespace),
     patterns.literal("="),
     patterns.any_amount(whitespace),
     V("Expression"),
     EOL
+  ))
+
+  Set = patterns.capture(patterns.concat(
+    patterns.any_amount(whitespace)
+    , patterns.literal("set")
+    , patterns.any_amount(whitespace)
   ))
 
 end)
