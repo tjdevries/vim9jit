@@ -24,7 +24,12 @@ local letter = patterns.branch(
   patterns.range('a', 'z'),
   patterns.range('A', 'Z')
 )
+
+local comma = patterns.literal(",")
 local underscore = patterns.literal("_")
+local left_paren = patterns.literal("(")
+local right_paren = patterns.literal(")")
+
 
 local _addition_operator = patterns.capture(patterns.literal("+"))
 
@@ -48,8 +53,9 @@ local grammar = token.define(function(_ENV)
     patterns.any_amount(
       patterns.concat(
         patterns.branch(
-          V("Let"),
-          V("Assign")
+          V("FuncDef")
+          , V("Let")
+          , V("Assign")
         ),
         patterns.one_or_no(EOL)
       )
@@ -152,6 +158,47 @@ local grammar = token.define(function(_ENV)
     , patterns.any_amount(whitespace)
   ))
 
+  ValidLine = patterns.branch(
+    V("Let")
+    , V("Assign")
+    , V("Set")
+    -- , EOL
+  )
+
+  FuncArg = patterns.capture(
+    V("_VarName")
+  )
+
+  FuncArgList = patterns.capture(patterns.concat(
+    V("FuncArg"),
+    patterns.any_amount(patterns.concat(
+      patterns.any_amount(whitespace),
+      comma,
+      patterns.any_amount(whitespace),
+      V("FuncArg")
+    ))
+  ))
+
+
+  FuncBody = patterns.capture(
+    patterns.one_or_more(V("ValidLine"))
+  )
+
+  FuncName = patterns.capture(V("_VarName"))
+
+  FuncDef = patterns.capture(patterns.concat(
+    patterns.any_amount(whitespace),
+    patterns.literal("def"),
+    patterns.one_or_more(whitespace),
+    V("FuncName"),
+    left_paren,
+    patterns.one_or_no(V("FuncArgList")),
+    right_paren,
+    patterns.any_amount(whitespace), EOL,
+    patterns.one_or_no(V("FuncBody")),
+    patterns.any_amount(whitespace),
+    patterns.literal("enddef")
+  ))
 end)
 
 return {

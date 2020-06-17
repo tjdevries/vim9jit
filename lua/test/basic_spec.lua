@@ -6,7 +6,7 @@ local eq, neq, get_item = helpers.eq, helpers.neq, helpers.get_item
 
 
 local make_vim9script = function(text)
-  return 'vim9script\n' .. text
+  return 'vim9script\n' .. helpers.dedent(text)
 end
 
 describe('parser', function()
@@ -108,5 +108,34 @@ describe('parser', function()
         eq(primitive_identifier.value, primitive)
       end)
     end
+  end)
+
+  describe('function definitions', function()
+    it('should allow empty definitions', function()
+      local parsed = token.parsestring(grammar, make_vim9script([[
+        def Concat()
+        enddef
+      ]]))
+      neq(nil, parsed)
+
+      local func_def = get_item(parsed, 'id', 'FuncDef')
+      neq(nil, func_def)
+      eq('Concat', get_item(func_def, 'id', 'FuncName').value)
+    end)
+
+    it('shouold allow argument definitions', function()
+      local parsed = token.parsestring(grammar, make_vim9script([[
+        def Concat(arg)
+        enddef
+      ]]))
+      neq(nil, parsed)
+
+      local func_def = get_item(parsed, 'id', 'FuncDef')
+      neq(nil, func_def)
+      eq('Concat', get_item(func_def, 'id', 'FuncName').value)
+
+
+      eq('arg', get_item(func_def, 'id', 'FuncArgList').value)
+    end)
   end)
 end)
