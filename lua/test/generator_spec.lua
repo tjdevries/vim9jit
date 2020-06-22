@@ -6,6 +6,8 @@ local generate = generator.generate
 local helpers = require('test.helpers')
 local eq, neq, get_item = helpers.eq, helpers.neq, helpers.get_item
 
+local fmt = generator._utils.fmt
+
 local make_vim9script = function(text)
   return 'vim9script\n' .. helpers.dedent(text)
 end
@@ -62,6 +64,25 @@ describe('generator', function()
     ]]))
 
     eq("local this_var = 1\nthis_var = 3", result)
+  end)
+
+  describe('functions', function()
+    it('should be able to generate functions', function()
+      local result = generate(make_vim9script [[
+        let sum = 1
+
+        def VimNew()
+          sum = sum + 1
+        enddef
+      ]])
+
+      eq(fmt [[
+        local sum = 1
+        local function VimNew()
+          sum = sum + 1
+        end
+        ]], result)
+    end)
   end)
 
   describe('calling functions', function()

@@ -8,8 +8,18 @@ local trim = vim.trim
 local inspect = require('inspect') or vim.inspect
 
 
-local fmt = function(s)
-  return dedent(trim(s)) .. "\n"
+local fmt = function(s, ending_newline)
+  if string.sub(s, 1, 1) == "\n" then
+    s = string.sub(s, 2)
+  end
+
+  local eol_string = ''
+  if ending_newline == nil or ending_newline == true then
+     eol_string = "\n"
+  end
+
+
+  return trim(dedent(s)) .. eol_string
 end
 
 -- TODO: Need to extend this further and make the corresponding vim9jit functions to
@@ -163,9 +173,13 @@ generator.match.Expression = function(match)
   return output
 end
 
+-- generator.match.ReturnValue = function(match)
+-- end
+generator.match.ReturnValue = generator.match.Expression
 generator.match.Return = function(match)
-  return string.format("return sum")
+  return string.format("return %s", get_result(match[1]))
 end
+
 generator.match.FuncDef = function(match)
   local func_name = get_result(get_item_with_id(match, 'FuncName'))
   local func_body = get_result(get_item_with_id(match, 'FuncBody'))
@@ -176,7 +190,7 @@ local function %s()
 %s
 end
     ]]),
-    func_name, indent(fmt(func_body), 2)
+    func_name, indent(fmt(func_body, false), 2)
   )
 end
 
@@ -293,5 +307,8 @@ generator.match.AdditionOperator = _ret_value
 generator.match.VariableIdentifier = _ret_value
 generator.match.Number = _ret_value
 generator.match.CapturedEOL = _ret_value
+
+generator._utils = {}
+generator._utils.fmt = fmt
 
 return generator

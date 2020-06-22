@@ -13,5 +13,4 @@ local function ExampleFunc()
   local x_thing = 5
   vim.g["vim_global_var"] = 12
   vim_global_var = 12
-  
 end

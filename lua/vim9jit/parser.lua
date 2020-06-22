@@ -149,6 +149,7 @@ local grammar = token.define(function(_ENV)
     V("ArithmeticExpression")
     , V("Number")
     , V("FuncCall")
+    , V("_VarName")
   )
 
   TypeDefinition = patterns.concat(
