@@ -1,4 +1,3 @@
-
 package.loaded['vim9jit'] = nil
 package.loaded['vim9jit.parser'] = nil
 package.loaded['vim9jit.generator'] = nil
@@ -21,7 +20,8 @@ for _, filename in ipairs(vim.fn.glob('./vim9_scripts/*.vim', nil, true)) do
   out_io:write("--[=[\n")
   out_io:write("Original vimscript\n")
   out_io:write(lines)
-  out_io:write("--]=]\n")
+  out_io:write("--]=]")
+  out_io:write("\n\n")
   out_io:write(new_lua)
   out_io:close()
 end

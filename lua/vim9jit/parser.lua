@@ -14,10 +14,12 @@ local whitespace = patterns.set(
   '\v',
   '\f'
 )
-local EOL = patterns.branch(
-  patterns.end_of_line,
-  patterns.end_of_file
-)
+
+local some_whitespace = patterns.one_or_more(whitespace)
+local any_whitespace = patterns.any_amount(whitespace)
+
+local EOL = patterns.end_of_line
+local EOL_or_EOF = patterns.branch(EOL, patterns.end_of_file)
 
 local digit = patterns.range('0', '9')
 local letter = patterns.branch(
@@ -50,19 +52,27 @@ local grammar = token.define(function(_ENV)
   )
 
   vim9script = patterns.capture(patterns.concat(
-    patterns.literal("vim9script"), EOL,
+    patterns.literal("vim9script"), EOL_or_EOF,
     patterns.any_amount(
       patterns.concat(
         patterns.branch(
           V("FuncDef")
+          , V("For")
           , V("Let")
           , V("Assign")
-          , patterns.end_of_line
+          , V("Command")
+          , patterns.concat(V("FuncCall"), V("CapturedEOL"))
+          , patterns.concat(patterns.any_amount(whitespace), patterns.end_of_line)
         )
       )
     ),
-    EOL
+    patterns.branch(
+      patterns.one_or_no(patterns.end_of_file)
+      -- , V("UnparsedCapturedError")
+    )
   ))
+
+  CapturedEOL = patterns.capture(EOL)
 
   Number = patterns.capture(patterns.one_or_more(digit))
 
@@ -88,9 +98,9 @@ local grammar = token.define(function(_ENV)
   ))
 
   AdditionOperator = patterns.capture(patterns.concat(
-    patterns.any_amount(whitespace),
+    any_whitespace,
     _addition_operator,
-    patterns.any_amount(whitespace)
+    any_whitespace
   ))
 
   ArithmeticTokens = patterns.optional_surrounding_parenths(
@@ -110,9 +120,35 @@ local grammar = token.define(function(_ENV)
     )
   )
 
+  FuncCallArg = patterns.capture(
+    patterns.branch(
+      V("Expression")
+      , V("VariableIdentifier")
+    )
+  )
+  FuncCallArgList = patterns.capture(
+    patterns.one_or_no(patterns.concat(
+      V("FuncCallArg"),
+      patterns.any_amount(patterns.concat(
+        any_whitespace, comma, any_whitespace
+        , V("FuncCallArg")
+      ))
+    ))
+  )
+
+  FuncCall = patterns.capture(patterns.concat(
+    V("FuncName"),
+    left_paren,
+    any_whitespace,
+    V("FuncCallArgList"),
+    any_whitespace,
+    right_paren
+  ))
+
   Expression = patterns.branch(
-    V("ArithmeticExpression"),
-    V("Number")
+    V("ArithmeticExpression")
+    , V("Number")
+    , V("FuncCall")
   )
 
   TypeDefinition = patterns.concat(
@@ -140,7 +176,7 @@ local grammar = token.define(function(_ENV)
       patterns.any_amount(whitespace),
       V("Expression")
     )),
-    EOL
+    EOL_or_EOF
   ))
 
   Assign = patterns.capture(patterns.concat(
@@ -151,7 +187,7 @@ local grammar = token.define(function(_ENV)
     patterns.literal("="),
     patterns.any_amount(whitespace),
     V("Expression"),
-    EOL
+    EOL_or_EOF
   ))
 
   Set = patterns.capture(patterns.concat(
@@ -160,11 +196,49 @@ local grammar = token.define(function(_ENV)
     , patterns.any_amount(whitespace)
   ))
 
+  -- TODO: This needs more options
+  ForVar = patterns.capture(
+    V("_VarName")
+  )
+
+  ForObj = patterns.capture(patterns.branch(
+    V("FuncCall")
+    , V("_VarName")
+  ))
+
+  ForBody = patterns.capture(patterns.any_amount(V("ValidLine")))
+
+  For = patterns.capture(patterns.concat(
+    patterns.any_amount(whitespace)
+    , patterns.literal("for")
+        , some_whitespace
+        , V("ForVar")
+        , some_whitespace
+        , patterns.literal("in")
+        , some_whitespace
+        , V("ForObj"), any_whitespace, EOL
+      , V("ForBody")
+    , any_whitespace, patterns.literal("endfor")
+  ))
+
+  ReturnValue = patterns.capture(V("Expression"))
+  Return = patterns.capture(patterns.concat(
+    any_whitespace,
+    patterns.literal("return"),
+    any_whitespace,
+    V("ReturnValue")
+  ))
+
   ValidLine = patterns.branch(
-    V("Let")
+    V("FuncDef")
+    , V("Return")
+    , V("For")
+    , V("Let")
     , V("Assign")
     , V("Set")
-    -- , EOL
+    , V("Command")
+    -- TODO: Not exactly true...
+    , patterns.end_of_line
   )
 
   FuncArg = patterns.capture(
@@ -181,10 +255,10 @@ local grammar = token.define(function(_ENV)
     ))
   ))
 
-
-  FuncBody = patterns.capture(
+  FuncBody = patterns.capture(patterns.branch(
     patterns.one_or_more(V("ValidLine"))
-  )
+    -- , patterns.any_amount(V("UnparsedCapturedError"))
+  ))
 
   FuncName = patterns.capture(V("_VarName"))
 
@@ -196,11 +270,26 @@ local grammar = token.define(function(_ENV)
     left_paren,
     patterns.one_or_no(V("FuncArgList")),
     right_paren,
-    patterns.any_amount(whitespace), EOL,
+    patterns.one_or_no(V("TypeDefinition")),
+    any_whitespace, EOL,
     patterns.one_or_no(V("FuncBody")),
-    patterns.any_amount(whitespace),
-    patterns.literal("enddef")
+    any_whitespace,
+    patterns.literal("enddef"), EOL
   ))
+
+  CommandName = patterns.capture(V("_VarName"))
+  CommandArguments = patterns.capture(V("Expression"))
+
+  Command = patterns.capture(patterns.concat(
+    any_whitespace,
+    V("CommandName"),
+    some_whitespace,
+    V("CommandArguments")
+  ))
+
+
+  UnparsedError = (1 - EOL) ^ 1
+  UnparsedCapturedError = patterns.capture(V("UnparsedError"))
 end)
 
 return {

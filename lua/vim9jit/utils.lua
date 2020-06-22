@@ -24,4 +24,17 @@ function utils.dedent(str, leave_indent)
   return str
 end
 
+function utils.indent(str, indent)
+  local split_str = vim.split(str, "\n")
+
+  local indent_str = (' '):rep(indent or 2)
+
+  local indented = {}
+  for _, v in ipairs(split_str) do
+    table.insert(indented, indent_str .. v)
+  end
+
+  return table.concat(indented, "\n")
+end
+
 return utils
