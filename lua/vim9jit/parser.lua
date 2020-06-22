@@ -44,6 +44,7 @@ local grammar = token.define(function(_ENV)
   SUPPRESS(
     "ArithmeticTokens"
     , "ArithmeticExpression"
+    , "ValidLine"
 
     , "_VarName"
   )
@@ -56,10 +57,11 @@ local grammar = token.define(function(_ENV)
           V("FuncDef")
           , V("Let")
           , V("Assign")
-        ),
-        patterns.one_or_no(EOL)
+          , patterns.end_of_line
+        )
       )
-    )
+    ),
+    EOL
   ))
 
   Number = patterns.capture(patterns.one_or_more(digit))

@@ -1,7 +1,14 @@
 local grammar = require('vim9jit.parser').grammar
 local token = require('vim9jit.token')
 
+local dedent = require('vim9jit.utils').dedent
+
 local inspect = require('inspect') or vim.inspect
+
+
+local fmt = function(s)
+  return dedent(vim.trim(s))
+end
 
 -- TODO: Need to extend this further and make the corresponding vim9jit functions to
 --          actually do the type checking. That's for another day though.
@@ -152,6 +159,23 @@ generator.match.Expression = function(match)
   return output
 end
 
+generator.match.FuncDef = function(match)
+  local func_name = get_result(get_item_with_id(match, 'FuncName'))
+  local func_body = get_result(get_item_with_id(match, 'FuncBody'))
+
+  return string.format(fmt(
+    [[
+local function %s()
+%s
+end
+    ]]),
+    func_name, vim.trim(func_body)
+  )
+end
+
+generator.match.FuncBody = generator.match.Expression
+
+generator.match.FuncName = _ret_value
 generator.match.TypeDefinition = _ret_value
 generator.match.AdditionOperator = _ret_value
 generator.match.VariableIdentifier = _ret_value
