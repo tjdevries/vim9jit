@@ -31,9 +31,12 @@ local comma = patterns.literal(",")
 local underscore = patterns.literal("_")
 local left_paren = patterns.literal("(")
 local right_paren = patterns.literal(")")
+local single_quote = patterns.literal("'")
+local double_quote = patterns.literal('"')
 
 
 local _addition_operator = patterns.capture(patterns.literal("+"))
+local _string_concat_operator = patterns.capture(patterns.literal('..'))
 
 local identifier = patterns.one_or_more(patterns.branch(
   letter,
@@ -46,9 +49,11 @@ local grammar = token.define(function(_ENV)
   SUPPRESS(
     "ArithmeticTokens"
     , "ArithmeticExpression"
+    , "StringExpression"
     , "ValidLine"
 
     , "_VarName"
+    , "_PrimitiveExpression"
   )
 
   vim9script = patterns.capture(patterns.concat(
@@ -60,9 +65,9 @@ local grammar = token.define(function(_ENV)
           , V("For")
           , V("Let")
           , V("Assign")
-          , V("Command")
           , patterns.concat(V("FuncCall"), V("CapturedEOL"))
-          , patterns.concat(patterns.any_amount(whitespace), patterns.end_of_line)
+          , patterns.concat(patterns.any_amount(whitespace), V("CapturedEOL"))
+          , V("Command")
         )
       )
     ),
@@ -103,12 +108,7 @@ local grammar = token.define(function(_ENV)
     any_whitespace
   ))
 
-  ArithmeticTokens = patterns.optional_surrounding_parenths(
-    patterns.branch(
-      V("Number"),
-      V("VariableIdentifier")
-    )
-  )
+  ArithmeticTokens = patterns.optional_surrounding_parenths(V("_PrimitiveExpression"))
 
   ArithmeticExpression = patterns.concat(
     V("ArithmeticTokens"),
@@ -119,6 +119,39 @@ local grammar = token.define(function(_ENV)
       )
     )
   )
+
+  StringOperator = patterns.capture(patterns.concat(
+    any_whitespace,
+    _string_concat_operator,
+    any_whitespace
+  ))
+
+  StringExpression = patterns.concat(
+    V("_PrimitiveExpression"),
+    patterns.one_or_more(patterns.concat(
+      V("StringOperator"),
+      V("_PrimitiveExpression")
+    ))
+  )
+
+  -- TODO: Probably need to handle escaping here...
+  -- TODO: Lots of other things are strings.
+  _InnerString = patterns.any_amount(
+    patterns.branch(
+      letter
+      , whitespace
+      , patterns.literal(":")
+    )
+  )
+
+  String = patterns.capture(
+    patterns.branch(
+      patterns.concat(single_quote, V("_InnerString"), single_quote),
+      patterns.concat(double_quote, V("_InnerString"), double_quote)
+    )
+  )
+
+  -- StringConcat patterns.concat(
 
   FuncCallArg = patterns.capture(
     patterns.branch(
@@ -137,6 +170,11 @@ local grammar = token.define(function(_ENV)
   )
 
   FuncCall = patterns.capture(patterns.concat(
+    any_whitespace,
+    patterns.one_or_no(patterns.concat(
+      patterns.literal("call"),
+      some_whitespace
+    )),
     V("FuncName"),
     left_paren,
     any_whitespace,
@@ -145,11 +183,17 @@ local grammar = token.define(function(_ENV)
     right_paren
   ))
 
-  Expression = patterns.branch(
-    V("ArithmeticExpression")
-    , V("Number")
+  _PrimitiveExpression = patterns.branch(
+    V("Number")
+    , V("String")
     , V("FuncCall")
     , V("_VarName")
+  )
+
+  Expression = patterns.branch(
+    V("ArithmeticExpression")
+    , V("StringExpression")
+    , V("_PrimitiveExpression")
   )
 
   TypeDefinition = patterns.concat(
@@ -192,9 +236,9 @@ local grammar = token.define(function(_ENV)
   ))
 
   Set = patterns.capture(patterns.concat(
-    patterns.any_amount(whitespace)
+    any_whitespace
     , patterns.literal("set")
-    , patterns.any_amount(whitespace)
+    , some_whitespace
   ))
 
   -- TODO: This needs more options
@@ -237,9 +281,11 @@ local grammar = token.define(function(_ENV)
     , V("Let")
     , V("Assign")
     , V("Set")
+    , V("FuncCall")
     , V("Command")
+
     -- TODO: Not exactly true...
-    , patterns.end_of_line
+    , V("CapturedEOL")
   )
 
   FuncArg = patterns.capture(
@@ -278,14 +324,27 @@ local grammar = token.define(function(_ENV)
     patterns.literal("enddef"), EOL
   ))
 
-  CommandName = patterns.capture(V("_VarName"))
-  CommandArguments = patterns.capture(V("Expression"))
+  CommandName = patterns.capture(patterns.concat(
+    -- TODO: Should make all the special words not allowed here.
+    patterns.neg_look_ahead(patterns.branch(
+      patterns.literal("let")
+      , patterns.literal("end")
+      , patterns.literal("call")
+    )),
+    V("_VarName")
+  ))
+  CommandArguments = patterns.capture(patterns.one_or_more(V("Expression")))
+  CommandBang = patterns.capture(patterns.literal("!"))
 
   Command = patterns.capture(patterns.concat(
     any_whitespace,
     V("CommandName"),
-    some_whitespace,
-    V("CommandArguments")
+    patterns.one_or_no(V("CommandBang")),
+    patterns.one_or_no(patterns.concat(
+      some_whitespace,
+      V("CommandArguments")
+    )),
+    EOL_or_EOF
   ))
 
 

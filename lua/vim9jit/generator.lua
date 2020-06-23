@@ -129,10 +129,11 @@ local _assignment = function(match, local_prefix)
   if STRICT and local_prefix then
     if type_definition then
       return string.format(
-        [[local %s = vim9jit.AssertType("%s", %s)]],
+        [[local %s = vim9jit.AssertType("%s", %s)%s]],
         identifier,
         type_definition,
-        expression
+        expression,
+        "\n"
       )
     end
   end
@@ -280,17 +281,29 @@ generator.match.ForObj = function(match)
 end
 
 generator.match.CommandName = _ret_value
+generator.match.CommandBang = function(match) return '"!"' end
 generator.match.CommandArguments = generator.match.Expression
 generator.match.Command = function(match)
   local command_name = get_result(get_item_with_id(match, 'CommandName'))
+  local command_bang = get_result(get_item_with_id(match, 'CommandBang')) or '""'
   local command_arguments = get_result(get_item_with_id(match, 'CommandArguments'))
 
-  return string.format(
-    "vim.cmd(string.format(%s, '%s', %s))\n",
-    "[[%s %s]]",
-    command_name,
-    command_arguments
-  )
+  if command_arguments then
+    return string.format(
+      "vim.cmd(string.format(%s, '%s', %s, %s))\n",
+      "[[%s%s '%s']]",
+      command_name,
+      command_bang,
+      command_arguments
+    )
+  else
+    return string.format(
+      "vim.cmd(string.format(%s, '%s', %s))\n",
+      "[[%s%s]]",
+      command_name,
+      command_bang
+    )
+  end
 end
 
 generator.match.UnparsedCapturedError = function(match)
@@ -301,9 +314,11 @@ end
 generator.match.FuncBody = generator.match.Expression
 generator.match.ForBody = generator.match.Expression
 
+generator.match.String = _ret_value
 generator.match.ForVar = _ret_value
 generator.match.TypeDefinition = _ret_value
 generator.match.AdditionOperator = _ret_value
+generator.match.StringOperator = _ret_value
 generator.match.VariableIdentifier = _ret_value
 generator.match.Number = _ret_value
 generator.match.CapturedEOL = _ret_value

@@ -9,7 +9,7 @@ local eq, neq, get_item = helpers.eq, helpers.neq, helpers.get_item
 local fmt = generator._utils.fmt
 
 local make_vim9script = function(text)
-  return 'vim9script\n' .. helpers.dedent(text)
+  return 'vim9script\n' .. fmt(text)
 end
 
 describe('generator', function()
@@ -22,39 +22,39 @@ describe('generator', function()
   it('should parse simple let statements', function()
     local result = generate(make_vim9script("let x = 1"))
 
-    eq('local x = 1', result)
+    eq('local x = 1\n', result)
   end)
 
   it('should parse simple let addition statements', function()
     local result = generate(make_vim9script("let x = 1 + 2"))
 
-    eq('local x = 1 + 2', result)
+    eq('local x = 1 + 2\n', result)
   end)
 
   it('should parse simple let addition statements', function()
     local result = generate(make_vim9script("let x: number"))
 
-    eq('local x = vim9jit.DefaultForType("number")', result)
+    eq('local x = vim9jit.DefaultForType("number")\n', result)
   end)
 
   it('should ignore type statements when strict mode is off', function()
     -- Our other option would be do something like `local x = assert_type(1 + 2, 'number')
     local result = generate(make_vim9script("let x: number = 1 + 2"))
 
-    eq('local x = 1 + 2', result)
+    eq('local x = 1 + 2\n', result)
   end)
 
   it('should not ignore type statements when in strict mode', function()
     -- Our other option would be do something like `local x = assert_type(1 + 2, 'number')
     local result = generate(make_vim9script("let x: number = 1 + 2"), true)
 
-    eq('local x = vim9jit.AssertType("number", 1 + 2)', result)
+    eq('local x = vim9jit.AssertType("number", 1 + 2)\n', result)
   end)
 
   it('should not use vim.g for declaring globals', function()
     local result = generate(make_vim9script("let g:glob_var = 1 + 2"))
 
-    eq('vim.g["glob_var"] = 1 + 2', result)
+    eq('vim.g["glob_var"] = 1 + 2\n', result)
   end)
 
   it('should not use local again for variables', function()
@@ -63,7 +63,7 @@ describe('generator', function()
       this_var = 3
     ]]))
 
-    eq("local this_var = 1\nthis_var = 3", result)
+    eq("local this_var = 1\nthis_var = 3\n", result)
   end)
 
   describe('functions', function()
@@ -76,12 +76,12 @@ describe('generator', function()
         enddef
       ]])
 
-      eq(fmt [[
-        local sum = 1
-        local function VimNew()
-          sum = sum + 1
-        end
-        ]], result)
+      eq(vim.trim [[
+local sum = 1
+local function VimNew()
+  sum = sum + 1
+end
+]], vim.trim(result))
     end)
   end)
 
@@ -91,7 +91,7 @@ describe('generator', function()
         let range = range(1, 100)
       ]])
 
-      eq("local range = vim.fn['range'](1, 100)", result)
+      eq("local range = vim.fn['range'](1, 100)\n", result)
     end)
   end)
 
@@ -109,7 +109,7 @@ local sum = 0
 for _, i in vim9jit.VimPairs(vim.fn['my_func'](1, 100)) do
   sum = sum + 1
 end
-]], result)
+]], vim.trim(result))
     end)
 
     it('should use super cool range wrapper', function()
@@ -124,6 +124,33 @@ end
 local sum = 0
 for i = 1, 100, 1 do
   sum = sum + 1
+end
+]], vim.trim(result))
+    end)
+  end)
+
+  describe('vim9 spec', function()
+    it('should handle indent time measurements', function()
+      local result = generate(make_vim9script [[
+        def VimNew(): number
+          let totallen = 0
+          for i in range(1, 100000)
+            setline(i, '    ' .. getline(i))
+            totallen = totallen + len(getline(i))
+          endfor
+          return totallen
+        enddef
+      ]])
+
+      eq([[
+local function VimNew()
+  local totallen = 0
+  for i = 1, 100000, 1 do
+    vim.fn['setline'](i, '    ' .. vim.fn['getline'](i))
+    totallen = totallen + vim.fn['len'](vim.fn['getline'](i))
+  end
+
+  return totallen
 end
 ]], result)
     end)

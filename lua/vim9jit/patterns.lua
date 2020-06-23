@@ -97,17 +97,6 @@ patterns.capture = function(a)
   return C(a)
 end
 
--- command_helper("do") -> "do", "DO", "Do", "d", "D",
-patterns.command_helper = function(s)
-  return patterns.branch(
-    patterns.literal(s),
-    patterns.literal(s:upper()),
-    patterns.literal(s:sub(1,1):upper() .. s:sub(2)),
-    patterns.literal(s:sub(1,1)),
-    patterns.literal(s:sub(1,1):upper())
-  )
-end
-
 patterns.zero_match = lpeg.P(0)
 patterns.any_character = lpeg.P(1)
 patterns.end_of_file = -lpeg.P(1)

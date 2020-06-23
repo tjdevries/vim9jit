@@ -10,12 +10,6 @@ local function trim(s)
 end
 
 local eq = function(exp, act)
-  -- It's annoying to always check for line endings...
-  if type(exp) == 'string' and type(act) == 'string' then
-    exp = trim(exp)
-    act = trim(act)
-  end
-
   return assert.are.same(exp, act)
 end
 

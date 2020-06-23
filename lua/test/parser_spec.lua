@@ -120,6 +120,28 @@ describe('parser', function()
         eq('getcurpos', get_item(func_call, 'id', 'FuncName').value)
       end)
     end)
+
+    it('should allow strings', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[let x = "hello world"]])
+      neq(nil, parsed)
+
+      local s = get_item(parsed, 'id', 'String')
+      neq(nil, s)
+    end)
+
+    it('should allow string concat', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[let x = "hello" .. ' world']])
+      neq(nil, parsed)
+
+      local exp = get_item(parsed, 'id', 'Expression')
+      neq(nil, exp)
+
+      local s = get_item(parsed, 'id', 'String', 1)
+      neq('hello', s.value)
+
+      local s_2 = get_item(parsed, 'id', 'String', 2)
+      neq([[ world]], s_2.value)
+    end)
   end)
 
   describe('primitive dicts', function()
@@ -180,7 +202,6 @@ describe('parser', function()
 
       eq('arg', get_item(func_def, 'id', 'FuncArgList').value)
 
-      eq('return arg + 1', get_item(func_def, 'id', 'Return').value)
       eq('arg + 1', get_item(func_def, 'id', 'ReturnValue').value)
     end)
   end)
@@ -265,6 +286,22 @@ describe('parser', function()
 
       local command_argument = get_item(command, 'id', 'CommandArguments')
       eq('my_func()', command_argument.value)
+    end)
+
+    it('Works for complicated echo', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[
+        echo 'Vim new: ' .. reltimestr(reltime(start))
+      ]])
+      neq(nil, parsed)
+
+      local command = get_item(parsed, 'id', 'Command')
+      neq(nil, command)
+
+      local command_name = get_item(command, 'id', 'CommandName')
+      eq('echo', command_name.value)
+
+      local command_argument = get_item(command, 'id', 'CommandArguments')
+      eq("'Vim new: ' .. reltimestr(reltime(start))", command_argument.value)
     end)
   end)
 

@@ -31,7 +31,11 @@ function utils.indent(str, indent)
 
   local indented = {}
   for _, v in ipairs(split_str) do
-    table.insert(indented, indent_str .. v)
+    if v == '' then
+      table.insert(indented, '')
+    else
+      table.insert(indented, indent_str .. v)
+    end
   end
 
   return table.concat(indented, "\n")
