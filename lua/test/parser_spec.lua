@@ -1,4 +1,4 @@
-require('plenary.test_harness'):setup_busted()
+pcall(function() require('plenary.test_harness'):setup_busted() end)
 
 local grammar = require('vim9jit.parser').grammar
 local token = require('vim9jit.token')
@@ -6,6 +6,8 @@ local token = require('vim9jit.token')
 local helpers = require('test.helpers')
 local eq, neq, get_item = helpers.eq, helpers.neq, helpers.get_item
 
+
+local trim = function (s) return s:match('^%s*(.*%S)') or '' end
 
 local make_vim9script = function(text)
   return 'vim9script\n' .. helpers.dedent(text)
@@ -269,7 +271,7 @@ describe('parser', function()
         neq(nil, for_obj)
         eq('range(1, 100)', for_obj.value)
 
-        eq('sum = sum + 1', vim.trim(get_item(parsed, 'id', 'ForBody').value))
+        eq('sum = sum + 1', trim(get_item(parsed, 'id', 'ForBody').value))
     end)
   end)
 
@@ -316,7 +318,7 @@ describe('parser', function()
         enddef
       ]])
 
-      neq('parsed', parsed)
+      neq(nil, parsed)
 
       local func_def = get_item(parsed, 'id', 'FuncDef')
       neq(nil, func_def)
@@ -327,6 +329,69 @@ describe('parser', function()
 
       local func_body_loop = get_item(func_body, 'id', 'For')
       neq(nil, func_body_loop)
+    end)
+  end)
+
+  describe('primitives', function()
+    it('should know about true', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[
+        let x = true
+      ]])
+
+      neq(nil, parsed)
+
+      local boolean = get_item(parsed, 'id', 'Boolean')
+      neq(nil, boolean)
+      eq('true', boolean.value)
+    end)
+
+    it('should know about false', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[
+        let x = false
+      ]])
+
+      neq(nil, parsed)
+
+      local boolean = get_item(parsed, 'id', 'Boolean')
+      neq(nil, boolean)
+      eq('false', boolean.value)
+    end)
+
+    it('should know about v:true', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[
+        let x = v:true
+      ]])
+
+      neq(nil, parsed)
+
+      local boolean = get_item(parsed, 'id', 'Boolean')
+      neq(nil, boolean)
+      eq('v:true', boolean.value)
+    end)
+
+    it('should know about v:false', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[
+        let x = v:false
+      ]])
+
+      neq(nil, parsed)
+
+      local boolean = get_item(parsed, 'id', 'Boolean')
+      neq(nil, boolean)
+      eq('v:false', boolean.value)
+    end)
+  end)
+
+  describe('conditionals', function()
+    it('should support simple ? usage', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[
+        let x = 1 ? 1 : 2
+      ]])
+
+      neq(nil, parsed)
+
+      local conditional = get_item(parsed, 'id', 'ConditionalExpression')
+      eq(nil, conditional)
     end)
   end)
 end)

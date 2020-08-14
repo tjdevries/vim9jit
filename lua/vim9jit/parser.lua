@@ -183,15 +183,36 @@ local grammar = token.define(function(_ENV)
     right_paren
   ))
 
+  Boolean = patterns.capture(patterns.branch(
+    patterns.literal("true"),
+    patterns.literal("v:true"),
+    patterns.literal("false"),
+    patterns.literal("v:false")
+  ))
+
   _PrimitiveExpression = patterns.branch(
     V("Number")
+    , V("Boolean")
     , V("String")
     , V("FuncCall")
     , V("_VarName")
   )
 
+  ConditionalExpression = patterns.concat(
+    V("_PrimitiveExpression"),
+    any_whitespace,
+    patterns.literal("?"),
+    any_whitespace,
+    V("_PrimitiveExpression"),
+    any_whitespace,
+    patterns.literal(":"),
+    any_whitespace,
+    V("_PrimitiveExpression")
+  )
+
   Expression = patterns.branch(
-    V("ArithmeticExpression")
+    V("ConditionalExpression")
+    , V("ArithmeticExpression")
     , V("StringExpression")
     , V("_PrimitiveExpression")
   )

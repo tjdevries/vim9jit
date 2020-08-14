@@ -174,6 +174,15 @@ generator.match.Expression = function(match)
   return output
 end
 
+generator.match.ConditionalExpression = function(match)
+  return string.format(
+    "vim9jit.conditional(%s, %s, %s)",
+    get_result(match[1]),
+    get_result(match[2]),
+    get_result(match[3])
+  )
+end
+
 -- generator.match.ReturnValue = function(match)
 -- end
 generator.match.ReturnValue = generator.match.Expression
@@ -308,6 +317,16 @@ end
 
 generator.match.UnparsedCapturedError = function(match)
   return inspect(match)
+end
+
+generator.match.Boolean = function(match)
+  local value = match.value
+
+  if string.find(value, "true") then
+    return "true"
+  else
+    return "false"
+  end
 end
 
 
