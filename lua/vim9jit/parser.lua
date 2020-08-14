@@ -198,7 +198,7 @@ local grammar = token.define(function(_ENV)
     , V("_VarName")
   )
 
-  ConditionalExpression = patterns.concat(
+  ConditionalExpression = patterns.capture(patterns.concat(
     V("_PrimitiveExpression"),
     any_whitespace,
     patterns.literal("?"),
@@ -208,7 +208,7 @@ local grammar = token.define(function(_ENV)
     patterns.literal(":"),
     any_whitespace,
     V("_PrimitiveExpression")
-  )
+  ))
 
   Expression = patterns.branch(
     V("ConditionalExpression")

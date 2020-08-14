@@ -4,7 +4,12 @@ package.loaded['vim9jit.generator'] = nil
 
 local generate = require('vim9jit.generator').generate
 
-for _, filename in ipairs(vim.fn.glob('./vim9_scripts/*.vim', nil, true)) do
+local convert_file = function(filename)
+  if string.find(filename, "/_", 1, true) then
+    print("Skipping", filename)
+    return
+  end
+
   print("Parsing and generating for:", filename)
   local file_io = io.open(filename, "r")
   local lines = file_io:read("a")
@@ -24,4 +29,12 @@ for _, filename in ipairs(vim.fn.glob('./vim9_scripts/*.vim', nil, true)) do
   out_io:write("\n\n")
   out_io:write(new_lua)
   out_io:close()
+end
+
+for _, filename in ipairs(vim.fn.glob('./vim9_scripts/**.vim', nil, true)) do
+  convert_file(filename)
+end
+
+for _, filename in ipairs(vim.fn.glob('./vim9_scripts/testdir/*.vim', nil, true)) do
+  convert_file(filename)
 end

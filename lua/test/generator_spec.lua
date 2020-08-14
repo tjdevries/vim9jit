@@ -165,5 +165,13 @@ end
 
       eq([[local x = vim9jit.conditional(true, 1, 2)]], vim.trim(result))
     end)
+
+    it('should handle functions', function()
+      local result = generate(make_vim9script [[
+        let x = MyFunc() ? 1 : 2
+      ]])
+
+      eq([[local x = vim9jit.conditional(MyFunc(), 1, 2)]], vim.trim(result))
+    end)
   end)
 end)

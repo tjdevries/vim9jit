@@ -173,7 +173,7 @@ describe('parser', function()
       eq('Concat', get_item(func_def, 'id', 'FuncName').value)
     end)
 
-    it('shouold allow argument definitions', function()
+    it('should allow argument definitions', function()
       local parsed = token.parsestring(grammar, make_vim9script([[
         def Concat(arg)
         enddef
@@ -382,16 +382,30 @@ describe('parser', function()
     end)
   end)
 
-  describe('conditionals', function()
-    it('should support simple ? usage', function()
-      local parsed = token.parsestring(grammar, make_vim9script [[
-        let x = 1 ? 1 : 2
-      ]])
+  describe('Expressions', function()
+    describe('function calls', function()
+        local parsed = token.parsestring(grammar, make_vim9script [[
+          def Example()
+            assert_equal(1, 1)
+          enddef
+        ]])
 
-      neq(nil, parsed)
+        neq(nil, parsed)
+    end)
 
-      local conditional = get_item(parsed, 'id', 'ConditionalExpression')
-      eq(nil, conditional)
+    describe('conditionals', function()
+      it('should support simple ? usage', function()
+        local parsed = token.parsestring(grammar, make_vim9script [[
+          let x = 1 ? 2 : 3
+        ]])
+
+        neq(nil, parsed)
+
+        local conditional = get_item(parsed, 'id', 'ConditionalExpression')
+        neq(nil, conditional)
+
+        eq("1 ? 2 : 3", conditional.value)
+      end)
     end)
   end)
 end)
