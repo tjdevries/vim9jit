@@ -144,6 +144,46 @@ describe('parser', function()
       local s_2 = get_item(parsed, 'id', 'String', 2)
       neq([[ world]], s_2.value)
     end)
+
+    describe('ListExpression', function()
+      it('should allow empty list', function()
+        local parsed = token.parsestring(grammar, make_vim9script [[
+          let x = []
+        ]])
+
+        eq('[]', get_item(parsed, 'id', 'ListExpression').value)
+      end)
+
+      it('should allow lists with 1 item', function()
+        local parsed = token.parsestring(grammar, make_vim9script [[
+          let x = [1]
+        ]])
+
+        eq('[1]', get_item(parsed, 'id', 'ListExpression').value)
+        eq('1', get_item(parsed, 'id', 'Number').value)
+      end)
+
+      it('should allow multiple items', function()
+        local parsed = token.parsestring(grammar, make_vim9script [[
+          let x = [1, a, true]
+        ]])
+
+        local list_expression = get_item(parsed, 'id', 'ListExpression')
+        eq('[1, a, true]', list_expression.value)
+        eq('1', get_item(list_expression, 'id', 'Number').value)
+        eq('a', get_item(list_expression, 'id', 'VariableIdentifier').value)
+        eq('true', get_item(list_expression, 'id', 'Boolean').value)
+      end)
+
+      it('should allow nested lists', function()
+        local parsed = token.parsestring(grammar, make_vim9script [[
+          let x = [ [1, 2], [3, 4] ]
+        ]])
+
+        local list_expression = get_item(parsed, 'id', 'ListExpression')
+        eq('[ [1, 2], [3, 4] ]', list_expression.value)
+      end)
+    end)
   end)
 
   describe('primitive dicts', function()
@@ -205,6 +245,19 @@ describe('parser', function()
       eq('arg', get_item(func_def, 'id', 'FuncArgList').value)
 
       eq('arg + 1', get_item(func_def, 'id', 'ReturnValue').value)
+    end)
+
+    it('should allow comments in functions', function()
+      local parsed = token.parsestring(grammar, make_vim9script([[
+        def MyFunc(arg)
+          assert_equal(1, 1)
+          # Hello world
+        enddef
+      ]]))
+
+      neq(nil, parsed)
+
+      eq("# Hello world", trim(get_item(parsed, 'id', 'Comment').value))
     end)
   end)
 
@@ -382,15 +435,34 @@ describe('parser', function()
     end)
   end)
 
+  describe('Comments', function()
+    it('should work on a line by itself', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[
+        # This is a comment
+      ]])
+
+      neq(nil, parsed)
+
+      local comment = get_item(parsed, 'id', 'Comment')
+      neq(nil, comment)
+      eq("# This is a comment", trim(comment.value))
+    end)
+  end)
+
   describe('Expressions', function()
     describe('function calls', function()
+      it('should support functions without `call`', function()
         local parsed = token.parsestring(grammar, make_vim9script [[
-          def Example()
+          def Test_expr1()
             assert_equal(1, 1)
           enddef
         ]])
 
-        neq(nil, parsed)
+        local func_body = get_item(parsed, 'id', 'FuncBody')
+        neq(nil, func_body)
+
+        eq("assert_equal", get_item(func_body, 'id', 'FuncName').value)
+      end)
     end)
 
     describe('conditionals', function()
@@ -406,6 +478,133 @@ describe('parser', function()
 
         eq("1 ? 2 : 3", conditional.value)
       end)
+
+      it('should work in functions', function()
+        local parsed = token.parsestring(grammar, make_vim9script [[
+          def Test_expr1()
+            assert_equal("one", 1 ? "one" : "two")
+          enddef
+        ]])
+
+        local func_body = get_item(parsed, 'id', 'FuncBody')
+        neq(nil, func_body)
+
+        eq("assert_equal", get_item(func_body, 'id', 'FuncName').value)
+      end)
+
+      it('should work in functions on multiple lines', function()
+        local parsed = token.parsestring(grammar, make_vim9script [[
+          def Test_expr1()
+            assert_equal("one", 1 ?
+              "one" :
+              "two")
+          enddef
+        ]])
+
+        local func_body = get_item(parsed, 'id', 'FuncBody')
+        neq(nil, func_body)
+
+        eq("assert_equal", get_item(func_body, 'id', 'FuncName').value)
+      end)
+
+      it('should work in functions on multiple lines, ?', function()
+        local parsed = token.parsestring(grammar, make_vim9script [[
+          def Test_expr1()
+            assert_equal("one", 1
+                ?
+              "one" :
+              "two")
+          enddef
+        ]])
+
+        local func_body = get_item(parsed, 'id', 'FuncBody')
+        neq(nil, func_body)
+
+        eq("assert_equal", get_item(func_body, 'id', 'FuncName').value)
+      end)
+
     end)
   end)
+
+  describe('IfStatement', function()
+    it("should handle simple expressions", function()
+      local parsed = token.parsestring(grammar, make_vim9script [[
+        if x
+          assert_equal(1, 1)
+        endif
+       ]])
+
+       neq(nil, parsed)
+
+       local if_statement = get_item(parsed, 'id', 'IfStatement')
+       neq(nil, if_statement)
+
+       eq("assert_equal", get_item(if_statement, 'id', 'FuncName').value)
+    end)
+  end)
+
+
+
+  -- {{{ Example Tests
+  describe('vim9testdir', function()
+    it('should parse', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[
+def Test_expr1()
+  assert_equal('one', true ? 'one' : 'two')
+  assert_equal('one', 1 ?
+			'one' :
+			'two')
+  assert_equal('one', 'x' ? 'one' : 'two')
+  assert_equal('one', 'x'
+  			? 'one'
+			: 'two')
+  
+  let var = 1
+  assert_equal('one', var ? 'one' : 'two')
+
+  assert_equal('two', false ? 'one' : 'two')
+  assert_equal('two', 0 ? 'one' : 'two')
+
+  assert_equal('two', '' ? 'one' : 'two')
+  var = 0
+  assert_equal('two', var ? 'one' : 'two')
+
+  # Not supported yet
+  #
+  # if has('float')
+  #   assert_equal('one', 0.1 ? 'one' : 'two')
+  # endif
+  # if has('float')
+  #   assert_equal('two', 0.0 ? 'one' : 'two')
+  # endif
+  # assert_equal('one', [0] ? 'one' : 'two')
+  # assert_equal('one', 0z1234 ? 'one' : 'two')
+  # assert_equal('one', #{x: 0} ? 'one' : 'two')
+  # assert_equal('two', 0z ? 'one' : 'two')
+  # assert_equal('two', [] ? 'one' : 'two')
+  # assert_equal('two', {} ? 'one' : 'two')
+
+  # let Some: func = function('len')
+  # let Other: func = function('winnr')
+  # let Res: func = g:atrue ? Some : Other
+  # assert_equal(function('len'), Res)
+
+  # let RetOne: func(string): number = function('len')
+  # let RetTwo: func(string): number = function('winnr')
+  # let RetThat: func = g:atrue ? RetOne : RetTwo
+  # assert_equal(function('len'), RetThat)
+
+  # let X = FuncOne
+  # let Y = FuncTwo
+  # let Z = g:cond ? FuncOne : FuncTwo
+  # assert_equal(123, Z(3))
+enddef
+]])
+
+      neq(nil, parsed)
+
+      neq(nil, get_item(parsed, 'id', 'FuncDef'))
+    end)
+  end)
+  -- }}}
 end)

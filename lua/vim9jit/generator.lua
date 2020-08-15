@@ -174,12 +174,40 @@ generator.match.Expression = function(match)
   return output
 end
 
+generator.match.ListExpression = function(match)
+  local results = {}
+  for _, v in ipairs(match) do
+    table.insert(results, get_result(v))
+  end
+
+  return string.format(
+    "{ %s }",
+    table.concat(results, ", ")
+  )
+end
+
 generator.match.ConditionalExpression = function(match)
   return string.format(
     "vim9jit.conditional(%s, %s, %s)",
     get_result(match[1]),
     get_result(match[2]),
     get_result(match[3])
+  )
+end
+
+generator.match.IfBody = generator.match.Expression
+generator.match.IfStatement = function(match)
+  -- TODO: Rename this to IfExpression
+  local if_expression = get_result(match[1])
+  local if_body = get_result(get_item_with_id(match, 'IfBody'))
+
+  return string.format(fmt(
+    [[
+if %s then
+%s
+end
+    ]]),
+    if_expression, indent(fmt(if_body, false), 2)
   )
 end
 
@@ -207,7 +235,9 @@ end
 generator.match.FuncName = function(match)
   local original_func_name = match.value
 
-  if string.match(string.sub(original_func_name, 1, 1), "%l") then
+  if original_func_name == "function" then
+    return "vim9jit.vim_function"
+  elseif string.match(string.sub(original_func_name, 1, 1), "%l") then
     -- Lowercase functions are always vim functions
     return string.format("vim.fn['%s']", original_func_name)
   else
@@ -329,6 +359,18 @@ generator.match.Boolean = function(match)
   end
 end
 
+generator.match.Comment = function(match)
+  return string.format("-- %s", match.value)
+end
+
+generator.match.VariableIdentifier = _ret_value
+
+local _dict_value = function(accessor)
+  return function(match)
+    return string.format("%s['%s']", accessor, get_result(match[1]))
+  end
+end
+generator.match.GlobalVariableIdentifier = _dict_value('vim.g')
 
 generator.match.FuncBody = generator.match.Expression
 generator.match.ForBody = generator.match.Expression
@@ -338,7 +380,6 @@ generator.match.ForVar = _ret_value
 generator.match.TypeDefinition = _ret_value
 generator.match.AdditionOperator = _ret_value
 generator.match.StringOperator = _ret_value
-generator.match.VariableIdentifier = _ret_value
 generator.match.Number = _ret_value
 generator.match.CapturedEOL = _ret_value
 

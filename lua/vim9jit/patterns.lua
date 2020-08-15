@@ -126,6 +126,10 @@ patterns.subset_expression = function(tokens, operators)
   )
 end
 
+patterns.up_to = function(what)
+  return ((P(1) - P(what))^1) * P(what)
+end
+
 -- luacheck: ignore 142
 function string:split(s)
   if self == nil then

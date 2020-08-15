@@ -1,47 +1,77 @@
 -- local l = require('lpeg')
 
-package.loaded['vim9jit.patterns'] = nil
+package.loaded['vim9jit.p'] = nil
 package.loaded['vim9jit.token'] = nil
 
-local patterns = require('vim9jit.patterns')
+local p = require('vim9jit.patterns')
 local token = require('vim9jit.token')
 
-local V = patterns.V
 
-local whitespace = patterns.set(
+-- capture
+-- concat
+-- any_amount
+-- one_or_more
+-- set
+
+local Capture = p.capture
+local Concat = p.concat
+
+local CaptureSeq = function(...)
+  return Capture(Concat(...))
+end
+
+
+
+local V = p.V
+
+local _whitespace_table = {
   ' ',
   '\t',
   '\v',
   '\f'
+}
+
+local whitespace = p.set(unpack(_whitespace_table))
+local whitespace_and_eol = p.set('\n', unpack(_whitespace_table))
+
+local some_whitespace = p.one_or_more(whitespace)
+local any_whitespace = p.any_amount(whitespace)
+
+local any_whitespace_or_eol = p.any_amount(whitespace_and_eol)
+
+local EOL = p.end_of_line
+local EOL_or_EOF = p.branch(EOL, p.end_of_file)
+
+local digit = p.range('0', '9')
+local letter = p.branch(
+  p.range('a', 'z'),
+  p.range('A', 'Z')
 )
 
-local some_whitespace = patterns.one_or_more(whitespace)
-local any_whitespace = patterns.any_amount(whitespace)
+local comma = p.literal(",")
+local underscore = p.literal("_")
+local left_paren = p.literal("(")
+local right_paren = p.literal(")")
+local single_quote = p.literal("'")
+local double_quote = p.literal('"')
+local left_bracket = p.literal("[")
+local right_bracket = p.literal("]")
 
-local EOL = patterns.end_of_line
-local EOL_or_EOF = patterns.branch(EOL, patterns.end_of_file)
 
-local digit = patterns.range('0', '9')
-local letter = patterns.branch(
-  patterns.range('a', 'z'),
-  patterns.range('A', 'Z')
+local _addition_operator = Capture(p.literal("+"))
+local _string_concat_operator = Capture(p.literal('..'))
+
+local identifier = Concat(
+  p.branch(
+    letter,
+    underscore
+  ),
+  p.any_amount(p.branch(
+    letter,
+    underscore,
+    digit
+  ))
 )
-
-local comma = patterns.literal(",")
-local underscore = patterns.literal("_")
-local left_paren = patterns.literal("(")
-local right_paren = patterns.literal(")")
-local single_quote = patterns.literal("'")
-local double_quote = patterns.literal('"')
-
-
-local _addition_operator = patterns.capture(patterns.literal("+"))
-local _string_concat_operator = patterns.capture(patterns.literal('..'))
-
-local identifier = patterns.one_or_more(patterns.branch(
-  letter,
-  underscore
-))
 
 local grammar = token.define(function(_ENV)
   START "vim9script"
@@ -54,81 +84,87 @@ local grammar = token.define(function(_ENV)
 
     , "_VarName"
     , "_PrimitiveExpression"
+    , "_SimpleExpression"
   )
 
-  vim9script = patterns.capture(patterns.concat(
-    patterns.literal("vim9script"), EOL_or_EOF,
-    patterns.any_amount(
-      patterns.concat(
-        patterns.branch(
+  vim9script = CaptureSeq(
+    p.literal("vim9script"), EOL_or_EOF,
+    p.any_amount(
+      Concat(
+        p.branch(
           V("FuncDef")
+          , V("IfStatement")
           , V("For")
           , V("Let")
           , V("Assign")
-          , patterns.concat(V("FuncCall"), V("CapturedEOL"))
-          , patterns.concat(patterns.any_amount(whitespace), V("CapturedEOL"))
+          , Concat(V("FuncCall"), V("CapturedEOL"))
+          , Concat(p.any_amount(whitespace), V("CapturedEOL"))
           , V("Command")
+          , V("Comment")
         )
       )
     ),
-    patterns.branch(
-      patterns.one_or_no(patterns.end_of_file)
+    p.branch(
+      p.one_or_no(p.end_of_file)
       -- , V("UnparsedCapturedError")
     )
+  )
+
+  CapturedEOL = CaptureSeq(any_whitespace, EOL)
+
+  Number = Capture(p.branch(
+    p.concat(p.one_or_more(digit), p.literal('.'), p.one_or_more(digit)),
+    p.one_or_more(digit)
   ))
 
-  CapturedEOL = patterns.capture(EOL)
-
-  Number = patterns.capture(patterns.one_or_more(digit))
-
-  VariableIdentifier = patterns.capture(identifier)
-  GlobalVariableIdentifier = patterns.capture(patterns.concat(
-    patterns.literal("g:"),
+  VariableIdentifier = Capture(identifier)
+  GlobalVariableIdentifier = CaptureSeq(
+    p.literal("g:"),
     V("VariableIdentifier")
-  ))
-  VimVariableIdentifier = patterns.capture(patterns.concat(
-    patterns.literal("v:"),
+  )
+  VimVariableIdentifier = CaptureSeq(
+    p.literal("v:"),
     V("VariableIdentifier")
-  ))
+  )
 
-  PrimitivesDictIdentifier = patterns.capture(patterns.branch(
-    patterns.literal("b"),
-    patterns.literal("t"),
-    patterns.literal("w")
+  PrimitivesDictIdentifier = Capture(p.branch(
+    p.literal("b"),
+    p.literal("t"),
+    p.literal("w")
   ))
-  PrimitivesVariableIdentifier = patterns.capture(patterns.concat(
+  PrimitivesVariableIdentifier = CaptureSeq(
     V("PrimitivesDictIdentifier"),
-    patterns.literal(":"),
+    p.literal(":"),
     V("VariableIdentifier")
-  ))
+  )
 
-  AdditionOperator = patterns.capture(patterns.concat(
+  AdditionOperator = CaptureSeq(
     any_whitespace,
     _addition_operator,
     any_whitespace
-  ))
+  )
 
-  ArithmeticTokens = patterns.optional_surrounding_parenths(V("_PrimitiveExpression"))
+  ArithmeticTokens = p.optional_surrounding_parenths(V("_PrimitiveExpression"))
 
-  ArithmeticExpression = patterns.concat(
+  ArithmeticExpression = Concat(
     V("ArithmeticTokens"),
-    patterns.one_or_more(
-      patterns.concat(
+    p.one_or_more(
+      Concat(
         V("AdditionOperator"),
         V("ArithmeticTokens")
       )
     )
   )
 
-  StringOperator = patterns.capture(patterns.concat(
+  StringOperator = CaptureSeq(
     any_whitespace,
     _string_concat_operator,
     any_whitespace
-  ))
+  )
 
-  StringExpression = patterns.concat(
+  StringExpression = Concat(
     V("_PrimitiveExpression"),
-    patterns.one_or_more(patterns.concat(
+    p.one_or_more(Concat(
       V("StringOperator"),
       V("_PrimitiveExpression")
     ))
@@ -136,43 +172,43 @@ local grammar = token.define(function(_ENV)
 
   -- TODO: Probably need to handle escaping here...
   -- TODO: Lots of other things are strings.
-  _InnerString = patterns.any_amount(
-    patterns.branch(
+  _InnerString = p.any_amount(
+    p.branch(
       letter
       , whitespace
-      , patterns.literal(":")
+      , p.literal(":")
     )
   )
 
-  String = patterns.capture(
-    patterns.branch(
-      patterns.concat(single_quote, V("_InnerString"), single_quote),
-      patterns.concat(double_quote, V("_InnerString"), double_quote)
+  String = Capture(
+    p.branch(
+      Concat(single_quote, V("_InnerString"), single_quote),
+      Concat(double_quote, V("_InnerString"), double_quote)
     )
   )
 
-  -- StringConcat patterns.concat(
+  -- StringConcat Concat(
 
-  FuncCallArg = patterns.capture(
-    patterns.branch(
+  FuncCallArg = Capture(
+    p.branch(
       V("Expression")
       , V("VariableIdentifier")
     )
   )
-  FuncCallArgList = patterns.capture(
-    patterns.one_or_no(patterns.concat(
+  FuncCallArgList = Capture(
+    p.one_or_no(Concat(
       V("FuncCallArg"),
-      patterns.any_amount(patterns.concat(
+      p.any_amount(Concat(
         any_whitespace, comma, any_whitespace
         , V("FuncCallArg")
       ))
     ))
   )
 
-  FuncCall = patterns.capture(patterns.concat(
+  FuncCall = CaptureSeq(
     any_whitespace,
-    patterns.one_or_no(patterns.concat(
-      patterns.literal("call"),
+    p.one_or_no(Concat(
+      p.literal("call"),
       some_whitespace
     )),
     V("FuncName"),
@@ -181,16 +217,16 @@ local grammar = token.define(function(_ENV)
     V("FuncCallArgList"),
     any_whitespace,
     right_paren
+  )
+
+  Boolean = Capture(p.branch(
+    p.literal("true"),
+    p.literal("v:true"),
+    p.literal("false"),
+    p.literal("v:false")
   ))
 
-  Boolean = patterns.capture(patterns.branch(
-    patterns.literal("true"),
-    patterns.literal("v:true"),
-    patterns.literal("false"),
-    patterns.literal("v:false")
-  ))
-
-  _PrimitiveExpression = patterns.branch(
+  _PrimitiveExpression = p.branch(
     V("Number")
     , V("Boolean")
     , V("String")
@@ -198,105 +234,152 @@ local grammar = token.define(function(_ENV)
     , V("_VarName")
   )
 
-  ConditionalExpression = patterns.capture(patterns.concat(
-    V("_PrimitiveExpression"),
-    any_whitespace,
-    patterns.literal("?"),
-    any_whitespace,
-    V("_PrimitiveExpression"),
-    any_whitespace,
-    patterns.literal(":"),
-    any_whitespace,
-    V("_PrimitiveExpression")
-  ))
-
-  Expression = patterns.branch(
-    V("ConditionalExpression")
-    , V("ArithmeticExpression")
+  _SimpleExpression = p.branch(
+    V("ArithmeticExpression")
     , V("StringExpression")
+    , V("ListExpression")
     , V("_PrimitiveExpression")
   )
 
-  TypeDefinition = patterns.concat(
-    patterns.literal(":"),
-    patterns.any_amount(whitespace),
-    patterns.capture(patterns.any_amount(letter))
+  ConditionalExpression = CaptureSeq(
+    V("_SimpleExpression"),
+    any_whitespace_or_eol,
+    p.literal("?"),
+    any_whitespace_or_eol,
+    V("_SimpleExpression"),
+    any_whitespace_or_eol,
+    p.literal(":"),
+    any_whitespace_or_eol,
+    V("_SimpleExpression")
   )
 
-  _VarName = patterns.branch(
+  ListExpression = CaptureSeq(
+    left_bracket,
+    any_whitespace,
+    p.one_or_no(Concat(
+      V("Expression"),
+      p.any_amount(Concat(
+        any_whitespace,
+        comma,
+        any_whitespace,
+        V("Expression")
+      )
+    ),
+    p.one_or_no(comma)
+    )),
+    any_whitespace,
+    right_bracket
+  )
+
+  Expression = p.branch(
+    V("ConditionalExpression")
+    , V("_SimpleExpression")
+  )
+
+  TypeDefinition = Concat(
+    p.literal(":"),
+    p.any_amount(whitespace),
+    Capture(p.any_amount(letter))
+  )
+
+  _VarName = p.branch(
     V("GlobalVariableIdentifier"),
     V("VimVariableIdentifier"),
     V("PrimitivesVariableIdentifier"),
     V("VariableIdentifier")
   )
 
-  Let = patterns.capture(patterns.concat(
-    patterns.any_amount(whitespace),
-    patterns.literal("let"),
-    patterns.one_or_more(whitespace),
+  CommentChar = Capture(p.literal("#"))
+
+  Comment = CaptureSeq(
+    any_whitespace,
+    V("CommentChar"),
+    p.branch(
+      p.up_to(EOL_or_EOF),
+      EOL_or_EOF
+    )
+  )
+
+  Let = CaptureSeq(
+    p.any_amount(whitespace),
+    p.literal("let"),
+    p.one_or_more(whitespace),
     V("_VarName"),
-    patterns.one_or_no(V("TypeDefinition")),
-    patterns.one_or_no(patterns.concat(
-      patterns.one_or_more(whitespace),
-      patterns.literal("="),
-      patterns.any_amount(whitespace),
+    p.one_or_no(V("TypeDefinition")),
+    p.one_or_no(Concat(
+      p.one_or_more(whitespace),
+      p.literal("="),
+      p.any_amount(whitespace),
       V("Expression")
     )),
     EOL_or_EOF
-  ))
+  )
 
-  Assign = patterns.capture(patterns.concat(
+  Assign = CaptureSeq(
     -- TODO: Maybe could put this whitespace into the resulting lua so it isn't so ugly...
-    patterns.any_amount(whitespace),
+    p.any_amount(whitespace),
     V("_VarName"),
-    patterns.one_or_more(whitespace),
-    patterns.literal("="),
-    patterns.any_amount(whitespace),
+    p.one_or_more(whitespace),
+    p.literal("="),
+    p.any_amount(whitespace),
     V("Expression"),
     EOL_or_EOF
-  ))
+  )
 
-  Set = patterns.capture(patterns.concat(
+  Set = CaptureSeq(
     any_whitespace
-    , patterns.literal("set")
+    , p.literal("set")
     , some_whitespace
-  ))
+  )
 
   -- TODO: This needs more options
-  ForVar = patterns.capture(
+  ForVar = Capture(
     V("_VarName")
   )
 
-  ForObj = patterns.capture(patterns.branch(
+  ForObj = Capture(p.branch(
     V("FuncCall")
     , V("_VarName")
   ))
 
-  ForBody = patterns.capture(patterns.any_amount(V("ValidLine")))
+  ForBody = Capture(p.any_amount(V("ValidLine")))
 
-  For = patterns.capture(patterns.concat(
-    patterns.any_amount(whitespace)
-    , patterns.literal("for")
+  For = CaptureSeq(
+    p.any_amount(whitespace)
+    , p.literal("for")
         , some_whitespace
         , V("ForVar")
         , some_whitespace
-        , patterns.literal("in")
+        , p.literal("in")
         , some_whitespace
         , V("ForObj"), any_whitespace, EOL
       , V("ForBody")
-    , any_whitespace, patterns.literal("endfor")
-  ))
+    , any_whitespace, p.literal("endfor")
+  )
 
-  ReturnValue = patterns.capture(V("Expression"))
-  Return = patterns.capture(patterns.concat(
+  ReturnValue = Capture(V("Expression"))
+  Return = CaptureSeq(
     any_whitespace,
-    patterns.literal("return"),
+    p.literal("return"),
     any_whitespace,
     V("ReturnValue")
-  ))
+  )
 
-  ValidLine = patterns.branch(
+  -- {{{ If
+  IfStatement = CaptureSeq(
+    any_whitespace,
+    "if", some_whitespace, V("Expression"), any_whitespace, EOL,
+      V("IfBody"),
+    any_whitespace_or_eol, "endif", any_whitespace_or_eol
+  )
+
+  IfBody = Capture(p.any_amount(V("ValidLine")))
+  -- }}}
+
+  ValidLine = p.branch(
     V("FuncDef")
+    , V("IfStatement")
+    -- NOTE: You probably shouldn't be able to return unless you're in a function...
     , V("Return")
     , V("For")
     , V("Let")
@@ -304,73 +387,76 @@ local grammar = token.define(function(_ENV)
     , V("Set")
     , V("FuncCall")
     , V("Command")
+    , V("Comment")
 
     -- TODO: Not exactly true...
     , V("CapturedEOL")
   )
 
-  FuncArg = patterns.capture(
+  FuncArg = Capture(
     V("_VarName")
   )
 
-  FuncArgList = patterns.capture(patterns.concat(
+  FuncArgList = CaptureSeq(
     V("FuncArg"),
-    patterns.any_amount(patterns.concat(
-      patterns.any_amount(whitespace),
+    p.any_amount(Concat(
+      p.any_amount(whitespace),
       comma,
-      patterns.any_amount(whitespace),
+      p.any_amount(whitespace),
       V("FuncArg")
     ))
+  )
+
+  FuncBody = Capture(p.branch(
+    p.one_or_more(V("ValidLine"))
+    -- , p.any_amount(V("UnparsedCapturedError"))
   ))
 
-  FuncBody = patterns.capture(patterns.branch(
-    patterns.one_or_more(V("ValidLine"))
-    -- , patterns.any_amount(V("UnparsedCapturedError"))
-  ))
+  FuncName = Capture(V("_VarName"))
 
-  FuncName = patterns.capture(V("_VarName"))
-
-  FuncDef = patterns.capture(patterns.concat(
-    patterns.any_amount(whitespace),
-    patterns.literal("def"),
-    patterns.one_or_more(whitespace),
+  FuncDef = CaptureSeq(
+    p.any_amount(whitespace),
+    p.literal("def"),
+    p.one_or_more(whitespace),
     V("FuncName"),
     left_paren,
-    patterns.one_or_no(V("FuncArgList")),
+    p.one_or_no(V("FuncArgList")),
     right_paren,
-    patterns.one_or_no(V("TypeDefinition")),
+    p.one_or_no(V("TypeDefinition")),
     any_whitespace, EOL,
-    patterns.one_or_no(V("FuncBody")),
+    p.one_or_no(V("FuncBody")),
     any_whitespace,
-    patterns.literal("enddef"), EOL
-  ))
+    p.literal("enddef"), EOL_or_EOF
+  )
 
-  CommandName = patterns.capture(patterns.concat(
+  CommandName = CaptureSeq(
     -- TODO: Should make all the special words not allowed here.
-    patterns.neg_look_ahead(patterns.branch(
-      patterns.literal("let")
-      , patterns.literal("end")
-      , patterns.literal("call")
+    p.neg_look_ahead(p.branch(
+      p.literal("let")
+      , p.literal("end")
+      , p.literal("call")
+      , p.literal("def")
+      , p.literal("if")
     )),
     V("_VarName")
-  ))
-  CommandArguments = patterns.capture(patterns.one_or_more(V("Expression")))
-  CommandBang = patterns.capture(patterns.literal("!"))
+  )
+  CommandArguments = Capture(p.one_or_more(V("Expression")))
+  CommandBang = Capture(p.literal("!"))
 
-  Command = patterns.capture(patterns.concat(
+  Command = CaptureSeq(
     any_whitespace,
     V("CommandName"),
-    patterns.one_or_no(V("CommandBang")),
-    patterns.one_or_no(patterns.concat(
+    p.one_or_no(V("CommandBang")),
+    p.one_or_no(Concat(
       some_whitespace,
       V("CommandArguments")
     )),
     EOL_or_EOF
-  ))
+  )
 
 
   UnparsedError = (1 - EOL) ^ 1
-  UnparsedCapturedError = patterns.capture(V("UnparsedError"))
+  UnparsedCapturedError = Capture(V("UnparsedError"))
 end)
 
 return {

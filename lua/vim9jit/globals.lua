@@ -12,4 +12,18 @@ vim9jit.VimPairs = function(tbl)
   end
 end
 
+vim9jit.conditional = function(cond, if_true, if_false)
+  if cond then
+    return if_true
+  else
+    return if_false
+  end
+end
+
+vim9jit.vim_function = function(name)
+  return function(...)
+    vim.api.nvim_call_function(name, {...})
+  end
+end
+
 return vim9jit

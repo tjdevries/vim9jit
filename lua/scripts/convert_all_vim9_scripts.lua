@@ -1,6 +1,4 @@
-package.loaded['vim9jit'] = nil
-package.loaded['vim9jit.parser'] = nil
-package.loaded['vim9jit.generator'] = nil
+require('plenary.reload').reload_module('vim9jit')
 
 local generate = require('vim9jit.generator').generate
 
