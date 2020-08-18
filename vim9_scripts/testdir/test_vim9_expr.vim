@@ -1,5 +1,15 @@
 vim9script
 
+let g:cond = v:false
+
+def FuncOne(arg: number): string
+  return 'yes'
+enddef
+
+def FuncTwo(arg: number): number
+  return 123
+enddef
+
 def Test_expr1()
   assert_equal('one', true ? 'one' : 'two')
   assert_equal('one', 1 ?
@@ -44,14 +54,13 @@ def Test_expr1()
   let Res: func = g:atrue ? Some : Other
   assert_equal(function('len'), Res)
 
-  # let RetOne: func(string): number = function('len')
-  # let RetTwo: func(string): number = function('winnr')
-  # let RetThat: func = g:atrue ? RetOne : RetTwo
-  # assert_equal(function('len'), RetThat)
+  let RetOne: func(string): number = function('len')
+  let RetTwo: func(string): number = function('winnr')
+  let RetThat: func = g:atrue ? RetOne : RetTwo
+  assert_equal(function('len'), RetThat)
 
-  # let X = FuncOne
-  # let Y = FuncTwo
-  # let Z = g:cond ? FuncOne : FuncTwo
-  # assert_equal(123, Z(3))
-
+  let X = FuncOne
+  let Y = FuncTwo
+  let Z = g:cond ? FuncOne : FuncTwo
+  assert_equal(123, Z(3))
 enddef

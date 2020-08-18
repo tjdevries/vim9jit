@@ -18,6 +18,62 @@ Well if we can just make languages whenever we want, why not make parsers and ge
 
 Also, fun.
 
+## Status
+
+- Can parse
+    - [ ] vim9script vs. old
+        - [ ] Need to be able to parse an old vim file, and then just the vim9 `def` as well?...
+    - [ ] Expressions
+        - [x] With type definitions
+        - [x] Simple arithmetic expressions
+        - [x] String concatentation
+        - [x] Multiplication
+        - [x] List definitions
+        - [ ] Numbers
+            - [x] Decimal numbers
+            - [x] Floats
+            - [x] Hex
+            - [ ] Literal blobs
+        - [ ] Dictionary definitions
+            - [ ] Old style dicts
+            - [ ] Literal dicts
+        - [ ] Vim-isms
+            - [x] Global variables
+            - [ ] Buffer variables
+            - [ ] Tab variables
+            - [ ] Window variables
+            - [ ] Script-local variables
+                - [ ] Referencing them later
+        - [x] Conditionals
+        - [ ] If statements
+            - [x] Simple if statements
+            - [ ] Else statements
+            - [ ] Elseif statements
+            - [ ] Exact vim semantics for if statements
+        - [ ] Function calls
+            - [x] Local functions (implemented in pure lua)
+            - [x] Builtin functions (called using `vim.fn`)
+            - [ ] Script local functions (exposed)
+        - [x] Commands
+    - [ ] Comments
+        - [x] Simple comments
+        - [ ] Need to also handle translation of old vim stuff w/ the # command?
+    - [ ] Func defitions
+        - [x] Function argument typing
+        - [x] Function return typing
+        - [ ] Optional arguments
+        - [ ] Exporting
+        - [ ] Spread `def MyFunc(...itemlist: list<number>)`
+        - [ ] Legacy function definitions
+            - [ ] Legacy function definitions intersperesed.
+    - [ ] For loops
+        - [x] Simple loops
+        - [x] Optimized range
+    - [ ] Importing functions
+    - [ ] Auto sourcing / finding functions
+
+
+
 ## Performance?
 
 Well, it would be pretty funny if luajit outperformed native vim9script. We'll have to see.
@@ -83,7 +139,7 @@ vim.cmd(string.format([[%s %s]], 'echo', vim.fn['reltimestr'](vim.fn['reltime'](
 ```
 
 
-So... looks like we're winning ;)
+So... looks like we're pretty fast ;)
 
 ## Non-Goals
 

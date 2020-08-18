@@ -31,10 +31,12 @@ local generator = {}
 
 local get_item
 
-get_item = function(t, param, key, result_number, current_found)
+get_item = function(t, param, key, recursive, result_number, current_found)
   if t == nil then
     return nil
   end
+
+  recursive = recursive == nil and true or false
 
   if result_number == nil then
     result_number = 1
@@ -58,6 +60,10 @@ get_item = function(t, param, key, result_number, current_found)
     end
   end
 
+  if not recursive then
+    return nil
+  end
+
   local result = nil
   for _, v in ipairs(t) do
     if type(v) == 'table' then
@@ -79,7 +85,7 @@ local get_item_with_id = function(match, id)
 end
 
 local id_exists = function(match, id)
-  return get_item(match, 'id', id) ~= nil
+  return get_item(match, 'id', id, false) ~= nil
 end
 
 local get_result = function(match)
@@ -188,7 +194,7 @@ end
 
 generator.match.ConditionalExpression = function(match)
   return string.format(
-    "vim9jit.conditional(%s, %s, %s)",
+    "vim9jit.conditional(%s, function() return %s end, function() return %s end)",
     get_result(match[1]),
     get_result(match[2]),
     get_result(match[3])

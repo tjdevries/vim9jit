@@ -1,6 +1,6 @@
 -- local l = require('lpeg')
 
-package.loaded['vim9jit.p'] = nil
+package.loaded['vim9jit.patterns'] = nil
 package.loaded['vim9jit.token'] = nil
 
 local p = require('vim9jit.patterns')
@@ -13,11 +13,8 @@ local token = require('vim9jit.token')
 -- one_or_more
 -- set
 
-local Capture = p.capture
-local Concat = p.concat
-
-local CaptureSeq = function(...)
-  return Capture(Concat(...))
+p.capture_seq = function(...)
+  return p.capture(p.concat(...))
 end
 
 
@@ -52,16 +49,18 @@ local comma = p.literal(",")
 local underscore = p.literal("_")
 local left_paren = p.literal("(")
 local right_paren = p.literal(")")
+local left_brace = p.literal("{")
+local right_brace = p.literal("}")
 local single_quote = p.literal("'")
 local double_quote = p.literal('"')
 local left_bracket = p.literal("[")
 local right_bracket = p.literal("]")
 
 
-local _addition_operator = Capture(p.literal("+"))
-local _string_concat_operator = Capture(p.literal('..'))
+local _addition_operator = p.capture(p.literal("+"))
+local _string_concat_operator = p.capture(p.literal('..'))
 
-local identifier = Concat(
+local identifier = p.concat(
   p.branch(
     letter,
     underscore
@@ -71,6 +70,18 @@ local identifier = Concat(
     underscore,
     digit
   ))
+)
+
+local list_comma = p.concat(
+  any_whitespace,
+  comma,
+  any_whitespace
+)
+
+local colon = p.concat(
+  any_whitespace,
+  p.literal(":"),
+  any_whitespace
 )
 
 local grammar = token.define(function(_ENV)
@@ -87,21 +98,19 @@ local grammar = token.define(function(_ENV)
     , "_SimpleExpression"
   )
 
-  vim9script = CaptureSeq(
+  vim9script = p.capture_seq(
     p.literal("vim9script"), EOL_or_EOF,
     p.any_amount(
-      Concat(
-        p.branch(
-          V("FuncDef")
-          , V("IfStatement")
-          , V("For")
-          , V("Let")
-          , V("Assign")
-          , Concat(V("FuncCall"), V("CapturedEOL"))
-          , Concat(p.any_amount(whitespace), V("CapturedEOL"))
-          , V("Command")
-          , V("Comment")
-        )
+      p.branch(
+        V("FuncDef")
+        , V("IfStatement")
+        , V("For")
+        , V("Let")
+        , V("Assign")
+        , p.concat(V("FuncCall"), V("CapturedEOL"))
+        , p.concat(p.any_amount(whitespace), V("CapturedEOL"))
+        , V("Command")
+        , V("Comment")
       )
     ),
     p.branch(
@@ -110,35 +119,41 @@ local grammar = token.define(function(_ENV)
     )
   )
 
-  CapturedEOL = CaptureSeq(any_whitespace, EOL)
+  CapturedEOL = p.capture_seq(any_whitespace, EOL)
 
-  Number = Capture(p.branch(
+  Number = p.capture(p.branch(
+    p.concat(
+      p.branch(p.literal("0x"), p.literal("0X")),
+      p.one_or_more(p.branch(
+        digit, p.range('a', 'f'), p.range('A', 'F')
+      ))
+    ),
     p.concat(p.one_or_more(digit), p.literal('.'), p.one_or_more(digit)),
     p.one_or_more(digit)
   ))
 
-  VariableIdentifier = Capture(identifier)
-  GlobalVariableIdentifier = CaptureSeq(
+  VariableIdentifier = p.capture(identifier)
+  GlobalVariableIdentifier = p.capture_seq(
     p.literal("g:"),
     V("VariableIdentifier")
   )
-  VimVariableIdentifier = CaptureSeq(
+  VimVariableIdentifier = p.capture_seq(
     p.literal("v:"),
     V("VariableIdentifier")
   )
 
-  PrimitivesDictIdentifier = Capture(p.branch(
+  PrimitivesDictIdentifier = p.capture(p.branch(
     p.literal("b"),
     p.literal("t"),
     p.literal("w")
   ))
-  PrimitivesVariableIdentifier = CaptureSeq(
+  PrimitivesVariableIdentifier = p.capture_seq(
     V("PrimitivesDictIdentifier"),
     p.literal(":"),
     V("VariableIdentifier")
   )
 
-  AdditionOperator = CaptureSeq(
+  AdditionOperator = p.capture_seq(
     any_whitespace,
     _addition_operator,
     any_whitespace
@@ -146,25 +161,25 @@ local grammar = token.define(function(_ENV)
 
   ArithmeticTokens = p.optional_surrounding_parenths(V("_PrimitiveExpression"))
 
-  ArithmeticExpression = Concat(
+  ArithmeticExpression = p.concat(
     V("ArithmeticTokens"),
     p.one_or_more(
-      Concat(
+      p.concat(
         V("AdditionOperator"),
         V("ArithmeticTokens")
       )
     )
   )
 
-  StringOperator = CaptureSeq(
+  StringOperator = p.capture_seq(
     any_whitespace,
     _string_concat_operator,
     any_whitespace
   )
 
-  StringExpression = Concat(
+  StringExpression = p.concat(
     V("_PrimitiveExpression"),
-    p.one_or_more(Concat(
+    p.one_or_more(p.concat(
       V("StringOperator"),
       V("_PrimitiveExpression")
     ))
@@ -180,34 +195,34 @@ local grammar = token.define(function(_ENV)
     )
   )
 
-  String = Capture(
+  String = p.capture(
     p.branch(
-      Concat(single_quote, V("_InnerString"), single_quote),
-      Concat(double_quote, V("_InnerString"), double_quote)
+      p.concat(single_quote, V("_InnerString"), single_quote),
+      p.concat(double_quote, V("_InnerString"), double_quote)
     )
   )
 
-  -- StringConcat Concat(
+  -- Stringp.concat Concat(
 
-  FuncCallArg = Capture(
+  FuncCallArg = p.capture(
     p.branch(
       V("Expression")
       , V("VariableIdentifier")
     )
   )
-  FuncCallArgList = Capture(
-    p.one_or_no(Concat(
+  FuncCallArgList = p.capture(
+    p.one_or_no(p.concat(
       V("FuncCallArg"),
-      p.any_amount(Concat(
+      p.any_amount(p.concat(
         any_whitespace, comma, any_whitespace
         , V("FuncCallArg")
       ))
     ))
   )
 
-  FuncCall = CaptureSeq(
+  FuncCall = p.capture_seq(
     any_whitespace,
-    p.one_or_no(Concat(
+    p.one_or_no(p.concat(
       p.literal("call"),
       some_whitespace
     )),
@@ -219,7 +234,7 @@ local grammar = token.define(function(_ENV)
     right_paren
   )
 
-  Boolean = Capture(p.branch(
+  Boolean = p.capture(p.branch(
     p.literal("true"),
     p.literal("v:true"),
     p.literal("false"),
@@ -241,7 +256,7 @@ local grammar = token.define(function(_ENV)
     , V("_PrimitiveExpression")
   )
 
-  ConditionalExpression = CaptureSeq(
+  ConditionalExpression = p.capture_seq(
     V("_SimpleExpression"),
     any_whitespace_or_eol,
     p.literal("?"),
@@ -253,12 +268,12 @@ local grammar = token.define(function(_ENV)
     V("_SimpleExpression")
   )
 
-  ListExpression = CaptureSeq(
+  ListExpression = p.capture_seq(
     left_bracket,
     any_whitespace,
-    p.one_or_no(Concat(
+    p.one_or_no(p.concat(
       V("Expression"),
-      p.any_amount(Concat(
+      p.any_amount(p.concat(
         any_whitespace,
         comma,
         any_whitespace,
@@ -276,10 +291,72 @@ local grammar = token.define(function(_ENV)
     , V("_SimpleExpression")
   )
 
-  TypeDefinition = Concat(
-    p.literal(":"),
-    p.any_amount(whitespace),
-    Capture(p.any_amount(letter))
+
+  --[[
+  The following builtin types are supported:
+      bool
+      number
+      float
+      string
+      blob
+      list<{type}>
+      dict<{type}>
+      job
+      channel
+      func
+      func: {type}
+      func({type}, ...)
+      func({type}, ...): {type}
+  --]]
+  _Type_IdentifierDefinition = p.one_or_more(letter)
+
+  _Type_GenericDefintion = p.concat(
+    p.branch(
+      -- TODO: We could switch this at some point to be just letters.
+      --        But I don't know if that's even valid vim9.
+      p.literal("list")
+      , p.literal("dict")
+    )
+    , p.literal('<')
+    , V("_TypeSyntax")
+    , p.literal('>')
+  )
+
+  _Type_FunctionDefintion = p.concat(
+    p.literal("func"),
+    p.branch(
+      p.concat(
+        p.literal(":")
+      ),
+      p.concat(
+        left_paren
+        , any_whitespace
+        , p.branch(
+          p.concat(
+            p.list_of(V("_TypeSyntax"), list_comma),
+            p.one_or_no(p.concat(list_comma, p.literal('...')))
+          ),
+          p.literal('...')
+        )
+        , any_whitespace
+        , p.literal('):')
+      )
+    )
+    , any_whitespace
+    , V("_TypeSyntax")
+  )
+
+  _Type_SingleDefinition = p.branch(
+    V("_Type_GenericDefintion")
+    , V("_Type_FunctionDefintion")
+    , V("_Type_IdentifierDefinition")
+  )
+
+  _TypeSyntax = p.list_of(V("_Type_SingleDefinition"), p.literal("|"))
+
+  TypeDefinition = p.concat(
+    colon,
+    p.capture(V("_TypeSyntax"))
   )
 
   _VarName = p.branch(
@@ -289,24 +366,25 @@ local grammar = token.define(function(_ENV)
     V("VariableIdentifier")
   )
 
-  CommentChar = Capture(p.literal("#"))
+  CommentChar = p.capture(p.literal("#"))
 
-  Comment = CaptureSeq(
+  Comment = p.capture_seq(
     any_whitespace,
     V("CommentChar"),
+    p.neg_look_ahead(left_brace),
     p.branch(
       p.up_to(EOL_or_EOF),
       EOL_or_EOF
     )
   )
 
-  Let = CaptureSeq(
+  Let = p.capture_seq(
     p.any_amount(whitespace),
     p.literal("let"),
     p.one_or_more(whitespace),
     V("_VarName"),
     p.one_or_no(V("TypeDefinition")),
-    p.one_or_no(Concat(
+    p.one_or_no(p.concat(
       p.one_or_more(whitespace),
       p.literal("="),
       p.any_amount(whitespace),
@@ -315,7 +393,7 @@ local grammar = token.define(function(_ENV)
     EOL_or_EOF
   )
 
-  Assign = CaptureSeq(
+  Assign = p.capture_seq(
     -- TODO: Maybe could put this whitespace into the resulting lua so it isn't so ugly...
     p.any_amount(whitespace),
     V("_VarName"),
@@ -326,25 +404,25 @@ local grammar = token.define(function(_ENV)
     EOL_or_EOF
   )
 
-  Set = CaptureSeq(
+  Set = p.capture_seq(
     any_whitespace
     , p.literal("set")
     , some_whitespace
   )
 
   -- TODO: This needs more options
-  ForVar = Capture(
+  ForVar = p.capture(
     V("_VarName")
   )
 
-  ForObj = Capture(p.branch(
+  ForObj = p.capture(p.branch(
     V("FuncCall")
     , V("_VarName")
   ))
 
-  ForBody = Capture(p.any_amount(V("ValidLine")))
+  ForBody = p.capture(p.any_amount(V("ValidLine")))
 
-  For = CaptureSeq(
+  For = p.capture_seq(
     p.any_amount(whitespace)
     , p.literal("for")
         , some_whitespace
@@ -357,8 +435,8 @@ local grammar = token.define(function(_ENV)
     , any_whitespace, p.literal("endfor")
   )
 
-  ReturnValue = Capture(V("Expression"))
-  Return = CaptureSeq(
+  ReturnValue = p.capture(V("Expression"))
+  Return = p.capture_seq(
     any_whitespace,
     p.literal("return"),
     any_whitespace,
@@ -366,14 +444,14 @@ local grammar = token.define(function(_ENV)
   )
 
   -- {{{ If
-  IfStatement = CaptureSeq(
+  IfStatement = p.capture_seq(
     any_whitespace,
     "if", some_whitespace, V("Expression"), any_whitespace, EOL,
       V("IfBody"),
     any_whitespace_or_eol, "endif", any_whitespace_or_eol
   )
 
-  IfBody = Capture(p.any_amount(V("ValidLine")))
+  IfBody = p.capture(p.any_amount(V("ValidLine")))
   -- }}}
 
   ValidLine = p.branch(
@@ -393,13 +471,17 @@ local grammar = token.define(function(_ENV)
     , V("CapturedEOL")
   )
 
-  FuncArg = Capture(
-    V("_VarName")
+  FuncArg = p.capture_seq(
+    V("_VarName"),
+    p.one_or_no(
+      V("TypeDefinition"),
+      any_whitespace
+    )
   )
 
-  FuncArgList = CaptureSeq(
+  FuncArgList = p.capture_seq(
     V("FuncArg"),
-    p.any_amount(Concat(
+    p.any_amount(p.concat(
       p.any_amount(whitespace),
       comma,
       p.any_amount(whitespace),
@@ -407,14 +489,14 @@ local grammar = token.define(function(_ENV)
     ))
   )
 
-  FuncBody = Capture(p.branch(
+  FuncBody = p.capture(p.branch(
     p.one_or_more(V("ValidLine"))
     -- , p.any_amount(V("UnparsedCapturedError"))
   ))
 
-  FuncName = Capture(V("_VarName"))
+  FuncName = p.capture(V("_VarName"))
 
-  FuncDef = CaptureSeq(
+  FuncDef = p.capture_seq(
     p.any_amount(whitespace),
     p.literal("def"),
     p.one_or_more(whitespace),
@@ -429,7 +511,7 @@ local grammar = token.define(function(_ENV)
     p.literal("enddef"), EOL_or_EOF
   )
 
-  CommandName = CaptureSeq(
+  CommandName = p.capture_seq(
     -- TODO: Should make all the special words not allowed here.
     p.neg_look_ahead(p.branch(
       p.literal("let")
@@ -440,14 +522,14 @@ local grammar = token.define(function(_ENV)
     )),
     V("_VarName")
   )
-  CommandArguments = Capture(p.one_or_more(V("Expression")))
-  CommandBang = Capture(p.literal("!"))
+  CommandArguments = p.capture(p.one_or_more(V("Expression")))
+  CommandBang = p.capture(p.literal("!"))
 
-  Command = CaptureSeq(
+  Command = p.capture_seq(
     any_whitespace,
     V("CommandName"),
     p.one_or_no(V("CommandBang")),
-    p.one_or_no(Concat(
+    p.one_or_no(p.concat(
       some_whitespace,
       V("CommandArguments")
     )),
@@ -456,7 +538,7 @@ local grammar = token.define(function(_ENV)
 
 
   UnparsedError = (1 - EOL) ^ 1
-  UnparsedCapturedError = Capture(V("UnparsedError"))
+  UnparsedCapturedError = p.capture(V("UnparsedError"))
 end)
 
 return {

@@ -2,6 +2,16 @@
 Original vimscript
 vim9script
 
+let g:cond = v:false
+
+def FuncOne(arg: number): string
+  return 'yes'
+enddef
+
+def FuncTwo(arg: number): number
+  return 123
+enddef
+
 def Test_expr1()
   assert_equal('one', true ? 'one' : 'two')
   assert_equal('one', 1 ?
@@ -46,45 +56,54 @@ def Test_expr1()
   let Res: func = g:atrue ? Some : Other
   assert_equal(function('len'), Res)
 
-  # let RetOne: func(string): number = function('len')
-  # let RetTwo: func(string): number = function('winnr')
-  # let RetThat: func = g:atrue ? RetOne : RetTwo
-  # assert_equal(function('len'), RetThat)
+  let RetOne: func(string): number = function('len')
+  let RetTwo: func(string): number = function('winnr')
+  let RetThat: func = g:atrue ? RetOne : RetTwo
+  assert_equal(function('len'), RetThat)
 
-  # let X = FuncOne
-  # let Y = FuncTwo
-  # let Z = g:cond ? FuncOne : FuncTwo
-  # assert_equal(123, Z(3))
-
+  let X = FuncOne
+  let Y = FuncTwo
+  let Z = g:cond ? FuncOne : FuncTwo
+  assert_equal(123, Z(3))
 enddef
 --]=]
 
 
+vim.g["cond"] = false
+
+local function FuncOne()
+  return 'yes'
+end
+
+local function FuncTwo()
+  return 123
+end
+
 local function Test_expr1()
-  vim.fn['assert_equal']('one', vim9jit.conditional(true, 'one', 'two'))
-  vim.fn['assert_equal']('one', vim9jit.conditional(1, 'one', 'two'))
-  vim.fn['assert_equal']('one', vim9jit.conditional('x', 'one', 'two'))
-  vim.fn['assert_equal']('one', vim9jit.conditional('x', 'one', 'two'))
+  vim.fn['assert_equal']('one', vim9jit.conditional(true, function() return 'one' end, function() return 'two' end))
+  vim.fn['assert_equal']('one', vim9jit.conditional(1, function() return 'one' end, function() return 'two' end))
+  vim.fn['assert_equal']('one', vim9jit.conditional('x', function() return 'one' end, function() return 'two' end))
+  vim.fn['assert_equal']('one', vim9jit.conditional('x', function() return 'one' end, function() return 'two' end))
 
   local var = 1
-  vim.fn['assert_equal']('one', vim9jit.conditional(var, 'one', 'two'))
+  vim.fn['assert_equal']('one', vim9jit.conditional(var, function() return 'one' end, function() return 'two' end))
 
-  vim.fn['assert_equal']('two', vim9jit.conditional(false, 'one', 'two'))
-  vim.fn['assert_equal']('two', vim9jit.conditional(0, 'one', 'two'))
+  vim.fn['assert_equal']('two', vim9jit.conditional(false, function() return 'one' end, function() return 'two' end))
+  vim.fn['assert_equal']('two', vim9jit.conditional(0, function() return 'one' end, function() return 'two' end))
 
-  vim.fn['assert_equal']('two', vim9jit.conditional('', 'one', 'two'))
+  vim.fn['assert_equal']('two', vim9jit.conditional('', function() return 'one' end, function() return 'two' end))
   var = 0
-  vim.fn['assert_equal']('two', vim9jit.conditional(var, 'one', 'two'))
+  vim.fn['assert_equal']('two', vim9jit.conditional(var, function() return 'one' end, function() return 'two' end))
 
-  vim.fn['assert_equal']('one', vim9jit.conditional({ 0 }, 'one', 'two'))
-  vim.fn['assert_equal']('one', vim9jit.conditional({ 0, 1, 2 }, 'one', 'two'))
-  vim.fn['assert_equal']('two', vim9jit.conditional({  }, 'one', 'two'))
+  vim.fn['assert_equal']('one', vim9jit.conditional({ 0 }, function() return 'one' end, function() return 'two' end))
+  vim.fn['assert_equal']('one', vim9jit.conditional({ 0, 1, 2 }, function() return 'one' end, function() return 'two' end))
+  vim.fn['assert_equal']('two', vim9jit.conditional({  }, function() return 'one' end, function() return 'two' end))
 
   if vim.fn['has']('float') then
-    vim.fn['assert_equal']('one', vim9jit.conditional(0.1, 'one', 'two'))
+    vim.fn['assert_equal']('one', vim9jit.conditional(0.1, function() return 'one' end, function() return 'two' end))
   end
   if vim.fn['has']('float') then
-    vim.fn['assert_equal']('two', vim9jit.conditional(0.0, 'one', 'two'))
+    vim.fn['assert_equal']('two', vim9jit.conditional(0.0, function() return 'one' end, function() return 'two' end))
   end
   -- # Not supported yet
   --   #
@@ -95,16 +114,16 @@ local function Test_expr1()
 
   local Some = vim9jit.vim_function('len')
   local Other = vim9jit.vim_function('winnr')
-  vim.g["Res"] = vim9jit.conditional(vim.g['atrue'], Some, Other)
+  local Res = vim9jit.conditional(vim.g['atrue'], function() return Some end, function() return Other end)
   vim.fn['assert_equal'](vim9jit.vim_function('len'), Res)
 
-  --   # let RetOne: func(string): number = function('len')
-  --   # let RetTwo: func(string): number = function('winnr')
-  --   # let RetThat: func = g:atrue ? RetOne : RetTwo
-  --   # assert_equal(function('len'), RetThat)
+  local RetOne = vim9jit.vim_function('len')
+  local RetTwo = vim9jit.vim_function('winnr')
+  local RetThat = vim9jit.conditional(vim.g['atrue'], function() return RetOne end, function() return RetTwo end)
+  vim.fn['assert_equal'](vim9jit.vim_function('len'), RetThat)
 
-  --   # let X = FuncOne
-  --   # let Y = FuncTwo
-  --   # let Z = g:cond ? FuncOne : FuncTwo
-  --   # assert_equal(123, Z(3))
+  local X = FuncOne
+  local Y = FuncTwo
+  local Z = vim9jit.conditional(vim.g['cond'], function() return FuncOne end, function() return FuncTwo end)
+  vim.fn['assert_equal'](123, Z(3))
 end

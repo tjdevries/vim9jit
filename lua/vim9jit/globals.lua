@@ -13,10 +13,11 @@ vim9jit.VimPairs = function(tbl)
 end
 
 vim9jit.conditional = function(cond, if_true, if_false)
+  -- TODO: Determine all the vim9 true/false semantics.
   if cond then
-    return if_true
+    return if_true()
   else
-    return if_false
+    return if_false()
   end
 end
 

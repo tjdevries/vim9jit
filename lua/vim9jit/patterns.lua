@@ -40,10 +40,12 @@ patterns.closed = function(start, finish, name)
   })
 end
 
-patterns.listOf = function(patt, sep)
+patterns.list_of = function(patt, sep, required)
   patt, sep = P(patt), P(sep)
 
-  return patt * (sep * patt)^0
+  local pow = required and 1 or 0
+
+  return patt * (sep * patt)^pow
 end
 
 patterns.g_paren = patterns.closed('(', ')', '_')

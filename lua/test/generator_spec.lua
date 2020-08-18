@@ -173,5 +173,13 @@ end
 
       eq([[local x = vim9jit.conditional(MyFunc(), 1, 2)]], vim.trim(result))
     end)
+
+    it('should handle this', function()
+      local result = generate(make_vim9script [[
+        let Z = g:cond ? FuncOne : FuncTwo
+      ]])
+
+      eq([[local Z = vim9jit.conditional(vim.g['cond'], FuncOne, FuncTwo)]], vim.trim(result))
+    end)
   end)
 end)

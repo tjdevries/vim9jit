@@ -13,6 +13,10 @@ local make_vim9script = function(text)
   return 'vim9script\n' .. helpers.dedent(text)
 end
 
+local get_parsed = function(s)
+  return token.parsestring(grammar, make_vim9script(s))
+end
+
 describe('parser', function()
   describe('Let', function()
     it('should load vim9script file', function()
@@ -30,6 +34,13 @@ describe('parser', function()
       eq(let.id, 'Let')
     end)
 
+    it('should parse hex numbers', function()
+      eq(
+        '0x1234DEADBEEF',
+        get_item(get_parsed('let x = 0x1234DEADBEEF'), 'id', 'Number').value
+      )
+    end)
+
     it('should parse simple addition statements', function()
       local parsed = token.parsestring(grammar, make_vim9script("let x = 1 + 2"))
       neq(nil, parsed)
@@ -40,32 +51,94 @@ describe('parser', function()
       eq(let.value, 'let x = 1 + 2')
     end)
 
-    it('should parse simple type definitions', function()
-      local parsed = token.parsestring(grammar, make_vim9script("let x: number = 1 + 2"))
-      neq(nil, parsed)
+    describe('TypeDefinition', function()
+      it('should parse simple type definitions', function()
+        local parsed = token.parsestring(grammar, make_vim9script("let x: number = 1 + 2"))
+        neq(nil, parsed)
 
-      local let = get_item(parsed, 'id', 'Let')
+        local let = get_item(parsed, 'id', 'Let')
 
-      eq(let.id, 'Let')
-      eq(let.value, 'let x: number = 1 + 2')
+        eq(let.id, 'Let')
+        eq(let.value, 'let x: number = 1 + 2')
 
-      local type_definition = get_item(parsed, 'id', 'TypeDefinition')
-      neq(nil, type_definition)
-      eq(type_definition.value, 'number')
-    end)
+        local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+        neq(nil, type_definition)
+        eq(type_definition.value, 'number')
+      end)
 
-    it('should allow for type definition with no assign', function()
-      local parsed = token.parsestring(grammar, make_vim9script("let x: number"))
-      neq(nil, parsed)
+      it('should allow for type definition with no assign', function()
+        local parsed = token.parsestring(grammar, make_vim9script("let x: number"))
+        neq(nil, parsed)
 
-      local let = get_item(parsed, 'id', 'Let')
+        local let = get_item(parsed, 'id', 'Let')
 
-      eq(let.id, 'Let')
-      eq(let.value, 'let x: number')
+        eq(let.id, 'Let')
+        eq(let.value, 'let x: number')
 
-      local type_definition = get_item(parsed, 'id', 'TypeDefinition')
-      neq(nil, type_definition)
-      eq(type_definition.value, 'number')
+        local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+        neq(nil, type_definition)
+        eq(type_definition.value, 'number')
+      end)
+
+      it('should handle list types', function()
+        local parsed = get_parsed("let x: list<number>")
+        local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+        eq(type_definition.value, 'list<number>')
+      end)
+
+      it('should handle nested list types', function()
+        local parsed = get_parsed("let x: list<list<bool>>")
+        local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+        eq(type_definition.value, 'list<list<bool>>')
+      end)
+
+      it('should handle function types', function()
+        local parsed = get_parsed('let x: func: string')
+        local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+        eq(type_definition.value, 'func: string')
+      end)
+
+      it('should handle function signature types', function()
+        local parsed = get_parsed('let x: func(number): number')
+        local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+        eq(type_definition.value, 'func(number): number')
+      end)
+
+      it('should handle function signature with multiple args', function()
+        local parsed = get_parsed('let x: func(number, string): number')
+        local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+        eq(type_definition.value, 'func(number, string): number')
+      end)
+
+      it('should handle function with args and complex return', function()
+        local parsed = get_parsed('let x: func(number, string): list<number>')
+        local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+        eq(type_definition.value, 'func(number, string): list<number>')
+      end)
+
+      it('should handle function with only ellipsis', function()
+        local parsed = get_parsed('let x: func(...): number')
+        local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+        eq(type_definition.value, 'func(...): number')
+      end)
+
+      it('should handle function with ellipsis', function()
+        local parsed = get_parsed('let x: func(number, ...): number')
+        local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+        eq(type_definition.value, 'func(number, ...): number')
+      end)
+
+      it('should handle union types', function()
+        local parsed = get_parsed('let x: string|number')
+        local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+        eq(type_definition.value, 'string|number')
+      end)
+
+      it('should handle function with union types', function()
+        local parsed = get_parsed('let x: func(number|bool, ...): number|string')
+        local type_definition = get_item(parsed, 'id', 'TypeDefinition')
+        eq(type_definition.value, 'func(number|bool, ...): number|string')
+      end)
     end)
 
     it('should parse handle global variables', function()
@@ -81,6 +154,11 @@ describe('parser', function()
 
       local var = get_item(global_var, 'id', 'VariableIdentifier')
       eq(var.value, 'glob_var')
+    end)
+
+    it('should handle Z', function()
+      local parsed = get_item(get_parsed [[let Z = g:cond ? FuncOne : FuncTwo]], 'id', 'Let')
+      eq([[let Z = g:cond ? FuncOne : FuncTwo]], parsed.value)
     end)
 
     it('should allow updating an existing variable', function()
@@ -258,6 +336,21 @@ describe('parser', function()
       neq(nil, parsed)
 
       eq("# Hello world", trim(get_item(parsed, 'id', 'Comment').value))
+    end)
+
+    it('should allow function defs with types', function()
+      local parsed = get_parsed [[
+        def FuncOne(arg: number): string
+          return 'yes'
+        enddef
+      ]]
+
+      local arg_defintion = get_item(parsed, 'id', 'FuncArgList')
+
+      neq(nil, arg_defintion)
+
+      eq('arg', get_item(arg_defintion, 'id', 'VariableIdentifier').value)
+      eq('number', get_item(arg_defintion, 'id', 'TypeDefinition').value)
     end)
   end)
 
@@ -558,7 +651,7 @@ def Test_expr1()
   assert_equal('one', 'x'
   			? 'one'
 			: 'two')
-  
+
   let var = 1
   assert_equal('one', var ? 'one' : 'two')
 
