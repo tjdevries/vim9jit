@@ -253,6 +253,7 @@ local grammar = token.define(function(_ENV)
     V("ArithmeticExpression")
     , V("StringExpression")
     , V("ListExpression")
+    , V("DictExpression")
     , V("_PrimitiveExpression")
   )
 
@@ -284,6 +285,27 @@ local grammar = token.define(function(_ENV)
     )),
     any_whitespace,
     right_bracket
+  )
+
+  DictKey = p.capture_seq(
+    V("String")
+  )
+
+  DictValue = p.capture_seq(
+    V("Expression")
+  )
+
+  DictExpression = p.capture_seq(
+    left_brace,
+    any_whitespace,
+    p.any_amount(p.concat(
+      V("DictKey"),
+      colon,
+      V("DictValue"),
+      p.one_or_no(list_comma)
+    )),
+    any_whitespace,
+    right_brace
   )
 
   Expression = p.branch(

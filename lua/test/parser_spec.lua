@@ -262,6 +262,33 @@ describe('parser', function()
         eq('[ [1, 2], [3, 4] ]', list_expression.value)
       end)
     end)
+
+    it('should handle empty dictionaries', function()
+      local parsed = get_parsed("let x = {}")
+      neq(nil, get_item(parsed, 'id', 'DictExpression'))
+    end)
+
+    it('should handle dictionaries with a single key', function()
+      local parsed = get_parsed("let x = {'a': 1}")
+
+      local dict = get_item(parsed, 'id', 'DictExpression')
+      eq("'a'", get_item(dict, 'id', 'DictKey').value)
+      eq("1", get_item(dict, 'id', 'DictValue').value)
+    end)
+
+    it('should handle dictionaries with a multiple keys', function()
+      local parsed = get_parsed("let x = {'a': 1, 'b': 2, 'c': v:true}")
+
+      local dict = get_item(parsed, 'id', 'DictExpression')
+      eq("'a'", get_item(dict, 'id', 'DictKey').value)
+      eq("1", get_item(dict, 'id', 'DictValue').value)
+
+      eq("'b'", get_item(dict, 'id', 'DictKey', 2).value)
+      eq("2", get_item(dict, 'id', 'DictValue', 2).value)
+
+      eq("'c'", get_item(dict, 'id', 'DictKey', 3).value)
+      eq("v:true", get_item(dict, 'id', 'DictValue', 3).value)
+    end)
   end)
 
   describe('primitive dicts', function()
