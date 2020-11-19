@@ -751,8 +751,27 @@ describe('parser', function()
         RESULT->add('new')
       ]])
 
-      eq(nil, parsed)
+      neq(nil, parsed)
+      eq("add", get_item(parsed, 'id', 'FuncName').value)
     end)
+  end)
+
+  describe("LambdaDef", function()
+    it('can handle saving to variable', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[var x = { a, b -> a + b }]])
+      neq(nil, parsed)
+      neq(nil, get_item(parsed, 'id', 'LambdaDef'))
+    end)
+
+    it('can handle saving to variable', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[
+        var RESULT = filter({idx, val -> fmod(val, 2)})
+      ]])
+
+      neq(nil, parsed)
+      neq(nil, get_item(parsed, 'id', 'LambdaDef'))
+    end)
+
   end)
 
 

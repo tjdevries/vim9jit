@@ -46,6 +46,7 @@ local letter = p.branch(
 )
 
 local comma = p.literal(",")
+
 local underscore = p.literal("_")
 local left_paren = p.literal("(")
 local right_paren = p.literal(")")
@@ -154,9 +155,12 @@ local grammar = token.define(function(_ENV)
     V("VariableIdentifier")
   )
 
-  AdditionOperator = p.capture_seq(
+  ArithmeticOperator = p.capture_seq(
     any_whitespace,
-    _addition_operator,
+    p.branch(
+      _addition_operator,
+      "*"
+    ),
     any_whitespace
   )
 
@@ -166,7 +170,7 @@ local grammar = token.define(function(_ENV)
     V("ArithmeticTokens"),
     p.one_or_more(
       p.concat(
-        V("AdditionOperator"),
+        V("ArithmeticOperator"),
         V("ArithmeticTokens")
       )
     )
@@ -286,6 +290,7 @@ local grammar = token.define(function(_ENV)
     , V("Boolean")
     , V("String")
     , V("FuncCall")
+    , V("LambdaDef")
     , V("_VarName")
   )
 
@@ -597,6 +602,24 @@ local grammar = token.define(function(_ENV)
     p.one_or_no(V("FuncBody")),
     any_whitespace,
     p.literal("enddef"), EOL_or_EOF
+  )
+
+  LambdaDef = p.capture_seq(
+    any_whitespace,
+    left_brace,
+    any_whitespace,
+    -- p.any_amont(p.concat(
+    --   V("_VarName"),
+    --   p.concat(
+    --     comma, V("_VarName")
+    p.one_or_no(V("FuncArgList")),
+    any_whitespace,
+    "->",
+    any_whitespace,
+    V("Expression"),
+    any_whitespace,
+    right_brace,
+    any_whitespace_or_eol
   )
 
   CommandName = p.capture_seq(

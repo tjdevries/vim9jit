@@ -35,9 +35,27 @@ local assert_execute = function(expected, vim9_str)
   end
 end
 
+vim_fn_count = 0
+vim.fn = setmetatable({}, {
+  __index = function(t, key)
+    local function _fn(...)
+      vim_fn_count = vim_fn_count + 1
+      return vim.call(key, ...)
+    end
+    t[key] = _fn
+    return _fn
+  end
+})
+
+
 describe('execute generated vimscript', function()
+  before_each(function()
+    vim_fn_count = 0
+  end)
+
   it('should return simple numbers', function()
     assert_execute(5, "var RESULT = 5")
+    assert.are.same(vim_fn_count, 0)
   end)
 
   it('should return strings', function()
@@ -90,7 +108,13 @@ local __TSMethodCall3 = vim.fn['filter'](__TSMethodCall2, 'v:val % 2 == 0')
 return __TSMethodCall3
 end)()
       --]]
-      assert_execute({1, 2, 4}, [[var RESULT = [1, 2, 3]->add(4)->filter('v:val % 2 == 0')]])
+      assert_execute({2, 4}, [[var RESULT = [1, 2, 3]->add(4)->filter('v:val % 2 == 0')]])
+      eq(1, vim_fn_count)
+    end)
+
+    it('calls vim.fn.filter less often when possible', function()
+      assert_execute({2, 4}, [[var RESULT = [1, 2, 3]->add(4)->filter({idx, val -> fmod(val, 2)})]])
+      eq(0, vim_fn_count)
     end)
   end)
 end)

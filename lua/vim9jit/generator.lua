@@ -32,82 +32,18 @@ local STRICT = false
 
 local generator = {}
 
-local get_item
-
-get_item = function(t, param, key, recursive, result_number, current_found)
-  if t == nil then
-    return nil
-  end
-
-  recursive = recursive == nil and true or false
-
-  if result_number == nil then
-    result_number = 1
-  end
-
-  if current_found == nil then
-    current_found = 0
-  end
-
-  if t[param] == key then
-    return t
-  end
-
-  for k, _ in ipairs(t) do
-    if t[k][param] == key then
-      current_found = current_found + 1
-
-      if current_found >= result_number then
-        return t[k]
-      end
-    end
-  end
-
-  if not recursive then
-    return nil
-  end
-
-  local result = nil
-  for _, v in ipairs(t) do
-    if type(v) == 'table' then
-      result = get_item(v, param, key, result_number, current_found)
-      if (result) then
-        current_found = current_found + 1
-        if current_found >= result_number then
-          return result
-        end
-      end
-    end
-  end
-
-  return result
-end
-
-local get_item_with_id = function(match, id)
-  return get_item(match, 'id', id)
-end
-
-local id_exists = function(match, id)
-  return get_item(match, 'id', id, false) ~= nil
-end
-
-local get_result = function(match)
-  if match == nil then
-    return nil
-  end
-
-  local match_id = match.id
-  assert(match_id, string.format("%s:%s malformed object", match_id, match))
-
-  -- Hmm... wonder if I could just use _ret_value for a lot of stuff.
-  assert(generator.match[match_id], string.format("%s:%s missing generator", match_id, inspect(match)))
-
-  return generator.match[match_id](match)
-end
-
-
 local _ret_value = function(match) return match.value end
 
+local util = require('vim9jit.generator.util')
+
+local get_item = util.get_item
+local get_item_with_id = util.get_item_with_id
+local id_exists = util.id_exists
+
+
+local get_result = function(match)
+  return util.get_result(generator, match)
+end
 
 generator.generate = function(str, strict)
   STRICT = strict
@@ -252,6 +188,15 @@ end
   )
 end
 
+generator.match.LambdaDef = function(match)
+  print("AFSDFSDFSDFDS")
+  print("AFSDFSDFSDFDS")
+  print("AFSDFSDFSDFDS")
+  print("AFSDFSDFSDFDS")
+  print("AFSDFSDFSDFDS")
+  return string.format("function(%s) return %s end", get_result(get_item_with_id(match, "FuncArgList")), get_result(get_item_with_id(match, "Expression")))
+end
+
 generator.match.FuncName = function(match)
   local original_func_name = match.value
 
@@ -285,36 +230,7 @@ end
 local in_place = { ['vim.fn["add"]'] = true }
 
 generator.match.MethodCall = function(match)
-  local obj = get_result(match[1])
-
-  local result = "(function()\n"
-  result = result .. string.format("local __TSMethodCall1 = %s\n", obj)
-
-  for i = 2, #match do
-    local func_node = get_result(get_item_with_id(match[i], 'FuncName'))
-    local func_args = get_result(get_item_with_id(match[i], 'FuncCallArgList'))
-
-    result = result .. string.format(
-      "local __TSMethodCall%s = %s(__TSMethodCall%s, %s)\n",
-      i,
-      func_node,
-      i - 1,
-      func_args)
-  end
-
-  result = result .. string.format("return __TSMethodCall%s\n", #match)
-  result = result .. "end)()"
-
-  if true then return result end
-
-  -- TODO: handle moving different position...
-  -- Example of special casing a method call to do the right thing.
-  if func_node.value == "add" then
-    return string.format(
-      "(function() local __MethodCallVal = %s; table.insert(__MethodCallVal, %s); return __MethodCallVal end)()",
-      obj, func_args
-    )
-  end
+  return require('vim9jit.generator.method_call')(match)
 end
 
 generator.match.For = function(match)
