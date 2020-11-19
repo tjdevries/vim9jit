@@ -1,4 +1,4 @@
-pcall(function() require('plenary.test_harness'):setup_busted() end)
+require('plenary.test_harness'):setup_busted()
 
 local grammar = require('vim9jit.parser').grammar
 local token = require('vim9jit.token')
@@ -18,48 +18,80 @@ local get_parsed = function(s)
 end
 
 describe('parser', function()
-  describe('Let', function()
+  describe('Var', function()
     it('should load vim9script file', function()
       local parsed = token.parsestring(grammar, "vim9script")
 
       eq(parsed.id, 'vim9script')
     end)
 
-    it('should parse simple let statements', function()
-      local parsed = token.parsestring(grammar, make_vim9script("let x = 1"))
+    it('should parse simple Var statements', function()
+      local parsed = token.parsestring(grammar, make_vim9script("var x = 1"))
       neq(nil, parsed)
 
-      local let = get_item(parsed, 'id', 'Let')
+      local var = get_item(parsed, 'id', 'Var')
 
-      eq(let.id, 'Let')
+      eq(var.id, 'Var')
     end)
 
     it('should parse hex numbers', function()
       eq(
         '0x1234DEADBEEF',
-        get_item(get_parsed('let x = 0x1234DEADBEEF'), 'id', 'Number').value
+        get_item(get_parsed('var x = 0x1234DEADBEEF'), 'id', 'Number').value
+      )
+    end)
+
+    it('should parse const', function()
+      eq(
+        '"is constant"',
+        get_item(get_parsed('const x = "is constant"'), 'id', 'String').value
+      )
+    end)
+
+    it('should parse final', function()
+      eq(
+        '"is final"',
+        get_item(get_parsed('const x = "is final"'), 'id', 'String').value
       )
     end)
 
     it('should parse simple addition statements', function()
-      local parsed = token.parsestring(grammar, make_vim9script("let x = 1 + 2"))
+      local parsed = token.parsestring(grammar, make_vim9script("var x = 1 + 2"))
       neq(nil, parsed)
 
-      local let = get_item(parsed, 'id', 'Let')
+      local var = get_item(parsed, 'id', 'Var')
 
-      eq(let.id, 'Let')
-      eq(let.value, 'let x = 1 + 2')
+      eq(var.id, 'Var')
+      eq(var.value, 'var x = 1 + 2')
+    end)
+
+    it('should parse early declaration', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[
+        var x
+        if true
+          x = 1
+        else
+          x = 2
+        endif
+      ]])
+
+      neq(nil, parsed)
+
+      local var = get_item(parsed, 'id', 'Var')
+
+      eq(var.id, 'Var')
+      eq(trim(var.value), 'var x')
     end)
 
     describe('TypeDefinition', function()
       it('should parse simple type definitions', function()
-        local parsed = token.parsestring(grammar, make_vim9script("let x: number = 1 + 2"))
+        local parsed = token.parsestring(grammar, make_vim9script("var x: number = 1 + 2"))
         neq(nil, parsed)
 
-        local let = get_item(parsed, 'id', 'Let')
+        local var = get_item(parsed, 'id', 'Var')
 
-        eq(let.id, 'Let')
-        eq(let.value, 'let x: number = 1 + 2')
+        eq(var.id, 'Var')
+        eq(var.value, 'var x: number = 1 + 2')
 
         local type_definition = get_item(parsed, 'id', 'TypeDefinition')
         neq(nil, type_definition)
@@ -67,13 +99,13 @@ describe('parser', function()
       end)
 
       it('should allow for type definition with no assign', function()
-        local parsed = token.parsestring(grammar, make_vim9script("let x: number"))
+        local parsed = token.parsestring(grammar, make_vim9script("var x: number"))
         neq(nil, parsed)
 
-        local let = get_item(parsed, 'id', 'Let')
+        local var = get_item(parsed, 'id', 'Var')
 
-        eq(let.id, 'Let')
-        eq(let.value, 'let x: number')
+        eq(var.id, 'Var')
+        eq(var.value, 'var x: number')
 
         local type_definition = get_item(parsed, 'id', 'TypeDefinition')
         neq(nil, type_definition)
@@ -81,74 +113,74 @@ describe('parser', function()
       end)
 
       it('should handle list types', function()
-        local parsed = get_parsed("let x: list<number>")
+        local parsed = get_parsed("var x: list<number>")
         local type_definition = get_item(parsed, 'id', 'TypeDefinition')
         eq(type_definition.value, 'list<number>')
       end)
 
       it('should handle nested list types', function()
-        local parsed = get_parsed("let x: list<list<bool>>")
+        local parsed = get_parsed("var x: list<list<bool>>")
         local type_definition = get_item(parsed, 'id', 'TypeDefinition')
         eq(type_definition.value, 'list<list<bool>>')
       end)
 
       it('should handle function types', function()
-        local parsed = get_parsed('let x: func: string')
+        local parsed = get_parsed('var x: func: string')
         local type_definition = get_item(parsed, 'id', 'TypeDefinition')
         eq(type_definition.value, 'func: string')
       end)
 
       it('should handle function signature types', function()
-        local parsed = get_parsed('let x: func(number): number')
+        local parsed = get_parsed('var x: func(number): number')
         local type_definition = get_item(parsed, 'id', 'TypeDefinition')
         eq(type_definition.value, 'func(number): number')
       end)
 
       it('should handle function signature with multiple args', function()
-        local parsed = get_parsed('let x: func(number, string): number')
+        local parsed = get_parsed('var x: func(number, string): number')
         local type_definition = get_item(parsed, 'id', 'TypeDefinition')
         eq(type_definition.value, 'func(number, string): number')
       end)
 
       it('should handle function with args and complex return', function()
-        local parsed = get_parsed('let x: func(number, string): list<number>')
+        local parsed = get_parsed('var x: func(number, string): list<number>')
         local type_definition = get_item(parsed, 'id', 'TypeDefinition')
         eq(type_definition.value, 'func(number, string): list<number>')
       end)
 
       it('should handle function with only ellipsis', function()
-        local parsed = get_parsed('let x: func(...): number')
+        local parsed = get_parsed('var x: func(...): number')
         local type_definition = get_item(parsed, 'id', 'TypeDefinition')
         eq(type_definition.value, 'func(...): number')
       end)
 
       it('should handle function with ellipsis', function()
-        local parsed = get_parsed('let x: func(number, ...): number')
+        local parsed = get_parsed('var x: func(number, ...): number')
         local type_definition = get_item(parsed, 'id', 'TypeDefinition')
         eq(type_definition.value, 'func(number, ...): number')
       end)
 
       it('should handle union types', function()
-        local parsed = get_parsed('let x: string|number')
+        local parsed = get_parsed('var x: string|number')
         local type_definition = get_item(parsed, 'id', 'TypeDefinition')
         eq(type_definition.value, 'string|number')
       end)
 
       it('should handle function with union types', function()
-        local parsed = get_parsed('let x: func(number|bool, ...): number|string')
+        local parsed = get_parsed('var x: func(number|bool, ...): number|string')
         local type_definition = get_item(parsed, 'id', 'TypeDefinition')
         eq(type_definition.value, 'func(number|bool, ...): number|string')
       end)
     end)
 
     it('should parse handle global variables', function()
-      local parsed = token.parsestring(grammar, make_vim9script("let g:glob_var = 1"))
+      local parsed = token.parsestring(grammar, make_vim9script("var g:glob_var = 1"))
       neq(nil, parsed)
 
-      local let = get_item(parsed, 'id', 'Let')
-      eq(let.id, 'Let')
+      local var = get_item(parsed, 'id', 'Var')
+      eq(var.id, 'Var')
 
-      local global_var = get_item(let, 'id', 'GlobalVariableIdentifier')
+      local global_var = get_item(var, 'id', 'GlobalVariableIdentifier')
       neq(nil, global_var)
       eq(global_var.value, 'g:glob_var')
 
@@ -157,18 +189,18 @@ describe('parser', function()
     end)
 
     it('should handle Z', function()
-      local parsed = get_item(get_parsed [[let Z = g:cond ? FuncOne : FuncTwo]], 'id', 'Let')
-      eq([[let Z = g:cond ? FuncOne : FuncTwo]], parsed.value)
+      local parsed = get_item(get_parsed [[var Z = g:cond ? FuncOne : FuncTwo]], 'id', 'Var')
+      eq([[var Z = g:cond ? FuncOne : FuncTwo]], parsed.value)
     end)
 
     it('should allow updating an existing variable', function()
       local parsed = token.parsestring(grammar, make_vim9script([[
-        let this_var: number = 1
+        var this_var: number = 1
         this_var = 3
       ]]))
       neq(nil, parsed)
 
-      local var = get_item(get_item(parsed, 'id', 'Let'), 'id', 'VariableIdentifier')
+      local var = get_item(get_item(parsed, 'id', 'Var'), 'id', 'VariableIdentifier')
       eq(var.id, 'VariableIdentifier')
       eq(var.value, 'this_var')
 
@@ -181,7 +213,7 @@ describe('parser', function()
 
     describe('with function calls', function()
       it('should allow setting variables to function calls', function()
-        local parsed = token.parsestring(grammar, make_vim9script("let range_func = range(1, 10)"))
+        local parsed = token.parsestring(grammar, make_vim9script("var range_func = range(1, 10)"))
         neq(nil, parsed)
 
         local func_call = get_item(parsed, 'id', 'FuncCall')
@@ -191,7 +223,7 @@ describe('parser', function()
       end)
 
       it('should allow setting variables to function calls with no variables', function()
-        local parsed = token.parsestring(grammar, make_vim9script("let cur_pos = getcurpos()"))
+        local parsed = token.parsestring(grammar, make_vim9script("var cur_pos = getcurpos()"))
         neq(nil, parsed)
 
         local func_call = get_item(parsed, 'id', 'FuncCall')
@@ -202,7 +234,7 @@ describe('parser', function()
     end)
 
     it('should allow strings', function()
-      local parsed = token.parsestring(grammar, make_vim9script [[let x = "hello world"]])
+      local parsed = token.parsestring(grammar, make_vim9script [[var x = "hello world"]])
       neq(nil, parsed)
 
       local s = get_item(parsed, 'id', 'String')
@@ -210,7 +242,7 @@ describe('parser', function()
     end)
 
     it('should allow string concat', function()
-      local parsed = token.parsestring(grammar, make_vim9script [[let x = "hello" .. ' world']])
+      local parsed = token.parsestring(grammar, make_vim9script [[var x = "hello" .. ' world']])
       neq(nil, parsed)
 
       local exp = get_item(parsed, 'id', 'Expression')
@@ -226,7 +258,7 @@ describe('parser', function()
     describe('ListExpression', function()
       it('should allow empty list', function()
         local parsed = token.parsestring(grammar, make_vim9script [[
-          let x = []
+          var x = []
         ]])
 
         eq('[]', get_item(parsed, 'id', 'ListExpression').value)
@@ -234,7 +266,7 @@ describe('parser', function()
 
       it('should allow lists with 1 item', function()
         local parsed = token.parsestring(grammar, make_vim9script [[
-          let x = [1]
+          var x = [1]
         ]])
 
         eq('[1]', get_item(parsed, 'id', 'ListExpression').value)
@@ -243,7 +275,7 @@ describe('parser', function()
 
       it('should allow multiple items', function()
         local parsed = token.parsestring(grammar, make_vim9script [[
-          let x = [1, a, true]
+          var x = [1, a, true]
         ]])
 
         local list_expression = get_item(parsed, 'id', 'ListExpression')
@@ -255,7 +287,7 @@ describe('parser', function()
 
       it('should allow nested lists', function()
         local parsed = token.parsestring(grammar, make_vim9script [[
-          let x = [ [1, 2], [3, 4] ]
+          var x = [ [1, 2], [3, 4] ]
         ]])
 
         local list_expression = get_item(parsed, 'id', 'ListExpression')
@@ -264,12 +296,12 @@ describe('parser', function()
     end)
 
     it('should handle empty dictionaries', function()
-      local parsed = get_parsed("let x = {}")
+      local parsed = get_parsed("var x = {}")
       neq(nil, get_item(parsed, 'id', 'DictExpression'))
     end)
 
     it('should handle dictionaries with a single key', function()
-      local parsed = get_parsed("let x = {'a': 1}")
+      local parsed = get_parsed("var x = {'a': 1}")
 
       local dict = get_item(parsed, 'id', 'DictExpression')
       eq("'a'", get_item(dict, 'id', 'DictKey').value)
@@ -277,7 +309,7 @@ describe('parser', function()
     end)
 
     it('should handle dictionaries with a multiple keys', function()
-      local parsed = get_parsed("let x = {'a': 1, 'b': 2, 'c': v:true}")
+      local parsed = get_parsed("var x = {'a': 1, 'b': 2, 'c': v:true}")
 
       local dict = get_item(parsed, 'id', 'DictExpression')
       eq("'a'", get_item(dict, 'id', 'DictKey').value)
@@ -296,7 +328,7 @@ describe('parser', function()
       it(string.format('Should handle: %s', primitive), function()
         local parsed = token.parsestring(
           grammar,
-          make_vim9script(string.format("let %s:glob_var = 1", primitive))
+          make_vim9script(string.format("var %s:glob_var = 1", primitive))
         )
 
         local primitive_identifier = get_item(parsed, 'id', 'PrimitivesDictIdentifier')
@@ -424,7 +456,7 @@ describe('parser', function()
 
     it('parse for loops with something inside', function()
         local parsed = token.parsestring(grammar, make_vim9script([[
-          let sum = 1
+          var sum = 1
 
           for i in range(1, 100)
             sum = sum + 1
@@ -484,7 +516,7 @@ describe('parser', function()
     it('Can have defitions, functions and loops together', function()
       local parsed = token.parsestring(grammar, make_vim9script [[
         def VimNew()
-          let sum = 0
+          var sum = 0
           for i in range(1, 100)
             sum = sum + 1
           endfor
@@ -508,7 +540,7 @@ describe('parser', function()
   describe('primitives', function()
     it('should know about true', function()
       local parsed = token.parsestring(grammar, make_vim9script [[
-        let x = true
+        var x = true
       ]])
 
       neq(nil, parsed)
@@ -520,7 +552,7 @@ describe('parser', function()
 
     it('should know about false', function()
       local parsed = token.parsestring(grammar, make_vim9script [[
-        let x = false
+        var x = false
       ]])
 
       neq(nil, parsed)
@@ -532,7 +564,7 @@ describe('parser', function()
 
     it('should know about v:true', function()
       local parsed = token.parsestring(grammar, make_vim9script [[
-        let x = v:true
+        var x = v:true
       ]])
 
       neq(nil, parsed)
@@ -544,7 +576,7 @@ describe('parser', function()
 
     it('should know about v:false', function()
       local parsed = token.parsestring(grammar, make_vim9script [[
-        let x = v:false
+        var x = v:false
       ]])
 
       neq(nil, parsed)
@@ -588,7 +620,7 @@ describe('parser', function()
     describe('conditionals', function()
       it('should support simple ? usage', function()
         local parsed = token.parsestring(grammar, make_vim9script [[
-          let x = 1 ? 2 : 3
+          var x = 1 ? 2 : 3
         ]])
 
         neq(nil, parsed)
@@ -661,6 +693,40 @@ describe('parser', function()
 
        eq("assert_equal", get_item(if_statement, 'id', 'FuncName').value)
     end)
+
+    it("should handle if else expression", function()
+      local contents = make_vim9script [[
+        if cond
+          assert_equal(1, 1)
+        else
+          assert_equal(1, 2)
+        endif
+      ]]
+
+      local parsed = token.parsestring(grammar, contents)
+
+      neq(nil, parsed)
+
+      local if_statement = get_item(parsed, 'id', 'IfStatement')
+      neq(nil, if_statement)
+
+      eq("assert_equal", get_item(if_statement, 'id', 'FuncName').value)
+
+      local else_statement = get_item(parsed, 'id', 'ElseStatement')
+      neq(nil, else_statement)
+    end)
+  end)
+
+  describe("MethodCall", function()
+    it("should handle simple case", function()
+      local parsed = token.parsestring(grammar, make_vim9script("var x = myList->add(1)"))
+      neq(nil, parsed)
+
+      local method_call = get_item(parsed, 'id', 'MethodCall')
+      neq(nil, method_call)
+
+      eq("add", get_item(method_call, 'id', 'FuncName').value)
+    end)
   end)
 
 
@@ -679,7 +745,7 @@ def Test_expr1()
   			? 'one'
 			: 'two')
 
-  let var = 1
+  var var = 1
   assert_equal('one', var ? 'one' : 'two')
 
   assert_equal('two', false ? 'one' : 'two')
@@ -704,19 +770,19 @@ def Test_expr1()
   # assert_equal('two', [] ? 'one' : 'two')
   # assert_equal('two', {} ? 'one' : 'two')
 
-  # let Some: func = function('len')
-  # let Other: func = function('winnr')
-  # let Res: func = g:atrue ? Some : Other
+  # var Some: func = function('len')
+  # var Other: func = function('winnr')
+  # var Res: func = g:atrue ? Some : Other
   # assert_equal(function('len'), Res)
 
-  # let RetOne: func(string): number = function('len')
-  # let RetTwo: func(string): number = function('winnr')
-  # let RetThat: func = g:atrue ? RetOne : RetTwo
+  # var RetOne: func(string): number = function('len')
+  # var RetTwo: func(string): number = function('winnr')
+  # var RetThat: func = g:atrue ? RetOne : RetTwo
   # assert_equal(function('len'), RetThat)
 
-  # let X = FuncOne
-  # let Y = FuncTwo
-  # let Z = g:cond ? FuncOne : FuncTwo
+  # var X = FuncOne
+  # var Y = FuncTwo
+  # var Z = g:cond ? FuncOne : FuncTwo
   # assert_equal(123, Z(3))
 enddef
 ]])

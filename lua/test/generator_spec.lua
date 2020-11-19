@@ -19,58 +19,71 @@ describe('generator', function()
     eq('', result)
   end)
 
-  it('should parse simple let statements', function()
-    local result = generate(make_vim9script("let x = 1"))
+  it('should parse simple var statements', function()
+    local result = generate(make_vim9script("var x = 1"))
 
     eq('local x = 1\n', result)
   end)
 
-  it('should parse simple let addition statements', function()
-    local result = generate(make_vim9script("let x = 1 + 2"))
+  it('should parse simple var addition statements', function()
+    local result = generate(make_vim9script("var x = 1 + 2"))
 
     eq('local x = 1 + 2\n', result)
   end)
 
-  it('should parse simple let addition statements', function()
-    local result = generate(make_vim9script("let x: number"))
+  it('should parse simple var addition statements', function()
+    local result = generate(make_vim9script("var x: number"))
 
     eq('local x = vim9jit.DefaultForType("number")\n', result)
   end)
 
   it('should ignore type statements when strict mode is off', function()
     -- Our other option would be do something like `local x = assert_type(1 + 2, 'number')
-    local result = generate(make_vim9script("let x: number = 1 + 2"))
+    local result = generate(make_vim9script("var x: number = 1 + 2"))
 
     eq('local x = 1 + 2\n', result)
   end)
 
   it('should not ignore type statements when in strict mode', function()
     -- Our other option would be do something like `local x = assert_type(1 + 2, 'number')
-    local result = generate(make_vim9script("let x: number = 1 + 2"), true)
+    local result = generate(make_vim9script("var x: number = 1 + 2"), true)
 
     eq('local x = vim9jit.AssertType("number", 1 + 2)\n', result)
   end)
 
   it('should not use vim.g for declaring globals', function()
-    local result = generate(make_vim9script("let g:glob_var = 1 + 2"))
+    local result = generate(make_vim9script("var g:glob_var = 1 + 2"))
 
     eq('vim.g["glob_var"] = 1 + 2\n', result)
   end)
 
   it('should not use local again for variables', function()
     local result = generate(make_vim9script([[
-      let this_var = 1
+      var this_var = 1
       this_var = 3
     ]]))
 
     eq("local this_var = 1\nthis_var = 3\n", result)
   end)
 
+  it('should not use local for forward declarations', function()
+    local result = generate(make_vim9script([[
+      var this_var
+      if cond
+        this_var = 3
+      else
+        this_var = 5
+      endif
+    ]]))
+
+    eq("local this_var = nil\nif cond then\n  this_var = 3\nelse\n  this_var = 5\nend\n", result)
+  end)
+
   describe('functions', function()
     -- TODO: Figure out why this won't work.
     pending('should be able to generate functions', function()
       local result = generate(make_vim9script [[
-  let sum = 1
+  var sum = 1
 
   def VimNew()
     sum = sum + 1
@@ -89,7 +102,7 @@ end
   describe('calling functions', function()
     it('should redirect to vim functions', function()
       local result = generate(make_vim9script [[
-        let range = range(1, 100)
+        var range = range(1, 100)
       ]])
 
       eq("local range = vim.fn['range'](1, 100)\n", result)
@@ -99,7 +112,7 @@ end
   describe('loops', function()
     it('should use pairs wrapper', function()
       local result = generate(make_vim9script [[
-        let sum = 0
+        var sum = 0
         for i in my_func(1, 100)
           sum = sum + 1
         endfor
@@ -115,7 +128,7 @@ end
 
     it('should use super cool range wrapper', function()
       local result = generate(make_vim9script [[
-        let sum = 0
+        var sum = 0
         for i in range(1, 100)
           sum = sum + 1
         endfor
@@ -134,7 +147,7 @@ end
     it('should handle indent time measurements', function()
       local result = generate(make_vim9script [[
         def VimNew(): number
-          let totallen = 0
+          var totallen = 0
           for i in range(1, 100000)
             setline(i, '    ' .. getline(i))
             totallen = totallen + len(getline(i))
@@ -157,29 +170,37 @@ end
     end)
   end)
 
+  describe('method calls', function()
+    it('should special case add', function()
+      local result = generate(make_vim9script("var x = myList->add(1)"))
+
+      eq("local x = (function() table.insert(myList, 1); return myList end)()", vim.trim(result))
+    end)
+  end)
+
   describe('conditionals', function()
     it('should handle a simple conditional', function()
       local result = generate(make_vim9script [[
-        let x = v:true ? 1 : 2
+        var x = v:true ? 1 : 2
       ]])
 
-      eq([[local x = vim9jit.conditional(true, 1, 2)]], vim.trim(result))
+      eq([[local x = vim9jit.conditional(true, function() return 1 end, function() return 2 end)]], vim.trim(result))
     end)
 
     it('should handle functions', function()
       local result = generate(make_vim9script [[
-        let x = MyFunc() ? 1 : 2
+        var x = MyFunc() ? 1 : 2
       ]])
 
-      eq([[local x = vim9jit.conditional(MyFunc(), 1, 2)]], vim.trim(result))
+      eq([[local x = vim9jit.conditional(MyFunc(), function() return 1 end, function() return 2 end)]], vim.trim(result))
     end)
 
     it('should handle this', function()
       local result = generate(make_vim9script [[
-        let Z = g:cond ? FuncOne : FuncTwo
+        var Z = g:cond ? FuncOne : FuncTwo
       ]])
 
-      eq([[local Z = vim9jit.conditional(vim.g['cond'], FuncOne, FuncTwo)]], vim.trim(result))
+      eq([[local Z = vim9jit.conditional(vim.g['cond'], function() return FuncOne end, function() return FuncTwo end)]], vim.trim(result))
     end)
   end)
 end)

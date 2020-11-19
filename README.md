@@ -18,6 +18,13 @@ Well if we can just make languages whenever we want, why not make parsers and ge
 
 Also, fun.
 
+## Notes:
+
+It is unlikely that we will implement the _type checking_ features from Vim 9 (although that could be fun :laugh:).
+However, to get your code type checked, you probably can just run it in Vim 9. This is more about a compatibility layer than it is about re-implementing everything.
+
+For example, at the moment, I plan for `const` and `final` to simply be variables. I do not plan on creating the ability to error when editing these items.
+
 ## Status
 
 - Can parse

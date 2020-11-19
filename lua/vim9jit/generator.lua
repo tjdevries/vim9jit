@@ -5,7 +5,10 @@ local dedent = require('vim9jit.utils').dedent
 local indent = require('vim9jit.utils').indent
 local trim = vim.trim
 
-local inspect = require('inspect') or vim.inspect
+local has_inspect, inspect = pcall(require, 'inspect')
+if not has_inspect then
+  inspect = vim.inspect
+end
 
 
 local fmt = function(s, ending_newline)
@@ -167,7 +170,7 @@ generator.match.Assign = function(match)
   return _assignment(match, false)
 end
 
-generator.match.Let = function(match)
+generator.match.Var = function(match)
   return _assignment(match, true)
 end
 
@@ -207,14 +210,25 @@ generator.match.IfStatement = function(match)
   local if_expression = get_result(match[1])
   local if_body = get_result(get_item_with_id(match, 'IfBody'))
 
+  local else_statement = get_result(get_item_with_id(match, 'ElseStatement'))
+  if else_statement then
+    else_statement = "\n" .. else_statement
+  end
+
   return string.format(fmt(
     [[
 if %s then
-%s
+%s%s
 end
     ]]),
-    if_expression, indent(fmt(if_body, false), 2)
+    if_expression, indent(fmt(if_body, false), 2), else_statement
   )
+end
+
+generator.match.ElseStatement = function(match)
+  local if_body = get_result(get_item_with_id(match, 'IfBody'))
+
+  return string.format("else\n%s", indent(fmt(if_body, false), 2))
 end
 
 -- generator.match.ReturnValue = function(match)
@@ -266,6 +280,20 @@ generator.match.FuncCall = function(match)
   local func_args = get_result(get_item_with_id(match, 'FuncCallArgList'))
 
   return string.format([[%s(%s)]], func_name, func_args)
+end
+
+generator.match.MethodCall = function(match)
+  local obj = get_result(match[1])
+  local func_node = get_item_with_id(match, 'FuncName')
+  local func_args = get_result(get_item_with_id(match, 'FuncCallArgList'))
+
+  -- Example of special casing a method call to do the right thing.
+  if func_node.value == "add" then
+    return string.format("(function() table.insert(%s, %s); return %s end)()", obj, func_args, obj)
+  end
+
+  local func_name = get_result(func_node)
+  return string.format("")
 end
 
 generator.match.For = function(match)

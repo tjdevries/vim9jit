@@ -105,7 +105,7 @@ local grammar = token.define(function(_ENV)
         V("FuncDef")
         , V("IfStatement")
         , V("For")
-        , V("Let")
+        , V("Var")
         , V("Assign")
         , p.concat(V("FuncCall"), V("CapturedEOL"))
         , p.concat(p.any_amount(whitespace), V("CapturedEOL"))
@@ -234,6 +234,23 @@ local grammar = token.define(function(_ENV)
     right_paren
   )
 
+  --[[
+    TODO:
+      - Need to add arrow methods for objects in vimL.
+        Difficulty is that these can be different parameters, different semantics,
+        different EVERYTHING for them... Getting this to compile would be VERY difficult.
+
+        myList->add(3)
+  --]]
+  MethodCall = p.capture_seq(
+    V("_VarName"),
+    "->",
+    V("FuncName"),
+    left_paren,
+    V("FuncCallArgList"),
+    right_paren
+  )
+
   Boolean = p.capture(p.branch(
     p.literal("true"),
     p.literal("v:true"),
@@ -246,6 +263,7 @@ local grammar = token.define(function(_ENV)
     , V("Boolean")
     , V("String")
     , V("FuncCall")
+    , V("MethodCall")
     , V("_VarName")
   )
 
@@ -400,9 +418,18 @@ local grammar = token.define(function(_ENV)
     )
   )
 
-  Let = p.capture_seq(
+  --[[
+  TODO: initialize to correct value... this might be harder
+    Declaring a variable with a type but without an initializer will initialize to
+    zero, false or empty.
+  --]]
+  Var = p.capture_seq(
     p.any_amount(whitespace),
-    p.literal("let"),
+    p.branch(
+      p.literal("var"),
+      p.literal("const"),
+      p.literal("final")
+    ),
     p.one_or_more(whitespace),
     V("_VarName"),
     p.one_or_no(V("TypeDefinition")),
@@ -415,6 +442,16 @@ local grammar = token.define(function(_ENV)
     EOL_or_EOF
   )
 
+  --[[
+    TODO:
+      - Since `&opt = value` is now assigning a value to option "opt", ":&" cannot be
+        used to repeat a `:substitute` command.
+
+        Need to handle transforming `&opt = value` -> either vim.api.nvim_set_<optionalname>_option or
+        just execute as command and hope we can transform the value correctly...
+        Probably would work with `vim.cmd(string.format("let &opt = %s", <whatever value is here>))`
+        or similar.
+  --]]
   Assign = p.capture_seq(
     -- TODO: Maybe could put this whitespace into the resulting lua so it isn't so ugly...
     p.any_amount(whitespace),
@@ -470,7 +507,13 @@ local grammar = token.define(function(_ENV)
     any_whitespace,
     "if", some_whitespace, V("Expression"), any_whitespace, EOL,
       V("IfBody"),
-    any_whitespace_or_eol, "endif", any_whitespace_or_eol
+    p.one_or_no(V("ElseStatement")),
+    any_whitespace_or_eol,
+    "endif", any_whitespace_or_eol
+  )
+
+  ElseStatement = p.capture_seq(
+    any_whitespace, "else", any_whitespace, EOL, V("IfBody")
   )
 
   IfBody = p.capture(p.any_amount(V("ValidLine")))
@@ -482,7 +525,7 @@ local grammar = token.define(function(_ENV)
     -- NOTE: You probably shouldn't be able to return unless you're in a function...
     , V("Return")
     , V("For")
-    , V("Let")
+    , V("Var")
     , V("Assign")
     , V("Set")
     , V("FuncCall")
@@ -536,11 +579,15 @@ local grammar = token.define(function(_ENV)
   CommandName = p.capture_seq(
     -- TODO: Should make all the special words not allowed here.
     p.neg_look_ahead(p.branch(
-      p.literal("let")
+      p.literal("var")
+      , p.literal("final")
+      , p.literal("const")
       , p.literal("end")
       , p.literal("call")
       , p.literal("def")
       , p.literal("if")
+      , p.literal("else")
+      , p.literal("endif")
     )),
     V("_VarName")
   )
