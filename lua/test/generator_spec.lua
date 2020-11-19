@@ -174,7 +174,7 @@ end
     it('should special case add', function()
       local result = generate(make_vim9script("var x = myList->add(1)"))
 
-      eq("local x = (function() table.insert(myList, 1); return myList end)()", vim.trim(result))
+      eq("local x = (table.insert(myList, 1) or myList)", vim.trim(result))
     end)
   end)
 
