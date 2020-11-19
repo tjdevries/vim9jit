@@ -15,8 +15,8 @@ local execute = function(vim9_str)
   local compiled = generate(make_vim9script(vim9_str))
   local loaded = loadstring(compiled .. "\nreturn RESULT")
 
-  local result = loaded and loaded()
-  if result == nil then
+  local ok, result = pcall(loaded)
+  if not ok then
     print("GENERATED:", compiled)
     print("   FROM  :", make_vim9script(vim9_str))
     print("LOADED FAILURE", loaded, loaded_failure)
@@ -65,7 +65,7 @@ describe('execute generated vimscript', function()
     it('works with myList->add', function()
       assert_execute({1, 2, 3, 'new'}, [[
         var RESULT = [1, 2, 3]
-        RESULT->add('new')
+        RESULT = RESULT->add('new')
       ]])
     end)
 
@@ -77,6 +77,20 @@ describe('execute generated vimscript', function()
 
     it('works with filter', function()
       assert_execute({2}, [[var RESULT = [1, 2, 3]->filter('v:val % 2 == 0')]])
+    end)
+
+    it('works with multipe method calls', function()
+      --[[
+Actually generates this basically:
+
+local RESULT = (function()
+local __TSMethodCall1 = { 1, 2, 3 }
+local __TSMethodCall2 = vim.fn['add'](__TSMethodCall1, 4)
+local __TSMethodCall3 = vim.fn['filter'](__TSMethodCall2, 'v:val % 2 == 0')
+return __TSMethodCall3
+end)()
+      --]]
+      assert_execute({1, 2, 4}, [[var RESULT = [1, 2, 3]->add(4)->filter('v:val % 2 == 0')]])
     end)
   end)
 end)

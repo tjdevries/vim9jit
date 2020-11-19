@@ -260,14 +260,18 @@ local grammar = token.define(function(_ENV)
 
         myList->add(3)
   --]]
-  MethodCall = p.capture_seq(
-    any_whitespace,
-    V("_SimpleExpression"),
+  MethodFuncCall = p.capture_seq(
     "->",
     V("FuncName"),
     left_paren,
     V("FuncCallArgList"),
     right_paren
+  )
+
+  MethodCall = p.capture_seq(
+    any_whitespace,
+    V("_SimpleExpression"),
+    p.one_or_more(V("MethodFuncCall"))
   )
 
   Boolean = p.capture(p.branch(

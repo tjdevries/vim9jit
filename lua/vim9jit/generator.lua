@@ -282,11 +282,32 @@ generator.match.FuncCall = function(match)
   return string.format([[%s(%s)]], func_name, func_args)
 end
 
+local in_place = { ['vim.fn["add"]'] = true }
+
 generator.match.MethodCall = function(match)
   local obj = get_result(match[1])
-  local func_node = get_item_with_id(match, 'FuncName')
-  local func_args = get_result(get_item_with_id(match, 'FuncCallArgList'))
 
+  local result = "(function()\n"
+  result = result .. string.format("local __TSMethodCall1 = %s\n", obj)
+
+  for i = 2, #match do
+    local func_node = get_result(get_item_with_id(match[i], 'FuncName'))
+    local func_args = get_result(get_item_with_id(match[i], 'FuncCallArgList'))
+
+    result = result .. string.format(
+      "local __TSMethodCall%s = %s(__TSMethodCall%s, %s)\n",
+      i,
+      func_node,
+      i - 1,
+      func_args)
+  end
+
+  result = result .. string.format("return __TSMethodCall%s\n", #match)
+  result = result .. "end)()"
+
+  if true then return result end
+
+  -- TODO: handle moving different position...
   -- Example of special casing a method call to do the right thing.
   if func_node.value == "add" then
     return string.format(
@@ -294,10 +315,6 @@ generator.match.MethodCall = function(match)
       obj, func_args
     )
   end
-
-  local func_name = get_result(func_node)
-  -- TODO: handle moving different position...
-  return string.format("%s(%s, %s)", func_name, obj, func_args)
 end
 
 generator.match.For = function(match)
