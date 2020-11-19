@@ -41,6 +41,23 @@ describe('parser', function()
       )
     end)
 
+    describe('strings', function()
+      it('should allow single quote strings', function()
+        eq(
+          "'a str'",
+          get_item(get_parsed("var x = 'a str'"), 'id', 'String').value
+        )
+      end)
+
+      it('should allow double quote strings', function()
+        eq(
+          '"a str"',
+          get_item(get_parsed('var x = "a str"'), 'id', 'String').value
+        )
+      end)
+    end)
+
+
     it('should parse const', function()
       eq(
         '"is constant"',
@@ -726,6 +743,15 @@ describe('parser', function()
       neq(nil, method_call)
 
       eq("add", get_item(method_call, 'id', 'FuncName').value)
+    end)
+
+    it('should allow method call alone on line', function()
+      local parsed = token.parsestring(grammar, make_vim9script [[
+        var RESULT = [1, 2, 3]
+        RESULT->add('new')
+      ]])
+
+      eq(nil, parsed)
     end)
   end)
 

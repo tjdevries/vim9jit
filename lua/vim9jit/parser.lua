@@ -108,6 +108,7 @@ local grammar = token.define(function(_ENV)
         , V("Var")
         , V("Assign")
         , p.concat(V("FuncCall"), V("CapturedEOL"))
+        , p.concat(V("MethodCall"), V("CapturedEOL"))
         , p.concat(p.any_amount(whitespace), V("CapturedEOL"))
         , V("Command")
         , V("Comment")
@@ -197,8 +198,25 @@ local grammar = token.define(function(_ENV)
 
   String = p.capture(
     p.branch(
-      p.concat(single_quote, V("_InnerString"), single_quote),
-      p.concat(double_quote, V("_InnerString"), double_quote)
+      --  Courtesy of Lua wiki. Thanks!
+      p.literal("'") * ((1 - p.S"'\r\n\f\\") + (p.literal '\\' * 1)) ^ 0 * "'",
+      p.literal('"') * ((1 - p.S'"\r\n\f\\') + (p.literal '\\' * 1)) ^ 0 * '"'
+
+      -- Hmmm... I don't think we can do better than above.
+      -- p.concat(
+      --   single_quote,
+      --   p.up_to(single_quote)
+      --   -- , single_quote
+      --   -- p.any_amount(p.neg_look_ahead(single_quote)),
+      --   -- single_quote
+      -- ),
+      -- p.concat(
+      --   double_quote,
+      --   p.up_to(double_quote)
+      --   -- , double_quote
+      --   -- p.any_amount(p.neg_look_ahead(double_quote)),
+      --   -- double_quote
+      -- )
     )
   )
 
@@ -243,7 +261,8 @@ local grammar = token.define(function(_ENV)
         myList->add(3)
   --]]
   MethodCall = p.capture_seq(
-    V("_VarName"),
+    any_whitespace,
+    V("_SimpleExpression"),
     "->",
     V("FuncName"),
     left_paren,
@@ -263,7 +282,6 @@ local grammar = token.define(function(_ENV)
     , V("Boolean")
     , V("String")
     , V("FuncCall")
-    , V("MethodCall")
     , V("_VarName")
   )
 
@@ -328,6 +346,7 @@ local grammar = token.define(function(_ENV)
 
   Expression = p.branch(
     V("ConditionalExpression")
+    , V("MethodCall")
     , V("_SimpleExpression")
   )
 

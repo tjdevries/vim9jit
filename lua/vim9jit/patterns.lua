@@ -62,6 +62,7 @@ patterns.split = function(value, sep)
 end
 
 
+patterns.S = S
 patterns.literal = lpeg.P
 patterns.set = function(...)
   return lpeg.S(fold(function (a, b) return a .. b end, ...))

@@ -289,7 +289,10 @@ generator.match.MethodCall = function(match)
 
   -- Example of special casing a method call to do the right thing.
   if func_node.value == "add" then
-    return string.format("(table.insert(%s, %s) or %s)", obj, func_args, obj)
+    return string.format(
+      "(function() local __MethodCallVal = %s; table.insert(__MethodCallVal, %s); return __MethodCallVal end)()",
+      obj, func_args
+    )
   end
 
   local func_name = get_result(func_node)
