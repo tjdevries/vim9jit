@@ -13,9 +13,9 @@ end
 
 local execute = function(vim9_str)
   local compiled = generate(make_vim9script(vim9_str))
-  local loaded, loaded_failure = loadstring(compiled .. "\nreturn RESULT")
+  local loaded = loadstring(compiled .. "\nreturn RESULT")
 
-  local result = loaded()
+  local result = loaded and loaded()
   if result == nil then
     print("GENERATED:", compiled)
     print("   FROM  :", make_vim9script(vim9_str))
@@ -73,6 +73,10 @@ describe('execute generated vimscript', function()
       assert_execute({1, 2, 3, 'new'}, [[
         var RESULT = [1, 2, 3]->add('new')
       ]])
+    end)
+
+    it('works with filter', function()
+      assert_execute({2}, [[var RESULT = [1, 2, 3]->filter('v:val % 2 == 0')]])
     end)
   end)
 end)

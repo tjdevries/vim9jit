@@ -296,7 +296,8 @@ generator.match.MethodCall = function(match)
   end
 
   local func_name = get_result(func_node)
-  return string.format("")
+  -- TODO: handle moving different position...
+  return string.format("%s(%s, %s)", func_name, obj, func_args)
 end
 
 generator.match.For = function(match)
