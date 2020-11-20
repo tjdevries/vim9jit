@@ -30,6 +30,7 @@ local assert_execute = function(expected, vim9_str)
 
   if not pcall(eq, expected, result) then
     print(string.rep("=", 80))
+    print("vim9_str:", vim9_str)
     print("COMPILED:", tostring(compiled))
     eq(expected, result)
   end
@@ -64,6 +65,26 @@ describe('execute generated vimscript', function()
 
   it('should return lists', function()
     assert_execute({1, 2, 3}, "var RESULT = [1, 2, 3]")
+  end)
+
+  describe('Expression', function()
+    describe('ComparisonExpression', function()
+      it('should work for numbers', function()
+        assert_execute(true, "var RESULT = 1 == 1")
+        assert_execute(false, "var RESULT = 2 == 1")
+      end)
+
+      it('should work for strings', function()
+        assert_execute(true, [[var RESULT = 'hello' == "hello"]])
+        assert_execute(false, [[var RESULT = 'hello' == 'world']])
+      end)
+
+      it('should work for weird vim string comparison operators', function()
+        assert_execute(false, [[var RESULT = 'hello' ==  'hElLo']])
+        assert_execute(false, [[var RESULT = 'hello' ==# 'hElLo']])
+        assert_execute(true,  [[var RESULT = 'hello' ==? 'hElLo']])
+      end)
+    end)
   end)
 
   describe('IfStatement', function()
@@ -103,7 +124,7 @@ Actually generates this basically:
 
 local RESULT = (function()
 local __TSMethodCall1 = { 1, 2, 3 }
-local __TSMethodCall2 = vim.fn['add'](__TSMethodCall1, 4)
+local __TSMethodCall2 = (table.insert(__TSMethodCall1, 4) or __TSMethodCall1)
 local __TSMethodCall3 = vim.fn['filter'](__TSMethodCall2, 'v:val % 2 == 0')
 return __TSMethodCall3
 end)()
@@ -112,7 +133,7 @@ end)()
       eq(1, vim_fn_count)
     end)
 
-    it('calls vim.fn.filter less often when possible', function()
+    pending('calls vim.fn.filter less often when possible', function()
       assert_execute({2, 4}, [[var RESULT = [1, 2, 3]->add(4)->filter({idx, val -> fmod(val, 2)})]])
       eq(0, vim_fn_count)
     end)

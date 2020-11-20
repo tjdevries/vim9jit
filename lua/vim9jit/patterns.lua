@@ -48,6 +48,7 @@ patterns.list_of = function(patt, sep, required)
   return patt * (sep * patt)^pow
 end
 
+
 patterns.g_paren = patterns.closed('(', ')', '_')
 
 patterns.split = function(value, sep)

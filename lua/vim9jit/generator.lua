@@ -131,6 +131,22 @@ generator.match.ListExpression = function(match)
   )
 end
 
+-- var x = cond ? foo : bawr
+--[[
+
+
+{ a, b, c}
+
+{
+  [1] = { ... cond }, <-- number.
+  [2] = { ... foo  },
+  [3] = { ... bawr },
+
+  ["id"] = "cond ? foo : bawr"
+  ["value"] = asdf
+}
+
+--]]
 generator.match.ConditionalExpression = function(match)
   return string.format(
     "vim9jit.conditional(%s, function() return %s end, function() return %s end)",
@@ -189,12 +205,11 @@ end
 end
 
 generator.match.LambdaDef = function(match)
-  print("AFSDFSDFSDFDS")
-  print("AFSDFSDFSDFDS")
-  print("AFSDFSDFSDFDS")
-  print("AFSDFSDFSDFDS")
-  print("AFSDFSDFSDFDS")
-  return string.format("function(%s) return %s end", get_result(get_item_with_id(match, "FuncArgList")), get_result(get_item_with_id(match, "Expression")))
+  return string.format(
+    "function(%s) return %s end",
+    get_result(get_item_with_id(match, "FuncArgList")),
+    get_result(get_item_with_id(match, "Expression"))
+  )
 end
 
 generator.match.FuncName = function(match)
@@ -330,6 +345,16 @@ generator.match.Boolean = function(match)
   end
 end
 
+generator.match.ComparisonExpression = function(match)
+  -- Operator, value, value
+  return string.format(
+    "require('vim9jit').ComparisonEvaluate([[%s]], %s, %s)",
+    get_result(match[2]),
+    get_result(match[1]),
+    get_result(match[3])
+  )
+end
+
 generator.match.Comment = function(match)
   return string.format("-- %s", match.value)
 end
@@ -353,6 +378,7 @@ generator.match.AdditionOperator = _ret_value
 generator.match.StringOperator = _ret_value
 generator.match.Number = _ret_value
 generator.match.CapturedEOL = _ret_value
+generator.match.ComparisonExpressionOperator  = _ret_value
 
 generator._utils = {}
 generator._utils.fmt = fmt

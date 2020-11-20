@@ -53,11 +53,6 @@ return function(match)
   result = result .. string.format("return __TSMethodCall%s\n", #match)
   result = result .. "end)()"
 
-  if true then return result end
-
-  -- TODO: handle moving different position...
-  -- Example of special casing a method call to do the right thing.
-  if func_node.value == "add" then
-  end
+  return result
 end
 

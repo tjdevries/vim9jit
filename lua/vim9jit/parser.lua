@@ -17,8 +17,6 @@ p.capture_seq = function(...)
   return p.capture(p.concat(...))
 end
 
-
-
 local V = p.V
 
 local _whitespace_table = {
@@ -85,16 +83,41 @@ local colon = p.concat(
   any_whitespace
 )
 
+p.capture_seq_whitespace = function(...)
+  local sequence = {...}
+  local sequence_with_whitespace = {any_whitespace_or_eol}
+  for _, v in ipairs(sequence) do
+    table.insert(sequence_with_whitespace, v)
+    table.insert(sequence_with_whitespace, any_whitespace_or_eol)
+  end
+  return p.capture(p.concat(unpack(sequence_with_whitespace)))
+end
+
+p.capture_seq_of_pat_with_optional_trailing_sep = function(pat, sep)
+  return p.concat(
+    any_whitespace_or_eol,
+    p.one_or_no(p.concat(
+      pat,
+      p.any_amount(p.concat(
+        any_whitespace_or_eol,
+        sep,
+        any_whitespace_or_eol,
+        pat
+      )),
+      p.one_or_no(sep)
+    )),
+    any_whitespace_or_eol
+  )
+end
+
 local grammar = token.define(function(_ENV)
   START "vim9script"
 
   SUPPRESS(
-    "ArithmeticTokens"
-    , "ArithmeticExpression"
+    "_VarName"
     , "StringExpression"
     , "ValidLine"
 
-    , "_VarName"
     , "_PrimitiveExpression"
     , "_SimpleExpression"
   )
@@ -155,25 +178,37 @@ local grammar = token.define(function(_ENV)
     V("VariableIdentifier")
   )
 
-  ArithmeticOperator = p.capture_seq(
-    any_whitespace,
-    p.branch(
-      _addition_operator,
-      "*"
-    ),
-    any_whitespace
+  BinaryOperand = p.capture_seq(
+    p.optional_surrounding_parenths(V("_SimpleExpression"))
   )
 
-  ArithmeticTokens = p.optional_surrounding_parenths(V("_PrimitiveExpression"))
+  BinaryOperator = p.capture(p.branch(
+    -- TODO: We need to make these operands tell us what's happening.
+    p.literal("+"),
+    p.literal("-")
+  ))
 
-  ArithmeticExpression = p.concat(
-    V("ArithmeticTokens"),
-    p.one_or_more(
-      p.concat(
-        V("ArithmeticOperator"),
-        V("ArithmeticTokens")
-      )
-    )
+  BinaryOperation = p.capture_seq_whitespace(
+    V("BinaryOperand"),
+    V("BinaryOperator"),
+    V("BinaryOperand")
+  )
+
+  -- { value = "==", id = "ComparisonExpressionOperator" }
+  ComparisonExpressionOperator = p.capture(p.branch(
+    p.literal("==?"),
+    p.literal("==#"),
+    p.literal("==")
+  ))
+
+  ComparisonExpression = p.capture_seq(
+    any_whitespace,
+    V("_SimpleExpression"),
+    any_whitespace,
+    V("ComparisonExpressionOperator"),
+    any_whitespace,
+    V("_SimpleExpression"),
+    any_whitespace
   )
 
   StringOperator = p.capture_seq(
@@ -200,7 +235,7 @@ local grammar = token.define(function(_ENV)
     )
   )
 
-  String = p.capture(
+  StringLiteral = p.capture(
     p.branch(
       --  Courtesy of Lua wiki. Thanks!
       p.literal("'") * ((1 - p.S"'\r\n\f\\") + (p.literal '\\' * 1)) ^ 0 * "'",
@@ -288,74 +323,51 @@ local grammar = token.define(function(_ENV)
   _PrimitiveExpression = p.branch(
     V("Number")
     , V("Boolean")
-    , V("String")
     , V("FuncCall")
-    , V("LambdaDef")
+    , V("StringLiteral")
+    , V("ListLiteral")
+    , V("DictLiteral")
+    , V("LambdaLiteral")
     , V("_VarName")
   )
 
+  -- TODO: Think a bit more about surround parens... cause they can happen!
   _SimpleExpression = p.branch(
-    V("ArithmeticExpression")
-    , V("StringExpression")
-    , V("ListExpression")
-    , V("DictExpression")
+    V("StringExpression")
     , V("_PrimitiveExpression")
   )
 
-  ConditionalExpression = p.capture_seq(
+  ConditionalExpression = p.capture_seq_whitespace(
     V("_SimpleExpression"),
-    any_whitespace_or_eol,
     p.literal("?"),
-    any_whitespace_or_eol,
     V("_SimpleExpression"),
-    any_whitespace_or_eol,
     p.literal(":"),
-    any_whitespace_or_eol,
     V("_SimpleExpression")
   )
 
-  ListExpression = p.capture_seq(
+  ListLiteral = p.capture_seq(
     left_bracket,
-    any_whitespace,
-    p.one_or_no(p.concat(
-      V("Expression"),
-      p.any_amount(p.concat(
-        any_whitespace,
-        comma,
-        any_whitespace,
-        V("Expression")
-      )
-    ),
-    p.one_or_no(comma)
-    )),
-    any_whitespace,
+    p.capture_seq_of_pat_with_optional_trailing_sep(V("Expression"), comma),
     right_bracket
   )
 
-  DictKey = p.capture_seq(
-    V("String")
-  )
+  DictKey = p.capture(V("StringLiteral"))
+  DictValue = p.capture(V("Expression"))
 
-  DictValue = p.capture_seq(
-    V("Expression")
-  )
-
-  DictExpression = p.capture_seq(
+  DictLiteral = p.capture_seq(
     left_brace,
-    any_whitespace,
-    p.any_amount(p.concat(
+    p.capture_seq_of_pat_with_optional_trailing_sep(p.concat(
       V("DictKey"),
       colon,
-      V("DictValue"),
-      p.one_or_no(list_comma)
-    )),
-    any_whitespace,
+      V("DictValue")
+    ), comma),
     right_brace
   )
 
   Expression = p.branch(
     V("ConditionalExpression")
     , V("MethodCall")
+    , V("ComparisonExpression")
     , V("_SimpleExpression")
   )
 
@@ -604,7 +616,7 @@ local grammar = token.define(function(_ENV)
     p.literal("enddef"), EOL_or_EOF
   )
 
-  LambdaDef = p.capture_seq(
+  LambdaLiteral = p.capture_seq(
     any_whitespace,
     left_brace,
     any_whitespace,

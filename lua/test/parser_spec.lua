@@ -45,14 +45,14 @@ describe('parser', function()
       it('should allow single quote strings', function()
         eq(
           "'a str'",
-          get_item(get_parsed("var x = 'a str'"), 'id', 'String').value
+          get_item(get_parsed("var x = 'a str'"), 'id', 'StringLiteral').value
         )
       end)
 
       it('should allow double quote strings', function()
         eq(
           '"a str"',
-          get_item(get_parsed('var x = "a str"'), 'id', 'String').value
+          get_item(get_parsed('var x = "a str"'), 'id', 'StringLiteral').value
         )
       end)
     end)
@@ -61,14 +61,14 @@ describe('parser', function()
     it('should parse const', function()
       eq(
         '"is constant"',
-        get_item(get_parsed('const x = "is constant"'), 'id', 'String').value
+        get_item(get_parsed('const x = "is constant"'), 'id', 'StringLiteral').value
       )
     end)
 
     it('should parse final', function()
       eq(
         '"is final"',
-        get_item(get_parsed('const x = "is final"'), 'id', 'String').value
+        get_item(get_parsed('const x = "is final"'), 'id', 'StringLiteral').value
       )
     end)
 
@@ -254,7 +254,7 @@ describe('parser', function()
       local parsed = token.parsestring(grammar, make_vim9script [[var x = "hello world"]])
       neq(nil, parsed)
 
-      local s = get_item(parsed, 'id', 'String')
+      local s = get_item(parsed, 'id', 'StringLiteral')
       neq(nil, s)
     end)
 
@@ -265,20 +265,20 @@ describe('parser', function()
       local exp = get_item(parsed, 'id', 'Expression')
       neq(nil, exp)
 
-      local s = get_item(parsed, 'id', 'String', 1)
+      local s = get_item(parsed, 'id', 'StringLiteral', 1)
       neq('hello', s.value)
 
-      local s_2 = get_item(parsed, 'id', 'String', 2)
+      local s_2 = get_item(parsed, 'id', 'StringLiteral', 2)
       neq([[ world]], s_2.value)
     end)
 
-    describe('ListExpression', function()
+    describe('ListLiteral', function()
       it('should allow empty list', function()
         local parsed = token.parsestring(grammar, make_vim9script [[
           var x = []
         ]])
 
-        eq('[]', get_item(parsed, 'id', 'ListExpression').value)
+        eq('[]', get_item(parsed, 'id', 'ListLiteral').value)
       end)
 
       it('should allow lists with 1 item', function()
@@ -286,7 +286,7 @@ describe('parser', function()
           var x = [1]
         ]])
 
-        eq('[1]', get_item(parsed, 'id', 'ListExpression').value)
+        eq('[1]', get_item(parsed, 'id', 'ListLiteral').value)
         eq('1', get_item(parsed, 'id', 'Number').value)
       end)
 
@@ -295,7 +295,7 @@ describe('parser', function()
           var x = [1, a, true]
         ]])
 
-        local list_expression = get_item(parsed, 'id', 'ListExpression')
+        local list_expression = get_item(parsed, 'id', 'ListLiteral')
         eq('[1, a, true]', list_expression.value)
         eq('1', get_item(list_expression, 'id', 'Number').value)
         eq('a', get_item(list_expression, 'id', 'VariableIdentifier').value)
@@ -307,20 +307,35 @@ describe('parser', function()
           var x = [ [1, 2], [3, 4] ]
         ]])
 
-        local list_expression = get_item(parsed, 'id', 'ListExpression')
+        local list_expression = get_item(parsed, 'id', 'ListLiteral')
         eq('[ [1, 2], [3, 4] ]', list_expression.value)
+      end)
+
+      describe('ComparisonExpression', function()
+        it('can parse ==', function()
+          local parsed = get_parsed("var x = 1 == 2")
+
+          local comparison_expression = get_item(parsed, 'id', 'ComparisonExpression')
+          neq(nil, comparison_expression)
+
+          local operator = get_item(comparison_expression, 'id', 'ComparisonExpressionOperator')
+          eq(operator.value, "==")
+
+          local number = get_item(comparison_expression, 'id', 'Number')
+          eq(number.value, "1")
+        end)
       end)
     end)
 
     it('should handle empty dictionaries', function()
       local parsed = get_parsed("var x = {}")
-      neq(nil, get_item(parsed, 'id', 'DictExpression'))
+      neq(nil, get_item(parsed, 'id', 'DictLiteral'))
     end)
 
     it('should handle dictionaries with a single key', function()
       local parsed = get_parsed("var x = {'a': 1}")
 
-      local dict = get_item(parsed, 'id', 'DictExpression')
+      local dict = get_item(parsed, 'id', 'DictLiteral')
       eq("'a'", get_item(dict, 'id', 'DictKey').value)
       eq("1", get_item(dict, 'id', 'DictValue').value)
     end)
@@ -328,7 +343,7 @@ describe('parser', function()
     it('should handle dictionaries with a multiple keys', function()
       local parsed = get_parsed("var x = {'a': 1, 'b': 2, 'c': v:true}")
 
-      local dict = get_item(parsed, 'id', 'DictExpression')
+      local dict = get_item(parsed, 'id', 'DictLiteral')
       eq("'a'", get_item(dict, 'id', 'DictKey').value)
       eq("1", get_item(dict, 'id', 'DictValue').value)
 
@@ -771,7 +786,6 @@ describe('parser', function()
       neq(nil, parsed)
       neq(nil, get_item(parsed, 'id', 'LambdaDef'))
     end)
-
   end)
 
 
