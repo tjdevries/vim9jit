@@ -6,8 +6,11 @@ local token = require('vim9jit.token')
 local helpers = require('test.helpers')
 local eq, neq, get_item = helpers.eq, helpers.neq, helpers.get_item
 
-
 local trim = function (s) return s:match('^%s*(.*%S)') or '' end
+
+local ws_eq = function(a, b)
+  return eq(trim(a), trim(b))
+end
 
 local make_vim9script = function(text)
   return 'vim9script\n' .. helpers.dedent(text)
@@ -32,6 +35,17 @@ describe('parser', function()
       local var = get_item(parsed, 'id', 'Var')
 
       eq(var.id, 'Var')
+    end)
+
+    describe("If we wrote lisp", function()
+      it('shoudl allow a bunch of parens', function()
+        local parsed = token.parsestring(grammar, make_vim9script("var x = (((1)))"))
+        local var = get_item(parsed, 'id', 'Var')
+        eq(var.id, 'Var')
+
+        local number = get_item(parsed, 'id', 'Number')
+        eq(number.value, '1')
+      end)
     end)
 
     it('should parse hex numbers', function()
@@ -410,10 +424,8 @@ describe('parser', function()
       neq(nil, func_def)
       eq('ReturnsPlusOne', get_item(func_def, 'id', 'FuncName').value)
 
-
-      eq('arg', get_item(func_def, 'id', 'FuncArgList').value)
-
-      eq('arg + 1', get_item(func_def, 'id', 'ReturnValue').value)
+      eq('arg', trim(get_item(func_def, 'id', 'FuncArgList').value))
+      eq('arg + 1', trim(get_item(func_def, 'id', 'ReturnValue').value))
     end)
 
     it('should allow comments in functions', function()
@@ -540,7 +552,7 @@ describe('parser', function()
       eq('echo', command_name.value)
 
       local command_argument = get_item(command, 'id', 'CommandArguments')
-      eq("'Vim new: ' .. reltimestr(reltime(start))", command_argument.value)
+      ws_eq("'Vim new: ' .. reltimestr(reltime(start))", command_argument.value)
     end)
   end)
 
@@ -660,7 +672,7 @@ describe('parser', function()
         local conditional = get_item(parsed, 'id', 'ConditionalExpression')
         neq(nil, conditional)
 
-        eq("1 ? 2 : 3", conditional.value)
+        ws_eq("1 ? 2 : 3", conditional.value)
       end)
 
       it('should work in functions', function()
@@ -771,24 +783,22 @@ describe('parser', function()
     end)
   end)
 
-  describe("LambdaDef", function()
+  describe("LambdaLiteral", function()
     it('can handle saving to variable', function()
-      local parsed = token.parsestring(grammar, make_vim9script [[var x = { a, b -> a + b }]])
+      local parsed = token.parsestring(grammar, make_vim9script([[var x = { a, b -> a + b }]]))
       neq(nil, parsed)
-      neq(nil, get_item(parsed, 'id', 'LambdaDef'))
+      neq(nil, get_item(parsed, 'id', 'LambdaLiteral'))
     end)
 
     it('can handle saving to variable', function()
-      local parsed = token.parsestring(grammar, make_vim9script [[
+      local parsed = token.parsestring(grammar, make_vim9script([[
         var RESULT = filter({idx, val -> fmod(val, 2)})
-      ]])
+      ]]))
 
       neq(nil, parsed)
-      neq(nil, get_item(parsed, 'id', 'LambdaDef'))
+      neq(nil, get_item(parsed, 'id', 'LambdaLiteral'))
     end)
   end)
-
-
 
   -- {{{ Example Tests
   describe('vim9testdir', function()

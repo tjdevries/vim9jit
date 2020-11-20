@@ -119,7 +119,6 @@ local grammar = token.define(function(_ENV)
     , "ValidLine"
 
     , "_PrimitiveExpression"
-    , "_SimpleExpression"
   )
 
   vim9script = p.capture_seq(
@@ -131,8 +130,11 @@ local grammar = token.define(function(_ENV)
         , V("For")
         , V("Var")
         , V("Assign")
+        -- "add(myList, 1)"
         , p.concat(V("FuncCall"), V("CapturedEOL"))
+        -- "myList->add(1)"
         , p.concat(V("MethodCall"), V("CapturedEOL"))
+        -- ""
         , p.concat(p.any_amount(whitespace), V("CapturedEOL"))
         , V("Command")
         , V("Comment")
@@ -143,6 +145,29 @@ local grammar = token.define(function(_ENV)
       -- , V("UnparsedCapturedError")
     )
   )
+
+  local expression_groups = {
+    "MethodCall",
+    "BinaryExpression",
+    "ComparisonExpression",
+    "ConditionalExpression",
+    "_PrimitiveExpression",
+  }
+
+  local get_expressions = function()
+    return unpack(vim.tbl_map(function(k) return V(k) end, expression_groups))
+  end
+
+  local get_expressions_except = function(group)
+    local exprs = {}
+    for _, v in ipairs(expression_groups) do
+      if v ~= group then
+        table.insert(exprs, V(v))
+      end
+    end
+
+    return p.branch(unpack(exprs))
+  end
 
   CapturedEOL = p.capture_seq(any_whitespace, EOL)
 
@@ -178,20 +203,23 @@ local grammar = token.define(function(_ENV)
     V("VariableIdentifier")
   )
 
-  BinaryOperand = p.capture_seq(
-    p.optional_surrounding_parenths(V("_SimpleExpression"))
+  StringOperator = p.capture_seq(
+    any_whitespace,
+    _string_concat_operator,
+    any_whitespace
   )
 
   BinaryOperator = p.capture(p.branch(
     -- TODO: We need to make these operands tell us what's happening.
     p.literal("+"),
-    p.literal("-")
+    p.literal("-"),
+    V("StringOperator")
   ))
 
-  BinaryOperation = p.capture_seq_whitespace(
-    V("BinaryOperand"),
+  BinaryExpression = p.capture_seq_whitespace(
+    V("_PrimitiveExpression"),
     V("BinaryOperator"),
-    V("BinaryOperand")
+    V("Expression")
   )
 
   -- { value = "==", id = "ComparisonExpressionOperator" }
@@ -201,30 +229,11 @@ local grammar = token.define(function(_ENV)
     p.literal("==")
   ))
 
-  ComparisonExpression = p.capture_seq(
-    any_whitespace,
-    V("_SimpleExpression"),
-    any_whitespace,
+  ComparisonExpression = p.capture_seq_whitespace(
+    get_expressions_except("ComparisonExpression"),
     V("ComparisonExpressionOperator"),
-    any_whitespace,
-    V("_SimpleExpression"),
-    any_whitespace
+    V("Expression")
   )
-
-  StringOperator = p.capture_seq(
-    any_whitespace,
-    _string_concat_operator,
-    any_whitespace
-  )
-
-  StringExpression = p.concat(
-    V("_PrimitiveExpression"),
-    p.one_or_more(p.concat(
-      V("StringOperator"),
-      V("_PrimitiveExpression")
-    ))
-  )
-
   -- TODO: Probably need to handle escaping here...
   -- TODO: Lots of other things are strings.
   _InnerString = p.any_amount(
@@ -299,6 +308,7 @@ local grammar = token.define(function(_ENV)
 
         myList->add(3)
   --]]
+  -- With whitespace?
   MethodFuncCall = p.capture_seq(
     "->",
     V("FuncName"),
@@ -307,9 +317,15 @@ local grammar = token.define(function(_ENV)
     right_paren
   )
 
+  --[[
+  Anything except this OR (this)
+  {
+    "_PrimitiveExpression",
+  }
+  --]]
   MethodCall = p.capture_seq(
     any_whitespace,
-    V("_SimpleExpression"),
+    V("_PrimitiveExpression"),
     p.one_or_more(V("MethodFuncCall"))
   )
 
@@ -329,20 +345,27 @@ local grammar = token.define(function(_ENV)
     , V("DictLiteral")
     , V("LambdaLiteral")
     , V("_VarName")
+    , V("ParenthedExpression")
   )
 
   -- TODO: Think a bit more about surround parens... cause they can happen!
   _SimpleExpression = p.branch(
-    V("StringExpression")
+    V("BinaryExpression")
     , V("_PrimitiveExpression")
   )
 
+  -- x == x ? y ? foo : bar : x
+  -- TODO: I would really like to be able to do this...
+  -- get_expressions_except("ConditionalExpression"),
   ConditionalExpression = p.capture_seq_whitespace(
-    V("_SimpleExpression"),
+    p.branch(
+      V("BinaryExpression"),
+      V("_PrimitiveExpression")
+    ),
     p.literal("?"),
-    V("_SimpleExpression"),
+    V("Expression"),
     p.literal(":"),
-    V("_SimpleExpression")
+    V("Expression")
   )
 
   ListLiteral = p.capture_seq(
@@ -364,12 +387,11 @@ local grammar = token.define(function(_ENV)
     right_brace
   )
 
-  Expression = p.branch(
-    V("ConditionalExpression")
-    , V("MethodCall")
-    , V("ComparisonExpression")
-    , V("_SimpleExpression")
+  ParenthedExpression = p.concat(
+    any_whitespace_or_eol, left_paren, V("Expression"), right_paren, any_whitespace_or_eol
   )
+
+  Expression = p.branch(get_expressions())
 
 
   --[[
@@ -492,15 +514,11 @@ local grammar = token.define(function(_ENV)
         Probably would work with `vim.cmd(string.format("let &opt = %s", <whatever value is here>))`
         or similar.
   --]]
-  Assign = p.capture_seq(
+  Assign = p.capture_seq_whitespace(
     -- TODO: Maybe could put this whitespace into the resulting lua so it isn't so ugly...
-    p.any_amount(whitespace),
     V("_VarName"),
-    p.one_or_more(whitespace),
     p.literal("="),
-    p.any_amount(whitespace),
-    V("Expression"),
-    EOL_or_EOF
+    V("Expression")
   )
 
   Set = p.capture_seq(
@@ -646,6 +664,7 @@ local grammar = token.define(function(_ENV)
       , p.literal("if")
       , p.literal("else")
       , p.literal("endif")
+      , p.literal("for")
     )),
     V("_VarName")
   )
@@ -663,10 +682,16 @@ local grammar = token.define(function(_ENV)
     EOL_or_EOF
   )
 
-
   UnparsedError = (1 - EOL) ^ 1
   UnparsedCapturedError = p.capture(V("UnparsedError"))
 end)
+
+--[[
+Examples of weird line things
+
+" this is acomment\n
+" this is another comment
+--]]
 
 return {
   grammar = grammar
