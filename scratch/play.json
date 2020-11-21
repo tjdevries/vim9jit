@@ -4,10 +4,10 @@
       "value":"x",
       "id":"VariableIdentifier",
       "pos":{
-        "column_finish":4,
+        "column_finish":5,
         "line_number":2,
         "start":16,
-        "column_start":4,
+        "column_start":5,
         "finish":16
       }
     },
@@ -16,29 +16,29 @@
         "value":"123",
         "id":"Number",
         "pos":{
-          "column_finish":10,
+          "column_finish":11,
           "line_number":2,
           "start":20,
-          "column_start":8,
+          "column_start":9,
           "finish":22
         }
       },
       "id":"Expression",
       "pos":{
-        "column_finish":8,
+        "column_finish":9,
         "line_number":2,
         "start":20,
-        "column_start":8,
+        "column_start":9,
         "finish":20
       }
     },
     "value":"var x = 123\n",
     "id":"Var",
     "pos":{
-      "column_finish":11,
+      "column_finish":12,
       "line_number":2,
       "start":12,
-      "column_start":0,
+      "column_start":1,
       "finish":23
     }
   },
@@ -47,10 +47,10 @@
       "value":"y",
       "id":"VariableIdentifier",
       "pos":{
-        "column_finish":4,
+        "column_finish":5,
         "line_number":3,
         "start":28,
-        "column_start":4,
+        "column_start":5,
         "finish":28
       }
     },
@@ -59,29 +59,29 @@
         "value":"\"4\"",
         "id":"StringLiteral",
         "pos":{
-          "column_finish":10,
+          "column_finish":11,
           "line_number":3,
           "start":32,
-          "column_start":8,
+          "column_start":9,
           "finish":34
         }
       },
       "id":"Expression",
       "pos":{
-        "column_finish":8,
+        "column_finish":9,
         "line_number":3,
         "start":32,
-        "column_start":8,
+        "column_start":9,
         "finish":32
       }
     },
     "value":"var y = \"4\"\n",
     "id":"Var",
     "pos":{
-      "column_finish":11,
+      "column_finish":12,
       "line_number":3,
       "start":24,
-      "column_start":0,
+      "column_start":1,
       "finish":35
     }
   },

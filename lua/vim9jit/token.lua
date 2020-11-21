@@ -45,35 +45,60 @@ local function max( a, b )
 end
 
 
--- TODO: Optimize this with the same string to provide faster parsing
---
--- get the line which p points into, the line number and the position
--- of the beginning of the line
-local __lines = {}
+-- get the the line number and start for p
+local __line_index = {}
 local function getline( s, p )
-  -- if __lines == {} then
-    local lno, sol = 1, 1
-    for i = 1, p do
-      if string.sub( s, i, i ) == "\n" then
-        lno = lno + 1
-        sol = i + 1
-      end
-    end
-    local eol = #s
-    for i = sol, #s do
-      if string.sub( s, i, i ) == "\n" then
-        eol = i - 1
+  if (__line_index[s] == nil) then
+    local idx = {[0]=1}
+    local inl = 0
+    while true do
+      inl = string.find(s, "\n", inl+1, true)
+      if inl then
+        table.insert(idx, inl)
+      else
         break
       end
     end
-    return string.sub( s, sol, eol ), lno, sol
-  -- end
+    if idx[#idx] ~= #s then
+      table.insert(idx, #s)
+    end
+    __line_index[s] = idx
+  end
+
+  local idx = __line_index[s]
+  assert(#idx > 0)
+  assert(idx[#idx] >= p)
+
+  local min = 1
+  local max = #idx
+  local lno
+  while true do
+    lno = math.floor((min+max)/2)
+    local q = idx[lno]
+    if p == q then
+      break
+    elseif p > q then
+      min = lno+1
+      if min > max then
+        lno = min
+        break
+      end
+    else
+      max = lno-1
+      if min > max then
+        break
+      end
+    end
+  end
+  return lno, idx[lno-1]
 end
 
 -- Error reporting {{{
 -- raise an error during semantic validation of the ast
 local function raise_error( n, msg, s, p )
-  local line, lno, sol = getline( s, p )
+  local lno, sol = getline( s, p )
+  local eol = string.find(s, "\n", sol+1, true) or (#s + 1)
+  local line = string.sub(s, sol, eol-1)
   assert( p <= #s )
   local clen = max( epnf.max_width, p+10-sol )
   if #line > clen then
@@ -113,7 +138,7 @@ end
 local function make_ast_node( id, pos, t )
   t.id = id
 
-  local _, lno, sol = getline( epnf.current_string, pos )
+  local lno, sol = getline( epnf.current_string, pos )
 
   -- Place a value
   if t[1] and type(t[1]) == 'string' then
@@ -193,7 +218,7 @@ end
 -- apply a given grammar to a string and return the ast. also allows
 -- to set the name of the string for error messages
 function epnf.parse( g, name, input, ... )
-  __lines = {}
+  __line_index = {}
   return L.match( L.P( g ), input, 1, name, ... ), name, input
 end
 
