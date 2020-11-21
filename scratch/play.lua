@@ -26,4 +26,12 @@ var y = "4"
 ]]
 
 local parsed = parsed_full(script)
-print(dkjson.encode(parsed, {indent = true}))
+local sorted = {
+  "line_start",
+  "line_finish",
+  "char_start",
+  "char_finish",
+  "byte_start",
+  "byte_finish",
+}
+print(dkjson.encode(parsed, {indent = true, keyorder = sorted}))

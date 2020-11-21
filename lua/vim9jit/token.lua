@@ -148,18 +148,24 @@ local function make_ast_node( id, pos, t )
   end
 
   -- Get the start and finish positions
-  local finish = pos
+  local pos_end = pos
   if t.value then
-    finish = pos + #t.value - 1
+    pos_end = pos + #t.value - 1
+  end
+
+  local lno_end, sol_end = getline(epnf.current_string, pos_end)
+  -- TODO: seems bad
+  if (pos == 1) and (sol == 1) then
+    sol = 0
   end
 
   t.pos = {
-    start = pos,
-    finish = finish,
-    -- start_of_line = sol,
-    line_number = lno,
-    column_start = pos - sol,
-    column_finish = finish - sol,
+    line_start  = lno,
+    line_finish = lno_end,
+    char_start  = pos - sol,
+    char_finish = pos_end - sol_end,
+    byte_start  = pos,
+    byte_finish = pos_end,
   }
 
   return t
