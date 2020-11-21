@@ -4,18 +4,16 @@
 
 local L = require('lpeg')
 
-local assert = assert
-local string, io = assert( string ), assert( io )
-local V = string.sub( assert( _VERSION ), -4 )
-local _G = assert( _G )
-local error = assert( error )
-local pairs = assert( pairs )
-local next = assert( next )
-local type = assert( type )
-local tostring = assert( tostring )
-local setmetatable = assert( setmetatable )
-local setfenv = setfenv
-local getfenv = getfenv
+-- sanity check? {{{
+assert(error)
+assert(io)
+assert(string)
+assert(next)
+assert(pairs)
+assert(setmetatable)
+assert(tostring)
+assert(type)
+-- }}}
 
 -- luacheck: ignore
 -- Get a nice print for vim, if applicable
@@ -23,9 +21,11 @@ local nvim = (vim or {})
 local nvim = (nvim.api or {})
 local print = nvim.nvim_err_write or print
 
+local V = string.sub(assert(_VERSION), -4)
+
 if V == " 5.1" then
-  assert( setfenv )
-  assert( getfenv )
+  assert(setfenv)
+  assert(getfenv)
 end
 
 
