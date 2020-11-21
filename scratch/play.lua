@@ -20,5 +20,10 @@ local function parsed_full(s)
 end
 
 
-local parsed = parsed_expr([[var x = 1]])
+local script = [[vim9script
+var x = 123
+var y = "4"
+]]
+
+local parsed = parsed_full(script)
 print(dkjson.encode(parsed, {indent = true}))
