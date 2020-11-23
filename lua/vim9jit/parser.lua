@@ -120,7 +120,7 @@ local make_grammar = function(grammar_start_token)
       , "StringExpression"
       , "ValidLine"
 
-      , "_PrimitiveExpression"
+      , "AnchoredExpression"
     )
 
     vim9script = p.capture_seq(
@@ -153,7 +153,7 @@ local make_grammar = function(grammar_start_token)
       "BinaryExpression",
       "ComparisonExpression",
       "ConditionalExpression",
-      "_PrimitiveExpression",
+      "AnchoredExpression",
     }
 
     local get_expressions = function()
@@ -223,7 +223,7 @@ local make_grammar = function(grammar_start_token)
     ))
 
     BinaryExpression = p.capture_seq_whitespace(
-      V("_PrimitiveExpression"),
+      V("AnchoredExpression"),
       V("BinaryOperator"),
       V("Expression")
     )
@@ -326,12 +326,12 @@ local make_grammar = function(grammar_start_token)
     --[[
     Anything except this OR (this)
     {
-      "_PrimitiveExpression",
+      "AnchoredExpression",
     }
     --]]
     MethodCall = p.capture_seq(
       any_whitespace,
-      V("_PrimitiveExpression"),
+      V("AnchoredExpression"),
       p.one_or_more(V("MethodFuncCall"))
     )
 
@@ -342,7 +342,7 @@ local make_grammar = function(grammar_start_token)
       p.literal("v:false")
     ))
 
-    _PrimitiveExpression = p.branch(
+    AnchoredExpression = p.branch(
       V("Number")
       , V("Boolean")
       , V("FuncCall")
@@ -357,7 +357,7 @@ local make_grammar = function(grammar_start_token)
     -- TODO: Think a bit more about surround parens... cause they can happen!
     _SimpleExpression = p.branch(
       V("BinaryExpression")
-      , V("_PrimitiveExpression")
+      , V("AnchoredExpression")
     )
 
     -- x == x ? y ? foo : bar : x
@@ -366,7 +366,7 @@ local make_grammar = function(grammar_start_token)
     ConditionalExpression = p.capture_seq_whitespace(
       p.branch(
         V("BinaryExpression"),
-        V("_PrimitiveExpression")
+        V("AnchoredExpression")
       ),
       p.literal("?"),
       V("Expression"),
