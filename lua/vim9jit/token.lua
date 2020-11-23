@@ -4,18 +4,16 @@
 
 local L = require('lpeg')
 
-local assert = assert
-local string, io = assert( string ), assert( io )
-local V = string.sub( assert( _VERSION ), -4 )
-local _G = assert( _G )
-local error = assert( error )
-local pairs = assert( pairs )
-local next = assert( next )
-local type = assert( type )
-local tostring = assert( tostring )
-local setmetatable = assert( setmetatable )
-local setfenv = setfenv
-local getfenv = getfenv
+-- sanity check? {{{
+assert(error)
+assert(io)
+assert(string)
+assert(next)
+assert(pairs)
+assert(setmetatable)
+assert(tostring)
+assert(type)
+-- }}}
 
 -- luacheck: ignore
 -- Get a nice print for vim, if applicable
@@ -23,9 +21,11 @@ local nvim = (vim or {})
 local nvim = (nvim.api or {})
 local print = nvim.nvim_err_write or print
 
+local V = string.sub(assert(_VERSION), -4)
+
 if V == " 5.1" then
-  assert( setfenv )
-  assert( getfenv )
+  assert(setfenv)
+  assert(getfenv)
 end
 
 
@@ -45,35 +45,60 @@ local function max( a, b )
 end
 
 
--- TODO: Optimize this with the same string to provide faster parsing
---
--- get the line which p points into, the line number and the position
--- of the beginning of the line
-local __lines = {}
+-- get the the line number and start for p
+local __line_index = {}
 local function getline( s, p )
-  -- if __lines == {} then
-    local lno, sol = 1, 1
-    for i = 1, p do
-      if string.sub( s, i, i ) == "\n" then
-        lno = lno + 1
-        sol = i + 1
-      end
-    end
-    local eol = #s
-    for i = sol, #s do
-      if string.sub( s, i, i ) == "\n" then
-        eol = i - 1
+  if (__line_index[s] == nil) then
+    local idx = {[0]=1}
+    local inl = 0
+    while true do
+      inl = string.find(s, "\n", inl+1, true)
+      if inl then
+        table.insert(idx, inl)
+      else
         break
       end
     end
-    return string.sub( s, sol, eol ), lno, sol
-  -- end
+    if idx[#idx] ~= #s then
+      table.insert(idx, #s)
+    end
+    __line_index[s] = idx
+  end
+
+  local idx = __line_index[s]
+  assert(#idx > 0)
+  assert(idx[#idx] >= p)
+
+  local min = 1
+  local max = #idx
+  local lno
+  while true do
+    lno = math.floor((min+max)/2)
+    local q = idx[lno]
+    if p == q then
+      break
+    elseif p > q then
+      min = lno+1
+      if min > max then
+        lno = min
+        break
+      end
+    else
+      max = lno-1
+      if min > max then
+        break
+      end
+    end
+  end
+  return lno, idx[lno-1]
 end
 
 -- Error reporting {{{
 -- raise an error during semantic validation of the ast
 local function raise_error( n, msg, s, p )
-  local line, lno, sol = getline( s, p )
+  local lno, sol = getline( s, p )
+  local eol = string.find(s, "\n", sol+1, true) or (#s + 1)
+  local line = string.sub(s, sol, eol-1)
   assert( p <= #s )
   local clen = max( epnf.max_width, p+10-sol )
   if #line > clen then
@@ -113,7 +138,7 @@ end
 local function make_ast_node( id, pos, t )
   t.id = id
 
-  local _, lno, sol = getline( epnf.current_string, pos )
+  local lno, sol = getline( epnf.current_string, pos )
 
   -- Place a value
   if t[1] and type(t[1]) == 'string' then
@@ -123,18 +148,24 @@ local function make_ast_node( id, pos, t )
   end
 
   -- Get the start and finish positions
-  local finish = pos
+  local pos_end = pos
   if t.value then
-    finish = pos + #t.value - 1
+    pos_end = pos + #t.value - 1
+  end
+
+  local lno_end, sol_end = getline(epnf.current_string, pos_end)
+  -- TODO: seems bad
+  if (pos == 1) and (sol == 1) then
+    sol = 0
   end
 
   t.pos = {
-    start = pos,
-    finish = finish,
-    -- start_of_line = sol,
-    line_number = lno,
-    column_start = pos - sol,
-    column_finish = finish - sol,
+    line_start  = lno,
+    line_finish = lno_end,
+    char_start  = pos - sol,
+    char_finish = pos_end - sol_end,
+    byte_start  = pos,
+    byte_finish = pos_end,
   }
 
   return t
@@ -193,7 +224,7 @@ end
 -- apply a given grammar to a string and return the ast. also allows
 -- to set the name of the string for error messages
 function epnf.parse( g, name, input, ... )
-  __lines = {}
+  __line_index = {}
   return L.match( L.P( g ), input, 1, name, ... ), name, input
 end
 

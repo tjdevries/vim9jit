@@ -39,6 +39,8 @@ luac.out
 *.x86_64
 *.hex
 
+# avert your eyes
+.vscode
 
 *.swp
 
