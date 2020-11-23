@@ -47,4 +47,24 @@ end
 vim9jit.BinaryOpEval = function(operator, a, b)
 end
 
+vim9jit.tbl = {}
+function vim9jit.tbl.filter(tbl, predicate, needs_viml)
+  local result
+  if type(predicate) ~= 'function' or needs_viml then
+    result = vim.fn.filter(tbl, predicate)
+  else
+    result = vim.tbl_filter(predicate, tbl)
+  end
+
+  for k, _ in pairs(tbl) do
+    tbl[k] = nil
+  end
+
+  for k, v in pairs(result) do
+    tbl[k] = v
+  end
+
+  return tbl
+end
+
 return vim9jit

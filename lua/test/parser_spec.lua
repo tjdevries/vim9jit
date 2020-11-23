@@ -455,6 +455,17 @@ describe('parser', function()
       eq('arg', get_item(arg_defintion, 'id', 'VariableIdentifier').value)
       eq('number', get_item(arg_defintion, 'id', 'TypeDefinition').value)
     end)
+
+    it('should allow function statements that refer to closured variables', function()
+      local parsed = get_parsed [[
+        var RESULT = 0
+        def VimNew()
+          RESULT = RESULT + 1
+        enddef
+      ]]
+
+      neq(nil, parsed)
+    end)
   end)
 
   describe('for loops', function()

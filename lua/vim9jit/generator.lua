@@ -85,7 +85,7 @@ local _assignment = function(match, local_prefix)
 
   local prefix
   if is_global then
-    prefix = string.format('vim.g[\"%s\"]', identifier)
+    prefix = get_result(get_item_with_id(match, 'GlobalVariableIdentifier'))
   else
     prefix = string.format("%s%s", local_prefix and 'local ' or '', identifier)
   end
@@ -190,24 +190,10 @@ generator.match.Return = function(match)
   return string.format("return %s", get_result(match[1]))
 end
 
-generator.match.FuncDef = function(match)
-  local func_name = get_result(get_item_with_id(match, 'FuncName'))
-  local func_body = get_result(get_item_with_id(match, 'FuncBody'))
-
-  return string.format(fmt(
-    [[
-local function %s()
-%s
-end
-    ]]),
-    func_name, indent(fmt(func_body, false), 2)
-  )
-end
-
-generator.match.LambdaDef = function(match)
+generator.match.LambdaLiteral = function(match)
   return string.format(
     "function(%s) return %s end",
-    get_result(get_item_with_id(match, "FuncArgList")),
+    get_result(get_item_with_id(match, "FuncArgList")) or '',
     get_result(get_item_with_id(match, "Expression"))
   )
 end
@@ -227,6 +213,17 @@ end
 
 generator.match.FuncCallArg = generator.match.Expression
 generator.match.FuncCallArgList = function(match)
+  local output = {}
+  for _, v in ipairs(match) do
+    table.insert(output, get_result(v))
+  end
+
+  return table.concat(output, ", ")
+end
+
+-- TODO: This may need to handle type things and such...?
+generator.match.FuncArg = generator.match.Expression
+generator.match.FuncArgList = function(match)
   local output = {}
   for _, v in ipairs(match) do
     table.insert(output, get_result(v))
@@ -378,9 +375,25 @@ local _dict_value = function(accessor)
   end
 end
 generator.match.GlobalVariableIdentifier = _dict_value('vim.g')
+generator.match.VimVariableIdentifier = _dict_value('vim.v')
 
 generator.match.FuncBody = generator.match.Expression
 generator.match.ForBody = generator.match.Expression
+
+generator.match.FuncStatement = function(match)
+  -- TODO: 
+  --    - There are names of functions in vimscript
+  --        that are NOT valid identifiers to be used directly in Lua.
+  --        We probably need to do something like
+  --        _ENV["func_name"] = function() ... end
+  --    - Probably want to expose these as s:local functions for vimscript land
+  --        so that people can use the script hax they are used to.
+  return string.format([[local function %s(%s) %s end]],
+    get_result(get_item_with_id(match, "FuncName")),
+    get_result(get_item_with_id(match, "FuncArgList")) or '',
+    get_result(get_item_with_id(match, "FuncBody"))
+  )
+end
 
 generator.match.StringLiteral = _ret_value
 generator.match.ForVar = _ret_value

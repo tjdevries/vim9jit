@@ -6,7 +6,9 @@ get_item = function(t, param, key, recursive, result_number, current_found)
     return nil
   end
 
-  recursive = recursive == nil and true or false
+  if recursive == nil then
+    recursive = false
+  end
 
   if result_number == nil then
     result_number = 1

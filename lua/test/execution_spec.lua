@@ -28,11 +28,12 @@ end
 local assert_execute = function(expected, vim9_str)
   local result, compiled = execute(vim9_str)
 
+  local ok = true
   if type(expected) == 'function' then
-    expected = expected()
+    ok, expected = pcall(expected)
   end
 
-  if not pcall(eq, expected, result) then
+  if not ok or not pcall(eq, expected, result) then
     print(string.rep("=", 80))
     print("vim9_str:", vim9_str)
     print("COMPILED:", tostring(compiled))
@@ -131,11 +132,13 @@ describe('execute generated vimscript', function()
 
         def VimNew()
           RESULT = RESULT + 1
-        end
+        enddef
 
         VimNew()
         VimNew()
       ]])
+
+      eq(0, VimFnCount)
     end)
 
     it('should call vim builtin functions', function()
@@ -153,6 +156,8 @@ describe('execute generated vimscript', function()
         var RESULT = [1, 2, 3]
         RESULT = RESULT->add('new')
       ]])
+
+      eq(0, VimFnCount)
     end)
 
     it('works with myList->add, declared inline', function()
@@ -161,8 +166,26 @@ describe('execute generated vimscript', function()
       ]])
     end)
 
-    it('works with filter', function()
+    it('works with filter, string', function()
       assert_execute({2}, [[var RESULT = [1, 2, 3]->filter('v:val % 2 == 0')]])
+
+      eq(1, VimFnCount)
+    end)
+
+    it('works with filter, string', function()
+      assert_execute({2}, [[
+        var RESULT = [1, 2, 3]->filter({v -> v == 2})
+      ]])
+
+      eq(0, VimFnCount)
+    end)
+
+    it('works with filter, string', function()
+      assert_execute({3}, [[
+        var RESULT = [1, 2, 3]->filter({ -> v:val == 3})
+      ]])
+
+      eq(1, VimFnCount)
     end)
 
     it('works with multipe method calls', function()

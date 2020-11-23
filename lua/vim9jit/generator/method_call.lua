@@ -10,6 +10,20 @@ local get_result = function(match)
   return util.get_result(generator, match)
 end
 
+local vimscript_idiosyncrasies = {
+  "VimVariableIdentifier",
+}
+
+local needs_to_call_viml = function(match)
+  for _, node_name in ipairs(vimscript_idiosyncrasies) do
+    if get_item(match, 'id', node_name, true) then
+      return true
+    end
+  end
+
+  return false
+end
+
 local func_node_overrides = {}
 
 func_node_overrides['add'] = function(obj, match)
@@ -18,6 +32,15 @@ func_node_overrides['add'] = function(obj, match)
   return string.format(
     "(function() local __MethodCallAdd = %s; table.insert(__MethodCallAdd, %s); return __MethodCallAdd end)()",
     obj, func_args
+  )
+end
+
+func_node_overrides['filter'] = function(obj, match)
+
+  return string.format('require("vim9jit").tbl.filter(%s, %s, %s)',
+    obj,
+    get_result(get_item_with_id(match, 'FuncCallArgList')),
+    needs_to_call_viml(match)
   )
 end
 
