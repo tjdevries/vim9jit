@@ -124,6 +124,29 @@ describe('execute generated vimscript', function()
     end)
   end)
 
+  describe('Function', function()
+    it('should generate a local function', function()
+      assert_execute(2, [[
+        var RESULT = 0
+
+        def VimNew()
+          RESULT = RESULT + 1
+        end
+
+        VimNew()
+        VimNew()
+      ]])
+    end)
+
+    it('should call vim builtin functions', function()
+      assert_execute({1, 2, 3, 4}, [[
+        var RESULT = range(1, 4)
+      ]])
+
+      eq(1, VimFnCount)
+    end)
+  end)
+
   describe('MethodCall', function()
     it('works with myList->add', function()
       assert_execute({1, 2, 3, 'new'}, [[

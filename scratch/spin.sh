@@ -5,7 +5,7 @@
 #
 # A: ./spin.sh
 # 1. safely polls for changes to ../lua/vim9jit/**.lua + ./play.lua
-# 2. defers to ./play.lua to generate ./test.{json,lpeg}/*.* output
+# 2. defers to ./play.lua to generate ./test.lpeg/*.* output
 # 3. shows a git diff for these files
 # 4. loops
 #

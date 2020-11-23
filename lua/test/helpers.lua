@@ -1,4 +1,3 @@
-local assert = require('luassert')
 
 -- Default to not printing anything during the tests.
 -- We can turn it on or off for specific tests if we want
@@ -10,11 +9,11 @@ local function trim(s)
 end
 
 local eq = function(exp, act)
-  return assert.are.same(exp, act)
+  return require('luassert').are.same(exp, act)
 end
 
 local neq = function(exp, act)
-  return assert.are_not.same(exp, act)
+  return require('luassert').are_not.same(exp, act)
 end
 
 local get_first_item = function(t)

@@ -3,7 +3,6 @@ local parser = require('vim9jit.parser')
 local token = require('vim9jit.token')
 
 
-
 -- parser ops {{{
 
 local function parse_full_file(s)

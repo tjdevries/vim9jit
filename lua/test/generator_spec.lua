@@ -27,12 +27,6 @@ describe('generator', function()
     eq('local x = vim9jit.AssertType("number", 1 + 2)\n', result)
   end)
 
-  it('should not use vim.g for declaring globals', function()
-    local result = generate(make_vim9script("var g:glob_var = 1 + 2"))
-
-    eq('vim.g["glob_var"] = 1 + 2\n', result)
-  end)
-
   it('should not use local again for variables', function()
     local result = generate(make_vim9script([[
       var this_var = 1
@@ -40,49 +34,6 @@ describe('generator', function()
     ]]))
 
     eq("local this_var = 1\nthis_var = 3\n", result)
-  end)
-
-  it('should not use local for forward declarations', function()
-    local result = generate(make_vim9script([[
-      var this_var
-      if cond
-        this_var = 3
-      else
-        this_var = 5
-      endif
-    ]]))
-
-    eq("local this_var = nil\nif cond then\n  this_var = 3\nelse\n  this_var = 5\nend\n", result)
-  end)
-
-  describe('functions', function()
-    -- TODO: Figure out why this won't work.
-    pending('should be able to generate functions', function()
-      local result = generate(make_vim9script [[
-  var sum = 1
-
-  def VimNew()
-    sum = sum + 1
-  enddef
-]])
-
-      eq(vim.trim [[
-local sum = 1
-local function VimNew()
-  sum = sum + 1
-end
-]], vim.trim(result))
-    end)
-  end)
-
-  describe('calling functions', function()
-    it('should redirect to vim functions', function()
-      local result = generate(make_vim9script [[
-        var range = range(1, 100)
-      ]])
-
-      eq("local range = vim.fn['range'](1, 100)\n", result)
-    end)
   end)
 
   describe('loops', function()
