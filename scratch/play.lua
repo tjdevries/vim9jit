@@ -6,15 +6,21 @@ local token = require('vim9jit.token')
 -- parser ops {{{
 
 local function parse_full_file(s)
-  return token.parsestring(parser.grammar, s)
+  local parsed = token.parsestring(parser.grammar, s)
+  assert(parsed ~= nil)
+  assert(parsed.pos.byte_start == 1)
+--assert(parsed.pos.byte_finish == #s)
+  return parsed
 end
 
 local function parse_fake_file(s)
-  return token.parsestring(parser.grammar, 'vim9script\n' .. helpers.dedent(s))
+  return parse_full_file('vim9script\n' .. helpers.dedent(s))
 end
 
 local function parse_expression(s)
-  return token.parsestring(parser.grammar_expression, s)
+  local parsed = token.parsestring(parser.grammar_expression, s)
+  assert((parsed.pos.byte_start == 1) and (parsed.pos.byte_finish == #s))
+  return parsed
 end
 
 -- }}}
@@ -116,13 +122,6 @@ end
 -- really run {{{
 
 if not pcall(debug.getlocal, 4, 1) then
-  local tested = {
-    "def_func",
-    "def_var",
-    "run_perf",
-  }
-
-
   local ok = true
   local function OK(fn)
     local function tb(...)
@@ -132,20 +131,44 @@ if not pcall(debug.getlocal, 4, 1) then
     ok = xpcall(fn, tb) and ok
   end
 
-  for _, n in ipairs(tested) do
-    local p, q
+  if #arg > 1 then
+    for _, n in ipairs(arg) do
+      local p, q
 
-    OK(function()
-      p = FR("./test.vim9/" .. n .. ".vim", parse_full_file)
-    end)
+      OK(function()
+        p = FR(n, parse_full_file)
+      end)
 
-    OK(function()
-      q = FW("./test.lpeg/" .. n .. ".lpeg", simple_format(p))
-    end)
+      OK(function()
+        q = simple_format(p)
+      end)
+
+      print(q)
+    end
+  else
+    local tested = {
+      "def_func",
+      "def_var",
+      "run_perf",
+      "test_ops",
+    }
+
+    for _, n in ipairs(tested) do
+      local p, q
+  
+      OK(function()
+        p = FR("./test.vim9/" .. n .. ".vim", parse_full_file)
+      end)
+
+      OK(function()
+        q = FW("./test.lpeg/" .. n .. ".lpeg", simple_format(p))
+      end)
+    end  
   end
 
   if not ok then
     os.exit(2)
   end
 end
+
 -- }}}

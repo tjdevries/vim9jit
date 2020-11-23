@@ -1,15 +1,12 @@
-" Test Vim9 assignments
+vim9script
 
-source check.vim
-source vim9.vim
-
-let s:appendToMe = 'xxx'
-let s:addToMe = 111
-let g:existing = 'yes'
-let g:inc_counter = 1
-let $SOME_ENV_VAR = 'some'
-let g:alist = [7]
-let g:astring = 'text'
+var s:appendToMe = 'xxx'
+var s:addToMe = 111
+var g:existing = 'yes'
+var g:inc_counter = 1
+var $SOME_ENV_VAR = 'some'
+var g:alist = [7]
+var g:astring = 'text'
 
 def Test_assignment_bool()
   assert_equal(s:true, v:true)
@@ -1042,6 +1039,3 @@ def Test_unlet()
   unlet $ENVVAR
   assert_equal('', $ENVVAR)
 enddef
-
-
-" vim: ts=8 sw=2 sts=2 expandtab tw=80 fdm=marker
