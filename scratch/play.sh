@@ -19,9 +19,4 @@ ${LRL}/?.so
 __
 )
 
-if [[ ( "$#" != '1' ) || ( "$1" != '--watch' ) ]]
-then
-    exec lua-5.1 ./play.lua "$@"
-else
-    echo 123
-fi
+exec lua-5.1 ./play.lua "$@"
