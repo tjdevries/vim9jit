@@ -119,7 +119,7 @@ generator.match.Expression = function(match)
   return output
 end
 
-generator.match.ListExpression = function(match)
+generator.match.ListLiteral = function(match)
   local results = {}
   for _, v in ipairs(match) do
     table.insert(results, get_result(v))
@@ -355,6 +355,17 @@ generator.match.ComparisonExpression = function(match)
   )
 end
 
+generator.match.BinaryExpression = function(match)
+  return string.format(
+    "require('vim9jit').BinaryExpression([[%s]], %s, %s)",
+    get_result(match[2]),
+    get_result(match[1]),
+    get_result(match[3])
+  )
+end
+
+generator.match.BinaryOperator = _ret_value
+
 generator.match.Comment = function(match)
   return string.format("-- %s", match.value)
 end
@@ -371,10 +382,9 @@ generator.match.GlobalVariableIdentifier = _dict_value('vim.g')
 generator.match.FuncBody = generator.match.Expression
 generator.match.ForBody = generator.match.Expression
 
-generator.match.String = _ret_value
+generator.match.StringLiteral = _ret_value
 generator.match.ForVar = _ret_value
 generator.match.TypeDefinition = _ret_value
-generator.match.AdditionOperator = _ret_value
 generator.match.StringOperator = _ret_value
 generator.match.Number = _ret_value
 generator.match.CapturedEOL = _ret_value
@@ -382,5 +392,8 @@ generator.match.ComparisonExpressionOperator  = _ret_value
 
 generator._utils = {}
 generator._utils.fmt = fmt
+generator._utils.set_grammar = function(g)
+  grammar = g
+end
 
 return generator

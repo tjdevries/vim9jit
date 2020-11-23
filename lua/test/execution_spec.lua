@@ -19,7 +19,7 @@ local execute = function(vim9_str)
   if not ok then
     print("GENERATED:", compiled)
     print("   FROM  :", make_vim9script(vim9_str))
-    print("LOADED FAILURE", loaded, loaded_failure)
+    print("LOADED FAILURE", loaded)
   end
 
   return result, compiled
@@ -27,6 +27,10 @@ end
 
 local assert_execute = function(expected, vim9_str)
   local result, compiled = execute(vim9_str)
+
+  if type(expected) == 'function' then
+    expected = expected()
+  end
 
   if not pcall(eq, expected, result) then
     print(string.rep("=", 80))
@@ -36,11 +40,11 @@ local assert_execute = function(expected, vim9_str)
   end
 end
 
-vim_fn_count = 0
+VimFnCount = 0
 vim.fn = setmetatable({}, {
   __index = function(t, key)
     local function _fn(...)
-      vim_fn_count = vim_fn_count + 1
+      VimFnCount = VimFnCount + 1
       return vim.call(key, ...)
     end
     t[key] = _fn
@@ -51,12 +55,32 @@ vim.fn = setmetatable({}, {
 
 describe('execute generated vimscript', function()
   before_each(function()
-    vim_fn_count = 0
+    VimFnCount = 0
   end)
 
-  it('should return simple numbers', function()
-    assert_execute(5, "var RESULT = 5")
-    assert.are.same(vim_fn_count, 0)
+  describe('assignment', function()
+    it('should allow simple assignment', function()
+      assert_execute(5, "var RESULT = 5")
+      assert.are.same(VimFnCount, 0)
+    end)
+
+    it('should allow simple addition', function()
+      assert_execute(10, "var RESULT = 5 + 5")
+      assert.are.same(VimFnCount, 0)
+    end)
+
+    it('should work with global variables', function()
+      assert_execute(function() return vim.api.nvim_get_var("glob_var") end, [[
+        var RESULT = true
+        var g:glob_var = RESULT
+      ]])
+    end)
+
+    describe('defaults', function()
+      it('number', function()
+        assert_execute(0, 'var RESULT: number')
+      end)
+    end)
   end)
 
   it('should return strings', function()
@@ -130,12 +154,12 @@ return __TSMethodCall3
 end)()
       --]]
       assert_execute({2, 4}, [[var RESULT = [1, 2, 3]->add(4)->filter('v:val % 2 == 0')]])
-      eq(1, vim_fn_count)
+      eq(1, VimFnCount)
     end)
 
     pending('calls vim.fn.filter less often when possible', function()
       assert_execute({2, 4}, [[var RESULT = [1, 2, 3]->add(4)->filter({idx, val -> fmod(val, 2)})]])
-      eq(0, vim_fn_count)
+      eq(0, VimFnCount)
     end)
   end)
 end)

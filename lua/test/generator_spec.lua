@@ -13,38 +13,14 @@ local make_vim9script = function(text)
 end
 
 describe('generator', function()
-  it('should generate nothing for empty file', function()
-    local result = generate("vim9script")
-
-    eq('', result)
-  end)
-
-  it('should parse simple var statements', function()
-    local result = generate(make_vim9script("var x = 1"))
-
-    eq('local x = 1\n', result)
-  end)
-
-  it('should parse simple var addition statements', function()
-    local result = generate(make_vim9script("var x = 1 + 2"))
-
-    eq('local x = 1 + 2\n', result)
-  end)
-
-  it('should parse simple var addition statements', function()
-    local result = generate(make_vim9script("var x: number"))
-
-    eq('local x = vim9jit.DefaultForType("number")\n', result)
-  end)
-
-  it('should ignore type statements when strict mode is off', function()
+  pending('should ignore type statements when strict mode is off', function()
     -- Our other option would be do something like `local x = assert_type(1 + 2, 'number')
     local result = generate(make_vim9script("var x: number = 1 + 2"))
 
     eq('local x = 1 + 2\n', result)
   end)
 
-  it('should not ignore type statements when in strict mode', function()
+  pending('should not ignore type statements when in strict mode', function()
     -- Our other option would be do something like `local x = assert_type(1 + 2, 'number')
     local result = generate(make_vim9script("var x: number = 1 + 2"), true)
 
