@@ -74,7 +74,7 @@ local _assignment = function(match, local_prefix)
   if STRICT and local_prefix then
     if type_definition then
       return string.format(
-        [[local %s = vim9jit.AssertType("%s", %s)%s]],
+        [[local %s = require('vim9jit').AssertType("%s", %s)%s]],
         identifier,
         type_definition,
         expression,
@@ -92,7 +92,7 @@ local _assignment = function(match, local_prefix)
 
   -- This handles things like `let x: number`
   if expression == nil and type_definition then
-    expression = string.format([[vim9jit.DefaultForType("%s")]], type_definition)
+    expression = string.format([[require('vim9jit').DefaultForType("%s")]], type_definition)
   end
 
   return string.format(
@@ -353,9 +353,14 @@ generator.match.ComparisonExpression = function(match)
 end
 
 generator.match.BinaryExpression = function(match)
+  local operator = get_result(match[2])
+  local format_str = require('vim9jit.generator.binary_expression')[operator]
+  if not format_str then
+    format_str = "require('vim9jit').BinaryExpression([[" .. operator ..  "]], %s, %s)"
+  end
+
   return string.format(
-    "require('vim9jit').BinaryExpression([[%s]], %s, %s)",
-    get_result(match[2]),
+    format_str,
     get_result(match[1]),
     get_result(match[3])
   )

@@ -1,5 +1,6 @@
 vim9script
-let x: number = 10
-let y: number = 12
 
-let svar = 123
+var x: number = 10
+var y: number = 12
+
+var svar = 123

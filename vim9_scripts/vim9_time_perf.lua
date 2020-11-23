@@ -2,10 +2,10 @@
 Original vimscript
 vim9script
 
-let start = reltime()
+var start = reltime()
 
 def VimNew(): number
-  let sum = 0
+  var sum = 0
   for i in range(1, 2999999)
     sum = sum + i
   endfor
@@ -21,16 +21,24 @@ echo reltimestr(reltime(start))
 
 local start = vim.fn['reltime']()
 
-local function VimNew()
-  local sum = 0
-  for i = 1, 2999999, 1 do
-    sum = sum + i
-  end
+-- local Vim9JitAdd = function(a, b)
 
+local function VimNew() local sum = 0
+for i = 1, 2999999, 1 do
+  sum = (function(a, b)
+    if type(a) == 'number' and type(b) == 'number' then
+      return a + b
+    end
 
-  return sum
+    error("Unsupported operation")
+  end)(sum, i)
+
+  sum = sum + 1
 end
 
+
+return sum
+ end
 vim.cmd(string.format([[%s%s '%s']], 'echo', "", VimNew()))
 vim.cmd(string.format([[%s%s '%s']], 'echo', "", vim.fn['reltimestr'](vim.fn['reltime'](start))))
 
