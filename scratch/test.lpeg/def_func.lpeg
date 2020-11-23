@@ -22,7 +22,7 @@
     },
   },
   [2]={
-    id="FuncDef",
+    id="FuncStatement",
     value="def ExampleFunc()\n  var vx: number = 101\n  g:gx = 1234567\n  b:bx = 1234567\nenddef\n",
     pos={
       line_start=3,

@@ -12,6 +12,7 @@ let g:alist = [7]
 let g:astring = 'text'
 
 def Test_assignment_bool()
+  assert_equal(s:true, v:true)
   var bool1: bool = true
   assert_equal(v:true, bool1)
   var bool2: bool = false

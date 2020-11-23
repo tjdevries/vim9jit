@@ -391,7 +391,7 @@ describe('parser', function()
       ]]))
       neq(nil, parsed)
 
-      local func_def = get_item(parsed, 'id', 'FuncDef')
+      local func_def = get_item(parsed, 'id', 'FuncStatement')
       neq(nil, func_def)
       eq('Concat', get_item(func_def, 'id', 'FuncName').value)
     end)
@@ -403,7 +403,7 @@ describe('parser', function()
       ]]))
       neq(nil, parsed)
 
-      local func_def = get_item(parsed, 'id', 'FuncDef')
+      local func_def = get_item(parsed, 'id', 'FuncStatement')
       neq(nil, func_def)
       eq('Concat', get_item(func_def, 'id', 'FuncName').value)
 
@@ -420,7 +420,7 @@ describe('parser', function()
 
       neq(nil, parsed)
 
-      local func_def = get_item(parsed, 'id', 'FuncDef')
+      local func_def = get_item(parsed, 'id', 'FuncStatement')
       neq(nil, func_def)
       eq('ReturnsPlusOne', get_item(func_def, 'id', 'FuncName').value)
 
@@ -569,7 +569,7 @@ describe('parser', function()
 
       neq(nil, parsed)
 
-      local func_def = get_item(parsed, 'id', 'FuncDef')
+      local func_def = get_item(parsed, 'id', 'FuncStatement')
       neq(nil, func_def)
       eq('VimNew', get_item(func_def, 'id', 'FuncName').value)
 
@@ -858,7 +858,7 @@ enddef
 
       neq(nil, parsed)
 
-      neq(nil, get_item(parsed, 'id', 'FuncDef'))
+      neq(nil, get_item(parsed, 'id', 'FuncStatement'))
     end)
   end)
   -- }}}

@@ -127,7 +127,7 @@ local make_grammar = function(grammar_start_token)
       p.literal("vim9script"), EOL_or_EOF,
       p.any_amount(
         p.branch(
-          V("FuncDef")
+          V("FuncStatement")
           , V("IfStatement")
           , V("For")
           , V("Var")
@@ -584,7 +584,7 @@ local make_grammar = function(grammar_start_token)
     -- }}}
 
     ValidLine = p.branch(
-      V("FuncDef")
+      V("FuncStatement")
       , V("IfStatement")
       -- NOTE: You probably shouldn't be able to return unless you're in a function...
       , V("Return")
@@ -625,7 +625,7 @@ local make_grammar = function(grammar_start_token)
 
     FuncName = p.capture(V("_VarName"))
 
-    FuncDef = p.capture_seq(
+    FuncStatement = p.capture_seq(
       p.any_amount(whitespace),
       p.literal("def"),
       p.one_or_more(whitespace),
@@ -697,4 +697,5 @@ end
 return {
   grammar = make_grammar(),
   grammar_expression = make_grammar("Expression"),
+  grammar_def = make_grammar("FuncStatement"),
 }
