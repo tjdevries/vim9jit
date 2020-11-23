@@ -67,4 +67,12 @@ function vim9jit.tbl.filter(tbl, predicate, needs_viml)
   return tbl
 end
 
+vim9jit.tbl.iter = function(tbl)
+  if vim.tbl_islist(tbl) then
+    return ipairs(tbl)
+  else
+    return pairs(tbl)
+  end
+end
+
 return vim9jit

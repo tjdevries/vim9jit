@@ -36,40 +36,6 @@ describe('generator', function()
     eq("local this_var = 1\nthis_var = 3\n", result)
   end)
 
-  describe('loops', function()
-    it('should use pairs wrapper', function()
-      local result = generate(make_vim9script [[
-        var sum = 0
-        for i in my_func(1, 100)
-          sum = sum + 1
-        endfor
-      ]])
-
-      eq(vim.trim[[
-local sum = 0
-for _, i in vim9jit.VimPairs(vim.fn['my_func'](1, 100)) do
-  sum = sum + 1
-end
-]], vim.trim(result))
-    end)
-
-    it('should use super cool range wrapper', function()
-      local result = generate(make_vim9script [[
-        var sum = 0
-        for i in range(1, 100)
-          sum = sum + 1
-        endfor
-      ]])
-
-      eq(vim.trim[[
-local sum = 0
-for i = 1, 100, 1 do
-  sum = sum + 1
-end
-]], vim.trim(result))
-    end)
-  end)
-
   describe('vim9 spec', function()
     it('should handle indent time measurements', function()
       local result = generate(make_vim9script [[

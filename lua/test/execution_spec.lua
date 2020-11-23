@@ -208,4 +208,32 @@ end)()
       eq(0, VimFnCount)
     end)
   end)
+
+  describe('For loops', function()
+    pending('should be able to use pairs wrapper', function()
+      assert_execute(10, [[
+        var RESULT = 0
+        var adder = 1
+
+        def MyFunc(a, b)
+          return range(1, 10)
+        enddef
+
+        for i in MyFunc(1, 10)
+          RESULT = RESULT + adder
+        endfor
+      ]])
+    end)
+
+    it('should not call vimscript for numeric ranges', function()
+      assert_execute(10, [[
+        var RESULT = 0
+        for i in range(1, 10)
+          RESULT = RESULT + 1
+        endfor
+      ]])
+
+      eq(0, VimFnCount)
+    end)
+  end)
 end)

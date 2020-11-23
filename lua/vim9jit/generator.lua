@@ -251,10 +251,10 @@ generator.match.For = function(match)
   local formatted_for_body = indent(trim(for_body), 2)
 
   local for_obj_match = get_item_with_id(match, 'ForObj')
-  local for_obj_func_name_match = get_item_with_id(for_obj_match, 'FuncName') or {}
+  local for_obj_func_name_match = get_item_with_id(for_obj_match, 'FuncName', true) or {}
 
   if for_obj_func_name_match.value == 'range' then
-    local func_call_args = get_item_with_id(for_obj_match, 'FuncCallArgList')
+    local func_call_args = get_item_with_id(for_obj_match, 'FuncCallArgList', true)
 
     local range_expr
     local range_max
@@ -299,7 +299,7 @@ end
 
 generator.match.ForObj = function(match)
   assert(#match == 1, "ForObj can only have one object here.")
-  return string.format('vim9jit.VimPairs(%s)', get_result(match[1]))
+  return string.format("require('vim9jit').tbl.iter(%s)", get_result(match[1]))
 end
 
 generator.match.CommandName = _ret_value

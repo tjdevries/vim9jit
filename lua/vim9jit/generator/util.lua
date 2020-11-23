@@ -52,8 +52,8 @@ get_item = function(t, param, key, recursive, result_number, current_found)
   return result
 end
 
-local get_item_with_id = function(match, id)
-  return get_item(match, 'id', id)
+local get_item_with_id = function(match, id, recursive)
+  return get_item(match, 'id', id, recursive)
 end
 
 local id_exists = function(match, id)
