@@ -56,9 +56,6 @@ local left_bracket = p.literal("[")
 local right_bracket = p.literal("]")
 
 
-local _addition_operator = p.capture(p.literal("+"))
-local _string_concat_operator = p.capture(p.literal('..'))
-
 local identifier = p.concat(
   p.branch(
     letter,
@@ -209,17 +206,15 @@ local make_grammar = function(grammar_start_token)
       V("VariableIdentifier")
     )
 
-    StringOperator = p.capture_seq(
-      any_whitespace,
-      _string_concat_operator,
-      any_whitespace
-    )
-
     BinaryOperator = p.capture(p.branch(
       -- TODO: We need to make these operands tell us what's happening.
       p.literal("+"),
       p.literal("-"),
-      V("StringOperator")
+      p.literal("*"),
+      p.literal("/"),
+      p.literal(".."),
+      p.literal("&&"),
+      p.literal("||")
     ))
 
     BinaryExpression = p.capture_seq_whitespace(
