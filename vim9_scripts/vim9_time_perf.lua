@@ -18,22 +18,13 @@ echo reltimestr(reltime(start))
 
 --]=]
 
+require('vim9jit')
 
 local start = vim.fn['reltime']()
 
--- local Vim9JitAdd = function(a, b)
-
 local function VimNew() local sum = 0
 for i = 1, 2999999, 1 do
-  sum = (function(a, b)
-    if type(a) == 'number' and type(b) == 'number' then
-      return a + b
-    end
-
-    error("Unsupported operation")
-  end)(sum, i)
-
-  sum = sum + 1
+  sum = Vim9__Add(sum, i)
 end
 
 

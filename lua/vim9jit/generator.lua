@@ -53,7 +53,7 @@ generator.generate = function(str, strict)
     error('Unparsed token: ' .. inspect(str))
   end
 
-  local output = ''
+  local output = "require('vim9jit')\n"
   for _, v in ipairs(parsed) do
     local g =  assert(generator.match[v.id], v.id)
     output = output .. g(v)
@@ -352,9 +352,17 @@ generator.match.ComparisonExpression = function(match)
   )
 end
 
+local optimized_binop = {}
+
+optimized_binop["+"] = "Vim9__Add(%s, %s)"
+optimized_binop["-"] = "Vim9__Sub(%s, %s)"
+optimized_binop["*"] = "Vim9__Mul(%s, %s)"
+optimized_binop["/"] = "Vim9__Div(%s, %s)"
+
+
 generator.match.BinaryExpression = function(match)
   local operator = get_result(match[2])
-  local format_str = require('vim9jit.generator.binary_expression')[operator]
+  local format_str = optimized_binop[operator]
   if not format_str then
     format_str = "require('vim9jit').BinaryExpression([[" .. operator ..  "]], %s, %s)"
   end

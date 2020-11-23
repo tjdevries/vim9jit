@@ -35,16 +35,11 @@ echo 'Vim old: ' .. reltimestr(reltime(start))
 bwipe!
 --]=]
 
+require('vim9jit')
 
 local function VimNew() local totallen = 0
 for i = 1, 100000, 1 do
-  vim.fn['setline'](i, require('vim9jit').BinaryExpression([[.. ]], '    ', vim.fn['getline'](i)))totallen = (function(a, b)
-    if type(a) == 'number' and type(b) == 'number' then
-      return a + b
-    end
-
-    error("Unsupported operation")
-  end)(totallen, vim.fn['len'](vim.fn['getline'](i)))
+  vim.fn['setline'](i, require('vim9jit').BinaryExpression([[..]], '    ', vim.fn['getline'](i)))totallen = Vim9__Add(totallen, vim.fn['len'](vim.fn['getline'](i)))
 end
 
 return totallen

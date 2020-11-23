@@ -68,4 +68,5 @@ def Test_expr1()
 enddef
 --]=]
 
+require('vim9jit')
 

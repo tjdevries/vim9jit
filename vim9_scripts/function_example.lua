@@ -9,6 +9,7 @@ def ExampleFunc()
 enddef
 --]=]
 
+require('vim9jit')
 
 local function ExampleFunc() local x_thing = 5
 vim.g['vim_global_var'] = 12
