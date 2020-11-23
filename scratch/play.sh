@@ -19,4 +19,4 @@ ${LRL}/?.so
 __
 )
 
-exec lua-5.1 ./play.lua "$@"
+exec lua5.1 ./play.lua "$@"

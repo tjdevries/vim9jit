@@ -23,7 +23,6 @@ set -e
 set -u
 
 DIFF=(
-    './test.json/*.json'
     './test.lpeg/*.lpeg'
 )
 
@@ -40,7 +39,7 @@ do
 done
 
 function NEXT {
-    find ./play.lua ../lua/vim9jit -type f -name '*.lua' -exec stat -f '%m' {} + | sort -rn | head -n 1
+    find ./play.lua ../lua/vim9jit -type f -name '*.lua' -exec stat --format '%Y' {} + | sort -rn | head -n 1
 }
 
 PREV=0

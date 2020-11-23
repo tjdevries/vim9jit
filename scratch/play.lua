@@ -1,4 +1,3 @@
-local dkjson = require('dkjson')
 local helpers = require('test.helpers')
 local parser = require('vim9jit.parser')
 local token = require('vim9jit.token')
