@@ -1,3 +1,6 @@
+local generator = require('vim9jit.generator')
+local generate = generator.generate
+local fmt = generator._utils.fmt
 
 -- Default to not printing anything during the tests.
 -- We can turn it on or off for specific tests if we want
@@ -88,10 +91,51 @@ local function dedent(str, leave_indent)
   return str
 end
 
+local make_vim9script = function(text)
+  return 'vim9script\n' .. fmt(text)
+end
+
+local execute = function(vim9_str)
+  local compiled = generate(make_vim9script(vim9_str))
+  local loaded = loadstring(compiled .. "\nreturn RESULT")
+
+  local ok, result = pcall(loaded)
+  if not ok then
+    print("GENERATED:", compiled)
+    print("   FROM  :", make_vim9script(vim9_str))
+    print("LOADED FAILURE", loaded)
+  end
+
+  return result, compiled
+end
+
+local assert_execute = function(expected, vim9_str)
+  local result, compiled = execute(vim9_str)
+
+  local ok = true
+  if type(expected) == 'function' then
+    ok, expected = pcall(expected)
+  end
+
+  if not ok or not pcall(eq, expected, result) then
+    print(string.rep("=", 80))
+    print("vim9_str:", vim9_str)
+    print("COMPILED:", tostring(compiled))
+    eq(expected, result)
+  end
+end
+
+local has_no_errors = function(str)
+  assert_execute(true, str .. "\nvar RESULT = true")
+  eq({}, vim.v.errors)
+end
+
 return {
-  eq=eq,
-  neq=neq,
-  get_first_item=get_first_item,
-  get_item=get_item,
-  dedent = dedent,
+  eq             = eq,
+  neq            = neq,
+  get_first_item = get_first_item,
+  get_item       = get_item,
+  dedent         = dedent,
+  assert_execute = assert_execute,
+  has_no_errors  = has_no_errors,
 }

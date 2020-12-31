@@ -33,7 +33,9 @@ For example, at the moment, I plan for `const` and `final` to simply be variable
     - [ ] Expressions
         - [x] With type definitions
         - [x] Simple arithmetic expressions
-        - [x] String concatentation
+        - [ ] Strings
+            - [x] concatentation
+            - [ ] indexing (character index)
         - [x] Multiplication
         - [x] List definitions
         - [ ] Numbers
@@ -44,6 +46,7 @@ For example, at the moment, I plan for `const` and `final` to simply be variable
         - [ ] Dictionary definitions
             - [ ] Old style dicts
             - [ ] Literal dicts
+            - [ ] Literal dicts with no #
         - [ ] Vim-isms
             - [x] Global variables
             - [ ] Buffer variables
@@ -57,6 +60,7 @@ For example, at the moment, I plan for `const` and `final` to simply be variable
             - [ ] Else statements
             - [ ] Elseif statements
             - [ ] Exact vim semantics for if statements
+                - [ ] Lots of new semantics for boolean conditions
         - [ ] Function calls
             - [x] Local functions (implemented in pure lua)
             - [x] Builtin functions (called using `vim.fn`)
@@ -73,12 +77,18 @@ For example, at the moment, I plan for `const` and `final` to simply be variable
         - [ ] Spread `def MyFunc(...itemlist: list<number>)`
         - [ ] Legacy function definitions
             - [ ] Legacy function definitions intersperesed.
+        - [ ] Lambdas
+            - { k, v -> asdf }
+            - (arg) => expr
     - [ ] For loops
         - [x] Simple loops
         - [x] Optimized range
     - [ ] Importing functions
     - [ ] Auto sourcing / finding functions
-
+    - [ ] `vim9script noclear`
+    - [ ] block syntax `:help :var`
+    - [ ] Manage starting with a colon / handling Ex expressions?
+    - [ ] Lost of new whitespace stuff
 
 
 ## Performance?

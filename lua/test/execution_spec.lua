@@ -1,45 +1,6 @@
-require('plenary.test_harness'):setup_busted()
-
-local generator = require('vim9jit.generator')
-local generate = generator.generate
-local fmt = generator._utils.fmt
-
 local helpers = require('test.helpers')
 local eq = helpers.eq
-
-local make_vim9script = function(text)
-  return 'vim9script\n' .. fmt(text)
-end
-
-local execute = function(vim9_str)
-  local compiled = generate(make_vim9script(vim9_str))
-  local loaded = loadstring(compiled .. "\nreturn RESULT")
-
-  local ok, result = pcall(loaded)
-  if not ok then
-    print("GENERATED:", compiled)
-    print("   FROM  :", make_vim9script(vim9_str))
-    print("LOADED FAILURE", loaded)
-  end
-
-  return result, compiled
-end
-
-local assert_execute = function(expected, vim9_str)
-  local result, compiled = execute(vim9_str)
-
-  local ok = true
-  if type(expected) == 'function' then
-    ok, expected = pcall(expected)
-  end
-
-  if not ok or not pcall(eq, expected, result) then
-    print(string.rep("=", 80))
-    print("vim9_str:", vim9_str)
-    print("COMPILED:", tostring(compiled))
-    eq(expected, result)
-  end
-end
+local assert_execute = helpers.assert_execute
 
 VimFnCount = 0
 vim.fn = setmetatable({}, {
@@ -108,6 +69,24 @@ describe('execute generated vimscript', function()
         assert_execute(false, [[var RESULT = 'hello' ==  'hElLo']])
         assert_execute(false, [[var RESULT = 'hello' ==# 'hElLo']])
         assert_execute(true,  [[var RESULT = 'hello' ==? 'hElLo']])
+      end)
+    end)
+
+    describe('BinaryExpression', function()
+      describe('&&', function()
+        it('bools and bools', function()
+          assert_execute(true, [[var RESULT = true && true]])
+          assert_execute(false, [[var RESULT = false && true]])
+          assert_execute(false, [[var RESULT = false && false]])
+        end)
+
+        it('numbers and bools', function()
+          assert_execute(true, [[var RESULT = 1 && true]])
+        end)
+
+        it('can have definitions as well', function()
+          assert_execute(true, [[var RESULT: bool = 1 && true]])
+        end)
       end)
     end)
   end)

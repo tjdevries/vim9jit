@@ -93,6 +93,11 @@ local _assignment = function(match, local_prefix)
   -- This handles things like `let x: number`
   if expression == nil and type_definition then
     expression = string.format([[require('vim9jit').DefaultForType("%s")]], type_definition)
+  elseif type_definition == "bool" then
+    expression = string.format(
+      [[Vim9__Truthy(%s)]],
+      expression
+    )
   end
 
   return string.format(
@@ -360,6 +365,7 @@ optimized_binop["*"] = "Vim9__Mul(%s, %s)"
 optimized_binop["/"] = "Vim9__Div(%s, %s)"
 
 
+-- TODO: Some of these could be short circuited and just call "bool" on them.
 generator.match.BinaryExpression = function(match)
   local operator = get_result(match[2])
   local format_str = optimized_binop[operator]

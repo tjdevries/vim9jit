@@ -1,5 +1,3 @@
-require('plenary.test_harness'):setup_busted()
-
 local grammar = require('vim9jit.parser').grammar
 local token = require('vim9jit.token')
 
@@ -672,6 +670,22 @@ describe('parser', function()
       end)
     end)
 
+    describe('binary expressions', function()
+      it('should support simple && usage', function()
+        local parsed = get_parsed([[var bool5: bool = 1 && true]])
+        eq('&&', get_item(parsed, 'id', 'BinaryOperator').value)
+      end)
+
+      it('should support simple && usage with a function call', function()
+        local parsed = get_parsed [[
+          var bool5: bool = 1 && 1
+        ]]
+
+        local item = get_item(parsed, 'id', 'BinaryOperator')
+        neq(nil, item)
+        eq('&&', item.value)
+      end)
+    end)
     describe('conditionals', function()
       it('should support simple ? usage', function()
         local parsed = token.parsestring(grammar, make_vim9script [[

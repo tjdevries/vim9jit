@@ -1,6 +1,8 @@
-
 Vim9__Add = function(a, b)
-  if type(a) == 'number' and type(b) == 'number' then
+  local t_a = type(a)
+  local t_b = type(b)
+
+  if t_a == 'number' and t_b == 'number' then
     return a + b
   end
 
@@ -8,7 +10,10 @@ Vim9__Add = function(a, b)
 end
 
 Vim9__Sub = function(a, b)
-  if type(a) == 'number' and type(b) == 'number' then
+  local t_a = type(a)
+  local t_b = type(b)
+
+  if t_a == 'number' and t_b == 'number' then
     return a - b
   end
 
@@ -16,7 +21,10 @@ Vim9__Sub = function(a, b)
 end
 
 Vim9__Mul = function(a, b)
-  if type(a) == 'number' and type(b) == 'number' then
+  local t_a = type(a)
+  local t_b = type(b)
+
+  if t_a == 'number' and t_b == 'number' then
     return a * b
   end
 
@@ -24,7 +32,10 @@ Vim9__Mul = function(a, b)
 end
 
 Vim9__Div = function(a, b)
-  if type(a) == 'number' and type(b) == 'number' then
+  local t_a = type(a)
+  local t_b = type(b)
+
+  if t_a == 'number' and t_b == 'number' then
     return a / b
   end
 

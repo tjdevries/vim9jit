@@ -1,4 +1,5 @@
 require('vim9jit.runtime.operations')
+local truthy = require('vim9jit.runtime.truthy')
 
 vim9jit = {}
 
@@ -25,6 +26,12 @@ vim9jit.ComparisonEvaluate = function(operator, a, b)
   end
 
   error("Unsupported operator: " .. operator)
+end
+
+vim9jit.BinaryExpression = function(operator, a, b)
+  if operator == "&&" then
+    return truthy(a) and truthy(b)
+  end
 end
 
 vim9jit.tbl = {}
