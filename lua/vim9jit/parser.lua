@@ -498,11 +498,14 @@ local make_grammar = function(grammar_start_token)
       p.one_or_no(V("TypeDefinition")),
       p.one_or_no(p.concat(
         p.one_or_more(whitespace),
-        p.branch(
-          V("_HeredocWithFunctionExpression"),
-          V("_HeredocExpression"),
-          V("_EqualsExpression")
-        )
+        p.literal("="),
+        p.one_or_more(whitespace),
+        V("Expression")
+        -- p.branch(
+        --   V("_HeredocWithFunctionExpression"),
+        --   V("_HeredocExpression"),
+        --   V("_EqualsExpression")
+        -- )
       )),
       EOL_or_EOF
     )

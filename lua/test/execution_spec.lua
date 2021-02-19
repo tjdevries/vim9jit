@@ -91,6 +91,14 @@ describe('execute generated vimscript', function()
     end)
   end)
 
+  describe('Math', function()
+    -- We haven't gotten this to work yet.
+    pending('works with precedence', function()
+      assert_execute(12, [[var RESULT = 2 + 2 * 5]])
+      assert_execute(12, [[var RESULT = 2 * 5 + 2]])
+    end)
+  end)
+
   describe('IfStatement', function()
     it('work with else and forward decl', function()
       assert_execute({1, 2, 3}, [[

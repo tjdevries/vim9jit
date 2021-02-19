@@ -73,6 +73,7 @@ For example, at the moment, I plan for `const` and `final` to simply be variable
         - [x] Function argument typing
         - [x] Function return typing
         - [ ] Optional arguments
+        - [ ] Arguments with defaults
         - [ ] Exporting
         - [ ] Spread `def MyFunc(...itemlist: list<number>)`
         - [ ] Legacy function definitions

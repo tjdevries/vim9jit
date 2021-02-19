@@ -1,3 +1,5 @@
+local trim = vim.trim
+local dedent = require('vim9jit.utils').dedent
 
 local get_item
 
@@ -68,8 +70,11 @@ local get_result = function(generator, match)
   local match_id = match.id
   assert(match_id, string.format("%s:%s malformed object", match_id, match))
 
-  -- Hmm... wonder if I could just use _ret_value for a lot of stuff.
-  assert(generator.match[match_id], string.format("%s: missing generator", match_id))
+  -- Hmm... wonder if I could just use _get_value for a lot of stuff.
+  assert(
+    generator.match[match_id],
+    string.format("%s: missing generator", match_id)
+  )
 
   return generator.match[match_id](match)
 end
@@ -79,4 +84,22 @@ return {
   get_item_with_id = get_item_with_id,
   id_exists = id_exists,
   get_result = get_result,
+
+  fmt = function(s, ending_newline)
+    if string.sub(s, 1, 1) == "\n" then
+      s = string.sub(s, 2)
+    end
+
+    local eol_string = ''
+    if ending_newline == nil or ending_newline == true then
+       eol_string = "\n"
+    end
+
+
+    return trim(dedent(s)) .. eol_string
+  end,
+
+  get_value = function(match)
+    return match.value
+  end,
 }
