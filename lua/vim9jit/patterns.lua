@@ -27,6 +27,7 @@ local patterns = {}
 
 patterns.match = lpeg.match
 patterns.V = function(item) return lpeg.V(item) end
+patterns.group = lpeg.V
 patterns.table_capture = function(item) return lpeg.Ct(item) end
 patterns.group_capture = Cg
 patterns.back_capture = lpeg.Cb
@@ -61,7 +62,6 @@ patterns.split = function(value, sep)
 
   return lpeg.match(g_split, value)
 end
-
 
 patterns.S = S
 patterns.literal = lpeg.P

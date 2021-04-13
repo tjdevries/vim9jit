@@ -1,5 +1,5 @@
 
--- I have changed several things in this file, but the majority of the ideas and compat between versions 
+-- I have changed several things in this file, but the majority of the ideas and compat between versions
 -- is thanks to: github.com epnfs.lua
 
 local L = require('lpeg')
@@ -207,7 +207,14 @@ function epnf.define( func, g, e )
       if suppressed[ name ] then
         g[ name ] = val
       else
-        g[ name ] = (L.Cc( name ) * L.Cp() * L.Ct( val )) / make_ast_node
+        g[ name ] = (
+            -- string of name
+            L.Cc(name)
+            -- position captured
+            * L.Cp()
+            -- table containing match data
+            * L.Ct(val)
+          ) / make_ast_node
       end
     end
   } )
