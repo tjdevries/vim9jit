@@ -1,11 +1,7 @@
-local generator = require('vim9jit.generator')
-local generate = generator.generate
-local fmt = generator._utils.fmt
-
 -- Default to not printing anything during the tests.
 -- We can turn it on or off for specific tests if we want
-local token = require('vim9jit.token')
-token.print_error = false
+-- local token = require('vim9jit.token')
+-- token.print_error = false
 
 local function trim(s)
   return s:match('^%s*(.*%S)') or ''
@@ -92,10 +88,16 @@ local function dedent(str, leave_indent)
 end
 
 local make_vim9script = function(text)
+  local generator = require('vim9jit.generator')
+  local fmt = generator._utils.fmt
+
   return 'vim9script\n' .. fmt(text)
 end
 
 local execute = function(vim9_str)
+  local generator = require('vim9jit.generator')
+  local generate = generator.generate
+
   local compiled = generate(make_vim9script(vim9_str))
   local loaded = loadstring(compiled .. "\nreturn RESULT")
 

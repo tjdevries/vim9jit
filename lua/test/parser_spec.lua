@@ -2,12 +2,12 @@ local helpers = require('test.helpers')
 local eq = assert.are.same
 local get_item = helpers.get_item
 
-local grammar = require('vim9jit.parser_2').make_grammar()
+local grammar = require('vim9jit.parser').make_grammar()
 
 local parse = function(s, g)
   local used_grammar = grammar
   if g then
-    used_grammar = require('vim9jit.parser_2').make_grammar(g)
+    used_grammar = require('vim9jit.parser').make_grammar(g)
   end
 
   local prefix = ''

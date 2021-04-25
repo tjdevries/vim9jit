@@ -59,7 +59,6 @@ local _wrap = function(generator)
   end
 end
 
-local any = _wrap(p.branch)
 local seq = _wrap(p.concat)
 local set = _wrap(p.branch)
 local some = _wrap(function(...)
@@ -89,6 +88,23 @@ local whitespace_and_eol = p.set('\n', unpack(_whitespace_table))
 local some_whitespace = p.one_or_more(whitespace)
 local any_whitespace = p.any_amount(whitespace)
 local any_whitespace_or_eol = p.any_amount(whitespace_and_eol)
+
+p.capture_seq_of_pat_with_optional_trailing_sep = function(pat, sep)
+  return p.concat(
+    any_whitespace_or_eol,
+    p.one_or_no(p.concat(
+      pat,
+      p.any_amount(p.concat(
+        any_whitespace_or_eol,
+        sep,
+        any_whitespace_or_eol,
+        pat
+      )),
+      p.one_or_no(sep)
+    )),
+    any_whitespace_or_eol
+  )
+end
 
 local c_seqw = function(sequence)
   local spaces = any_whitespace
@@ -156,13 +172,35 @@ local make_grammar = function(root)
     --
     -- TODO:
     -- - exponentiation
-    Expression = any {
+
+    --[[
+      exp = lpeg.V("term") + lpeg.V("factor") + integer,
+      term = node((lpeg.V("factor") + integer) * addsub * lpeg.V("exp")),
+      factor = node(integer * muldiv * (lpeg.V("factor") + integer))
+    --]]
+
+    Expression = set {
       group.Term,
       group.Factor,
       group.Number,
+      group.Boolean,
       group.VarName,
+      group.ListLiteral,
+      group.StringLiteral,
+
+      -- TODO: Figure out how I can do this again...
+      --    perhaps I need to flatten them? I'm not actually sure tbh
+      -- group.AnchoredExpression,
 
       capture = true,
+    },
+
+    AnchoredExpression = set {
+      group.Number,
+      group.Boolean,
+      group.VarName,
+      group.ListLiteral,
+      group.StringLiteral,
     },
 
     Add = literal "+",
@@ -183,22 +221,18 @@ local make_grammar = function(root)
       group.Number,
       set { group.Multiply, group.Divide, },
       set { group.Factor, group.Number, },
-    },
 
-    --[[
-      exp = lpeg.V("term") + lpeg.V("factor") + integer,
-      term = node((lpeg.V("factor") + integer) * addsub * lpeg.V("exp")),
-      factor = node(integer * muldiv * (lpeg.V("factor") + integer))
-    --]]
+      linespace = true,
+    },
 
     Unary = set { "+", "-" },
 
     Number = seq {
       optional { group.Unary, },
-      any {
+      set {
         -- Hexadecimal
         seq {
-          any { "0x", "0X", },
+          set { "0x", "0X", },
           some {
             set { digit, range { 'a', 'f' }, range { 'A', 'F' } }
           }
@@ -213,6 +247,26 @@ local make_grammar = function(root)
       },
 
       capture = true,
+    },
+
+    Boolean = set {
+      "true", "v:true", "false", "v:false", capture = true,
+    },
+
+    StringLiteral = set {
+      --  Courtesy of Lua wiki. Thanks!
+      p.literal("'") * ((1 - p.S"'\r\n\f\\") + (p.literal '\\' * 1)) ^ 0 * "'",
+      p.literal('"') * ((1 - p.S'"\r\n\f\\') + (p.literal '\\' * 1)) ^ 0 * '"',
+
+      capture = true,
+    },
+
+    ListLiteral = seq {
+      '[',
+      p.capture_seq_of_pat_with_optional_trailing_sep(group.Expression, literal ","),
+      ']',
+
+      linespace = true,
     },
   }
 
