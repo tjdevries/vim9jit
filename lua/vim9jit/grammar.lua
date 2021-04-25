@@ -53,7 +53,9 @@ end
 
 local function make_ast_node(id, pos, t)
   t.id = id
-  t.pos = pos
+
+  -- TODO: Can add back pos if we need to
+  -- t.pos = pos
 
   -- Place a value
   if t[1] and type(t[1]) == 'string' then
