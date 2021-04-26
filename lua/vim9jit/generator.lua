@@ -1,6 +1,8 @@
 local parser = require('vim9jit.parser')
 local make_grammar = parser.make_grammar
 
+local tree = require('vim9jit.tree')
+
 local generator = {}
 
 generator.generate = function(str, root)
@@ -70,7 +72,45 @@ match.ListLiteral = function(node)
   )
 end
 
-match.AnchoredExpression = get_result
+match.FuncCall = function(node)
+  local func_name = get_result(tree.get_item_with_id(node, 'FuncName'))
+  local func_args = get_result(tree.get_item_with_id(node, 'FuncCallArgList'))
+
+  return string.format([[%s(%s)]], func_name, func_args)
+end
+
+match.FuncCallArg = match.Expression
+match.FuncCallArgList = function(node)
+  local output = {}
+  for _, v in ipairs(node) do
+    table.insert(output, get_result(v))
+  end
+
+  return table.concat(output, ", ")
+end
+
+match.AnchoredExpression = function(node)
+  -- get_result
+  -- return '420'
+  return get_result(node[1])
+end
+
+match.ParenthedExpression = function(node)
+  return string.format("(%s)", get_result(node[1]))
+end
+
+match.FuncName = function(node)
+  local original_func_name = node.value
+
+  if original_func_name == "function" then
+    return "vim9jit.vim_function"
+  elseif string.match(string.sub(original_func_name, 1, 1), "%l") then
+    -- Lowercase functions are always vim functions
+    return string.format("vim.fn['%s']", original_func_name)
+  else
+    return original_func_name
+  end
+end
 
 match.Number = get_value
 match.StringLiteral = get_value

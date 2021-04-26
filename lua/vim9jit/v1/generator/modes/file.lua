@@ -167,7 +167,7 @@ file_mode.FuncCallArg = file_mode.Expression
 file_mode.FuncCallArgList = function(mode, match)
   local output = {}
   for _, v in ipairs(match) do
-    table.insert(output, get_result(mode, v))
+    table.insert(output, get_result(v))
   end
 
   return table.concat(output, ", ")

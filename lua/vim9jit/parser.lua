@@ -46,6 +46,7 @@ local any_amount = function(t)
   end
 end
 
+local any_whitespace = any_amount { whitespace }
 
 local any_amount_of = function(t)
   return p.any_amount(p.branch(grammar_unpack(t)))
@@ -63,9 +64,32 @@ local seq = _wrap(p.concat)
 local set = _wrap(p.branch)
 local some = _wrap(function(...)
   local args = {...}
-  assert(#args == 1, "Must be one")
+  assert(#args == 1, "Must be one: some")
   return p.one_or_more(args[1])
 end)
+local one_or_no = _wrap(function(...)
+  local args = {...}
+  assert(#args == 1, "Must be one: one_or_no")
+  return p.one_or_no(args[1])
+end)
+
+local list_of = function(t)
+  local patt = seq(t)
+  local pow = t.required and 1 or 0
+
+  -- could change it into the new method
+  return patt * (t.separator * patt)^pow
+end
+-- local list_of = _wrap(function(...)
+--   local t = seq({...})
+
+--   assert(t.separator, "Must pass a separator")
+
+--   local pow = t.required and 1 or 0
+
+--   -- could change it into the new method
+--   return t[1] * (t.separator * t[1])^pow
+-- end)
 
 -- local optional = _wrap(lib.optional)
 local optional = function(t)
@@ -179,28 +203,31 @@ local make_grammar = function(root)
       factor = node(integer * muldiv * (lpeg.V("factor") + integer))
     --]]
 
-    Expression = set {
-      group.Term,
-      group.Factor,
-      group.Number,
-      group.Boolean,
-      group.VarName,
-      group.ListLiteral,
-      group.StringLiteral,
+    Expression = seq {
+      any_whitespace, 
+      set {
+        group.FuncCall,
+        group.Term,
+        group.Factor,
 
-      -- TODO: Figure out how I can do this again...
-      --    perhaps I need to flatten them? I'm not actually sure tbh
-      -- group.AnchoredExpression,
+        group.AnchoredExpression,
 
-      capture = true,
+        capture = true,
+      },
     },
 
+    -- The singular items that can be used anywhere as one "unit"
     AnchoredExpression = set {
       group.Number,
       group.Boolean,
       group.VarName,
       group.ListLiteral,
       group.StringLiteral,
+      group.ParenthedExpression,
+    },
+
+    ParenthedExpression = seq {
+      any_whitespace, "(", any_whitespace, group.Expression, any_whitespace, ")", any_whitespace,
     },
 
     Add = literal "+",
@@ -210,18 +237,20 @@ local make_grammar = function(root)
     Divide = literal "/",
 
     Term = seq {
-      set { group.Factor, group.Number, },
+      set { group.Factor, group.AnchoredExpression, },
       set { group.Add, group.Subtract },
       group.Expression,
 
+      capture = true,
       linespace = true,
     },
 
     Factor = seq {
-      group.Number,
+      group.AnchoredExpression,
       set { group.Multiply, group.Divide, },
-      set { group.Factor, group.Number, },
+      set { group.Factor, group.AnchoredExpression, },
 
+      capture = true,
       linespace = true,
     },
 
@@ -268,6 +297,31 @@ local make_grammar = function(root)
 
       linespace = true,
     },
+
+    -- {{{ Function Calls
+    FuncCall = seq {
+      group.FuncName, "(", group.FuncCallArgList, ")",
+
+      linespace = true,
+    },
+
+    FuncName = set {
+      group.VarName,
+
+      capture = true,
+    },
+
+    FuncCallArg = group.Expression,
+
+    FuncCallArgList = one_or_no {
+      list_of {
+        group.FuncCallArg,
+
+        separator = ",",
+        linespace = true,
+      }
+    },
+    -- }}}
   }
 
   return g.grammar(result)
