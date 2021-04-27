@@ -1,7 +1,7 @@
-require('vim9jit.runtime.operations')
+local _ = require('vim9jit.runtime.operations')
 local truthy = require('vim9jit.runtime.truthy')
 
-vim9jit = {}
+local vim9jit = {}
 
 vim9jit.DefaultForType = function(type_str)
   if type_str == 'number' then
@@ -32,6 +32,13 @@ vim9jit.BinaryExpression = function(operator, a, b)
   if operator == "&&" then
     return truthy(a) and truthy(b)
   end
+end
+
+vim9jit.IndexAccess = function(value)
+  if type(value) == "number" then return value + 1 end
+  if type(value) == "string" then return value end
+
+  error("Not handled for access: " .. vim.inspect(value))
 end
 
 vim9jit.tbl = {}

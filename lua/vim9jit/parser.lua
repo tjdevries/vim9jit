@@ -206,7 +206,6 @@ local make_grammar = function(root)
     Expression = seq {
       any_whitespace, 
       set {
-        group.FuncCall,
         group.Term,
         group.Factor,
 
@@ -218,11 +217,16 @@ local make_grammar = function(root)
 
     -- The singular items that can be used anywhere as one "unit"
     AnchoredExpression = set {
+      group.FuncCall,
+      group.ObjectBracketAccess,
+      group.DictionaryLiteral,
+      group.ListLiteral,
+      group.StringLiteral,
+
       group.Number,
       group.Boolean,
       group.VarName,
-      group.ListLiteral,
-      group.StringLiteral,
+
       group.ParenthedExpression,
     },
 
@@ -290,12 +294,47 @@ local make_grammar = function(root)
       capture = true,
     },
 
+    ObjectBracketAccess = seq {
+      set { group.ListLiteral, group.DictionaryLiteral },
+      '[', group.Expression, ']',
+
+      linespace = true,
+    },
+
     ListLiteral = seq {
       '[',
       p.capture_seq_of_pat_with_optional_trailing_sep(group.Expression, literal ","),
       ']',
 
       linespace = true,
+    },
+
+    DictionaryKey = set {
+      group.VarName,
+    },
+
+    DictionaryValue = set {
+      group.AnchoredExpression,
+    },
+
+    DictionaryItem = seq {
+      group.DictionaryKey,
+      ':',
+      group.DictionaryValue,
+
+      linespace = true,
+      capture = true,
+    },
+
+    DictionaryLiteral = seq {
+      '{',
+        list_of {
+          group.DictionaryItem,
+
+          separator = ',',
+          linespace = true,
+        },
+      '}',
     },
 
     -- {{{ Function Calls
