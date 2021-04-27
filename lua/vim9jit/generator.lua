@@ -164,7 +164,20 @@ match.Subtract = function() return "-" end
 match.Multiply = function() return "*" end
 match.Divide = function() return "/" end
 
-match.VarName = get_value
+match.VariableIdentifier = get_value
+
+local make_special_var = function(formatted)
+  return function(node)
+    local variable_name = get_result_for_id(node, 'VariableIdentifier')
+    return string.format(formatted, variable_name)
+  end
+end
+
+match.Variable = function(node)
+  return get_result(node[1])
+end
+
+match.GlobalVariableIdentifier = make_special_var('vim.g.%s')
 
 match.Boolean = function(node)
   local val = get_value(node)

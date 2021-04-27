@@ -174,18 +174,6 @@ local make_grammar = function(grammar_start_token)
 
     CapturedEOL = p.capture_seq(any_whitespace, EOL)
 
-    Number = p.capture(p.branch(
-      p.concat(
-        p.branch(p.literal("0x"), p.literal("0X")),
-        p.one_or_more(p.branch(
-          digit, p.range('a', 'f'), p.range('A', 'F')
-        ))
-      ),
-      p.concat(p.one_or_more(digit), p.literal('.'), p.one_or_more(digit)),
-      p.one_or_more(digit)
-    ))
-
-    VariableIdentifier = p.capture(identifier)
     GlobalVariableIdentifier = p.capture_seq(
       p.literal("g:"),
       V("VariableIdentifier")

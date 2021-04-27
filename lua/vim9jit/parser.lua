@@ -177,12 +177,12 @@ local make_grammar = function(root)
     },
 
     Assign = c_seqw {
-      group.VarName, "=", group.Expression,
+      group.Variable, "=", group.Expression,
 
       eol = false,
     },
 
-    VarName = seq {
+    VariableIdentifier = seq {
       set {
         letter, underscore
       },
@@ -191,6 +191,24 @@ local make_grammar = function(root)
       },
 
       capture = true,
+    },
+
+    BufferVariableIdentifier = seq { "b:", group.VariableIdentifier, capture = true },
+    GlobalVariableIdentifier = seq { "g:", group.VariableIdentifier, capture = true },
+    ScriptVariableIdentifier = seq { "s:", group.VariableIdentifier, capture = true },
+    TabVaraibleIdentifier    = seq { "t:", group.VariableIdentifier, capture = true },
+    VimVariableIdentifier    = seq { "v:", group.VariableIdentifier, capture = true },
+    WindowVariableIdentifier = seq { "w:", group.VariableIdentifier, capture = true },
+
+    Variable = set {
+      group.BufferVariableIdentifier,
+      group.GlobalVariableIdentifier,
+      group.ScriptVariableIdentifier,
+      group.TabVaraibleIdentifier,
+      group.VimVariableIdentifier,
+      group.WindowVariableIdentifier,
+
+      group.VariableIdentifier,
     },
 
     --
@@ -225,7 +243,7 @@ local make_grammar = function(root)
 
       group.Number,
       group.Boolean,
-      group.VarName,
+      group.Variable,
 
       group.ParenthedExpression,
     },
@@ -310,12 +328,11 @@ local make_grammar = function(root)
     },
 
     DictionaryKey = set {
-      group.VarName,
+      group.VariableIdentifier,
+      -- TODO: Make the [] expression syntax
     },
 
-    DictionaryValue = set {
-      group.AnchoredExpression,
-    },
+    DictionaryValue = group.Expression,
 
     DictionaryItem = seq {
       group.DictionaryKey,
@@ -345,7 +362,7 @@ local make_grammar = function(root)
     },
 
     FuncName = set {
-      group.VarName,
+      group.VariableIdentifier,
 
       capture = true,
     },
