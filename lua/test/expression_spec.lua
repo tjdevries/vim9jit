@@ -70,7 +70,7 @@ describe("expressions", function()
 
     describe('can call builtin functions', function()
       it('can return lists', function()
-        eq({1, 2, 3, 4}, eval('range( (1), 4)'))
+        eq({1, 2, 3, 4}, eval('range( (1), 4, 1)'))
       end)
 
       it('can return dicts', function()
@@ -83,6 +83,7 @@ describe("expressions", function()
 
       it('can interact with lists', function()
         eq(1, eval('get([1, 2, 3, 4], 0)'))
+        eq(1, eval('get([   1, \n2, 3, \t4  ]   , 0)'))
       end)
 
       it('can do addition with functions', function()
@@ -102,6 +103,8 @@ describe("expressions", function()
 
       it('can grab items from a dictionary with complicated expr', function()
         eq(11, eval('{A: 5 + 6}["A"]'))
+        eq(11, eval('{["A"]: 5 + 6}["A"]'))
+        eq(11, eval('{["A"]: 5 + 6}.A'))
       end)
     end)
   end)

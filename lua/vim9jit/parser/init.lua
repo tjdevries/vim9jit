@@ -3,132 +3,25 @@ local g = require('vim9jit.grammar')
 
 local lib = require('vim9jit.lib')
 
-local range = lib.range
-local _whitespace_table = {
-  ' ',
-  '\t',
-  '\v',
-  '\f'
-}
-local whitespace = p.set(unpack(_whitespace_table))
+local any_amount  = lib.any_amount
+local letter      = lib.letter
+local list_of     = lib.list_of
+local literal     = lib.literal
+local one_or_more = lib.one_or_more
+local one_or_no   = lib.one_or_no
+local optional    = lib.optional
+local range       = lib.range
+local seq         = lib.seq
+local set         = lib.set
+local some        = lib.some
 
-local grammar_unpack = function(t)
-  local results = {}
+-- local whitespace = lib.whitespace
 
-  local spaces = p.any_amount(whitespace)
+local underscore = literal "_"
+local digit = range { '0', '9' }
 
-  if t.linespace then
-    table.insert(results, spaces)
-  end
-
-  for _, v in ipairs(t) do
-    if type(v) == "string" then
-      table.insert(results, p.literal(v))
-    else
-      table.insert(results, v)
-    end
-
-    if t.linespace then
-      table.insert(results, spaces)
-    end
-  end
-
-  return unpack(results)
-end
-
-local literal = lib.literal
-local any_amount = function(t)
-  assert(#t == 1)
-  if t.capture == false then
-    return p.any_amount(t[1])
-  else
-    return p.capture(p.any_amount(t[1]))
-  end
-end
-
-local any_whitespace = any_amount { whitespace }
-
-local any_amount_of = function(t)
-  return p.any_amount(p.branch(grammar_unpack(t)))
-end
-
-local _wrap = function(generator)
-  return function(t)
-    local res = generator(grammar_unpack(t))
-    if t.capture then res = p.capture(res) end
-    return res
-  end
-end
-
-local seq = _wrap(p.concat)
-local set = _wrap(p.branch)
-local some = _wrap(function(...)
-  local args = {...}
-  assert(#args == 1, "Must be one: some")
-  return p.one_or_more(args[1])
-end)
-local one_or_no = _wrap(function(...)
-  local args = {...}
-  assert(#args == 1, "Must be one: one_or_no")
-  return p.one_or_no(args[1])
-end)
-
-local list_of = function(t)
-  local patt = seq(t)
-  local pow = t.required and 1 or 0
-
-  -- could change it into the new method
-  return patt * (t.separator * patt)^pow
-end
--- local list_of = _wrap(function(...)
---   local t = seq({...})
-
---   assert(t.separator, "Must pass a separator")
-
---   local pow = t.required and 1 or 0
-
---   -- could change it into the new method
---   return t[1] * (t.separator * t[1])^pow
--- end)
-
--- local optional = _wrap(lib.optional)
-local optional = function(t)
-  local result = lib.optional(t)
-  if t.capture then
-    result = p.capture(result)
-  end
-  return result
-end
-
-local underscore = p.literal("_")
-local digit = p.range('0', '9')
-local letter = p.branch(
-  p.range('a', 'z'),
-  p.range('A', 'Z')
-)
-
-local whitespace_and_eol = p.set('\n', unpack(_whitespace_table))
-
-local some_whitespace = p.one_or_more(whitespace)
-local any_whitespace = p.any_amount(whitespace)
-local any_whitespace_or_eol = p.any_amount(whitespace_and_eol)
-
-p.capture_seq_of_pat_with_optional_trailing_sep = function(pat, sep)
-  return p.concat(
-    any_whitespace_or_eol,
-    p.one_or_no(p.concat(
-      pat,
-      p.any_amount(p.concat(
-        any_whitespace_or_eol,
-        sep,
-        any_whitespace_or_eol,
-        pat
-      )),
-      p.one_or_no(sep)
-    )),
-    any_whitespace_or_eol
-  )
-end
+local any_whitespace = lib.any_whitespace
+local any_whitespace_or_eol = lib.any_whitespace_or_eol
 
 local c_seqw = function(sequence)
   local spaces = any_whitespace
@@ -151,7 +44,6 @@ local c_seqw = function(sequence)
 end
 
 local EOL = p.end_of_line
-local EOF = p.end_of_file
 local EOL_or_EOF = p.branch(EOL, p.end_of_file)
 
 local group = setmetatable({}, {
@@ -182,12 +74,36 @@ local make_grammar = function(root)
       eol = false,
     },
 
+    -- VarKeyword    = literal "var",
+    -- ConstKeyword  = literal "const",
+    -- FinalKeyworld = literal "final",
+
+    -- Var = seq {
+    --   set { group.VarKeyword, group.ConstKeyword, group.FinalKeyworld },
+
+    --   capture = true,
+    -- },
+
+    -- TypeDefiniton = seq {
+    --   ":", group.TypeSyntax
+    -- },
+
+    -- TypeSyntax = list_of {
+    --   group.Type_SingleDefinition,
+
+    --   separator = "|",
+    -- },
+
+    -- Type_SingleDefinition = set {
+    --   'asdf'
+    -- },
+
     VariableIdentifier = seq {
       set {
         letter, underscore
       },
-      any_amount_of {
-        letter, underscore, digit
+      any_amount {
+        set { letter, underscore, digit },
       },
 
       capture = true,
@@ -237,6 +153,7 @@ local make_grammar = function(root)
     AnchoredExpression = set {
       group.FuncCall,
       group.ObjectBracketAccess,
+      group.ObjectDotAccess,
       group.DictionaryLiteral,
       group.ListLiteral,
       group.StringLiteral,
@@ -319,17 +236,28 @@ local make_grammar = function(root)
       linespace = true,
     },
 
+    ObjectDotAccess = seq {
+      group.DictionaryLiteral, ".", group.VariableIdentifier,
+
+      linespace = true,
+    },
+
     ListLiteral = seq {
       '[',
-      p.capture_seq_of_pat_with_optional_trailing_sep(group.Expression, literal ","),
+      list_of { group.Expression, separator = "," },
       ']',
 
       linespace = true,
     },
 
+    DictionaryKeyExpression = seq {
+      '[', group.Expression, ']',
+    },
+
     DictionaryKey = set {
       group.VariableIdentifier,
       -- TODO: Make the [] expression syntax
+      group.DictionaryKeyExpression,
     },
 
     DictionaryValue = group.Expression,

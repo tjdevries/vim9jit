@@ -81,6 +81,10 @@ match.DictionaryKey = function(node)
   return get_result(node[1])
 end
 
+match.DictionaryKeyExpression = function(node)
+  return string.format("[%s]", get_result(node[1]))
+end
+
 match.DictionaryValue = function(node)
   return get_result(node[1])
 end
@@ -112,6 +116,13 @@ match.ObjectBracketAccess = function(node)
 
   return string.format(
     "(%s)[vim9jit.IndexAccess(%s)]",
+    get_result(node[1]), get_result(node[2])
+  )
+end
+
+match.ObjectDotAccess = function(node)
+  return string.format(
+    "(%s).%s",
     get_result(node[1]), get_result(node[2])
   )
 end

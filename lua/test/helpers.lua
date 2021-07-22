@@ -21,18 +21,14 @@ end
 
 local get_item
 
-get_item = function(t, param, key, result_number, current_found)
+get_item = function(t, param, key, result_number, current_found, recursive)
   if t == nil then
     return nil
   end
 
-  if result_number == nil then
-    result_number = 1
-  end
-
-  if current_found == nil then
-    current_found = 0
-  end
+  if result_number == nil then result_number = 1 end
+  if current_found == nil then current_found = 0 end
+  if recursive == nil then recursive = true end
 
   if t[param] == key then
     return t
@@ -47,6 +43,8 @@ get_item = function(t, param, key, result_number, current_found)
       end
     end
   end
+
+  if not recursive then return nil end
 
   local result = nil
   for _, v in ipairs(t) do
