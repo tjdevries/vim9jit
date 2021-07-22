@@ -1,12 +1,12 @@
-local grammar = require('vim9jit.parser').grammar
-local grammar_def = require('vim9jit.parser').grammar_def
-local token = require('vim9jit.token')
+local grammar = require("vim9jit.parser").grammar
+local grammar_def = require("vim9jit.parser").grammar_def
+local token = require "vim9jit.token"
 
-local dedent = require('vim9jit.utils').dedent
-local indent = require('vim9jit.utils').indent
+local dedent = require("vim9jit.utils").dedent
+local indent = require("vim9jit.utils").indent
 local trim = vim.trim
 
-local has_inspect, inspect = pcall(require, 'inspect')
+local has_inspect, inspect = pcall(require, "inspect")
 if not has_inspect then
   inspect = vim.inspect
 end
@@ -16,11 +16,10 @@ local fmt = function(s, ending_newline)
     s = string.sub(s, 2)
   end
 
-  local eol_string = ''
+  local eol_string = ""
   if ending_newline == nil or ending_newline == true then
-     eol_string = "\n"
+    eol_string = "\n"
   end
-
 
   return trim(dedent(s)) .. eol_string
 end
@@ -38,7 +37,7 @@ generator.generate = function(str, strict)
 
   local parsed = token.parsestring(grammar, str)
   if parsed == nil then
-    error('Unparsed token: ' .. inspect(str))
+    error("Unparsed token: " .. inspect(str))
   end
 
   local output = "require('vim9jit')\n"
@@ -55,17 +54,16 @@ generator.generate_def = function(str, strict)
 
   local parsed = token.parsestring(grammar_def, str)
   if parsed == nil then
-    error('Unparsed token: ' .. vim.inspect(str))
+    error("Unparsed token: " .. vim.inspect(str))
   end
 
   local output = "require('vim9jit')\n"
-  local g = assert(require('vim9jit.generator.modes.def')[parsed.id], parsed.id)
+  local g = assert(require("vim9jit.generator.modes.def")[parsed.id], parsed.id)
   output = output .. g(parsed)
 
   return output
   -- return require("generator.def").generate(str)
 end
-
 
 generator._utils = {}
 generator._utils.fmt = fmt

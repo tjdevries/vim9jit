@@ -1,5 +1,5 @@
-local generator = require('vim9jit.generator')
-local grammar_def = require('vim9jit.parser').grammar_def
+local generator = require "vim9jit.generator"
+local grammar_def = require("vim9jit.parser").grammar_def
 
 local transpiler = {}
 
@@ -8,9 +8,9 @@ transpiler.transpile = function(vim_source)
 
   local vim_lines = vim.split(vim_source, "\n")
   for _, line in ipairs(vim_lines) do
-    if line ~= '' then
+    if line ~= "" then
       -- TODO: probably could have comments above this line?
-      if string.find(line, '%s*vim9script') then
+      if string.find(line, "%s*vim9script") then
         return transpiler._transpile_vim9(vim_source)
       else
         return transpiler._transpile_embedded(vim_source)
@@ -60,14 +60,7 @@ transpiler._transpile_embedded = function(vim_source)
           local old_grammar = generator._utils.get_grammar()
           generator._utils.set_grammar(grammar_def)
 
-          table.insert(
-            result,
-            wrap_with_lua_eof(
-              generator.generate_def(
-                table.concat(current_def, "\n")
-              )
-            )
-          )
+          table.insert(result, wrap_with_lua_eof(generator.generate_def(table.concat(current_def, "\n"))))
 
           generator._utils.set_grammar(old_grammar)
         end

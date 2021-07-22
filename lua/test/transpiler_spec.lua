@@ -1,7 +1,7 @@
-local transpiler = require('vim9jit.transpiler')
+local transpiler = require "vim9jit.transpiler"
 
-describe('transpiler', function()
-  it('should be able to transpile vim9script', function()
+describe("transpiler", function()
+  it("should be able to transpile vim9script", function()
     local result = transpiler.transpile [[
       vim9script
 
@@ -12,7 +12,7 @@ describe('transpiler', function()
     assert.are.same(vim.g.MY_VAR, 1)
   end)
 
-  it('should be able to transpile vimscript with vim9 in it', function()
+  it("should be able to transpile vimscript with vim9 in it", function()
     local result = transpiler.transpile [[
       function! HelloWorld()
         return "Hello World"
@@ -25,7 +25,7 @@ describe('transpiler', function()
       let g:MY_VAR = FinalFunc()
     ]]
 
-    assert.are.same(result, '')
+    assert.are.same(result, "")
     vim.api.nvim_exec(result, false)
   end)
 end)

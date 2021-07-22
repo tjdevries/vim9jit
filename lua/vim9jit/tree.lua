@@ -1,6 +1,5 @@
 local tree = {}
 
-
 tree.get_item = function(t, param, key, recursive, result_number, current_found)
   if t == nil then
     return nil
@@ -38,9 +37,9 @@ tree.get_item = function(t, param, key, recursive, result_number, current_found)
 
   local result = nil
   for _, v in ipairs(t) do
-    if type(v) == 'table' then
+    if type(v) == "table" then
       result = tree.get_item(v, param, key, result_number, current_found)
-      if (result) then
+      if result then
         current_found = current_found + 1
         if current_found >= result_number then
           return result
@@ -53,7 +52,7 @@ tree.get_item = function(t, param, key, recursive, result_number, current_found)
 end
 
 tree.get_item_with_id = function(match, id, recursive)
-  return tree.get_item(match, 'id', id, recursive)
+  return tree.get_item(match, "id", id, recursive)
 end
 
 return tree

@@ -1,10 +1,10 @@
-local helpers = require('test.helpers')
+local helpers = require "test.helpers"
 local eq = helpers.eq
 local has_no_errors = helpers.has_no_errors
 
-describe('src/testdir/test_vim9_assign.vim', function()
-  describe('Test_assignment_bool', function()
-    it('should handle boolean assignments', function()
+describe("src/testdir/test_vim9_assign.vim", function()
+  describe("Test_assignment_bool", function()
+    it("should handle boolean assignments", function()
       has_no_errors [[
         var bool1: bool = true
         assert_equal(v:true, bool1)
@@ -13,7 +13,7 @@ describe('src/testdir/test_vim9_assign.vim', function()
       ]]
     end)
 
-    it('should auto convert numbers to bools', function()
+    it("should auto convert numbers to bools", function()
       has_no_errors [[
         var bool3: bool = 0
         assert_equal(false, bool3)
@@ -22,7 +22,7 @@ describe('src/testdir/test_vim9_assign.vim', function()
       ]]
     end)
 
-    pending('convert binary expressions', function()
+    pending("convert binary expressions", function()
       has_no_errors [[
         var bool5: bool = 1 && true
         assert_equal(true, bool5)
@@ -34,8 +34,8 @@ describe('src/testdir/test_vim9_assign.vim', function()
     end)
   end)
 
-  describe('tests that confuse me', function()
-    pending('currently does not auto convert subtypes', function()
+  describe("tests that confuse me", function()
+    pending("currently does not auto convert subtypes", function()
       local _ = [[
         def MyFunc(): bool
             var my_bool: bool = 1

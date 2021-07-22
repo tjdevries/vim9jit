@@ -1,7 +1,7 @@
 vim9jit = {}
 
 vim9jit.DefaultForType = function(type_str)
-  error("Unimplemented: DefaultForType")
+  error "Unimplemented: DefaultForType"
 end
 
 vim9jit.VimPairs = function(tbl)
@@ -23,7 +23,7 @@ end
 
 vim9jit.vim_function = function(name)
   return function(...)
-    vim.api.nvim_call_function(name, {...})
+    vim.api.nvim_call_function(name, { ... })
   end
 end
 

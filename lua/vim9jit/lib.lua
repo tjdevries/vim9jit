@@ -1,15 +1,14 @@
 --- Rewritten version of patterns.lua
 --- Could be upstreamed to plenary maybe :)
-local lpeg = require('lpeg')
+local lpeg = require "lpeg"
 
 local lib = {}
 
-local P, S, C, Ct, Cg, V =
-  lpeg.P, lpeg.S, lpeg.C, lpeg.Ct, lpeg.Cg, lpeg.V
+local P, S, C, Ct, Cg, V = lpeg.P, lpeg.S, lpeg.C, lpeg.Ct, lpeg.Cg, lpeg.V
 
-local fold = function (func, ...)
+local fold = function(func, ...)
   local result = nil
-  for _, v in ipairs({...}) do
+  for _, v in ipairs { ... } do
     if result == nil then
       result = v
     else
@@ -19,29 +18,31 @@ local fold = function (func, ...)
   return result
 end
 
-local folder = function (func)
-  return function (...)
+local folder = function(func)
+  return function(...)
     return fold(func, ...)
   end
 end
 
 local capture = C
 local vararg_set = function(...)
-  return lpeg.S(fold(function (a, b) return a .. b end, ...))
+  return lpeg.S(fold(function(a, b)
+    return a .. b
+  end, ...))
 end
 
 local _whitespace_table = {
-  ' ',
-  '\t',
-  '\v',
-  '\f'
+  " ",
+  "\t",
+  "\v",
+  "\f",
 }
 
 lib.literal = P
 lib.group = V
 
 lib.whitespace = vararg_set(unpack(_whitespace_table))
-lib.whitespace_and_eol = vararg_set('\n', unpack(_whitespace_table))
+lib.whitespace_and_eol = vararg_set("\n", unpack(_whitespace_table))
 
 local any_amount = function(patt)
   return patt ^ 0
@@ -71,24 +72,31 @@ lib.grammar_unpack = function(t)
   return unpack(results)
 end
 
-
 --- Takes vargs -> concats all of them and wraps in lpeg.S
 lib.set = function(...)
-  return lpeg.S(fold(function (a, b) return a .. b end, ...))
+  return lpeg.S(fold(function(a, b)
+    return a .. b
+  end, ...))
 end
 
 local _wrap = function(generator)
   return function(t)
     local res = generator(lib.grammar_unpack(t))
-    if t.capture then res = capture(res) end
+    if t.capture then
+      res = capture(res)
+    end
     return res
   end
 end
 
-lib.seq = _wrap(folder(function (a, b) return a * b end))
-lib.set = _wrap(folder(function (a, b) return a + b end))
+lib.seq = _wrap(folder(function(a, b)
+  return a * b
+end))
+lib.set = _wrap(folder(function(a, b)
+  return a + b
+end))
 lib.some = _wrap(function(...)
-  local args = {...}
+  local args = { ... }
   assert(#args == 1, "Must be one: some")
   return args[1] ^ 1
 end)
@@ -104,13 +112,13 @@ lib.any_amount = function(t)
 end
 
 lib.one_or_no = _wrap(function(...)
-  local args = {...}
+  local args = { ... }
   assert(#args == 1, "Must be one: one_or_no")
   return args[1] ^ -1
 end)
 
 lib.one_or_more = _wrap(function(...)
-  local args = {...}
+  local args = { ... }
   assert(#args == 1, "Must be one: one_or_more")
   return args[1] ^ 1
 end)
@@ -123,7 +131,7 @@ lib.list_of = function(t)
   local spaces = lib.any_whitespace_or_eol
 
   -- could change it into the new method
-  local result = patt * (spaces * sep * spaces * patt)^pow
+  local result = patt * (spaces * sep * spaces * patt) ^ pow
   if t.trailing then
     result = result * spaces * lib.optional(sep) * spaces
   end
@@ -153,8 +161,8 @@ end
 lib.any_whitespace = lib.any_amount { lib.whitespace }
 lib.any_whitespace_or_eol = lib.any_amount { lib.whitespace_and_eol }
 lib.letter = lib.set {
-  lib.range{ 'a', 'z' },
-  lib.range{ 'A', 'Z' },
+  lib.range { "a", "z" },
+  lib.range { "A", "Z" },
 }
 
 return lib

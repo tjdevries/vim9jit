@@ -1,13 +1,13 @@
-local g = require('vim9jit.grammar')
-local lib = require('vim9jit.lib')
+local g = require "vim9jit.grammar"
+local lib = require "vim9jit.lib"
 
 local any_whitespace = lib.any_whitespace
-local one_or_no   = lib.one_or_no
-local letter      = lib.letter
-local list_of     = lib.list_of
+local one_or_no = lib.one_or_no
+local letter = lib.letter
+local list_of = lib.list_of
 local one_or_more = lib.one_or_more
-local seq         = lib.seq
-local set         = lib.set
+local seq = lib.seq
+local set = lib.set
 
 local group = setmetatable({}, {
   __index = function(_, k)
@@ -19,7 +19,8 @@ return g.grammar {
   "TypeSyntax",
 
   TypeDefinition = seq {
-    ":", group.TypeSyntax,
+    ":",
+    group.TypeSyntax,
   },
 
   TypeSyntax = list_of {

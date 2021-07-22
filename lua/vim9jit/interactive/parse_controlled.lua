@@ -1,4 +1,4 @@
-RELOAD('vim9jit')
+RELOAD "vim9jit"
 
 local thread = coroutine.create(function()
   local x = 1
@@ -7,7 +7,7 @@ local thread = coroutine.create(function()
   return 5
 end)
 
-debug.sethook(print, 'crl', 10)
+debug.sethook(print, "crl", 10)
 
 local res = coroutine.resume(thread)
 print("RES:", res)

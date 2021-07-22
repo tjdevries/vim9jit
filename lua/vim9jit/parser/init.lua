@@ -1,24 +1,24 @@
-local p = require('vim9jit.patterns')
-local g = require('vim9jit.grammar')
+local p = require "vim9jit.patterns"
+local g = require "vim9jit.grammar"
 
-local lib = require('vim9jit.lib')
+local lib = require "vim9jit.lib"
 
-local any_amount  = lib.any_amount
-local letter      = lib.letter
-local list_of     = lib.list_of
-local literal     = lib.literal
+local any_amount = lib.any_amount
+local letter = lib.letter
+local list_of = lib.list_of
+local literal = lib.literal
 local one_or_more = lib.one_or_more
-local one_or_no   = lib.one_or_no
-local optional    = lib.optional
-local range       = lib.range
-local seq         = lib.seq
-local set         = lib.set
-local some        = lib.some
+local one_or_no = lib.one_or_no
+local optional = lib.optional
+local range = lib.range
+local seq = lib.seq
+local set = lib.set
+local some = lib.some
 
 -- local whitespace = lib.whitespace
 
 local underscore = literal "_"
-local digit = range { '0', '9' }
+local digit = range { "0", "9" }
 
 local any_whitespace = lib.any_whitespace
 local any_whitespace_or_eol = lib.any_whitespace_or_eol
@@ -29,7 +29,7 @@ local c_seqw = function(sequence)
     spaces = any_whitespace_or_eol
   end
 
-  local sequence_with_whitespace = {spaces}
+  local sequence_with_whitespace = { spaces }
   for i, v in ipairs(sequence) do
     table.insert(sequence_with_whitespace, v)
 
@@ -57,7 +57,8 @@ local make_grammar = function(root)
     root or "vim9script",
 
     vim9script = seq {
-      "vim9script", EOL_or_EOF,
+      "vim9script",
+      EOL_or_EOF,
       any_amount {
         set {
           seq { group.Assign, EOL_or_EOF },
@@ -69,7 +70,9 @@ local make_grammar = function(root)
     },
 
     Assign = c_seqw {
-      group.Variable, "=", group.Expression,
+      group.Variable,
+      "=",
+      group.Expression,
 
       eol = false,
     },
@@ -100,7 +103,8 @@ local make_grammar = function(root)
 
     VariableIdentifier = seq {
       set {
-        letter, underscore
+        letter,
+        underscore,
       },
       any_amount {
         set { letter, underscore, digit },
@@ -112,8 +116,8 @@ local make_grammar = function(root)
     BufferVariableIdentifier = seq { "b:", group.VariableIdentifier, capture = true },
     GlobalVariableIdentifier = seq { "g:", group.VariableIdentifier, capture = true },
     ScriptVariableIdentifier = seq { "s:", group.VariableIdentifier, capture = true },
-    TabVaraibleIdentifier    = seq { "t:", group.VariableIdentifier, capture = true },
-    VimVariableIdentifier    = seq { "v:", group.VariableIdentifier, capture = true },
+    TabVaraibleIdentifier = seq { "t:", group.VariableIdentifier, capture = true },
+    VimVariableIdentifier = seq { "v:", group.VariableIdentifier, capture = true },
     WindowVariableIdentifier = seq { "w:", group.VariableIdentifier, capture = true },
 
     Variable = set {
@@ -138,7 +142,7 @@ local make_grammar = function(root)
     --]]
 
     Expression = seq {
-      any_whitespace, 
+      any_whitespace,
       set {
         group.Term,
         group.Factor,
@@ -166,7 +170,13 @@ local make_grammar = function(root)
     },
 
     ParenthedExpression = seq {
-      any_whitespace, "(", any_whitespace, group.Expression, any_whitespace, ")", any_whitespace,
+      any_whitespace,
+      "(",
+      any_whitespace,
+      group.Expression,
+      any_whitespace,
+      ")",
+      any_whitespace,
     },
 
     Add = literal "+",
@@ -176,7 +186,7 @@ local make_grammar = function(root)
     Divide = literal "/",
 
     Term = seq {
-      set { group.Factor, group.AnchoredExpression, },
+      set { group.Factor, group.AnchoredExpression },
       set { group.Add, group.Subtract },
       group.Expression,
 
@@ -186,8 +196,8 @@ local make_grammar = function(root)
 
     Factor = seq {
       group.AnchoredExpression,
-      set { group.Multiply, group.Divide, },
-      set { group.Factor, group.AnchoredExpression, },
+      set { group.Multiply, group.Divide },
+      set { group.Factor, group.AnchoredExpression },
 
       capture = true,
       linespace = true,
@@ -196,19 +206,21 @@ local make_grammar = function(root)
     Unary = set { "+", "-" },
 
     Number = seq {
-      optional { group.Unary, },
+      optional { group.Unary },
       set {
         -- Hexadecimal
         seq {
-          set { "0x", "0X", },
+          set { "0x", "0X" },
           some {
-            set { digit, range { 'a', 'f' }, range { 'A', 'F' } }
-          }
+            set { digit, range { "a", "f" }, range { "A", "F" } },
+          },
         },
 
         -- Float
         seq {
-          some { digit }, '.', some { digit }
+          some { digit },
+          ".",
+          some { digit },
         },
 
         some { digit },
@@ -218,40 +230,50 @@ local make_grammar = function(root)
     },
 
     Boolean = set {
-      "true", "v:true", "false", "v:false", capture = true,
+      "true",
+      "v:true",
+      "false",
+      "v:false",
+      capture = true,
     },
 
     StringLiteral = set {
       --  Courtesy of Lua wiki. Thanks!
-      p.literal("'") * ((1 - p.S"'\r\n\f\\") + (p.literal '\\' * 1)) ^ 0 * "'",
-      p.literal('"') * ((1 - p.S'"\r\n\f\\') + (p.literal '\\' * 1)) ^ 0 * '"',
+      p.literal "'" * ((1 - p.S "'\r\n\f\\") + (p.literal "\\" * 1)) ^ 0 * "'",
+      p.literal '"' * ((1 - p.S '"\r\n\f\\') + (p.literal "\\" * 1)) ^ 0 * '"',
 
       capture = true,
     },
 
     ObjectBracketAccess = seq {
       set { group.ListLiteral, group.DictionaryLiteral },
-      '[', group.Expression, ']',
+      "[",
+      group.Expression,
+      "]",
 
       linespace = true,
     },
 
     ObjectDotAccess = seq {
-      group.DictionaryLiteral, ".", group.VariableIdentifier,
+      group.DictionaryLiteral,
+      ".",
+      group.VariableIdentifier,
 
       linespace = true,
     },
 
     ListLiteral = seq {
-      '[',
+      "[",
       list_of { group.Expression, separator = "," },
-      ']',
+      "]",
 
       linespace = true,
     },
 
     DictionaryKeyExpression = seq {
-      '[', group.Expression, ']',
+      "[",
+      group.Expression,
+      "]",
     },
 
     DictionaryKey = set {
@@ -264,7 +286,7 @@ local make_grammar = function(root)
 
     DictionaryItem = seq {
       group.DictionaryKey,
-      ':',
+      ":",
       group.DictionaryValue,
 
       linespace = true,
@@ -272,19 +294,22 @@ local make_grammar = function(root)
     },
 
     DictionaryLiteral = seq {
-      '{',
-        list_of {
-          group.DictionaryItem,
+      "{",
+      list_of {
+        group.DictionaryItem,
 
-          separator = ',',
-          linespace = true,
-        },
-      '}',
+        separator = ",",
+        linespace = true,
+      },
+      "}",
     },
 
     -- {{{ Function Calls
     FuncCall = seq {
-      group.FuncName, "(", group.FuncCallArgList, ")",
+      group.FuncName,
+      "(",
+      group.FuncCallArgList,
+      ")",
 
       linespace = true,
     },
@@ -303,7 +328,7 @@ local make_grammar = function(root)
 
         separator = ",",
         linespace = true,
-      }
+      },
     },
     -- }}}
   }
@@ -312,5 +337,5 @@ local make_grammar = function(root)
 end
 
 return {
-  make_grammar = make_grammar
+  make_grammar = make_grammar,
 }

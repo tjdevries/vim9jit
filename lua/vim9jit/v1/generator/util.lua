@@ -1,5 +1,5 @@
 local trim = vim.trim
-local dedent = require('vim9jit.utils').dedent
+local dedent = require("vim9jit.utils").dedent
 
 local get_item
 
@@ -40,9 +40,9 @@ get_item = function(t, param, key, recursive, result_number, current_found)
 
   local result = nil
   for _, v in ipairs(t) do
-    if type(v) == 'table' then
+    if type(v) == "table" then
       result = get_item(v, param, key, result_number, current_found)
-      if (result) then
+      if result then
         current_found = current_found + 1
         if current_found >= result_number then
           return result
@@ -55,11 +55,11 @@ get_item = function(t, param, key, recursive, result_number, current_found)
 end
 
 local get_item_with_id = function(match, id, recursive)
-  return get_item(match, 'id', id, recursive)
+  return get_item(match, "id", id, recursive)
 end
 
 local id_exists = function(match, id)
-  return get_item(match, 'id', id, false) ~= nil
+  return get_item(match, "id", id, false) ~= nil
 end
 
 local get_result = function(generator, match)
@@ -71,10 +71,7 @@ local get_result = function(generator, match)
   assert(match_id, string.format("%s:%s malformed object", match_id, match))
 
   -- Hmm... wonder if I could just use _get_value for a lot of stuff.
-  assert(
-    generator.match[match_id],
-    string.format("%s: missing generator", match_id)
-  )
+  assert(generator.match[match_id], string.format("%s: missing generator", match_id))
 
   return generator.match[match_id](match)
 end
@@ -90,11 +87,10 @@ return {
       s = string.sub(s, 2)
     end
 
-    local eol_string = ''
+    local eol_string = ""
     if ending_newline == nil or ending_newline == true then
-       eol_string = "\n"
+      eol_string = "\n"
     end
-
 
     return trim(dedent(s)) .. eol_string
   end,

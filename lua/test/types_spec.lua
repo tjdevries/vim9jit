@@ -1,6 +1,6 @@
-local types_grammar = require('vim9jit.parser.types')
+local types_grammar = require "vim9jit.parser.types"
 
-local helpers = require('test.helpers')
+local helpers = require "test.helpers"
 local eq = helpers.eq
 local get_item = helpers.get_item
 
@@ -14,11 +14,13 @@ local parsed = function(output, input, debug)
   local index = 1
 
   while true do
-   local node = get_item(parsed, 'id', 'TypeSingleDefinition', index, nil, false)
-   if not node then break end
+    local node = get_item(parsed, "id", "TypeSingleDefinition", index, nil, false)
+    if not node then
+      break
+    end
 
-   table.insert(items, node.value)
-   index = index + 1
+    table.insert(items, node.value)
+    index = index + 1
   end
 
   eq(output, items)
@@ -26,15 +28,15 @@ local parsed = function(output, input, debug)
 end
 
 describe("types", function()
-  it('can parse this', function()
-    parsed({"number"}, "number")
+  it("can parse this", function()
+    parsed({ "number" }, "number")
   end)
 
-  it('can parse | separated', function()
+  it("can parse | separated", function()
     parsed({ "number", "bool" }, "number|bool")
   end)
 
-  it('can parse functions', function()
+  it("can parse functions", function()
     parsed({ "func: number" }, "func: number", true)
   end)
 end)
