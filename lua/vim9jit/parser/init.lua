@@ -246,7 +246,7 @@ local make_grammar = function(root)
     },
 
     ObjectBracketAccess = seq {
-      set { group.ListLiteral, group.DictionaryLiteral },
+      set { group.ListLiteral, group.DictionaryLiteral, group.ParenthedExpression },
       "[",
       group.Expression,
       "]",
@@ -255,7 +255,7 @@ local make_grammar = function(root)
     },
 
     ObjectDotAccess = seq {
-      group.DictionaryLiteral,
+      set { group.DictionaryLiteral, group.ParenthedExpression },
       ".",
       group.VariableIdentifier,
 

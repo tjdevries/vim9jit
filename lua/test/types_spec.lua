@@ -37,6 +37,6 @@ describe("types", function()
   end)
 
   it("can parse functions", function()
-    parsed({ "func: number" }, "func: number", true)
+    parsed({ "func: number" }, "func: number")
   end)
 end)

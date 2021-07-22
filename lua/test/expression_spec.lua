@@ -4,6 +4,10 @@ local helpers = require "test.helpers"
 local eq = helpers.eq
 
 local eval = function(s, force)
+  if type(s) == "table" then
+    s = table.concat(s, "\n")
+  end
+
   local generated, parsed = generator.generate(s, "Expression")
   local inner = vim.split(generated, "\n")
   inner[#inner] = "return " .. inner[#inner]
@@ -42,7 +46,7 @@ describe("expressions", function()
       eq("hello", eval '"hello"')
     end)
 
-    it("returns a single var", function()
+    it("returns a single bool", function()
       eq(true, eval "true")
       eq(true, eval "v:true")
       eq(false, eval "false")
@@ -105,6 +109,16 @@ describe("expressions", function()
         eq(11, eval '{A: 5 + 6}["A"]')
         eq(11, eval '{["A"]: 5 + 6}["A"]')
         eq(11, eval '{["A"]: 5 + 6}.A')
+      end)
+
+      it("can access values from lists that are stored as a result of expression", function()
+        eq(1, eval "([1, 2, 3, 4])[0]")
+        eq(2, eval "([1, 2, 3, 4])[[1,2,3][0]]")
+      end)
+
+      it("can access values from dicts that are stored as a result of expression", function()
+        eq(5, eval "({A: 5}).A")
+        eq(5, eval "({A: 5})[['A'][0]]")
       end)
     end)
   end)
