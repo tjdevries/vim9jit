@@ -45,3 +45,8 @@ luac.out
 *.swp
 
 doc/tags
+
+
+# Added by cargo
+
+/target
