@@ -8,6 +8,10 @@ fn is_digit(ch: char) -> bool {
     '0' <= ch && ch <= '9'
 }
 
+fn is_alphanumeric(ch: char) -> bool {
+    is_letter(ch) || is_digit(ch)
+}
+
 const EOF: char = '\0';
 const EOL: char = '\n';
 
@@ -146,15 +150,8 @@ fn parse(input: String) -> Result<Vec<Token>> {
         match token {
             Token::Ignore => continue,
             Token::ParseError => return Err(ParseError {}),
-            tok => {
-                // This feels so dumb
-                if tok == Token::EOF {
-                    result.push(tok);
-                    break;
-                }
-
-                result.push(tok);
-            }
+            Token::EOF => break,
+            tok => result.push(tok),
         }
     }
 
@@ -168,6 +165,7 @@ fn main() {
 #[cfg(test)]
 mod test {
     use super::*;
+    use Token::*;
 
     macro_rules! chars {
         ($s: expr) => {
@@ -177,11 +175,11 @@ mod test {
 
     macro_rules! v9 {
         () => {
-            Token::Vim9Script(vec!['v', 'i', 'm', '9', 's', 'c', 'r', 'i', 'p', 't'])
+            Vim9Script(vec!['v', 'i', 'm', '9', 's', 'c', 'r', 'i', 'p', 't'])
         };
 
         ($l: expr) => {
-            Token::Vim9Script({
+            Vim9Script({
                 let mut v: Vec<char> = vec!['v', 'i', 'm', '9', 's', 'c', 'r', 'i', 'p', 't'];
                 v.extend::<Vec<char>>($l.chars().collect());
                 v
@@ -189,83 +187,42 @@ mod test {
         };
     }
 
-    #[test]
-    fn test_parses_just_vim9script() -> Result<()> {
-        let parsed = parse("vim9script\n".into())?;
-        assert_eq!(parsed, vec![v9!(), Token::EOF]);
+    macro_rules! test_tokens {
+        ($name: ident, $syntax: literal, [$( $x:expr ),*]) => {
+            #[test]
+            fn $name() -> Result<()> {
+                let mut text = "vim9script\n".to_owned();
+                text.push_str($syntax);
 
-        Ok(())
+                let parsed = parse(text)?;
+
+                let mut expected = Vec::new();
+                expected.push(v9!());
+                $(
+                    expected.push($x);
+                )*
+
+                assert_eq!(parsed, expected);
+                Ok(())
+            }
+        };
     }
 
-    #[test]
-    fn test_parses_comment_with_space_after_vim9script() -> Result<()> {
-        let parsed = parse("vim9script  \n# my first comment".into())?;
-        assert_eq!(
-            parsed,
-            vec![
-                v9!("  "),
-                Token::Comment(chars!("# my first comment")),
-                Token::EOF
-            ]
-        );
+    test_tokens!(can_parse_just_vim9script, "", []);
 
-        Ok(())
-    }
+    test_tokens!(
+        can_parse_a_simple_comment,
+        "# My first comment",
+        [Comment(chars!("# My first comment"))]
+    );
 
-    #[test]
-    fn test_parses_simple_comment() -> Result<()> {
-        let parsed = parse("vim9script\n# my first comment".into())?;
-        assert_eq!(
-            parsed,
-            vec![
-                v9!(),
-                Token::Comment(chars!("# my first comment")),
-                Token::EOF
-            ]
-        );
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_fails_when_bad_vim9script() {
-        assert!(parse("vim9scrt".into()).is_err());
-    }
-
-    #[test]
-    fn test_parses_a_single_digit_number() -> Result<()> {
-        assert_eq!(
-            parse("5".into())?,
-            vec![Token::Number(chars!("5")), Token::EOF]
-        );
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_parses_a_multiple_digit_number() -> Result<()> {
-        assert_eq!(
-            parse("5432".into())?,
-            vec![Token::Number(chars!("5432")), Token::EOF]
-        );
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_parses_an_addition() -> Result<()> {
-        assert_eq!(
-            parse("5432 + 342".into())?,
-            vec![
-                Token::Number(chars!("5432")),
-                Token::Plus,
-                Token::Number(chars!("342")),
-                Token::EOF
-            ]
-        );
-
-        Ok(())
-    }
+    // Numbers
+    test_tokens!(parses_a_single_digit_number, "5", [Number(chars!("5"))]);
+    test_tokens!(
+        parses_an_addition,
+        "5432 + 342",
+        [Number(chars!("5432")), Plus, Number(chars!("342"))]
+    );
 
     // var x = 5
     // [ Token::Var("var") Token::identifier("x"), Token::Equal, Token::Number("5") ]
@@ -276,4 +233,26 @@ mod test {
     // (let) -> (+) -> 5
     //           `---> 6
     //
+
+    #[test]
+    fn test_parses_comment_with_space_after_vim9script() -> Result<()> {
+        let parsed = parse("vim9script  \n# my first comment".into())?;
+        assert_eq!(
+            parsed,
+            vec![v9!("  "), Comment(chars!("# my first comment"))]
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_fails_when_bad_vim9script() {
+        assert!(parse("vim9scrt".into()).is_err());
+    }
+    #[test]
+    fn test_parses_a_multiple_digit_number() -> Result<()> {
+        assert_eq!(parse("5432".into())?, vec![Number(chars!("5432"))]);
+
+        Ok(())
+    }
 }
