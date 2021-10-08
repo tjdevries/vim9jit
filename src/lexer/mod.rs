@@ -38,7 +38,7 @@ pub enum Token {
     Identifier(Vec<char>),
 
     // Commands
-    Var,
+    CommandVar,
 
     // Whitespace
     NewLine,
@@ -180,7 +180,7 @@ mod tokenizer {
     }
 
     pub fn new_statement(lexer: &mut Lexer) -> Option<State> {
-        println!("Current token: {:?}", lexer.ch);
+        // println!("Current token: {:?}", lexer.ch);
 
         let tok = match shared(lexer) {
             Some(t) => t,
@@ -191,7 +191,7 @@ mod tokenizer {
                     let word = read_while(lexer, |ch| !is_whitespace(ch));
 
                     if word == chars!("var") {
-                        Token::Var
+                        Token::CommandVar
                     } else if is_digit(val) {
                         Token::Number(word)
                     } else {
@@ -212,7 +212,7 @@ mod tokenizer {
     }
 
     pub fn generic(lexer: &mut Lexer) -> Option<State> {
-        println!("Generic token: {:?}", lexer.ch);
+        // println!("Generic token: {:?}", lexer.ch);
 
         let tok = match shared(lexer) {
             Some(t) => t,
@@ -377,19 +377,19 @@ mod test {
         [Number(chars!("5432")), Plus, Number(chars!("342"))]
     );
 
-    test_tokens!(parse_singular_var, "var", [Var]);
+    test_tokens!(parse_singular_var, "var", [CommandVar]);
 
     test_tokens!(
         parse_singular_var_statement,
         "var foo = 5",
-        [Var, Identifier(chars!("foo")), Equal, Number(chars!("5"))]
+        [CommandVar, Identifier(chars!("foo")), Equal, Number(chars!("5"))]
     );
 
     test_tokens!(
         parse_var_var_statement,
         "var var = 54 + 32",
         [
-            Var,
+            CommandVar,
             Identifier(chars!("var")),
             Equal,
             Number(chars!("54")),
@@ -402,7 +402,7 @@ mod test {
         parse_simple_list,
         "var x = [1, 2, 3]",
         [
-            Var,
+            CommandVar,
             Identifier(chars!("x")),
             Equal,
             LeftBracket,
@@ -419,7 +419,7 @@ mod test {
         parse_list_with_addition,
         "var x = [1, 2 + foo, 3]",
         [
-            Var,
+            CommandVar,
             Identifier(chars!("x")),
             Equal,
             LeftBracket,

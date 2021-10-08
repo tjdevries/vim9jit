@@ -1,61 +1,93 @@
-use crate::lexer::tokenize_file;
+use thiserror::Error;
+
+use crate::ast;
 use crate::lexer::Token;
 
-#[derive(Debug, PartialEq)]
-struct Program {
-    statements: Vec<Statement>,
-}
+#[derive(Error, Debug, Clone, PartialEq, Eq)]
+pub enum ParseErrorKind {
+    #[error("Unexpected end of file")]
+    Eof,
 
-#[derive(Debug, PartialEq)]
-enum Statement {
-    Vim9Script,
-    Var {
-        identifier: Identifier,
-        expression: Expression,
+    #[error("Failed to parse: {message}")]
+    Message { message: &'static str },
+
+    #[error("Expected eof")]
+    ExpectedEof { actual: &'static str },
+
+    #[error("Unknown token")]
+    Unknown,
+
+    #[error("expected {expected}, but got `{actual}`")]
+    Expected {
+        actual: &'static str,
+        expected: &'static str,
     },
 
-    Error {
-        msg: String,
-    },
+    #[error("Invalid number literal: {0}")]
+    InvalidLitNum(#[from] std::num::ParseFloatError),
 }
 
-#[derive(Debug, PartialEq)]
-struct Identifier {
-    name: String,
+#[derive(Debug)]
+pub struct ParseError {
+    pub kind: ParseErrorKind,
 }
 
-#[derive(Debug, PartialEq)]
-enum Expression {
-    Number(i64),
+pub type ParseResult<T, E = ParseError> = Result<T, E>;
 
-    Infix {
-        operator: Operator,
-        left: Box<Expression>,
-        right: Box<Expression>,
-    },
+pub trait Parse
+where
+    Self: Sized,
+{
+    fn parse(p: &mut Parser) -> ParseResult<Self>;
 }
 
-#[derive(Debug, PartialEq)]
-enum Operator {
-    Add,
-    Sub,
-    Mul,
-    Div,
+#[derive(PartialOrd, Ord, PartialEq, Eq, Debug)]
+enum Precedence {
+    Lowest,
+    Equality,
+    LesserGreater,
+    Sum,
+    Product,
+    Prefix,
+    Call,
 }
 
-struct Parser {
-    tokens: Vec<Token>,
+fn get_precedence(operator: ast::InfixOperator) -> Precedence {
+    // TODO: The rest of em
+    match operator {
+        ast::InfixOperator::Add | ast::InfixOperator::Sub => Precedence::Sum,
+        ast::InfixOperator::Mul | ast::InfixOperator::Div => Precedence::Product,
+        _ => Precedence::Lowest,
+    }
+}
+pub struct Parser {
+    pub tokens: Vec<Token>,
 
     position: usize,
     read_position: usize,
 }
 
 impl Parser {
+    pub fn parse<T>(&mut self) -> ParseResult<T>
+    where
+        T: Parse,
+    {
+        T::parse(self)
+    }
+
     pub fn next_token(&mut self) -> Token {
         self.position = self.read_position;
         self.read_position = self.read_position + 1;
 
         self.token()
+    }
+
+    pub fn peek_token(&mut self) -> Token {
+        self.get_token_at(self.read_position)
+    }
+
+    pub fn token(&self) -> Token {
+        self.get_token_at(self.position)
     }
 
     fn get_token_at(&self, n: usize) -> Token {
@@ -67,45 +99,7 @@ impl Parser {
         }
     }
 
-    pub fn peek_token(&mut self) -> Token {
-        self.get_token_at(self.read_position)
-    }
-
-    pub fn token(&self) -> Token {
-        self.get_token_at(self.position)
-    }
-
-    fn next_statement(&mut self) -> Option<Statement> {
-        let mut tok = Token::StartOfFile;
-        while tok != Token::EOF {
-            tok = self.next_token();
-
-            match &tok {
-                Token::Vim9Script(_) => return self.parse_vim9script(),
-                Token::Var => return parse_var(self),
-                // {
-                //     identifier: Identifier { name: "x".into() },
-                //     expression: Expression {},
-                // },
-                thing => {
-                    println!("Have not yet parsed: {:?}", thing);
-                }
-            }
-        }
-
-        // Silently skip this
-        None
-    }
-
-    fn parse_vim9script(&mut self) -> Option<Statement> {
-        if !matches!(self.next_token(), Token::NewLine | Token::EOF) {
-            None
-        } else {
-            Some(Statement::Vim9Script)
-        }
-    }
-
-    fn parse_expression(&mut self) -> Option<Expression> {
+    fn parse_expression(&mut self) -> Option<ast::Expression> {
         let tok = self.next_token();
         let peeked = self.peek_token();
 
@@ -120,8 +114,8 @@ impl Parser {
                     // Advance
                     self.next_token();
 
-                    Some(Expression::Infix {
-                        operator: Operator::Add,
+                    Some(ast::Expression::Infix {
+                        operator: ast::InfixOperator::Add,
                         left: Box::new(convert_single_token_to_expression(tok)),
                         right: Box::new(self.parse_expression()?),
                     })
@@ -132,8 +126,8 @@ impl Parser {
 
                     let next = self.next_token();
 
-                    Some(Expression::Infix {
-                        operator: Operator::Mul,
+                    Some(ast::Expression::Infix {
+                        operator: ast::InfixOperator::Mul,
                         left: Box::new(convert_single_token_to_expression(tok)),
                         right: Box::new(convert_single_token_to_expression(next)),
                     })
@@ -145,23 +139,23 @@ impl Parser {
     }
 }
 
-fn convert_single_token_to_expression(tok: Token) -> Expression {
+fn convert_single_token_to_expression(tok: Token) -> ast::Expression {
     match tok {
         Token::Number(num) => {
             // TODO: This is terrible parsing. It's like you're writing C++...
             let num: String = num.iter().collect();
             let parsed_num: i64 = num.parse().unwrap();
-            Expression::Number(parsed_num)
+            ast::Expression::Number(parsed_num)
         }
         _ => panic!("I thought rust was safe...??? explain this."),
     }
 }
 
-fn parse_var(p: &mut Parser) -> Option<Statement> {
+fn parse_var(p: &mut Parser) -> Option<ast::Statement> {
     let identifier = match parse_identifier(p) {
         Some(identifier) => identifier,
         None => {
-            return Some(Statement::Error {
+            return Some(ast::Statement::Error {
                 msg: format!("Was expecting identifier, got nothing {:?}", p.token()),
             })
         }
@@ -169,7 +163,7 @@ fn parse_var(p: &mut Parser) -> Option<Statement> {
 
     let tok = p.next_token();
     if !matches!(tok, Token::Equal) {
-        return Some(Statement::Error {
+        return Some(ast::Statement::Error {
             msg: format!("Was expecting token equals, got {:?}", tok),
         });
     }
@@ -178,36 +172,38 @@ fn parse_var(p: &mut Parser) -> Option<Statement> {
     let expression = match p.parse_expression() {
         Some(expression) => expression,
         None => {
-            return Some(Statement::Error {
+            return Some(ast::Statement::Error {
                 msg: format!("Was expecting expression, got GARBAGE {:?}", p.token()),
             })
         }
     };
 
-    Some(Statement::Var { identifier, expression })
+    Some(ast::Statement::Var(ast::StatementVar { identifier, expression }))
 }
 
-fn parse_identifier(p: &mut Parser) -> Option<Identifier> {
+fn parse_identifier(p: &mut Parser) -> Option<ast::Identifier> {
     let tok = p.next_token();
     let name = match tok {
         Token::Identifier(chars) => chars.iter().collect(),
         _ => return None,
     };
 
-    Some(Identifier { name })
+    Some(ast::Identifier { name })
 }
 
-fn parse(tokens: Vec<Token>) -> Program {
+fn parse(tokens: Vec<Token>) -> ParseResult<ast::Program> {
     let mut parser = Parser {
         tokens,
         position: 0,
         read_position: 0,
     };
 
-    let mut statements = Vec::new();
-    while let Some(statement) = parser.next_statement() {
-        statements.push(statement)
-    }
+    parser.parse()
+
+    // let mut statements = Vec::new();
+    // while let Some(statement) = parser.next_statement() {
+    //     statements.push(statement)
+    // }
 
     //     for tok in tokens {
     //         statements.push(match tok {
@@ -220,7 +216,7 @@ fn parse(tokens: Vec<Token>) -> Program {
     //         });
     //     }
 
-    Program { statements }
+    // ast::Program { statements }
 }
 
 // vim9script
@@ -230,130 +226,133 @@ fn parse(tokens: Vec<Token>) -> Program {
 //  echo [1, 2, 3]
 // enddef
 
-#[derive(Debug)]
-pub struct ParseError {
-    tok: Token,
-}
-type Result<T> = std::result::Result<T, ParseError>;
-
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::ast::*;
+    use crate::lexer::tokenize_file;
 
     fn get_tokens(input: &str) -> Vec<Token> {
         tokenize_file(format!("vim9script\n{}", input).chars().collect()).unwrap()
     }
 
     #[test]
-    fn parses_vim9script() {
+    fn parses_vim9script() -> ParseResult<()> {
         let tokens = tokenize_file("vim9script".into()).unwrap();
 
         assert_eq!(
             Program {
-                statements: vec![Statement::Vim9Script]
+                statements: vec![Statement::Vim9Script(StatementVim9 {})]
             },
-            parse(tokens)
+            parse(tokens)?
         );
+
+        Ok(())
     }
 
     #[test]
-    fn parses_a_var_statement() {
+    fn parses_a_var_statement() -> ParseResult<()> {
         let tokens = get_tokens("var x = 5");
 
         assert_eq!(
             Program {
                 statements: vec![
-                    Statement::Vim9Script,
-                    Statement::Var {
+                    Statement::Vim9Script(StatementVim9 {}),
+                    Statement::Var(StatementVar {
                         identifier: Identifier { name: "x".into() },
                         expression: Expression::Number(5),
-                    }
+                    })
                 ]
             },
-            parse(tokens)
+            parse(tokens)?
         );
+
+        Ok(())
     }
 
     #[test]
-    fn parses_a_var_statement_with_addition() {
+    fn parses_a_var_statement_with_addition() -> ParseResult<()> {
         let tokens = get_tokens("var x = 5 + 6");
 
         assert_eq!(
             Program {
                 statements: vec![
-                    Statement::Vim9Script,
-                    Statement::Var {
+                    Statement::Vim9Script(StatementVim9 {}),
+                    Statement::Var(StatementVar {
                         identifier: Identifier { name: "x".into() },
                         expression: Expression::Infix {
-                            operator: Operator::Add,
+                            operator: InfixOperator::Add,
                             left: Box::new(Expression::Number(5)),
                             right: Box::new(Expression::Number(6)),
                         },
-                    }
+                    })
                 ]
             },
-            parse(tokens)
+            parse(tokens)?
         );
+
+        Ok(())
     }
 
     #[test]
-    fn parses_a_var_statement_operator_precedence_1() {
+    fn parses_a_var_statement_operator_precedence_1() -> ParseResult<()> {
         let tokens = get_tokens("var x = 5 + 6 * 2");
 
         assert_eq!(
             Program {
                 statements: vec![
-                    Statement::Vim9Script,
-                    Statement::Var {
+                    Statement::Vim9Script(StatementVim9 {}),
+                    Statement::Var(StatementVar {
                         identifier: Identifier { name: "x".into() },
                         expression: Expression::Infix {
-                            operator: Operator::Add,
+                            operator: InfixOperator::Add,
                             left: Box::new(Expression::Number(5)),
                             right: Box::new(Expression::Infix {
-                                operator: Operator::Mul,
+                                operator: InfixOperator::Mul,
                                 left: Box::new(Expression::Number(6)),
                                 right: Box::new(Expression::Number(2)),
                             }),
                         },
-                    }
+                    })
                 ]
             },
-            parse(tokens)
+            parse(tokens)?
         );
+
+        Ok(())
     }
 
     #[test]
-    fn parses_a_var_statement_operator_precedence_2() {
+    fn parses_a_var_statement_operator_precedence_2() -> ParseResult<()> {
         let tokens = get_tokens("var x = 5 * 6 + 2");
 
         assert_eq!(
             Program {
                 statements: vec![
-                    Statement::Vim9Script,
-                    Statement::Var {
+                    Statement::Vim9Script(StatementVim9 {}),
+                    Statement::Var(StatementVar {
                         identifier: Identifier { name: "x".into() },
                         expression: Expression::Infix {
-                            operator: Operator::Add,
+                            operator: InfixOperator::Add,
                             left: Box::new(Expression::Infix {
-                                operator: Operator::Mul,
+                                operator: InfixOperator::Mul,
                                 left: Box::new(Expression::Number(5)),
                                 right: Box::new(Expression::Number(6)),
                             }),
                             right: Box::new(Expression::Number(2)),
                         },
-                    }
+                    })
                 ]
             },
-            parse(tokens)
+            parse(tokens)?
         );
+
+        Ok(())
     }
 
     #[test]
-    fn parses_a_var_statement_with_no_equal() {
+    fn errors_when_a_var_statement_has_no_equal() {
         let tokens = get_tokens("var x 5");
-        let parsed = parse(tokens);
-
-        // TODO: This is not that pretty
-        assert!(matches!(parsed.statements[1], Statement::Error { .. }));
+        assert!(parse(tokens).is_err());
     }
 }
