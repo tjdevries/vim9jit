@@ -1,5 +1,5 @@
 use crate::ast;
-use crate::lexer::Token;
+use crate::lexer::TokenKind;
 use crate::parser::Parse;
 use crate::parser::ParseResult;
 use crate::parser::Parser;
@@ -13,8 +13,8 @@ impl Parse for Program {
     fn parse(p: &mut Parser) -> ParseResult<Self> {
         let mut statements: Vec<ast::Statement> = Vec::new();
         loop {
-            match p.token() {
-                Token::EOF => break,
+            match p.token().kind {
+                TokenKind::EOF => break,
                 _ => statements.push(p.parse()?),
             }
         }

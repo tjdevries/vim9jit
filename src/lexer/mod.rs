@@ -1,9 +1,3 @@
-macro_rules! chars {
-    ($s: expr) => {
-        $s.chars().collect::<Vec<char>>()
-    };
-}
-
 fn is_letter(ch: char) -> bool {
     'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z'
 }
@@ -28,17 +22,40 @@ const EOF: char = 0 as char;
 const EOL: char = '\n';
 
 #[derive(PartialEq, Debug, Clone)]
-pub enum Token {
+pub struct Token {
+    pub kind: TokenKind,
+    pub text: String,
+}
+
+impl Token {
+    pub fn new<A: AsRef<str>>(kind: TokenKind, text: A) -> Self {
+        Self {
+            kind,
+            text: text.as_ref().into(),
+        }
+    }
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub enum TokenKind {
     StartOfFile,
 
-    Vim9Script(Vec<char>),
-    Comment(Vec<char>),
+    Vim9Script,
+    Comment,
 
-    Number(Vec<char>),
-    Identifier(Vec<char>),
+    Number,
+    Identifier,
 
     // Commands
     CommandVar,
+
+    // Scopes
+    GlobalScope,
+    TabScope,
+    WindowScope,
+    BufferScope,
+    ScriptScope, // Does this one still exist??
+    LocalScope,  // Does this one still exist??
 
     // Whitespace
     NewLine,
@@ -46,8 +63,8 @@ pub enum Token {
     // Operations
     Plus,
     Minus,
-    Multiply,
-    Divide,
+    Star,
+    Slash,
 
     Equal,
 
@@ -124,10 +141,16 @@ pub struct State {
     next: fn(&mut Lexer) -> Option<State>,
 }
 
-// struct StateFn {
-//     // f: Box<dyn FnMut(&mut Lexer) -> Option<State>>,
-//     next: fn(&mut Lexer) -> Option<State>,
-// }
+macro_rules! tok {
+    ($kind: expr, $l: expr) => {
+        Token::new($kind, $l.to_string())
+    };
+}
+
+macro_rules! T {
+    [=] => { Token::new(TokenKind::Equal, "=") };
+    [,] => { Token::new(TokenKind::Comma, ",") };
+}
 
 mod tokenizer {
     use super::*;
@@ -135,34 +158,37 @@ mod tokenizer {
     macro_rules! tok_error {
         () => {
             Some(State {
-                tokens: vec![Token::ParseError],
-                next: panic,
+                tokens: vec![Token::new(TokenKind::ParseError, String::new())],
+                next: panic_next,
             })
         };
     }
 
-    fn shared(lexer: &mut Lexer) -> Option<Token> {
-        let tok = match lexer.ch {
-            EOF => Token::EOF,
-            EOL => Token::NewLine,
-            '#' => Token::Comment(read_until_eol(lexer)),
+    //boolean
+    //ebullient
 
-            ' ' => Token::Ignore,
+    fn shared(lexer: &mut Lexer) -> Option<Token> {
+        let kind = match lexer.ch {
+            '#' => return Some(Token::new(TokenKind::Comment, read_until_eol(lexer))),
+
+            EOF => TokenKind::EOF,
+            EOL => TokenKind::NewLine,
+            ' ' => TokenKind::Ignore,
+            '-' => TokenKind::Minus,
 
             _ => return None,
         };
 
-        Some(tok)
+        Some(Token::new(kind, lexer.ch.to_string()))
     }
 
-    fn panic(_: &mut Lexer) -> Option<State> {
+    fn panic_next(_: &mut Lexer) -> Option<State> {
         panic!("PANIC TOKENIZER")
     }
 
     pub fn new_file(lexer: &mut Lexer) -> Option<State> {
-        println!("Newfile token: {:?}", lexer.ch);
+        // println!("Newfile token: {:?}", lexer.ch);
 
-        let mut result = Vec::new();
         if !lexer.is_start() {
             return tok_error!();
         };
@@ -171,10 +197,11 @@ mod tokenizer {
             return tok_error!();
         }
 
-        result.extend(read_until_eol(lexer));
-
         Some(State {
-            tokens: vec![Token::Vim9Script(result)],
+            tokens: vec![Token {
+                kind: TokenKind::Vim9Script,
+                text: read_until_eol(lexer),
+            }],
             next: new_statement,
         })
     }
@@ -185,15 +212,35 @@ mod tokenizer {
         let tok = match shared(lexer) {
             Some(t) => t,
             None => match lexer.ch {
-                '\n' => Token::NewLine,
+                '\n' => Token {
+                    kind: TokenKind::NewLine,
+                    text: "\n".to_string(),
+                },
+
+                scope if lexer.peek_char() == ':' => {
+                    lexer.read_char();
+
+                    match scope {
+                        'g' => Token::new(TokenKind::GlobalScope, "g:"),
+                        't' => Token::new(TokenKind::TabScope, "t:"),
+                        'w' => Token::new(TokenKind::WindowScope, "w:"),
+                        'b' => Token::new(TokenKind::BufferScope, "b:"),
+                        's' => Token::new(TokenKind::ScriptScope, "s:"),
+                        'l' => Token::new(TokenKind::LocalScope, "l:"),
+                        _ => Token::new(TokenKind::ParseError, scope.to_string()),
+                    }
+                }
 
                 val => {
-                    let word = read_while(lexer, |ch| !is_whitespace(ch));
+                    let text = read_while(lexer, |ch| !is_whitespace(ch));
 
-                    if word == chars!("var") {
-                        Token::CommandVar
+                    // TODO: Need to handle all the different commands here :) :) :)
+                    if text == "var" {
+                        Token::new(TokenKind::CommandVar, text)
                     } else if is_digit(val) {
-                        Token::Number(word)
+                        Token::new(TokenKind::Number, text)
+                    } else if text.chars().all(|c| is_identifier(c)) {
+                        Token::new(TokenKind::Identifier, text)
                     } else {
                         panic!("OH NO! {}, {:?}", val, lexer)
                     }
@@ -201,12 +248,16 @@ mod tokenizer {
             },
         };
 
-        if tok == Token::EOF {
+        if tok.kind == TokenKind::EOF {
             return None;
         }
 
         Some(State {
-            next: if tok == Token::NewLine { new_statement } else { generic },
+            next: if tok.kind == TokenKind::NewLine {
+                new_statement
+            } else {
+                generic
+            },
             tokens: vec![tok],
         })
     }
@@ -217,24 +268,24 @@ mod tokenizer {
         let tok = match shared(lexer) {
             Some(t) => t,
             None => match lexer.ch {
-                EOF => Token::EOF,
-                '\n' => Token::NewLine,
+                EOF => tok!(TokenKind::EOF, lexer.ch),
+                '\n' => tok!(TokenKind::NewLine, lexer.ch),
 
-                ' ' => Token::Ignore,
-                '+' => Token::Plus,
-                '*' => Token::Multiply,
-                '=' => Token::Equal,
-                '[' => Token::LeftBracket,
-                ']' => Token::RightBracket,
-                ',' => Token::Comma,
+                ' ' => tok!(TokenKind::Ignore, lexer.ch),
+                '+' => tok!(TokenKind::Plus, lexer.ch),
+                '*' => tok!(TokenKind::Star, lexer.ch),
+                '=' => tok!(TokenKind::Equal, lexer.ch),
+                '[' => tok!(TokenKind::LeftBracket, lexer.ch),
+                ']' => tok!(TokenKind::RightBracket, lexer.ch),
+                ',' => T![,],
 
                 val => {
-                    let word = read_while(lexer, |ch| is_identifier(ch));
+                    let text = read_while(lexer, |ch| is_identifier(ch));
 
                     if is_digit(val) {
-                        Token::Number(word)
-                    } else if word.iter().all(|c| is_identifier(*c)) {
-                        Token::Identifier(word)
+                        Token::new(TokenKind::Number, text)
+                    } else if text.chars().all(|c| is_identifier(c)) {
+                        Token::new(TokenKind::Identifier, text)
                     } else {
                         panic!("OH NO! {}, {:?}", val, lexer)
                     }
@@ -243,7 +294,11 @@ mod tokenizer {
         };
 
         Some(State {
-            next: if tok == Token::NewLine { new_statement } else { generic },
+            next: if tok.kind == TokenKind::NewLine {
+                new_statement
+            } else {
+                generic
+            },
 
             tokens: vec![tok],
         })
@@ -257,19 +312,22 @@ pub struct LexerError {
 
 type Result<T> = std::result::Result<T, LexerError>;
 
-fn read_until_eol(l: &mut Lexer) -> Vec<char> {
+fn read_until_eol(l: &mut Lexer) -> String {
     read_while(l, |ch| ch != EOF && ch != EOL)
 }
 
-fn read_while(l: &mut Lexer, predicate: fn(ch: char) -> bool) -> Vec<char> {
-    let mut result = Vec::new();
-    if predicate(l.ch) {
-        result.push(l.ch)
+fn read_while(l: &mut Lexer, predicate: fn(ch: char) -> bool) -> String {
+    let mut result = String::new();
+
+    // TODO: Return an empty range?
+    if !predicate(l.ch) {
+        return result;
     }
 
+    result.push(l.ch);
     while predicate(l.peek_char()) {
         l.read_char();
-        result.push(l.ch);
+        result.push(l.ch)
     }
 
     result
@@ -297,15 +355,15 @@ fn tokenize(input: String, state: fn(&mut Lexer) -> Option<State>) -> Result<Vec
         }
 
         for tok in tokens {
-            if tok == Token::ParseError {
+            if tok.kind == TokenKind::ParseError {
                 return Err(LexerError { tok });
             }
 
-            if tok == Token::EOF {
+            if tok.kind == TokenKind::EOF {
                 break 'outer;
             }
 
-            if tok == Token::Ignore {
+            if tok.kind == TokenKind::Ignore {
                 continue;
             }
 
@@ -321,21 +379,20 @@ fn tokenize(input: String, state: fn(&mut Lexer) -> Option<State>) -> Result<Vec
 
 #[cfg(test)]
 mod test {
-    use Token::*;
+    use TokenKind::*;
 
     use super::*;
 
     macro_rules! v9 {
         () => {
-            Vim9Script(vec!['v', 'i', 'm', '9', 's', 'c', 'r', 'i', 'p', 't'])
+            Token::new(Vim9Script, "vim9script")
         };
 
         ($l: expr) => {
-            Vim9Script({
-                let mut v: Vec<char> = vec!['v', 'i', 'm', '9', 's', 'c', 'r', 'i', 'p', 't'];
-                v.extend::<Vec<char>>($l.chars().collect());
-                v
-            })
+            Token {
+                kind: Vim9Script,
+                text: format!("vim9script{}", $l),
+            }
         };
     }
 
@@ -343,12 +400,12 @@ mod test {
         ($name: ident, $syntax: literal, [$( $x:expr ),*]) => {
             #[test]
             fn $name() -> Result<()> {
-                let mut text = "vim9script\n".to_owned();
+                let mut text = "vim9script\n".to_string();
                 text.push_str($syntax);
 
                 let mut expected = Vec::new();
                 expected.push(v9!());
-                expected.push(Token::NewLine);
+                expected.push(Token { kind: TokenKind::NewLine, text: "\n".to_string(), });
                 $(
                     expected.push($x);
                 )*
@@ -366,35 +423,45 @@ mod test {
     test_tokens!(
         can_parse_a_simple_comment,
         "# My first comment",
-        [Comment(chars!("# My first comment"))]
+        [Token::new(Comment, "# My first comment")]
     );
 
     // Numbers
-    test_tokens!(parses_a_single_digit_number, "5", [Number(chars!("5"))]);
+    test_tokens!(parses_a_single_digit_number, "5", [Token::new(Number, "5")]);
+
     test_tokens!(
         parses_an_addition,
         "5432 + 342",
-        [Number(chars!("5432")), Plus, Number(chars!("342"))]
+        [
+            Token::new(Number, "5432"),
+            Token::new(Plus, "+"),
+            Token::new(Number, "342")
+        ]
     );
 
-    test_tokens!(parse_singular_var, "var", [CommandVar]);
+    test_tokens!(parse_singular_var, "var", [Token::new(CommandVar, "var")]);
 
     test_tokens!(
         parse_singular_var_statement,
         "var foo = 5",
-        [CommandVar, Identifier(chars!("foo")), Equal, Number(chars!("5"))]
+        [
+            Token::new(CommandVar, "var"),
+            Token::new(Identifier, "foo"),
+            Token::new(Equal, "="),
+            Token::new(Number, "5")
+        ]
     );
 
     test_tokens!(
         parse_var_var_statement,
         "var var = 54 + 32",
         [
-            CommandVar,
-            Identifier(chars!("var")),
-            Equal,
-            Number(chars!("54")),
-            Plus,
-            Number(chars!("32"))
+            Token::new(CommandVar, "var"),
+            Token::new(Identifier, "var"),
+            Token::new(Equal, "="),
+            Token::new(Number, "54"),
+            Token::new(Plus, "+"),
+            Token::new(Number, "32")
         ]
     );
 
@@ -402,42 +469,73 @@ mod test {
         parse_simple_list,
         "var x = [1, 2, 3]",
         [
-            CommandVar,
-            Identifier(chars!("x")),
-            Equal,
-            LeftBracket,
-            Number(chars!("1")),
-            Comma,
-            Number(chars!("2")),
-            Comma,
-            Number(chars!("3")),
-            RightBracket
+            Token::new(CommandVar, "var"),
+            Token::new(Identifier, "x"),
+            Token::new(Equal, "="),
+            Token::new(LeftBracket, "["),
+            Token::new(Number, "1"),
+            Token::new(Comma, ","),
+            Token::new(Number, "2"),
+            Token::new(Comma, ","),
+            Token::new(Number, "3"),
+            Token::new(RightBracket, "]")
         ]
     );
 
     test_tokens!(
         parse_list_with_addition,
-        "var x = [1, 2 + foo, 3]",
+        "var x = [1, 2 + foo, -3]",
         [
-            CommandVar,
-            Identifier(chars!("x")),
-            Equal,
-            LeftBracket,
-            Number(chars!("1")),
-            Comma,
-            Number(chars!("2")),
-            Plus,
-            Identifier(chars!("foo")),
-            Comma,
-            Number(chars!("3")),
-            RightBracket
+            Token::new(CommandVar, "var"),
+            Token::new(Identifier, "x"),
+            Token::new(Equal, "="),
+            Token::new(LeftBracket, "["),
+            Token::new(Number, "1"),
+            Token::new(Comma, ","),
+            Token::new(Number, "2"),
+            Token::new(Plus, "+"),
+            Token::new(Identifier, "foo"),
+            Token::new(Comma, ","),
+            Token::new(Minus, "-"),
+            Token::new(Number, "3"),
+            Token::new(RightBracket, "]")
         ]
+    );
+
+    test_tokens!(
+        parse_global_var,
+        "g:hello = 5",
+        [
+            Token::new(GlobalScope, "g:"),
+            Token::new(Identifier, "hello"),
+            T![=],
+            Token::new(Number, "5")
+        ]
+    );
+
+    test_tokens!(
+        parse_regular_var,
+        "hello = 5",
+        [Token::new(Identifier, "hello"), T![=], Token::new(Number, "5")]
     );
 
     #[test]
     fn test_parses_comment_with_space_after_vim9script() -> Result<()> {
         let parsed = tokenize("vim9script  \n# my first comment".into(), tokenizer::new_file)?;
-        assert_eq!(parsed, vec![v9!("  "), NewLine, Comment(chars!("# my first comment"))]);
+        assert_eq!(
+            parsed,
+            vec![
+                v9!("  "),
+                Token {
+                    kind: NewLine,
+                    text: "\n".into()
+                },
+                Token {
+                    kind: Comment,
+                    text: "# my first comment".into()
+                }
+            ]
+        );
 
         Ok(())
     }
@@ -450,7 +548,10 @@ mod test {
     fn test_parses_a_multiple_digit_number() -> Result<()> {
         assert_eq!(
             tokenize("5432".into(), tokenizer::generic)?,
-            vec![Number(chars!("5432"))]
+            vec![Token {
+                kind: Number,
+                text: "5432".into()
+            }]
         );
 
         Ok(())

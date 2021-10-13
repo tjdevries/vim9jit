@@ -50,3 +50,5 @@ doc/tags
 # Added by cargo
 
 /target
+
+dump.lsif

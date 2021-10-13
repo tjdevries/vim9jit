@@ -1,5 +1,5 @@
 use crate::ast;
-use crate::lexer::Token;
+use crate::lexer::TokenKind;
 use crate::parser::Parse;
 use crate::parser::ParseError;
 use crate::parser::ParseErrorKind;
@@ -16,9 +16,9 @@ pub struct StatementVar {
 
 impl Parse for StatementVar {
     fn parse(p: &mut Parser) -> ParseResult<Self> {
-        let identifier: ast::Identifier = p.parse()?;
+        let identifier = p.parse()?;
 
-        if !matches!(p.next_token(), Token::Equal) {
+        if !matches!(p.next_token().kind, TokenKind::Equal) {
             return Err(ParseError {
                 kind: ParseErrorKind::Expected {
                     expected: "equal",

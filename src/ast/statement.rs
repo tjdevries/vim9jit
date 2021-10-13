@@ -1,6 +1,5 @@
 use crate::ast;
-use crate::ast::Identifier;
-use crate::lexer::Token;
+use crate::lexer::TokenKind;
 use crate::parser::Parse;
 use crate::parser::ParseResult;
 use crate::parser::Parser;
@@ -17,18 +16,19 @@ pub enum Statement {
 impl Parse for Statement {
     fn parse(p: &mut Parser) -> ParseResult<Self> {
         // todo!()
-        match p.next_token() {
-            Token::Vim9Script(_) => {
-                // return Ok(p.parse_vim9script()),
+        let token = p.next_token();
 
-                if !matches!(p.next_token(), Token::NewLine | Token::EOF) {
+        match token.kind {
+            TokenKind::Vim9Script => {
+                let next_token = p.next_token();
+                if !matches!(next_token.kind, TokenKind::NewLine | TokenKind::EOF) {
                     panic!("Not handled")
                 } else {
                     Ok(ast::Statement::Vim9Script(ast::StatementVim9 {}))
                 }
             }
-            Token::CommandVar => Ok(ast::Statement::Var(p.parse()?)),
-            Token::EOF => Ok(ast::Statement::Empty),
+            TokenKind::CommandVar => Ok(ast::Statement::Var(p.parse()?)),
+            TokenKind::EOF => Ok(ast::Statement::Empty),
             unparsed => panic!("AHHHHHHH {:?}", unparsed),
         }
     }

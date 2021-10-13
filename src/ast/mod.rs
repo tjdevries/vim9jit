@@ -23,9 +23,11 @@ pub use literal_number::LiteralNumber;
 #[derive(Debug, Clone, PartialEq)]
 pub enum PrefixOperator {
     Bang,
+    Minus,
+    Plus,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Copy)]
 pub enum InfixOperator {
     Equal,
     NotEqual,

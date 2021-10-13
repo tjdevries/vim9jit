@@ -2,6 +2,7 @@ use thiserror::Error;
 
 use crate::ast;
 use crate::lexer::Token;
+use crate::lexer::TokenKind;
 
 #[derive(Error, Debug, Clone, PartialEq, Eq)]
 pub enum ParseErrorKind {
@@ -42,7 +43,7 @@ where
 }
 
 #[derive(PartialOrd, Ord, PartialEq, Eq, Debug)]
-enum Precedence {
+pub enum Precedence {
     Lowest,
     Equality,
     LesserGreater,
@@ -52,19 +53,21 @@ enum Precedence {
     Call,
 }
 
-fn get_precedence(operator: ast::InfixOperator) -> Precedence {
-    // TODO: The rest of em
-    match operator {
-        ast::InfixOperator::Add | ast::InfixOperator::Sub => Precedence::Sum,
-        ast::InfixOperator::Mul | ast::InfixOperator::Div => Precedence::Product,
-        _ => Precedence::Lowest,
-    }
-}
 pub struct Parser {
     pub tokens: Vec<Token>,
 
     position: usize,
     read_position: usize,
+}
+
+fn get_precedence(token: Token) -> Precedence {
+    use TokenKind::*;
+
+    match token.kind {
+        Plus | Minus => Precedence::Sum,
+        Star | Slash => Precedence::Product,
+        _ => Precedence::Lowest,
+    }
 }
 
 impl Parser {
@@ -82,109 +85,40 @@ impl Parser {
         self.token()
     }
 
-    pub fn peek_token(&mut self) -> Token {
+    pub fn peek_token(&self) -> Token {
         self.get_token_at(self.read_position)
+    }
+
+    pub fn peek_precedence(&self) -> Precedence {
+        get_precedence(self.peek_token())
     }
 
     pub fn token(&self) -> Token {
         self.get_token_at(self.position)
     }
 
+    pub fn precedence(&self) -> Precedence {
+        get_precedence(self.token())
+    }
+
     fn get_token_at(&self, n: usize) -> Token {
         if n >= self.tokens.len() {
-            Token::EOF
+            // TODO: Probably should be string with EOF in it??
+            Token {
+                kind: TokenKind::EOF,
+                text: String::new(),
+            }
         } else {
             // TODO: Can I avoid cloning this?
             self.tokens[n].clone()
         }
     }
-
-    fn parse_expression(&mut self) -> Option<ast::Expression> {
-        let tok = self.next_token();
-        let peeked = self.peek_token();
-
-        // This is the last token in an expression.
-        if matches!(peeked, Token::EOF | Token::NewLine) {
-            Some(convert_single_token_to_expression(tok))
-        } else {
-            match peeked {
-                // 5 + 2 * 10
-                // 5 * 2 + 10
-                Token::Plus => {
-                    // Advance
-                    self.next_token();
-
-                    Some(ast::Expression::Infix {
-                        operator: ast::InfixOperator::Add,
-                        left: Box::new(convert_single_token_to_expression(tok)),
-                        right: Box::new(self.parse_expression()?),
-                    })
-                }
-
-                Token::Multiply => {
-                    self.next_token();
-
-                    let next = self.next_token();
-
-                    Some(ast::Expression::Infix {
-                        operator: ast::InfixOperator::Mul,
-                        left: Box::new(convert_single_token_to_expression(tok)),
-                        right: Box::new(convert_single_token_to_expression(next)),
-                    })
-                }
-
-                peeked => panic!("TJ please write some more code {:?}\n{:?}", peeked, self.tokens),
-            }
-        }
-    }
-}
-
-fn convert_single_token_to_expression(tok: Token) -> ast::Expression {
-    match tok {
-        Token::Number(num) => {
-            // TODO: This is terrible parsing. It's like you're writing C++...
-            let num: String = num.iter().collect();
-            let parsed_num: i64 = num.parse().unwrap();
-            ast::Expression::Number(parsed_num)
-        }
-        _ => panic!("I thought rust was safe...??? explain this."),
-    }
-}
-
-fn parse_var(p: &mut Parser) -> Option<ast::Statement> {
-    let identifier = match parse_identifier(p) {
-        Some(identifier) => identifier,
-        None => {
-            return Some(ast::Statement::Error {
-                msg: format!("Was expecting identifier, got nothing {:?}", p.token()),
-            })
-        }
-    };
-
-    let tok = p.next_token();
-    if !matches!(tok, Token::Equal) {
-        return Some(ast::Statement::Error {
-            msg: format!("Was expecting token equals, got {:?}", tok),
-        });
-    }
-
-    // TODO: Actually read the expression...
-    let expression = match p.parse_expression() {
-        Some(expression) => expression,
-        None => {
-            return Some(ast::Statement::Error {
-                msg: format!("Was expecting expression, got GARBAGE {:?}", p.token()),
-            })
-        }
-    };
-
-    Some(ast::Statement::Var(ast::StatementVar { identifier, expression }))
 }
 
 fn parse_identifier(p: &mut Parser) -> Option<ast::Identifier> {
     let tok = p.next_token();
-    let name = match tok {
-        Token::Identifier(chars) => chars.iter().collect(),
+    let name = match tok.kind {
+        TokenKind::Identifier => tok.text,
         _ => return None,
     };
 
@@ -260,13 +194,35 @@ mod test {
                     Statement::Vim9Script(StatementVim9 {}),
                     Statement::Var(StatementVar {
                         identifier: Identifier { name: "x".into() },
-                        expression: Expression::Number(5),
+                        expression: Expression::Number(5.into()),
                     })
                 ]
             },
             parse(tokens)?
         );
 
+        Ok(())
+    }
+
+    #[test]
+    fn parses_a_prefix_expression() -> ParseResult<()> {
+        let tokens = get_tokens("var x = -5");
+
+        assert_eq!(
+            Program {
+                statements: vec![
+                    Statement::Vim9Script(StatementVim9 {}),
+                    Statement::Var(StatementVar {
+                        identifier: Identifier { name: "x".into() },
+                        expression: Expression::Prefix {
+                            operator: PrefixOperator::Minus,
+                            right: Box::new(Expression::Number(5.into())),
+                        }
+                    })
+                ]
+            },
+            parse(tokens)?
+        );
         Ok(())
     }
 
@@ -282,8 +238,8 @@ mod test {
                         identifier: Identifier { name: "x".into() },
                         expression: Expression::Infix {
                             operator: InfixOperator::Add,
-                            left: Box::new(Expression::Number(5)),
-                            right: Box::new(Expression::Number(6)),
+                            left: Box::new(Expression::Number(5.into())),
+                            right: Box::new(Expression::Number(6.into())),
                         },
                     })
                 ]
@@ -306,11 +262,11 @@ mod test {
                         identifier: Identifier { name: "x".into() },
                         expression: Expression::Infix {
                             operator: InfixOperator::Add,
-                            left: Box::new(Expression::Number(5)),
+                            left: Box::new(Expression::Number(5.into())),
                             right: Box::new(Expression::Infix {
                                 operator: InfixOperator::Mul,
-                                left: Box::new(Expression::Number(6)),
-                                right: Box::new(Expression::Number(2)),
+                                left: Box::new(Expression::Number(6.into())),
+                                right: Box::new(Expression::Number(2.into())),
                             }),
                         },
                     })
@@ -325,6 +281,7 @@ mod test {
     #[test]
     fn parses_a_var_statement_operator_precedence_2() -> ParseResult<()> {
         let tokens = get_tokens("var x = 5 * 6 + 2");
+        // -> var x = ((5 * 6) + 2)
 
         assert_eq!(
             Program {
@@ -336,10 +293,10 @@ mod test {
                             operator: InfixOperator::Add,
                             left: Box::new(Expression::Infix {
                                 operator: InfixOperator::Mul,
-                                left: Box::new(Expression::Number(5)),
-                                right: Box::new(Expression::Number(6)),
+                                left: Box::new(Expression::Number(5.into())),
+                                right: Box::new(Expression::Number(6.into())),
                             }),
-                            right: Box::new(Expression::Number(2)),
+                            right: Box::new(Expression::Number(2.into())),
                         },
                     })
                 ]
