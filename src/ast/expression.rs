@@ -1,4 +1,8 @@
+use num::ToPrimitive;
+
 use crate::ast;
+use crate::ast::VimVariable;
+use crate::ast::VimVariableScope;
 use crate::lexer::Token;
 use crate::lexer::TokenKind;
 use crate::parser;
@@ -13,6 +17,8 @@ pub enum Expression {
 
     Identifier(ast::Identifier),
 
+    VimVariable(ast::VimVariable),
+
     Prefix {
         operator: ast::PrefixOperator,
         right: Box<Expression>,
@@ -25,51 +31,70 @@ pub enum Expression {
     },
 }
 
-// fn terminal(tok: Token) -> ParseResult<Expression> {
-//     Ok(match tok {
-//         Token::Number(num) => {
-//             // TODO: This is terrible parsing. It's like you're writing C++...
-//             let num: String = num.iter().collect();
-//             let parsed_num: i64 = num.parse().unwrap();
-//             Expression::Number(parsed_num)
-//         }
-//         _ => panic!("I thought rust was safe...??? explain this."),
-//     })
-// }
+impl<I> From<I> for Expression
+where
+    I: ToPrimitive,
+{
+    fn from(val: I) -> Self {
+        Expression::Number(val.into())
+    }
+}
 
-fn get_prefix_fn(token: Token) -> fn(&mut Parser) -> ParseResult<Expression> {
+// TODO: I really don't like that I have tokenkind as another argument.
+// How can I pass a function back that captures a variable but actually have it work w/ types.
+fn get_prefix_fn(token: Token) -> fn(&mut Parser, TokenKind) -> ParseResult<Expression> {
     match token.kind {
-        TokenKind::Number => |p| Ok(Expression::Number(p.parse()?)),
-        TokenKind::Identifier => |p| Ok(Expression::Identifier(p.parse()?)),
-        TokenKind::CommandVar => todo!("CommandVar "),
-        TokenKind::NewLine => todo!("NewLine "),
-        TokenKind::Plus => |p| {
+        TokenKind::Number => |p, _| Ok(Expression::Number(p.parse()?)),
+        TokenKind::Identifier => |p, _| Ok(Expression::Identifier(p.parse()?)),
+
+        // vim variable scopes
+        TokenKind::GlobalScope
+        | TokenKind::TabScope
+        | TokenKind::WindowScope
+        | TokenKind::BufferScope
+        | TokenKind::ScriptScope
+        | TokenKind::LocalScope => |p, kind| {
+            // consume <scope>:
+            p.next_token();
+
+            Ok(Expression::VimVariable(VimVariable {
+                scope: match kind {
+                    TokenKind::GlobalScope => VimVariableScope::Global,
+                    TokenKind::TabScope => VimVariableScope::Tab,
+                    TokenKind::WindowScope => VimVariableScope::Window,
+                    TokenKind::BufferScope => VimVariableScope::Buffer,
+                    TokenKind::ScriptScope => VimVariableScope::Script,
+                    TokenKind::LocalScope => VimVariableScope::Local,
+                    _ => unreachable!("cannot have any other token kinds here"),
+                },
+                identifier: p.parse()?,
+            }))
+        },
+
+        TokenKind::Plus | TokenKind::Minus => |p, kind| {
+            // Consume the operator
+            p.next_token();
+
             Ok(Expression::Prefix {
-                operator: ast::PrefixOperator::Plus,
-                right: Box::new(p.parse()?),
+                operator: match kind {
+                    TokenKind::Plus => ast::PrefixOperator::Plus,
+                    TokenKind::Minus => ast::PrefixOperator::Minus,
+                    _ => unreachable!(),
+                },
+                right: Box::new(parse_expresion(p, Precedence::Prefix)?),
             })
         },
-        TokenKind::Minus => |p| {
-            Ok(Expression::Prefix {
-                operator: ast::PrefixOperator::Minus,
-                right: Box::new(p.parse()?),
-            })
-        },
+
+        TokenKind::Star => todo!("Multiply"),
+        TokenKind::Slash => todo!("Divide"),
+
         TokenKind::Comma => todo!("Comma "),
-        TokenKind::Star => todo!("Multiply "),
-        TokenKind::Slash => todo!("Divide "),
         TokenKind::Equal => todo!("Equal"),
-        TokenKind::LeftBracket => todo!("LeftBracket "),
-        TokenKind::RightBracket => todo!("RightBracket "),
+        TokenKind::LeftBracket => todo!("LeftBracket"),
+        TokenKind::RightBracket => todo!("RightBracket"),
 
         // These probably should never happen???
-        TokenKind::Ignore => todo!("Ignore "),
-        TokenKind::EOF => todo!("EOF "),
-        TokenKind::Comment => todo!("Comment"),
-        TokenKind::ParseError => todo!("ParseError"),
-        TokenKind::StartOfFile => todo!("StartOfFile"),
-        TokenKind::Vim9Script => todo!("Vim9Script"),
-        _ => todo!(),
+        kind => todo!("Unhandled prefix kind: {:?}", kind),
     }
 }
 
@@ -84,14 +109,16 @@ fn get_infix_fn<'a>(token: Token) -> Option<impl Fn(&'a mut Parser, Expression) 
                 _ => unreachable!("These are the only operators in the match statement"),
             };
 
+            println!("Generating infix function for: {:?}", operator);
+
             Some(move |p: &'a mut Parser, left| {
-                let precedence = p.precedence();
-                p.next_token();
+                println!("Current Token: {:?}", p.token());
+                println!("LEFT: {:?}", left);
 
                 Ok(Expression::Infix {
                     left: Box::new(left),
                     operator,
-                    right: Box::new(parse_expresion(p, precedence)?),
+                    right: Box::new(parse_expresion(p, p.precedence())?),
                 })
             })
         }
@@ -100,15 +127,13 @@ fn get_infix_fn<'a>(token: Token) -> Option<impl Fn(&'a mut Parser, Expression) 
 }
 
 fn parse_expresion(p: &mut Parser, precedence: Precedence) -> ParseResult<Expression> {
-    println!("We are attempting to parse {:?}", p.token());
+    println!("We are attempting to parse {:?}", p.peek_token());
 
-    let prefix = get_prefix_fn(p.token());
-    let mut left = prefix(p)?;
+    let prefix = get_prefix_fn(p.peek_token());
+    let mut left = prefix(p, p.peek_token().kind)?;
 
     while !matches!(p.peek_token().kind, TokenKind::NewLine | TokenKind::EOF) && precedence < p.peek_precedence() {
-        let token = p.next_token();
-
-        let infix = match get_infix_fn(token) {
+        let infix = match get_infix_fn(p.next_token()) {
             Some(infix) => infix,
             None => break,
         };
@@ -121,7 +146,6 @@ fn parse_expresion(p: &mut Parser, precedence: Precedence) -> ParseResult<Expres
 
 impl Parse for Expression {
     fn parse(p: &mut Parser) -> ParseResult<Self> {
-        p.next_token();
         parse_expresion(p, parser::Precedence::Lowest)
     }
 }

@@ -2,3 +2,6 @@ max_width = 120
 imports_granularity = "Item"
 reorder_imports = true
 group_imports = "StdExternalCrate"
+
+format_macro_matchers = true
+format_macro_bodies = true

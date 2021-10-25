@@ -1,3 +1,4 @@
+use super::Expression;
 use crate::lexer::TokenKind;
 use crate::parser::Parse;
 use crate::parser::ParseResult;
@@ -13,7 +14,19 @@ impl Parse for Identifier {
         let token = p.next_token();
         match token.kind {
             TokenKind::Identifier => Ok(Self { name: token.text }),
-            _ => panic!("NOPE"),
+            tok => panic!("Expected identifier, got: {:?}", tok),
         }
+    }
+}
+
+impl Into<Expression> for Identifier {
+    fn into(self) -> Expression {
+        Expression::Identifier(self)
+    }
+}
+
+impl From<&str> for Identifier {
+    fn from(val: &str) -> Self {
+        Identifier { name: val.to_owned() }
     }
 }

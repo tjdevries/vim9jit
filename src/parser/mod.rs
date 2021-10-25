@@ -115,16 +115,6 @@ impl Parser {
     }
 }
 
-fn parse_identifier(p: &mut Parser) -> Option<ast::Identifier> {
-    let tok = p.next_token();
-    let name = match tok.kind {
-        TokenKind::Identifier => tok.text,
-        _ => return None,
-    };
-
-    Some(ast::Identifier { name })
-}
-
 fn parse(tokens: Vec<Token>) -> ParseResult<ast::Program> {
     let mut parser = Parser {
         tokens,
@@ -133,24 +123,6 @@ fn parse(tokens: Vec<Token>) -> ParseResult<ast::Program> {
     };
 
     parser.parse()
-
-    // let mut statements = Vec::new();
-    // while let Some(statement) = parser.next_statement() {
-    //     statements.push(statement)
-    // }
-
-    //     for tok in tokens {
-    //         statements.push(match tok {
-    //             Token::Vim9Script(_) => Statement::Vim9Script,
-    //             Token::Var => Statement::Var {
-    //                 identifier: Identifier { name: "x".into() },
-    //                 expression: Expression {},
-    //             },
-    //             tok => println!("Have not yet parsed: {:?}", tok),
-    //         });
-    //     }
-
-    // ast::Program { statements }
 }
 
 // vim9script
@@ -162,9 +134,70 @@ fn parse(tokens: Vec<Token>) -> ParseResult<ast::Program> {
 
 #[cfg(test)]
 mod test {
+    use pretty_assertions::assert_eq;
+
     use super::*;
+    use crate::ast::InfOp;
+    use crate::ast::PreOp;
     use crate::ast::*;
     use crate::lexer::tokenize_file;
+    use crate::lexer::T;
+
+    macro_rules! prog {
+        [$( $x:expr ),*] => {
+            Program {
+                statements: vec![
+                    vim9!(),
+                    $(
+                        $x,
+                    )*
+                ]
+            }
+        }
+    }
+
+    macro_rules! vim9 {
+        () => {
+            Statement::Vim9Script(StatementVim9 {})
+        };
+    }
+
+    macro_rules! var {
+        ($id: ident = $expression: expr) => {
+             Statement::Var(StatementVar {
+                identifier: id!($id),
+                equal: T![=],
+                expression: $expression.into(),
+            })
+        }
+    }
+
+    macro_rules! inf {
+        ($op:tt, $left:expr, $right:expr) => {
+            Expression::Infix {
+                left: Box::new($left.into()),
+                operator: InfOp!($op),
+                right: Box::new($right.into()),
+            }
+        };
+    }
+
+    macro_rules! pre {
+        ($op:tt, $expression:expr) => {
+            Expression::Prefix {
+                operator: PreOp!($op),
+                right: Box::new($expression.into()),
+            }
+        };
+    }
+
+    macro_rules! id {
+        ($name:ident) => {
+            Identifier {
+                name: stringify!($name).to_string(),
+            }
+        };
+    }
 
     fn get_tokens(input: &str) -> Vec<Token> {
         tokenize_file(format!("vim9script\n{}", input).chars().collect()).unwrap()
@@ -172,140 +205,75 @@ mod test {
 
     #[test]
     fn parses_vim9script() -> ParseResult<()> {
+        println!("Hello");
         let tokens = tokenize_file("vim9script".into()).unwrap();
 
-        assert_eq!(
-            Program {
-                statements: vec![Statement::Vim9Script(StatementVim9 {})]
-            },
-            parse(tokens)?
-        );
+        assert_eq!(prog![], parse(tokens)?);
 
         Ok(())
     }
 
-    #[test]
-    fn parses_a_var_statement() -> ParseResult<()> {
-        let tokens = get_tokens("var x = 5");
+    macro_rules! test_prog {
+        ($name:ident, $program:literal, $statement:expr) => {
+            #[test]
+            fn $name() -> ParseResult<()> {
+                let tokens = get_tokens($program);
 
-        assert_eq!(
-            Program {
-                statements: vec![
-                    Statement::Vim9Script(StatementVim9 {}),
-                    Statement::Var(StatementVar {
-                        identifier: Identifier { name: "x".into() },
-                        expression: Expression::Number(5.into()),
-                    })
-                ]
-            },
-            parse(tokens)?
-        );
+                assert_eq!(prog![$statement], parse(tokens)?);
 
-        Ok(())
+                Ok(())
+            }
+        }; // TODO: Make list of statements
+           // ($name:ident, $program:literal,[$statement:expr]) => {
+           //     #[test]
+           //     fn $name() -> ParseResult<()> {
+           //         let tokens = get_tokens($program);
+
+           //         assert_eq!(prog![$statement], parse(tokens)?);
+
+           //         Ok(())
+           //     }
+           // };
     }
 
-    #[test]
-    fn parses_a_prefix_expression() -> ParseResult<()> {
-        let tokens = get_tokens("var x = -5");
+    test_prog!(
+        parses_a_simple_var,
+        "var foobarbaz = 12341234",
+        var! { foobarbaz = 12341234 }
+    );
 
-        assert_eq!(
-            Program {
-                statements: vec![
-                    Statement::Vim9Script(StatementVim9 {}),
-                    Statement::Var(StatementVar {
-                        identifier: Identifier { name: "x".into() },
-                        expression: Expression::Prefix {
-                            operator: PrefixOperator::Minus,
-                            right: Box::new(Expression::Number(5.into())),
-                        }
-                    })
-                ]
-            },
-            parse(tokens)?
-        );
-        Ok(())
-    }
+    test_prog!(
+        parses_a_prefix,
+        "var x = -5 * foo",
+        var! { x = inf!(*, pre!(-, 5), id!(foo)) }
+    );
 
-    #[test]
-    fn parses_a_var_statement_with_addition() -> ParseResult<()> {
-        let tokens = get_tokens("var x = 5 + 6");
+    test_prog!(
+        pases_a_var_statement_with_addition,
+        "var x = 5 + 6",
+        var! { x = inf!(+, 5, 6) }
+    );
 
-        assert_eq!(
-            Program {
-                statements: vec![
-                    Statement::Vim9Script(StatementVim9 {}),
-                    Statement::Var(StatementVar {
-                        identifier: Identifier { name: "x".into() },
-                        expression: Expression::Infix {
-                            operator: InfixOperator::Add,
-                            left: Box::new(Expression::Number(5.into())),
-                            right: Box::new(Expression::Number(6.into())),
-                        },
-                    })
-                ]
-            },
-            parse(tokens)?
-        );
+    test_prog!(
+        parses_a_var_statement_operator_precedence_1,
+        "var x = 5 + 6 * 2",
+        var! { x = inf!(+, 5, inf!(*, 6, 2)) }
+    );
 
-        Ok(())
-    }
+    test_prog!(
+        parses_a_var_statement_operator_precedence_2,
+        "var x = 5 * 6 + foo",
+        var! { x = inf!(+, inf!(*, 5, 6), id!(foo)) }
+    );
 
-    #[test]
-    fn parses_a_var_statement_operator_precedence_1() -> ParseResult<()> {
-        let tokens = get_tokens("var x = 5 + 6 * 2");
-
-        assert_eq!(
-            Program {
-                statements: vec![
-                    Statement::Vim9Script(StatementVim9 {}),
-                    Statement::Var(StatementVar {
-                        identifier: Identifier { name: "x".into() },
-                        expression: Expression::Infix {
-                            operator: InfixOperator::Add,
-                            left: Box::new(Expression::Number(5.into())),
-                            right: Box::new(Expression::Infix {
-                                operator: InfixOperator::Mul,
-                                left: Box::new(Expression::Number(6.into())),
-                                right: Box::new(Expression::Number(2.into())),
-                            }),
-                        },
-                    })
-                ]
-            },
-            parse(tokens)?
-        );
-
-        Ok(())
-    }
-
-    #[test]
-    fn parses_a_var_statement_operator_precedence_2() -> ParseResult<()> {
-        let tokens = get_tokens("var x = 5 * 6 + 2");
-        // -> var x = ((5 * 6) + 2)
-
-        assert_eq!(
-            Program {
-                statements: vec![
-                    Statement::Vim9Script(StatementVim9 {}),
-                    Statement::Var(StatementVar {
-                        identifier: Identifier { name: "x".into() },
-                        expression: Expression::Infix {
-                            operator: InfixOperator::Add,
-                            left: Box::new(Expression::Infix {
-                                operator: InfixOperator::Mul,
-                                left: Box::new(Expression::Number(5.into())),
-                                right: Box::new(Expression::Number(6.into())),
-                            }),
-                            right: Box::new(Expression::Number(2.into())),
-                        },
-                    })
-                ]
-            },
-            parse(tokens)?
-        );
-
-        Ok(())
-    }
+    test_prog!(
+        parses_a_var_with_a_global_variable,
+        "var x = g:foo",
+        var! { x = Expression::VimVariable(ast::VimVariable{
+            scope: ast::VimVariableScope::Global,
+            identifier: "foo".into()
+        }) }
+    );
 
     #[test]
     fn errors_when_a_var_statement_has_no_equal() {

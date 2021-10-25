@@ -1,3 +1,5 @@
+use num::ToPrimitive;
+
 use crate::lexer::TokenKind;
 use crate::parser::Parse;
 use crate::parser::ParseError;
@@ -11,7 +13,7 @@ pub struct LiteralNumber {
 
 impl Parse for LiteralNumber {
     fn parse(p: &mut crate::parser::Parser) -> ParseResult<Self> {
-        let token = p.token();
+        let token = p.next_token();
         match token.kind {
             TokenKind::Number => {
                 // TODO: Actually error correctly
@@ -28,8 +30,13 @@ impl Parse for LiteralNumber {
     }
 }
 
-impl From<i64> for LiteralNumber {
-    fn from(val: i64) -> Self {
-        Self { value: val as f64 }
+impl<I> From<I> for LiteralNumber
+where
+    I: ToPrimitive,
+{
+    fn from(val: I) -> Self {
+        Self {
+            value: val.to_f64().unwrap(),
+        }
     }
 }

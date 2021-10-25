@@ -15,8 +15,9 @@ pub enum Statement {
 
 impl Parse for Statement {
     fn parse(p: &mut Parser) -> ParseResult<Self> {
-        // todo!()
+        println!("Was start of file? {:?}", p.token());
         let token = p.next_token();
+        println!(".. and now parsing: {:?}\n", p.token());
 
         match token.kind {
             TokenKind::Vim9Script => {

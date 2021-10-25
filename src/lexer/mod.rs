@@ -141,8 +141,9 @@ pub struct State {
     next: fn(&mut Lexer) -> Option<State>,
 }
 
+#[macro_export]
 macro_rules! tok {
-    ($kind: expr, $l: expr) => {
+    ($kind:expr, $l:expr) => {
         Token::new($kind, $l.to_string())
     };
 }
@@ -150,6 +151,26 @@ macro_rules! tok {
 macro_rules! T {
     [=] => { Token::new(TokenKind::Equal, "=") };
     [,] => { Token::new(TokenKind::Comma, ",") };
+}
+pub(crate) use T;
+
+// all combinators have (lexer, tok)
+mod combinator {
+    use super::*;
+
+    pub fn scoped_var(lexer: &mut Lexer, c: char) -> Token {
+        lexer.read_char();
+
+        match c {
+            'g' => Token::new(TokenKind::GlobalScope, "g:"),
+            't' => Token::new(TokenKind::TabScope, "t:"),
+            'w' => Token::new(TokenKind::WindowScope, "w:"),
+            'b' => Token::new(TokenKind::BufferScope, "b:"),
+            's' => Token::new(TokenKind::ScriptScope, "s:"),
+            'l' => Token::new(TokenKind::LocalScope, "l:"),
+            _ => Token::new(TokenKind::ParseError, c.to_string()),
+        }
+    }
 }
 
 mod tokenizer {
@@ -217,19 +238,7 @@ mod tokenizer {
                     text: "\n".to_string(),
                 },
 
-                scope if lexer.peek_char() == ':' => {
-                    lexer.read_char();
-
-                    match scope {
-                        'g' => Token::new(TokenKind::GlobalScope, "g:"),
-                        't' => Token::new(TokenKind::TabScope, "t:"),
-                        'w' => Token::new(TokenKind::WindowScope, "w:"),
-                        'b' => Token::new(TokenKind::BufferScope, "b:"),
-                        's' => Token::new(TokenKind::ScriptScope, "s:"),
-                        'l' => Token::new(TokenKind::LocalScope, "l:"),
-                        _ => Token::new(TokenKind::ParseError, scope.to_string()),
-                    }
-                }
+                scope if lexer.peek_char() == ':' => combinator::scoped_var(lexer, scope),
 
                 val => {
                     let text = read_while(lexer, |ch| !is_whitespace(ch));
@@ -278,6 +287,8 @@ mod tokenizer {
                 '[' => tok!(TokenKind::LeftBracket, lexer.ch),
                 ']' => tok!(TokenKind::RightBracket, lexer.ch),
                 ',' => T![,],
+
+                scope if lexer.peek_char() == ':' => combinator::scoped_var(lexer, scope),
 
                 val => {
                     let text = read_while(lexer, |ch| is_identifier(ch));
@@ -388,7 +399,7 @@ mod test {
             Token::new(Vim9Script, "vim9script")
         };
 
-        ($l: expr) => {
+        ($l:expr) => {
             Token {
                 kind: Vim9Script,
                 text: format!("vim9script{}", $l),
