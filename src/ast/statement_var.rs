@@ -1,4 +1,5 @@
 use crate::ast;
+use crate::gen::CodeGen;
 use crate::lexer::Token;
 use crate::lexer::TokenKind;
 use crate::parser::Parse;
@@ -41,5 +42,11 @@ impl Parse for StatementVar {
             equal,
             expression,
         })
+    }
+}
+
+impl CodeGen for StatementVar {
+    fn gen(&self) -> String {
+        "var".to_string()
     }
 }

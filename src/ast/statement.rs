@@ -1,4 +1,5 @@
 use crate::ast;
+use crate::gen::CodeGen;
 use crate::lexer::TokenKind;
 use crate::parser::Parse;
 use crate::parser::ParseResult;
@@ -32,5 +33,18 @@ impl Parse for Statement {
             TokenKind::EOF => Ok(ast::Statement::Empty),
             unparsed => panic!("AHHHHHHH {:?}", unparsed),
         }
+    }
+}
+
+impl CodeGen for Statement {
+    fn gen(&self) -> String {
+        match self {
+            Statement::Vim9Script(v) => v.gen(),
+            Statement::Var(v) => v.gen(),
+            Statement::Empty => "".to_string(),
+            _ => unimplemented!(),
+        }
+        .to_string()
+        // "print('statement');".to_string()
     }
 }

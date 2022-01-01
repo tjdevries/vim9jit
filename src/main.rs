@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 mod ast;
+mod gen;
 mod lexer;
 mod parser;
 

@@ -8,6 +8,11 @@ edition = "2021"
 [dependencies]
 thiserror = "1.0.29"
 num = "0.4.0"
+rmp = "0.8.10"
+rmpv = "1.0.0"
+anyhow = "1.0.52"
 
 [dev-dependencies]
 pretty_assertions = "1.0.0"
+
+[features]

@@ -1,4 +1,5 @@
 #![allow(unused_macros)]
+#![allow(unused_imports)]
 
 mod program;
 pub use program::Program;

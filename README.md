@@ -6,7 +6,7 @@ Ok, hear me out. vim9script... but in lua... so fast
 
 So, here's my plan that I'm messing around with:
 
-1. Write a `vim9script` parser using Lua(jit) & LPEG
+1. Write a `vim9script` parser using Rust (because I want to learn rust)
 2. Write a generator from `vim9script` AST-like nodes -> Lua code.
 3. Write wrappers to make it so that when a file sees `vim9script`, what it does instead is generate and expose the code in the correct way.
 4. ???
@@ -14,9 +14,7 @@ So, here's my plan that I'm messing around with:
 
 ## Why?
 
-Well if we can just make languages whenever we want, why not make parsers and generators whenever we want :)
-
-Also, fun.
+Fun. Please do not expect this to be finished :)
 
 ## Notes:
 
@@ -25,7 +23,9 @@ However, to get your code type checked, you probably can just run it in Vim 9. T
 
 For example, at the moment, I plan for `const` and `final` to simply be variables. I do not plan on creating the ability to error when editing these items.
 
-## Status
+## Status (Out Of Date)
+
+TODO: Update this to Rust version once I get a few more things completed.
 
 - Can parse
     - [ ] vim9script vs. old

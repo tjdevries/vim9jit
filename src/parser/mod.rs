@@ -115,7 +115,7 @@ impl Parser {
     }
 }
 
-fn parse(tokens: Vec<Token>) -> ParseResult<ast::Program> {
+pub fn parse(tokens: Vec<Token>) -> ParseResult<ast::Program> {
     let mut parser = Parser {
         tokens,
         position: 0,

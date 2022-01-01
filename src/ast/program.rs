@@ -1,4 +1,5 @@
 use crate::ast;
+use crate::gen::CodeGen;
 use crate::lexer::TokenKind;
 use crate::parser::Parse;
 use crate::parser::ParseResult;
@@ -20,5 +21,16 @@ impl Parse for Program {
         }
 
         Ok(Program { statements })
+    }
+}
+
+impl CodeGen for Program {
+    fn gen(&self) -> String {
+        self.statements
+            .iter()
+            .map(|s| s.gen())
+            .collect::<Vec<String>>()
+            .join("\n")
+            .to_string()
     }
 }
