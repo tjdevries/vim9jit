@@ -16,6 +16,9 @@ pub use statement_vim9::StatementVim9;
 mod expression;
 pub use expression::Expression;
 
+mod type_declaration;
+pub use type_declaration::TypeDeclaration;
+
 // Terminals
 mod identifier;
 pub use identifier::Identifier;
@@ -58,6 +61,26 @@ pub enum InfixOperator {
     Div,
 }
 
+impl CodeGen for InfixOperator {
+    fn gen(&self, _: &mut GenDB) -> String {
+        // TODO: We need to do this with Vim9Add and others
+
+        match self {
+            InfixOperator::Equal => "==",
+            InfixOperator::NotEqual => "!=",
+            InfixOperator::LessThan => "<",
+            InfixOperator::GreatherThan => ">",
+            InfixOperator::LessThanOrEqual => "<=",
+            InfixOperator::GreatherThanOrEqual => ">=",
+            InfixOperator::Add => "+",
+            InfixOperator::Sub => "-",
+            InfixOperator::Mul => "*",
+            InfixOperator::Div => "/",
+        }
+        .to_string()
+    }
+}
+
 macro_rules! InfOp {
     [=] => { InfixOperator::Equal };
     [!=] => { InfixOperator::NotEqual };
@@ -75,3 +98,6 @@ macro_rules! InfOp {
 }
 
 pub(crate) use InfOp;
+
+use crate::gen::CodeGen;
+use crate::gen::GenDB;

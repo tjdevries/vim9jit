@@ -3,6 +3,8 @@ use num::ToPrimitive;
 use crate::ast;
 use crate::ast::VimVariable;
 use crate::ast::VimVariableScope;
+use crate::gen::CodeGen;
+use crate::gen::GenDB;
 use crate::lexer::Token;
 use crate::lexer::TokenKind;
 use crate::parser;
@@ -39,6 +41,12 @@ where
         Expression::Number(val.into())
     }
 }
+
+// impl<bool> From<bool>for Expression {
+//     fn from(val: bool) -> Self {
+//         Expression::Bool(val.into())
+//     }
+// }
 
 // TODO: I really don't like that I have tokenkind as another argument.
 // How can I pass a function back that captures a variable but actually have it work w/ types.
@@ -147,5 +155,21 @@ fn parse_expresion(p: &mut Parser, precedence: Precedence) -> ParseResult<Expres
 impl Parse for Expression {
     fn parse(p: &mut Parser) -> ParseResult<Self> {
         parse_expresion(p, parser::Precedence::Lowest)
+    }
+}
+
+impl CodeGen for Expression {
+    fn gen(&self, db: &mut GenDB) -> String {
+        match self {
+            Expression::Number(num) => num.value.to_string(),
+            Expression::Identifier(identifier) => identifier.gen(db),
+            Expression::VimVariable(_) => todo!(),
+            Expression::Prefix { .. } => todo!(),
+            Expression::Infix { left, operator, right } => {
+                // TODO: We need some way to track the current state of things.
+                // since I want to be able to look up the type of the left & right guys.
+                format!("{} {} {}", left.gen(db), operator.gen(db), right.gen(db))
+            }
+        }
     }
 }

@@ -9,17 +9,26 @@ use rmpv::encode::write_value;
 use rmpv::Value;
 use std::process::{Command, Stdio};
 
+#[derive(Default, Debug)]
+pub struct Scope {}
+
+#[derive(Default, Debug)]
+pub struct GenDB {
+    scopes: Vec<Scope>,
+}
+
 pub trait CodeGen
 where
     Self: Sized,
 {
-    fn gen(&self) -> String;
+    fn gen(&self, db: &mut GenDB) -> String;
 }
 
 pub fn generate(prog: ast::Program) -> String {
     println!("{:?}", prog);
 
-    prog.gen()
+    let mut db = GenDB::default();
+    prog.gen(&mut db)
 }
 
 pub fn all_of_it(preamble: &str, result: &str) -> Result<rmpv::Value> {
@@ -121,6 +130,18 @@ mod test {
     #[test]
     fn test_can_do_whole_thing() -> Result<()> {
         assert_eq!(all_of_it("", "1 + 1")?, 2.into());
+        Ok(())
+    }
+
+    #[test]
+    fn test_can_return_val_of_simple_identifier() -> Result<()> {
+        assert_eq!(all_of_it("var x = 1", "x")?, 1.into());
+        assert_eq!(all_of_it("var x = 1", "x + 2")?, 3.into());
+        assert_eq!(all_of_it("var x = 1 + 2", "x")?, 3.into());
+        assert_eq!(all_of_it("var x = 1 * 2", "x")?, 2.into());
+
+        assert_eq!(all_of_it("var x = 1\nvar y = 2\nvar z = x * y", "z")?, 2.into());
+
         Ok(())
     }
 }

@@ -19,10 +19,7 @@ pub enum ParseErrorKind {
     Unknown,
 
     #[error("expected {expected}, but got `{actual}`")]
-    Expected {
-        actual: &'static str,
-        expected: &'static str,
-    },
+    Expected { actual: String, expected: String },
 
     #[error("Invalid number literal: {0}")]
     InvalidLitNum(#[from] std::num::ParseFloatError),
@@ -139,6 +136,7 @@ mod test {
     use super::*;
     use crate::ast::InfOp;
     use crate::ast::PreOp;
+    use crate::ast::TypeDeclaration;
     use crate::ast::*;
     use crate::lexer::tokenize_file;
     use crate::lexer::T;
@@ -166,10 +164,20 @@ mod test {
         ($id: ident = $expression: expr) => {
              Statement::Var(StatementVar {
                 identifier: id!($id),
+                type_decl: None,
                 equal: T![=],
                 expression: $expression.into(),
             })
-        }
+        };
+
+        ($id: ident: $type_decl: ident = $expression: expr) => {
+             Statement::Var(StatementVar {
+                identifier: id!($id),
+                type_decl: Some(TypeDeclaration::$type_decl),
+                equal: T![=],
+                expression: $expression.into(),
+            })
+        };
     }
 
     macro_rules! inf {
@@ -249,7 +257,7 @@ mod test {
     );
 
     test_prog!(
-        pases_a_var_statement_with_addition,
+        parses_a_var_statement_with_addition,
         "var x = 5 + 6",
         var! { x = inf!(+, 5, 6) }
     );
@@ -269,10 +277,30 @@ mod test {
     test_prog!(
         parses_a_var_with_a_global_variable,
         "var x = g:foo",
-        var! { x = Expression::VimVariable(ast::VimVariable{
-            scope: ast::VimVariableScope::Global,
-            identifier: "foo".into()
-        }) }
+        var! {
+            x = Expression::VimVariable(
+                ast::VimVariable{
+                    scope: ast::VimVariableScope::Global,
+                    identifier: "foo".into()
+                }
+            )
+        }
+    );
+
+    test_prog!(
+        parses_a_var_with_a_type_definition_number,
+        "var xyz: number = 5",
+        var! {
+            xyz: Number = 5
+        }
+    );
+
+    test_prog!(
+        parses_a_var_with_a_type_definition_bool,
+        "var xyz: bool = hello",
+        var! {
+            xyz: Bool = id!(hello)
+        }
     );
 
     #[test]

@@ -13,6 +13,8 @@ echo x
 g:x = 7
 g:z = "ThePrimagen"
 
-g:hello = true
-g:z$:norm! dd
-g:x:norm! dd
+# g:hello = true
+# g:z$:norm! dd
+# g:x:norm! dd
+
+var other: number = 5

@@ -1,4 +1,6 @@
 use super::Expression;
+use crate::gen::CodeGen;
+use crate::gen::GenDB;
 use crate::lexer::TokenKind;
 use crate::parser::Parse;
 use crate::parser::ParseResult;
@@ -28,5 +30,11 @@ impl Into<Expression> for Identifier {
 impl From<&str> for Identifier {
     fn from(val: &str) -> Self {
         Identifier { name: val.to_owned() }
+    }
+}
+
+impl CodeGen for Identifier {
+    fn gen(&self, _: &mut GenDB) -> String {
+        self.name.clone()
     }
 }

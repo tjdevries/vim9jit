@@ -45,6 +45,7 @@ pub enum TokenKind {
 
     Number,
     Identifier,
+    TypeDeclaration,
 
     // Commands
     CommandVar,
@@ -70,6 +71,7 @@ pub enum TokenKind {
 
     LeftBracket,
     RightBracket,
+    Colon,
 
     Comma,
 
@@ -98,7 +100,7 @@ impl Lexer {
     }
 
     /// Read next char, update positions
-    pub fn read_char(&mut self) {
+    pub fn read_char(&mut self) -> char {
         if self.read_position >= self.input.len() {
             self.ch = EOF;
         } else {
@@ -106,6 +108,8 @@ impl Lexer {
         }
         self.position = self.read_position;
         self.read_position = self.read_position + 1;
+
+        self.ch
     }
 
     pub fn peek_char(&self) -> char {
@@ -185,9 +189,6 @@ mod tokenizer {
         };
     }
 
-    //boolean
-    //ebullient
-
     fn shared(lexer: &mut Lexer) -> Option<Token> {
         let kind = match lexer.ch {
             '#' => return Some(Token::new(TokenKind::Comment, read_until_eol(lexer))),
@@ -243,15 +244,20 @@ mod tokenizer {
                 val => {
                     let text = read_while(lexer, |ch| !is_whitespace(ch));
 
-                    // TODO: Need to handle all the different commands here :) :) :)
-                    if text == "var" {
-                        Token::new(TokenKind::CommandVar, text)
-                    } else if is_digit(val) {
-                        Token::new(TokenKind::Number, text)
-                    } else if text.chars().all(|c| is_identifier(c)) {
-                        Token::new(TokenKind::Identifier, text)
-                    } else {
-                        panic!("OH NO! {}, {:?}", val, lexer)
+                    match text.as_str() {
+                        "var" => Token::new(TokenKind::CommandVar, text),
+                        //
+                        // TODO: Need to handle all the different commands here
+                        //
+                        _ => {
+                            if is_digit(val) {
+                                Token::new(TokenKind::Number, text)
+                            } else if text.chars().all(|c| is_identifier(c)) {
+                                Token::new(TokenKind::Identifier, text)
+                            } else {
+                                panic!("Not yet parseable: {}, {:?}", val, lexer)
+                            }
+                        }
                     }
                 }
             },
@@ -264,11 +270,81 @@ mod tokenizer {
         Some(State {
             next: if tok.kind == TokenKind::NewLine {
                 new_statement
+            } else if tok.kind == TokenKind::CommandVar {
+                new_var
             } else {
                 generic
             },
             tokens: vec![tok],
         })
+    }
+
+    pub fn new_var(lexer: &mut Lexer) -> Option<State> {
+        println!("Current token: {:?}", lexer.ch);
+
+        let mut tokens = Vec::new();
+
+        // All vars MUST have a whitespace afterwards...
+        // Not sure if this should be in lexer or not, but it makes life easier to think about this
+        // way.
+        tokens.push(Token::new(
+            TokenKind::Ignore,
+            read_while(lexer, |ch| is_whitespace(ch) && ch != EOF),
+        ));
+        lexer.read_char();
+
+        // Now we can have an identifier
+        let mut text = String::new();
+        loop {
+            println!("yayayayayayaya: {}, {}", lexer.ch, lexer.peek_char());
+
+            let ch = lexer.ch;
+            let next = lexer.peek_char();
+
+            text.push(ch);
+            if next == EOF {
+                break;
+            } else if next == '\n' || ch == '\n' {
+                break;
+            } else if next.is_whitespace() {
+                tokens.push(Token::new(TokenKind::Identifier, text));
+                break;
+            } else if next == ':' {
+                match lexer.peek_n(2) {
+                    Some(ch) => {
+                        if ch.is_whitespace() {
+                            // TYPE DECLS
+                            // panic!("TYPE DECLS");
+                            tokens.push(Token::new(TokenKind::Identifier, text));
+                            lexer.read_char();
+
+                            // read ':'
+                            lexer.read_char();
+
+                            // read whitespace until type decl
+                            read_while(lexer, |ch| ch.is_whitespace());
+                            lexer.read_char();
+
+                            // TODO: This could be more complicated here...
+                            // I don't know where to put all of this stuff
+                            tokens.push(Token::new(
+                                TokenKind::TypeDeclaration,
+                                read_while(lexer, |ch| ch != '='),
+                            ));
+                            break;
+                        }
+                    }
+                    None => unreachable!("new_var problems."),
+                }
+            }
+
+            lexer.read_char();
+        }
+
+        dbg!(&tokens);
+
+        // TODO: Could be generic or new_statement
+        Some(State { next: generic, tokens })
     }
 
     pub fn generic(lexer: &mut Lexer) -> Option<State> {
@@ -555,6 +631,7 @@ mod test {
     fn test_fails_when_bad_vim9script() {
         assert!(tokenize("vim9scrt".into(), tokenizer::new_file).is_err());
     }
+
     #[test]
     fn test_parses_a_multiple_digit_number() -> Result<()> {
         assert_eq!(

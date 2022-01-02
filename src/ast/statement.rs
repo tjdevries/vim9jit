@@ -1,5 +1,6 @@
 use crate::ast;
 use crate::gen::CodeGen;
+use crate::gen::GenDB;
 use crate::lexer::TokenKind;
 use crate::parser::Parse;
 use crate::parser::ParseResult;
@@ -37,10 +38,10 @@ impl Parse for Statement {
 }
 
 impl CodeGen for Statement {
-    fn gen(&self) -> String {
+    fn gen(&self, db: &mut GenDB) -> String {
         match self {
-            Statement::Vim9Script(v) => v.gen(),
-            Statement::Var(v) => v.gen(),
+            Statement::Vim9Script(v) => v.gen(db),
+            Statement::Var(v) => v.gen(db),
             Statement::Empty => "".to_string(),
             _ => unimplemented!(),
         }

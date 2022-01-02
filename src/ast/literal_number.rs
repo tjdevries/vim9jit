@@ -20,10 +20,10 @@ impl Parse for LiteralNumber {
                 let value: f64 = token.text.parse().unwrap();
                 Ok(Self { value })
             }
-            _ => Err(ParseError {
+            kind => Err(ParseError {
                 kind: ParseErrorKind::Expected {
-                    actual: "Somethign else",
-                    expected: "token",
+                    actual: "TokenKind::Number".to_string(),
+                    expected: format!("{:?}", kind),
                 },
             }),
         }
