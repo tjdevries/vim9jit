@@ -63,7 +63,12 @@ fn get_precedence(token: Token) -> Precedence {
     match token.kind {
         Plus | Minus => Precedence::Sum,
         Star | Slash => Precedence::Product,
-        _ => Precedence::Lowest,
+        LeftParen => Precedence::Call,
+
+        // Everything else, but I want this to error if we miss one
+        StartOfFile | Vim9Script | Comment | Number | Identifier | TypeDeclaration | CommandVar | GlobalScope
+        | TabScope | WindowScope | BufferScope | ScriptScope | LocalScope | NewLine | Equal | RightParen
+        | LeftBracket | RightBracket | Colon | Comma | Ignore | EOF | ParseError => Precedence::Lowest,
     }
 }
 
@@ -84,6 +89,10 @@ impl Parser {
 
     pub fn peek_token(&self) -> Token {
         self.get_token_at(self.read_position)
+    }
+
+    pub fn expect_peek(&mut self, expect: TokenKind) -> bool {
+        self.next_token().kind == expect
     }
 
     pub fn peek_precedence(&self) -> Precedence {
@@ -207,13 +216,27 @@ mod test {
         };
     }
 
+    macro_rules! call {
+        ($name:ident,[$($x:expr),*]) => {
+            Expression::Call(FunctionCall {
+                function: Box::new(Expression::Identifier(id!($name))),
+                args: vec![
+                    $(
+                        $x,
+                    )*
+                ],
+
+                rparen: Token::new(TokenKind::RightParen, ")"),
+            })
+        };
+    }
+
     fn get_tokens(input: &str) -> Vec<Token> {
         tokenize_file(format!("vim9script\n{}", input).chars().collect()).unwrap()
     }
 
     #[test]
     fn parses_vim9script() -> ParseResult<()> {
-        println!("Hello");
         let tokens = tokenize_file("vim9script".into()).unwrap();
 
         assert_eq!(prog![], parse(tokens)?);
@@ -226,6 +249,7 @@ mod test {
             #[test]
             fn $name() -> ParseResult<()> {
                 let tokens = get_tokens($program);
+                dbg!(&tokens);
 
                 assert_eq!(prog![$statement], parse(tokens)?);
 
@@ -301,6 +325,12 @@ mod test {
         var! {
             xyz: Bool = id!(hello)
         }
+    );
+
+    test_prog!(
+        parses_a_fuction_call,
+        "var x = abs(1)",
+        var! { x = call!(abs, [1.into()]) }
     );
 
     #[test]

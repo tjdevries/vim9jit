@@ -69,6 +69,8 @@ pub enum TokenKind {
 
     Equal,
 
+    LeftParen,
+    RightParen,
     LeftBracket,
     RightBracket,
     Colon,
@@ -178,6 +180,8 @@ mod combinator {
 }
 
 mod tokenizer {
+    use log::trace;
+
     use super::*;
 
     macro_rules! tok_error {
@@ -197,6 +201,8 @@ mod tokenizer {
             EOL => TokenKind::NewLine,
             ' ' => TokenKind::Ignore,
             '-' => TokenKind::Minus,
+            '(' => TokenKind::LeftParen,
+            ')' => TokenKind::RightParen,
 
             _ => return None,
         };
@@ -209,7 +215,7 @@ mod tokenizer {
     }
 
     pub fn new_file(lexer: &mut Lexer) -> Option<State> {
-        // println!("Newfile token: {:?}", lexer.ch);
+        trace!("Newfile token: {:?}", lexer.ch);
 
         if !lexer.is_start() {
             return tok_error!();
@@ -229,7 +235,7 @@ mod tokenizer {
     }
 
     pub fn new_statement(lexer: &mut Lexer) -> Option<State> {
-        // println!("Current token: {:?}", lexer.ch);
+        trace!("Current token: {:?}", lexer.ch);
 
         let tok = match shared(lexer) {
             Some(t) => t,
@@ -280,7 +286,7 @@ mod tokenizer {
     }
 
     pub fn new_var(lexer: &mut Lexer) -> Option<State> {
-        println!("Current token: {:?}", lexer.ch);
+        trace!("new_var:: {:?}", lexer.ch);
 
         let mut tokens = Vec::new();
 
@@ -296,8 +302,6 @@ mod tokenizer {
         // Now we can have an identifier
         let mut text = String::new();
         loop {
-            println!("yayayayayayaya: {}, {}", lexer.ch, lexer.peek_char());
-
             let ch = lexer.ch;
             let next = lexer.peek_char();
 
@@ -341,14 +345,12 @@ mod tokenizer {
             lexer.read_char();
         }
 
-        dbg!(&tokens);
-
         // TODO: Could be generic or new_statement
         Some(State { next: generic, tokens })
     }
 
     pub fn generic(lexer: &mut Lexer) -> Option<State> {
-        // println!("Generic token: {:?}", lexer.ch);
+        trace!("generic:: {:?}", lexer.ch);
 
         let tok = match shared(lexer) {
             Some(t) => t,
@@ -466,6 +468,7 @@ fn tokenize(input: String, state: fn(&mut Lexer) -> Option<State>) -> Result<Vec
 
 #[cfg(test)]
 mod test {
+    use pretty_assertions::assert_eq;
     use TokenKind::*;
 
     use super::*;
@@ -604,6 +607,20 @@ mod test {
         parse_regular_var,
         "hello = 5",
         [Token::new(Identifier, "hello"), T![=], Token::new(Number, "5")]
+    );
+
+    test_tokens!(
+        test_parses_a_function_call,
+        "var x = abs(1)",
+        [
+            Token::new(CommandVar, "var"),
+            Token::new(Identifier, "x"),
+            T![=],
+            Token::new(Identifier, "abs"),
+            Token::new(LeftParen, "("),
+            Token::new(Number, "1"),
+            Token::new(RightParen, ")")
+        ]
     );
 
     #[test]

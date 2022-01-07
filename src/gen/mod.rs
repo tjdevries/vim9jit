@@ -1,20 +1,66 @@
-use crate::ast;
-use crate::lexer::tokenize_file;
-use crate::parser::parse;
+use std::collections::HashMap;
+use std::process::Command;
+use std::process::Stdio;
+
 use anyhow::anyhow;
 use anyhow::Result;
+use log::trace;
 // use pretty_assertions::assert_eq;
 use rmpv::decode::read_value;
 use rmpv::encode::write_value;
 use rmpv::Value;
-use std::process::{Command, Stdio};
+
+use crate::ast;
+use crate::ast::Expression;
+use crate::ast::Identifier;
+use crate::lexer::tokenize_file;
+use crate::parser::parse;
 
 #[derive(Default, Debug)]
-pub struct Scope {}
+pub struct Scope<'a> {
+    lookup: HashMap<&'a Identifier, Expression>,
+}
 
-#[derive(Default, Debug)]
-pub struct GenDB {
-    scopes: Vec<Scope>,
+#[derive(Debug)]
+pub struct GenDB<'a> {
+    scopes: Vec<Scope<'a>>,
+}
+
+impl<'a> Default for GenDB<'a> {
+    fn default() -> Self {
+        Self {
+            scopes: vec![Scope::default()],
+        }
+    }
+}
+
+impl<'a> GenDB<'a> {
+    pub fn add_identifier(&mut self, identifier: &'a Identifier, expr: &Expression) {
+        let scope: &mut Scope<'_> = self.scopes.last_mut().expect("Should always have at least one scope");
+        scope.lookup.insert(identifier, expr.clone());
+    }
+
+    pub fn get_identifier_expr(&mut self, identifier: &Identifier) -> Option<&Expression> {
+        for scope in self.scopes.iter() {
+        }
+
+        None
+    }
+
+    /// Checks whether certain items behave the same in vim9script and lua
+    pub fn has_shared_behavior(&self, expr: &Expression) -> bool {
+        match expr {
+            Expression::Number(_) => true,
+            Expression::Identifier(identifier) => {
+                println!("Identifier: {:?}", identifier);
+                true
+            },
+            Expression::VimVariable(_) => false,
+            Expression::Call(_) => false,
+            Expression::Prefix { operator, right } => false,
+            Expression::Infix { left, operator, right } => false,
+        }
+    }
 }
 
 pub trait CodeGen
@@ -25,16 +71,20 @@ where
 }
 
 pub fn generate(prog: ast::Program) -> String {
-    println!("{:?}", prog);
+    trace!("{:?}", prog);
 
     let mut db = GenDB::default();
     prog.gen(&mut db)
 }
 
-pub fn all_of_it(preamble: &str, result: &str) -> Result<rmpv::Value> {
-    let tokens = tokenize_file(format!("vim9script\n{}", preamble).into()).unwrap();
+pub fn to_lua(s: &str) -> String {
+    let tokens = tokenize_file(format!("vim9script\n{}", s).into()).unwrap();
     let parsed = parse(tokens).unwrap();
-    let lua = generate(parsed);
+    generate(parsed)
+}
+
+pub fn all_of_it(preamble: &str, result: &str) -> Result<rmpv::Value> {
+    let lua = to_lua(preamble);
 
     eval(&lua, result)
 }
@@ -141,6 +191,15 @@ mod test {
         assert_eq!(all_of_it("var x = 1 * 2", "x")?, 2.into());
 
         assert_eq!(all_of_it("var x = 1\nvar y = 2\nvar z = x * y", "z")?, 2.into());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_can_call_a_function() -> Result<()> {
+        assert_eq!(all_of_it("var x = abs(1)", "x")?, 1.into());
+        assert_eq!(all_of_it("var x = abs(1 - 2)", "x")?, 1.into());
+        assert_eq!(all_of_it("var x = abs(1 + 2)", "x")?, 3.into());
 
         Ok(())
     }

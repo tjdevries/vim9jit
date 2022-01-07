@@ -16,6 +16,9 @@ pub use statement_vim9::StatementVim9;
 mod expression;
 pub use expression::Expression;
 
+mod expression_call;
+pub use expression_call::FunctionCall;
+
 mod type_declaration;
 pub use type_declaration::TypeDeclaration;
 
@@ -56,9 +59,10 @@ pub enum InfixOperator {
 
     Add,
     Sub,
-
     Mul,
     Div,
+
+    Call,
 }
 
 impl CodeGen for InfixOperator {
@@ -76,6 +80,7 @@ impl CodeGen for InfixOperator {
             InfixOperator::Sub => "-",
             InfixOperator::Mul => "*",
             InfixOperator::Div => "/",
+            InfixOperator::Call => unimplemented!(),
         }
         .to_string()
     }

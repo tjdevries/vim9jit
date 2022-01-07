@@ -1,5 +1,7 @@
+use log::debug;
 use num::ToPrimitive;
 
+use super::FunctionCall;
 use crate::ast;
 use crate::ast::VimVariable;
 use crate::ast::VimVariableScope;
@@ -15,11 +17,14 @@ use crate::parser::Precedence;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression {
+    // TODO: Other primitive types
     Number(ast::LiteralNumber),
 
     Identifier(ast::Identifier),
-
     VimVariable(ast::VimVariable),
+
+    // TODO: Other call types
+    Call(ast::FunctionCall),
 
     Prefix {
         operator: ast::PrefixOperator,
@@ -106,7 +111,7 @@ fn get_prefix_fn(token: Token) -> fn(&mut Parser, TokenKind) -> ParseResult<Expr
     }
 }
 
-fn get_infix_fn<'a>(token: Token) -> Option<impl Fn(&'a mut Parser, Expression) -> ParseResult<Expression>> {
+fn get_infix_fn<'a>(token: Token) -> Option<Box<dyn Fn(&'a mut Parser, Expression) -> ParseResult<Expression>>> {
     match token.kind {
         TokenKind::Plus | TokenKind::Minus | TokenKind::Star | TokenKind::Slash => {
             let operator = match token.kind {
@@ -117,25 +122,30 @@ fn get_infix_fn<'a>(token: Token) -> Option<impl Fn(&'a mut Parser, Expression) 
                 _ => unreachable!("These are the only operators in the match statement"),
             };
 
-            println!("Generating infix function for: {:?}", operator);
+            debug!("Generating infix function for: {:?}", operator);
 
-            Some(move |p: &'a mut Parser, left| {
-                println!("Current Token: {:?}", p.token());
-                println!("LEFT: {:?}", left);
-
+            Some(Box::new(move |p: &'a mut Parser, left| {
                 Ok(Expression::Infix {
                     left: Box::new(left),
                     operator,
                     right: Box::new(parse_expresion(p, p.precedence())?),
                 })
-            })
+            }))
         }
+        TokenKind::LeftParen => Some(Box::new(|p: &'a mut Parser, left| {
+            Ok(Expression::Call(FunctionCall {
+                function: left.into(),
+                // operator: ast::InfixOperator::Call,
+                args: parse_expression_list(p, TokenKind::Comma, TokenKind::RightParen)?,
+                rparen: p.next_token(),
+            }))
+        })),
         _ => None,
     }
 }
 
 fn parse_expresion(p: &mut Parser, precedence: Precedence) -> ParseResult<Expression> {
-    println!("We are attempting to parse {:?}", p.peek_token());
+    debug!("ParseExpression: start {:?}", p.peek_token());
 
     let prefix = get_prefix_fn(p.peek_token());
     let mut left = prefix(p, p.peek_token().kind)?;
@@ -152,6 +162,30 @@ fn parse_expresion(p: &mut Parser, precedence: Precedence) -> ParseResult<Expres
     Ok(left)
 }
 
+// NOTE: Leaves the `right` Token as the current token for the parser.
+fn parse_expression_list(p: &mut Parser, separator: TokenKind, right: TokenKind) -> ParseResult<Vec<Expression>> {
+    let mut list = Vec::new();
+
+    Ok(if p.peek_token().kind == right {
+        p.next_token();
+        list
+    } else {
+        list.push(parse_expresion(p, Precedence::Lowest)?);
+
+        while p.peek_token().kind == separator {
+            p.next_token();
+            p.next_token();
+            list.push(parse_expresion(p, Precedence::Lowest)?);
+        }
+
+        if p.peek_token().kind != right {
+            panic!("TODO: This should be an error")
+        }
+
+        list
+    })
+}
+
 impl Parse for Expression {
     fn parse(p: &mut Parser) -> ParseResult<Self> {
         parse_expresion(p, parser::Precedence::Lowest)
@@ -166,10 +200,18 @@ impl CodeGen for Expression {
             Expression::VimVariable(_) => todo!(),
             Expression::Prefix { .. } => todo!(),
             Expression::Infix { left, operator, right } => {
+                match (db.has_shared_behavior(left), db.has_shared_behavior(right)) {
+                    (true, true) => {
+                        format!("({} {} {})", left.gen(db), operator.gen(db), right.gen(db))
+                    }
+                    _ => {
+                        panic!("Not sure how to handle");
+                    }
+                }
                 // TODO: We need some way to track the current state of things.
                 // since I want to be able to look up the type of the left & right guys.
-                format!("{} {} {}", left.gen(db), operator.gen(db), right.gen(db))
             }
+            Expression::Call(function_call) => function_call.gen(db),
         }
     }
 }
