@@ -5,6 +5,7 @@ use std::process::Stdio;
 use anyhow::anyhow;
 use anyhow::Result;
 use log::trace;
+use log::warn;
 // use pretty_assertions::assert_eq;
 use rmpv::decode::read_value;
 use rmpv::encode::write_value;
@@ -17,16 +18,26 @@ use crate::lexer::tokenize_file;
 use crate::parser::parse;
 
 #[derive(Default, Debug)]
-pub struct Scope<'a> {
-    lookup: HashMap<&'a Identifier, Expression>,
+pub struct Scope {
+    lookup: HashMap<Identifier, Expression>,
+}
+
+impl Scope {
+    fn add_identifier(&mut self, identifier: Identifier, expr: &Expression) {
+        self.lookup.insert(identifier, expr.clone());
+    }
+
+    fn get_identifier(&self, identifier: &Identifier) -> Option<&Expression> {
+        self.lookup.get(identifier)
+    }
 }
 
 #[derive(Debug)]
-pub struct GenDB<'a> {
-    scopes: Vec<Scope<'a>>,
+pub struct GenDB {
+    scopes: Vec<Scope>,
 }
 
-impl<'a> Default for GenDB<'a> {
+impl Default for GenDB {
     fn default() -> Self {
         Self {
             scopes: vec![Scope::default()],
@@ -34,14 +45,17 @@ impl<'a> Default for GenDB<'a> {
     }
 }
 
-impl<'a> GenDB<'a> {
-    pub fn add_identifier(&mut self, identifier: &'a Identifier, expr: &Expression) {
-        let scope: &mut Scope<'_> = self.scopes.last_mut().expect("Should always have at least one scope");
-        scope.lookup.insert(identifier, expr.clone());
+impl GenDB {
+    pub fn add_identifier(&mut self, identifier: Identifier, expr: &Expression) {
+        let scope = self.scopes.last_mut().expect("Should always have at least one scope");
+        scope.add_identifier(identifier, expr);
     }
 
-    pub fn get_identifier_expr(&mut self, identifier: &Identifier) -> Option<&Expression> {
+    pub fn get_identifier(&self, identifier: &Identifier) -> Option<&Expression> {
         for scope in self.scopes.iter() {
+            if let Some(expr) = scope.get_identifier(identifier) {
+                return Some(expr);
+            }
         }
 
         None
@@ -51,9 +65,13 @@ impl<'a> GenDB<'a> {
     pub fn has_shared_behavior(&self, expr: &Expression) -> bool {
         match expr {
             Expression::Number(_) => true,
-            Expression::Identifier(identifier) => {
-                println!("Identifier: {:?}", identifier);
-                true
+            Expression::Identifier(identifier) => match self.get_identifier(identifier) {
+                Some(expr) => self.has_shared_behavior(expr),
+                None => {
+                    // If we don't know about this identifier, then we just default back to runtime checks.
+                    warn!("unknown identifier: {:?}", identifier);
+                    false
+                }
             },
             Expression::VimVariable(_) => false,
             Expression::Call(_) => false,
@@ -85,6 +103,13 @@ pub fn to_lua(s: &str) -> String {
 
 pub fn all_of_it(preamble: &str, result: &str) -> Result<rmpv::Value> {
     let lua = to_lua(preamble);
+
+    eval(&lua, result)
+}
+
+pub fn eval_with_setup(setup: &str, s: &str, result: &str) -> Result<rmpv::Value> {
+    let lua = to_lua(s);
+    let lua = setup.to_string() + ";\n" + lua.as_str();
 
     eval(&lua, result)
 }
@@ -162,6 +187,8 @@ pub fn eval(preamble: &str, result: &str) -> Result<rmpv::Value> {
 
 #[cfg(test)]
 mod test {
+    use pretty_assertions::assert_eq;
+
     use super::*;
 
     #[test]
@@ -200,6 +227,12 @@ mod test {
         assert_eq!(all_of_it("var x = abs(1)", "x")?, 1.into());
         assert_eq!(all_of_it("var x = abs(1 - 2)", "x")?, 1.into());
         assert_eq!(all_of_it("var x = abs(1 + 2)", "x")?, 3.into());
+
+        assert_eq!("", to_lua("var x = GLOBAL_VAL + 3"));
+        assert_eq!(
+            eval_with_setup("GLOBAL_VAL = 5", "var x = GLOBAL_VAL + 3", "x")?,
+            8.into()
+        );
 
         Ok(())
     }

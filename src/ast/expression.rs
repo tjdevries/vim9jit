@@ -205,11 +205,9 @@ impl CodeGen for Expression {
                         format!("({} {} {})", left.gen(db), operator.gen(db), right.gen(db))
                     }
                     _ => {
-                        panic!("Not sure how to handle");
+                        format!(r#"Vim9__{:?}({}, {})"#, operator, left.gen(db), right.gen(db))
                     }
                 }
-                // TODO: We need some way to track the current state of things.
-                // since I want to be able to look up the type of the left & right guys.
             }
             Expression::Call(function_call) => function_call.gen(db),
         }

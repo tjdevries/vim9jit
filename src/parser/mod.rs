@@ -175,7 +175,7 @@ mod test {
                 identifier: id!($id),
                 type_decl: None,
                 equal: T![=],
-                expression: $expression.into(),
+                expr: $expression.into(),
             })
         };
 
@@ -184,7 +184,7 @@ mod test {
                 identifier: id!($id),
                 type_decl: Some(TypeDeclaration::$type_decl),
                 equal: T![=],
-                expression: $expression.into(),
+                expr: $expression.into(),
             })
         };
     }

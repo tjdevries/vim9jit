@@ -14,7 +14,7 @@ pub struct StatementVar {
     pub identifier: ast::Identifier,
     pub type_decl: Option<ast::TypeDeclaration>,
     pub equal: Token,
-    pub expression: ast::Expression,
+    pub expr: ast::Expression,
     // equals: Token,
     // eol: Token,
 }
@@ -49,13 +49,14 @@ impl Parse for StatementVar {
             identifier,
             type_decl,
             equal,
-            expression,
+            expr: expression,
         })
     }
 }
 
 impl CodeGen for StatementVar {
     fn gen(&self, db: &mut GenDB) -> String {
-        format!("local {} = {}", self.identifier.gen(db), self.expression.gen(db))
+        db.add_identifier(self.identifier.clone(), &self.expr);
+        format!("local {} = {}", self.identifier.gen(db), self.expr.gen(db))
     }
 }
