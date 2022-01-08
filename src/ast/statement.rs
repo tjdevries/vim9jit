@@ -81,8 +81,10 @@ impl CodeGen for Statement {
             Statement::For(for_) => for_.gen(db),
             Statement::Expr(expr) => expr.gen(db),
             Statement::Return(ret) => format!("return {}", ret.gen(db)),
-            Statement::EndDef => todo!(),
             Statement::Error { msg } => todo!(),
+
+            // This shouldn't happend, maybe could remove this now that I fixed parsing.
+            Statement::EndDef => unreachable!(),
         }
         .to_string()
         // "print('statement');".to_string()

@@ -64,7 +64,7 @@ impl Parse for StatementFor {
 impl CodeGen for StatementFor {
     fn gen(&self, db: &mut GenDB) -> String {
         format!(
-            r#"for {} in ipairs({}) do
+            r#"for _, {} in ipairs({}) do
   {}
 end
 "#,
