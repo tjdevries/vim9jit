@@ -18,6 +18,8 @@ use crate::parser::Precedence;
 #[derive(Debug, Clone, PartialEq)]
 // TODO: Other primitive types
 pub enum Expression {
+    Empty,
+
     Number(ast::LiteralNumber),
 
     Identifier(ast::Identifier),
@@ -135,9 +137,10 @@ fn get_infix_fn<'a>(token: Token) -> Option<Box<dyn Fn(&'a mut Parser, Expressio
         TokenKind::LeftParen => Some(Box::new(|p: &'a mut Parser, left| {
             let call = Expression::Call(FunctionCall {
                 function: left.into(),
-                // operator: ast::InfixOperator::Call,
                 args: parse_expression_list(p, TokenKind::Comma, TokenKind::RightParen)?,
             });
+
+            // assert!(p.token().kind != TokenKind::RightParen);
 
             Ok(call)
         })),
@@ -168,21 +171,19 @@ fn parse_expression_list(p: &mut Parser, separator: TokenKind, right: TokenKind)
     let mut list = Vec::new();
 
     Ok(if p.peek_token().kind == right {
-        p.next_token();
+        p.expect(&right)?;
         list
     } else {
         list.push(parse_expresion(p, Precedence::Lowest)?);
 
         while p.peek_token().kind == separator {
             dbg!(p.next_token());
-            list.push(parse_expresion(p, Precedence::Lowest)?);
+            list.push(dbg!(parse_expresion(p, Precedence::Lowest)?));
         }
 
-        if p.peek_token().kind != right {
-            panic!("TODO: This should be an error")
-        }
-        p.next_token();
-
+        dbg!(p.position);
+        p.expect(&right)?;
+        dbg!(p.position);
         list
     })
 }
@@ -196,6 +197,7 @@ impl Parse for Expression {
 impl CodeGen for Expression {
     fn gen(&self, db: &mut GenDB) -> String {
         match self {
+            Expression::Empty => "".to_string(),
             Expression::Number(num) => num.value.to_string(),
             Expression::Identifier(identifier) => identifier.gen(db),
             Expression::VimVariable(_) => todo!(),

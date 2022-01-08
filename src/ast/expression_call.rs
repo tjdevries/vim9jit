@@ -18,6 +18,13 @@ pub struct FunctionCall {
 impl CodeGen for FunctionCall {
     fn gen(&self, db: &mut crate::gen::GenDB) -> String {
         let args = self.args.iter().map(|e| e.gen(db)).collect::<Vec<String>>();
-        format!(r#"vim.fn["{}"]({})"#, self.function.gen(db), args.join(","))
+        let name = self.function.gen(db);
+
+        // This is a user function
+        if name.chars().next().unwrap().is_uppercase() {
+            format!(r#"({})({})"#, name, args.join(","))
+        } else {
+            format!(r#"vim.fn["{}"]({})"#, name, args.join(","))
+        }
     }
 }

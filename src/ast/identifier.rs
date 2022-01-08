@@ -1,8 +1,11 @@
 use super::Expression;
 use crate::gen::CodeGen;
 use crate::gen::GenDB;
+use crate::lexer::Token;
 use crate::lexer::TokenKind;
 use crate::parser::Parse;
+use crate::parser::ParseError;
+use crate::parser::ParseErrorKind;
 use crate::parser::ParseResult;
 use crate::parser::Parser;
 
@@ -16,7 +19,12 @@ impl Parse for Identifier {
         let token = p.next_token();
         match token.kind {
             TokenKind::Identifier => Ok(Self { name: token.text }),
-            tok => panic!("Expected identifier, got: {:?}", tok),
+            _ => Err(ParseError {
+                kind: ParseErrorKind::Expected {
+                    actual: format!("{:?}", token),
+                    expected: "A valid identifier".to_string(),
+                },
+            }),
         }
     }
 }
@@ -30,6 +38,14 @@ impl Into<Expression> for Identifier {
 impl From<&str> for Identifier {
     fn from(val: &str) -> Self {
         Identifier { name: val.to_owned() }
+    }
+}
+
+impl From<&Token> for Identifier {
+    fn from(val: &Token) -> Self {
+        Identifier {
+            name: val.text.to_owned(),
+        }
     }
 }
 

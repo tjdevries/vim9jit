@@ -54,7 +54,7 @@ pub enum Precedence {
 pub struct Parser {
     pub tokens: Vec<Token>,
 
-    position: usize,
+    pub position: usize,
     read_position: usize,
 }
 
@@ -115,23 +115,10 @@ impl Parser {
         }
     }
 
-    fn get_next_useful_token(&mut self) -> Token {
-        let mut tok = self.next_token();
-        while tok.kind == TokenKind::Ignore || tok.kind == TokenKind::NewLine {
-            tok = self.next_token();
-
-            if tok.kind == TokenKind::EOF {
-                panic!("WE HAVE GONE TOO FAR");
-            }
-        }
-
-        tok
-    }
-
-    pub fn expect(&mut self, expected: TokenKind) -> ParseResult<Token> {
-        let tok = self.get_next_useful_token();
-        if tok.kind != expected {
-            panic!("Gotta write this error: {:?}", tok);
+    pub fn expect(&mut self, expected: &TokenKind) -> ParseResult<Token> {
+        let tok = self.next_token();
+        if &tok.kind != expected {
+            panic!("Gotta write this error: expected::{:?}, got:{:?}", expected, tok);
         }
 
         Ok(tok)

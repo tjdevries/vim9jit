@@ -317,6 +317,7 @@ mod tokenizer {
                         "def" => tok!(CommandDef, lexer, text),
                         "enddef" => tok!(CommandEndDef, lexer, text),
                         "echo" => tok!(CommandEcho, lexer, text),
+                        "return" => tok!(CommandReturn, lexer, text),
 
                         // non commands
                         _ => {

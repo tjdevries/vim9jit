@@ -73,6 +73,7 @@ impl GenDB {
         // TODO: Actually use decl
 
         match expr {
+            Expression::Empty => true,
             Expression::Number(_) => true,
             Expression::Identifier(identifier) => match self.get_var(identifier) {
                 Some(variable) => self.has_shared_behavior(&variable.decl, &variable.expr),
@@ -112,6 +113,7 @@ pub fn to_lua(s: &str) -> String {
 
 pub fn all_of_it(preamble: &str, result: &str) -> Result<rmpv::Value> {
     let lua = to_lua(preamble);
+    println!("{}", &lua);
 
     eval(&lua, result)
 }
@@ -248,8 +250,10 @@ mod test {
 
     #[test]
     fn test_can_eval_terrible_benchmark() -> Result<()> {
-        let lua = to_lua(constants::TERRIBLE_BENCHMARK);
-
+        assert_eq!(
+            all_of_it(constants::TERRIBLE_BENCHMARK, "sum")?,
+            4499998500001u64.into()
+        );
         Ok(())
     }
 }

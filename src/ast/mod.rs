@@ -12,6 +12,7 @@ mod statement_for;
 mod statement_var;
 pub use statement_def::StatementDef;
 pub use statement_for::StatementFor;
+pub use statement_var::StatementExpr;
 pub use statement_var::StatementVar;
 
 mod statement_vim9;

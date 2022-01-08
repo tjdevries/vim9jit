@@ -1,3 +1,4 @@
+use super::Identifier;
 use crate::ast;
 use crate::gen::CodeGen;
 use crate::gen::GenDB;
@@ -58,5 +59,29 @@ impl CodeGen for StatementVar {
     fn gen(&self, db: &mut GenDB) -> String {
         db.add_var(self.identifier.clone(), self.type_decl.clone(), self.expr.clone());
         format!("local {} = {}", self.identifier.gen(db), self.expr.gen(db))
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct StatementExpr {
+    pub identifier: ast::Identifier,
+    pub equal: Token,
+    pub expr: ast::Expression,
+}
+
+impl Parse for StatementExpr {
+    fn parse(p: &mut Parser) -> ParseResult<Self> {
+        Ok(Self {
+            // TODO: I REALLY DO NOT LIKE THAT THIS DOESN'T ADVANCE
+            identifier: (&p.token()).into(),
+            equal: p.next_token(),
+            expr: p.parse()?,
+        })
+    }
+}
+
+impl CodeGen for StatementExpr {
+    fn gen(&self, db: &mut GenDB) -> String {
+        format!("{} = {}", self.identifier.gen(db), self.expr.gen(db))
     }
 }

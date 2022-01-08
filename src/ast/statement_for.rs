@@ -1,6 +1,8 @@
 use super::Expression;
 use super::Identifier;
 use super::Statement;
+use crate::gen::CodeGen;
+use crate::gen::GenDB;
 use crate::lexer::Token;
 use crate::lexer::TokenKind;
 use crate::parser::Parse;
@@ -17,7 +19,7 @@ pub struct StatementFor {
     in_: Identifier,
     pub iterator: Expression,
     // TODO: Vec
-    // pub body: Box<Statement>,
+    pub body: Vec<Statement>,
     // end:
 }
 
@@ -34,15 +36,46 @@ impl Parse for StatementFor {
         let iterator = p.parse()?;
         dbg!(&iterator);
 
-        // panic!("We got iterator: {:?}", iterator);
+        let mut body = Vec::new();
+        loop {
+            // Keep looping until we encounter an enddef
+            match p.parse::<Statement>() {
+                Ok(statement) => body.push(statement),
+                Err(err) => match p.token().kind {
+                    TokenKind::CommandEndFor => {
+                        break;
+                    }
+                    _ => return Err(err),
+                },
+            }
+        }
 
         Ok(Self {
             open,
             args,
             in_,
             iterator,
-            // body: ,
-            close: p.expect(TokenKind::CommandEndFor)?,
+            body,
+            close: p.token(),
         })
+    }
+}
+
+impl CodeGen for StatementFor {
+    fn gen(&self, db: &mut GenDB) -> String {
+        format!(
+            r#"for {} in ipairs({}) do
+  {}
+end
+"#,
+            self.args.gen(db),
+            self.iterator.gen(db),
+            self.body
+                .iter()
+                .map(|s| s.gen(db))
+                .collect::<Vec<String>>()
+                .join("\n")
+                .to_string()
+        )
     }
 }
