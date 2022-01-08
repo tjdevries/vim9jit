@@ -7,7 +7,11 @@ pub use program::Program;
 mod statement;
 pub use statement::Statement;
 
+mod statement_def;
+mod statement_for;
 mod statement_var;
+pub use statement_def::StatementDef;
+pub use statement_for::StatementFor;
 pub use statement_var::StatementVar;
 
 mod statement_vim9;

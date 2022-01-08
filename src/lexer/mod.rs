@@ -21,17 +21,52 @@ fn is_whitespace(ch: char) -> bool {
 const EOF: char = 0 as char;
 const EOL: char = '\n';
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Clone)]
 pub struct Token {
     pub kind: TokenKind,
+    pub line: usize,
+    pub col: usize,
     pub text: String,
 }
 
+impl std::fmt::Debug for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Token {{{:3}, {:13} }} = {}",
+            self.line,
+            format!("{:?}", self.kind),
+            self.text.replace("\n", "\\n")
+        )
+    }
+}
+
+impl PartialEq for Token {
+    fn eq(&self, other: &Self) -> bool {
+        // TODO: At this point, I don't care about line/col for equals.
+        // This lets me not worry about constructing them correctly
+        self.kind == other.kind && self.text == other.text
+    }
+}
+
 impl Token {
-    pub fn new<A: AsRef<str>>(kind: TokenKind, text: A) -> Self {
+    pub fn dummy<A: AsRef<str>>(kind: TokenKind, text: A) -> Self {
+        Self::new(kind, 0, text.as_ref())
+    }
+
+    pub fn new(kind: TokenKind, line: usize, text: &str) -> Self {
+        match kind {
+            TokenKind::Identifier => {
+                assert!(text != "", "Text must not be empty");
+            }
+            _ => {}
+        };
+
         Self {
             kind,
-            text: text.as_ref().into(),
+            line,
+            col: 0,
+            text: text.into(),
         }
     }
 }
@@ -49,6 +84,12 @@ pub enum TokenKind {
 
     // Commands
     CommandVar,
+    CommandDef,
+    CommandEndDef,
+    CommandFor,
+    CommandEndFor,
+    CommandReturn,
+    CommandEcho,
 
     // Scopes
     GlobalScope,
@@ -89,6 +130,9 @@ pub struct Lexer {
     pub position: usize,      // Reading position
     pub read_position: usize, // Current moving reading position
     pub ch: char,             // Current read character
+
+    line: usize,
+    offset: usize,
 }
 
 impl Lexer {
@@ -97,6 +141,8 @@ impl Lexer {
             input,
             position: 0,
             read_position: 0,
+            line: 0,
+            offset: 0,
             ch: EOF,
         }
     }
@@ -108,6 +154,11 @@ impl Lexer {
         } else {
             self.ch = self.input[self.read_position];
         }
+
+        if self.ch == '\n' {
+            self.line += 1;
+        }
+
         self.position = self.read_position;
         self.read_position = self.read_position + 1;
 
@@ -149,14 +200,23 @@ pub struct State {
 
 #[macro_export]
 macro_rules! tok {
-    ($kind:expr, $l:expr) => {
-        Token::new($kind, $l.to_string())
+    ($kind:ident, $l:expr) => {
+        Token::new(TokenKind::$kind, $l.line, &$l.ch.to_string())
+    };
+
+    ($kind:ident, $l:expr, $text:expr) => {
+        Token::new(TokenKind::$kind, $l.line, &$text)
     };
 }
 
 macro_rules! T {
-    [=] => { Token::new(TokenKind::Equal, "=") };
-    [,] => { Token::new(TokenKind::Comma, ",") };
+    [=] => { Token::dummy(TokenKind::Equal, "=") };
+    [,] => { Token::dummy(TokenKind::Comma, ",") };
+    [:] => { Token::dummy(TokenKind::Colon, ":") };
+
+    [$l:expr; =] => { Token::new(TokenKind::Equal, $l.line, "=") };
+    [$l:expr; ,] => { Token::new(TokenKind::Comma, $l.line, ",") };
+    [$l:expr; :] => { Token::new(TokenKind::Colon, $l.line, ":") };
 }
 pub(crate) use T;
 
@@ -168,13 +228,13 @@ mod combinator {
         lexer.read_char();
 
         match c {
-            'g' => Token::new(TokenKind::GlobalScope, "g:"),
-            't' => Token::new(TokenKind::TabScope, "t:"),
-            'w' => Token::new(TokenKind::WindowScope, "w:"),
-            'b' => Token::new(TokenKind::BufferScope, "b:"),
-            's' => Token::new(TokenKind::ScriptScope, "s:"),
-            'l' => Token::new(TokenKind::LocalScope, "l:"),
-            _ => Token::new(TokenKind::ParseError, c.to_string()),
+            'g' => tok!(GlobalScope, lexer, "g:"),
+            't' => tok!(TabScope, lexer, "t:"),
+            'w' => tok!(WindowScope, lexer, "w:"),
+            'b' => tok!(BufferScope, lexer, "b:"),
+            's' => tok!(ScriptScope, lexer, "s:"),
+            'l' => tok!(LocalScope, lexer, "l:"),
+            _ => tok!(ParseError, lexer, c.to_string()),
         }
     }
 }
@@ -187,7 +247,7 @@ mod tokenizer {
     macro_rules! tok_error {
         () => {
             Some(State {
-                tokens: vec![Token::new(TokenKind::ParseError, String::new())],
+                tokens: vec![Token::dummy(TokenKind::ParseError, String::new())],
                 next: panic_next,
             })
         };
@@ -195,7 +255,7 @@ mod tokenizer {
 
     fn shared(lexer: &mut Lexer) -> Option<Token> {
         let kind = match lexer.ch {
-            '#' => return Some(Token::new(TokenKind::Comment, read_until_eol(lexer))),
+            '#' => return Some(Token::dummy(TokenKind::Comment, read_until_eol(lexer))),
 
             EOF => TokenKind::EOF,
             EOL => TokenKind::NewLine,
@@ -207,7 +267,7 @@ mod tokenizer {
             _ => return None,
         };
 
-        Some(Token::new(kind, lexer.ch.to_string()))
+        Some(Token::new(kind, lexer.line, &lexer.ch.to_string()))
     }
 
     fn panic_next(_: &mut Lexer) -> Option<State> {
@@ -221,15 +281,17 @@ mod tokenizer {
             return tok_error!();
         };
 
+        if lexer.ch.is_whitespace() {
+            read_while(lexer, is_whitespace);
+            lexer.read_char();
+        }
+
         if "im9script" != lexer.peek_until("im9script".len()) {
             return tok_error!();
         }
 
         Some(State {
-            tokens: vec![Token {
-                kind: TokenKind::Vim9Script,
-                text: read_until_eol(lexer),
-            }],
+            tokens: vec![tok!(Vim9Script, lexer, &read_until_eol(lexer))],
             next: new_statement,
         })
     }
@@ -240,10 +302,7 @@ mod tokenizer {
         let tok = match shared(lexer) {
             Some(t) => t,
             None => match lexer.ch {
-                '\n' => Token {
-                    kind: TokenKind::NewLine,
-                    text: "\n".to_string(),
-                },
+                '\n' => tok!(NewLine, lexer, "\n".to_string()),
 
                 scope if lexer.peek_char() == ':' => combinator::scoped_var(lexer, scope),
 
@@ -251,15 +310,20 @@ mod tokenizer {
                     let text = read_while(lexer, |ch| !is_whitespace(ch));
 
                     match text.as_str() {
-                        "var" => Token::new(TokenKind::CommandVar, text),
-                        //
                         // TODO: Need to handle all the different commands here
-                        //
+                        "var" => tok!(CommandVar, lexer, text),
+                        "for" => tok!(CommandFor, lexer, text),
+                        "endfor" => tok!(CommandEndFor, lexer, text),
+                        "def" => tok!(CommandDef, lexer, text),
+                        "enddef" => tok!(CommandEndDef, lexer, text),
+                        "echo" => tok!(CommandEcho, lexer, text),
+
+                        // non commands
                         _ => {
                             if is_digit(val) {
-                                Token::new(TokenKind::Number, text)
+                                tok!(Number, lexer, text)
                             } else if text.chars().all(|c| is_identifier(c)) {
-                                Token::new(TokenKind::Identifier, text)
+                                tok!(Identifier, lexer, text)
                             } else {
                                 panic!("Not yet parseable: {}, {:?}", val, lexer)
                             }
@@ -274,7 +338,7 @@ mod tokenizer {
         }
 
         Some(State {
-            next: if tok.kind == TokenKind::NewLine {
+            next: if tok.kind == TokenKind::NewLine || tok.kind == TokenKind::Ignore {
                 new_statement
             } else if tok.kind == TokenKind::CommandVar {
                 new_var
@@ -293,7 +357,7 @@ mod tokenizer {
         // All vars MUST have a whitespace afterwards...
         // Not sure if this should be in lexer or not, but it makes life easier to think about this
         // way.
-        tokens.push(Token::new(
+        tokens.push(Token::dummy(
             TokenKind::Ignore,
             read_while(lexer, |ch| is_whitespace(ch) && ch != EOF),
         ));
@@ -311,7 +375,7 @@ mod tokenizer {
             } else if next == '\n' || ch == '\n' {
                 break;
             } else if next.is_whitespace() {
-                tokens.push(Token::new(TokenKind::Identifier, text));
+                tokens.push(tok!(Identifier, lexer, text));
                 break;
             } else if next == ':' {
                 match lexer.peek_n(2) {
@@ -319,7 +383,7 @@ mod tokenizer {
                         if ch.is_whitespace() {
                             // TYPE DECLS
                             // panic!("TYPE DECLS");
-                            tokens.push(Token::new(TokenKind::Identifier, text));
+                            tokens.push(tok!(Identifier, lexer, text));
                             lexer.read_char();
 
                             // read ':'
@@ -331,10 +395,7 @@ mod tokenizer {
 
                             // TODO: This could be more complicated here...
                             // I don't know where to put all of this stuff
-                            tokens.push(Token::new(
-                                TokenKind::TypeDeclaration,
-                                read_while(lexer, |ch| ch != '='),
-                            ));
+                            tokens.push(tok!(TypeDeclaration, lexer, read_while(lexer, |ch| ch != '=')));
                             break;
                         }
                     }
@@ -355,28 +416,32 @@ mod tokenizer {
         let tok = match shared(lexer) {
             Some(t) => t,
             None => match lexer.ch {
-                EOF => tok!(TokenKind::EOF, lexer.ch),
-                '\n' => tok!(TokenKind::NewLine, lexer.ch),
+                EOF => tok!(EOF, lexer),
+                '\n' => tok!(NewLine, lexer),
 
-                ' ' => tok!(TokenKind::Ignore, lexer.ch),
-                '+' => tok!(TokenKind::Plus, lexer.ch),
-                '*' => tok!(TokenKind::Star, lexer.ch),
-                '=' => tok!(TokenKind::Equal, lexer.ch),
-                '[' => tok!(TokenKind::LeftBracket, lexer.ch),
-                ']' => tok!(TokenKind::RightBracket, lexer.ch),
-                ',' => T![,],
+                '+' => tok!(Plus, lexer),
+                '*' => tok!(Star, lexer),
+                '=' => tok!(Equal, lexer),
+                '[' => tok!(LeftBracket, lexer),
+                ']' => tok!(RightBracket, lexer),
+                ',' => T![lexer; ,],
+                ':' => T![lexer; :],
 
-                scope if lexer.peek_char() == ':' => combinator::scoped_var(lexer, scope),
+                c if c.is_whitespace() => tok!(Ignore, lexer),
 
                 val => {
-                    let text = read_while(lexer, |ch| is_identifier(ch));
-
-                    if is_digit(val) {
-                        Token::new(TokenKind::Number, text)
-                    } else if text.chars().all(|c| is_identifier(c)) {
-                        Token::new(TokenKind::Identifier, text)
+                    if lexer.peek_char() == ':' {
+                        combinator::scoped_var(lexer, val)
                     } else {
-                        panic!("OH NO! {}, {:?}", val, lexer)
+                        let text = read_while(lexer, |ch| is_identifier(ch));
+
+                        if is_digit(val) {
+                            tok!(Number, lexer, text)
+                        } else if !text.is_empty() && text.chars().all(|c| is_identifier(c)) {
+                            tok!(Identifier, lexer, text)
+                        } else {
+                            panic!("OH NO! {}, {:?}", val, lexer)
+                        }
                     }
                 }
             },
@@ -472,17 +537,15 @@ mod test {
     use TokenKind::*;
 
     use super::*;
+    use crate::constants;
 
     macro_rules! v9 {
         () => {
-            Token::new(Vim9Script, "vim9script")
+            Token::dummy(Vim9Script, "vim9script")
         };
 
         ($l:expr) => {
-            Token {
-                kind: Vim9Script,
-                text: format!("vim9script{}", $l),
-            }
+            Token::dummy(Vim9Script, format!("vim9script{}", $l))
         };
     }
 
@@ -495,7 +558,7 @@ mod test {
 
                 let mut expected = Vec::new();
                 expected.push(v9!());
-                expected.push(Token { kind: TokenKind::NewLine, text: "\n".to_string(), });
+                expected.push(Token::dummy(TokenKind::NewLine, "\n".to_string()));
                 $(
                     expected.push($x);
                 )*
@@ -513,32 +576,32 @@ mod test {
     test_tokens!(
         can_parse_a_simple_comment,
         "# My first comment",
-        [Token::new(Comment, "# My first comment")]
+        [Token::dummy(Comment, "# My first comment")]
     );
 
     // Numbers
-    test_tokens!(parses_a_single_digit_number, "5", [Token::new(Number, "5")]);
+    test_tokens!(parses_a_single_digit_number, "5", [Token::dummy(Number, "5")]);
 
     test_tokens!(
         parses_an_addition,
         "5432 + 342",
         [
-            Token::new(Number, "5432"),
-            Token::new(Plus, "+"),
-            Token::new(Number, "342")
+            Token::dummy(Number, "5432"),
+            Token::dummy(Plus, "+"),
+            Token::dummy(Number, "342")
         ]
     );
 
-    test_tokens!(parse_singular_var, "var", [Token::new(CommandVar, "var")]);
+    test_tokens!(parse_singular_var, "var", [Token::dummy(CommandVar, "var")]);
 
     test_tokens!(
         parse_singular_var_statement,
         "var foo = 5",
         [
-            Token::new(CommandVar, "var"),
-            Token::new(Identifier, "foo"),
-            Token::new(Equal, "="),
-            Token::new(Number, "5")
+            Token::dummy(CommandVar, "var"),
+            Token::dummy(Identifier, "foo"),
+            Token::dummy(Equal, "="),
+            Token::dummy(Number, "5")
         ]
     );
 
@@ -546,12 +609,12 @@ mod test {
         parse_var_var_statement,
         "var var = 54 + 32",
         [
-            Token::new(CommandVar, "var"),
-            Token::new(Identifier, "var"),
-            Token::new(Equal, "="),
-            Token::new(Number, "54"),
-            Token::new(Plus, "+"),
-            Token::new(Number, "32")
+            Token::dummy(CommandVar, "var"),
+            Token::dummy(Identifier, "var"),
+            Token::dummy(Equal, "="),
+            Token::dummy(Number, "54"),
+            Token::dummy(Plus, "+"),
+            Token::dummy(Number, "32")
         ]
     );
 
@@ -559,16 +622,16 @@ mod test {
         parse_simple_list,
         "var x = [1, 2, 3]",
         [
-            Token::new(CommandVar, "var"),
-            Token::new(Identifier, "x"),
-            Token::new(Equal, "="),
-            Token::new(LeftBracket, "["),
-            Token::new(Number, "1"),
-            Token::new(Comma, ","),
-            Token::new(Number, "2"),
-            Token::new(Comma, ","),
-            Token::new(Number, "3"),
-            Token::new(RightBracket, "]")
+            Token::dummy(CommandVar, "var"),
+            Token::dummy(Identifier, "x"),
+            Token::dummy(Equal, "="),
+            Token::dummy(LeftBracket, "["),
+            Token::dummy(Number, "1"),
+            Token::dummy(Comma, ","),
+            Token::dummy(Number, "2"),
+            Token::dummy(Comma, ","),
+            Token::dummy(Number, "3"),
+            Token::dummy(RightBracket, "]")
         ]
     );
 
@@ -576,19 +639,19 @@ mod test {
         parse_list_with_addition,
         "var x = [1, 2 + foo, -3]",
         [
-            Token::new(CommandVar, "var"),
-            Token::new(Identifier, "x"),
-            Token::new(Equal, "="),
-            Token::new(LeftBracket, "["),
-            Token::new(Number, "1"),
-            Token::new(Comma, ","),
-            Token::new(Number, "2"),
-            Token::new(Plus, "+"),
-            Token::new(Identifier, "foo"),
-            Token::new(Comma, ","),
-            Token::new(Minus, "-"),
-            Token::new(Number, "3"),
-            Token::new(RightBracket, "]")
+            Token::dummy(CommandVar, "var"),
+            Token::dummy(Identifier, "x"),
+            Token::dummy(Equal, "="),
+            Token::dummy(LeftBracket, "["),
+            Token::dummy(Number, "1"),
+            Token::dummy(Comma, ","),
+            Token::dummy(Number, "2"),
+            Token::dummy(Plus, "+"),
+            Token::dummy(Identifier, "foo"),
+            Token::dummy(Comma, ","),
+            Token::dummy(Minus, "-"),
+            Token::dummy(Number, "3"),
+            Token::dummy(RightBracket, "]")
         ]
     );
 
@@ -596,30 +659,30 @@ mod test {
         parse_global_var,
         "g:hello = 5",
         [
-            Token::new(GlobalScope, "g:"),
-            Token::new(Identifier, "hello"),
+            Token::dummy(GlobalScope, "g:"),
+            Token::dummy(Identifier, "hello"),
             T![=],
-            Token::new(Number, "5")
+            Token::dummy(Number, "5")
         ]
     );
 
     test_tokens!(
         parse_regular_var,
         "hello = 5",
-        [Token::new(Identifier, "hello"), T![=], Token::new(Number, "5")]
+        [Token::dummy(Identifier, "hello"), T![=], Token::dummy(Number, "5")]
     );
 
     test_tokens!(
         test_parses_a_function_call,
         "var x = abs(1)",
         [
-            Token::new(CommandVar, "var"),
-            Token::new(Identifier, "x"),
+            Token::dummy(CommandVar, "var"),
+            Token::dummy(Identifier, "x"),
             T![=],
-            Token::new(Identifier, "abs"),
-            Token::new(LeftParen, "("),
-            Token::new(Number, "1"),
-            Token::new(RightParen, ")")
+            Token::dummy(Identifier, "abs"),
+            Token::dummy(LeftParen, "("),
+            Token::dummy(Number, "1"),
+            Token::dummy(RightParen, ")")
         ]
     );
 
@@ -630,14 +693,8 @@ mod test {
             parsed,
             vec![
                 v9!("  "),
-                Token {
-                    kind: NewLine,
-                    text: "\n".into()
-                },
-                Token {
-                    kind: Comment,
-                    text: "# my first comment".into()
-                }
+                Token::dummy(NewLine, "\n"),
+                Token::dummy(Comment, "# my first comment")
             ]
         );
 
@@ -653,10 +710,7 @@ mod test {
     fn test_parses_a_multiple_digit_number() -> Result<()> {
         assert_eq!(
             tokenize("5432".into(), tokenizer::generic)?,
-            vec![Token {
-                kind: Number,
-                text: "5432".into()
-            }]
+            vec![Token::dummy(Number, "5432")]
         );
 
         Ok(())
@@ -666,5 +720,10 @@ mod test {
     fn peek_until() {
         let lex = Lexer::new("hello".chars().collect());
         assert_eq!(vec!['h', 'e', 'l'], lex.peek_until(3).chars().collect::<Vec<char>>())
+    }
+
+    #[test]
+    fn test_can_parse_terrible_benchmark() {
+        assert!(dbg!(tokenize(constants::TERRIBLE_BENCHMARK.into(), tokenizer::new_file)).is_ok());
     }
 }

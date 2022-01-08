@@ -50,6 +50,7 @@ pub enum Precedence {
     Call,
 }
 
+#[derive(Debug)]
 pub struct Parser {
     pub tokens: Vec<Token>,
 
@@ -65,10 +66,7 @@ fn get_precedence(token: Token) -> Precedence {
         Star | Slash => Precedence::Product,
         LeftParen => Precedence::Call,
 
-        // Everything else, but I want this to error if we miss one
-        StartOfFile | Vim9Script | Comment | Number | Identifier | TypeDeclaration | CommandVar | GlobalScope
-        | TabScope | WindowScope | BufferScope | ScriptScope | LocalScope | NewLine | Equal | RightParen
-        | LeftBracket | RightBracket | Colon | Comma | Ignore | EOF | ParseError => Precedence::Lowest,
+        _ => Precedence::Lowest,
     }
 }
 
@@ -110,14 +108,33 @@ impl Parser {
     fn get_token_at(&self, n: usize) -> Token {
         if n >= self.tokens.len() {
             // TODO: Probably should be string with EOF in it??
-            Token {
-                kind: TokenKind::EOF,
-                text: String::new(),
-            }
+            Token::dummy(TokenKind::EOF, String::new())
         } else {
             // TODO: Can I avoid cloning this?
             self.tokens[n].clone()
         }
+    }
+
+    fn get_next_useful_token(&mut self) -> Token {
+        let mut tok = self.next_token();
+        while tok.kind == TokenKind::Ignore || tok.kind == TokenKind::NewLine {
+            tok = self.next_token();
+
+            if tok.kind == TokenKind::EOF {
+                panic!("WE HAVE GONE TOO FAR");
+            }
+        }
+
+        tok
+    }
+
+    pub fn expect(&mut self, expected: TokenKind) -> ParseResult<Token> {
+        let tok = self.get_next_useful_token();
+        if tok.kind != expected {
+            panic!("Gotta write this error: {:?}", tok);
+        }
+
+        Ok(tok)
     }
 }
 
@@ -147,6 +164,7 @@ mod test {
     use crate::ast::PreOp;
     use crate::ast::TypeDeclaration;
     use crate::ast::*;
+    use crate::constants::TERRIBLE_BENCHMARK;
     use crate::lexer::tokenize_file;
     use crate::lexer::T;
 
@@ -226,7 +244,7 @@ mod test {
                     )*
                 ],
 
-                rparen: Token::new(TokenKind::RightParen, ")"),
+                // rparen: Token::new(TokenKind::RightParen, ")"),
             })
         };
     }
@@ -332,6 +350,16 @@ mod test {
         "var x = abs(1)",
         var! { x = call!(abs, [1.into()]) }
     );
+
+    #[test]
+    fn parses_terrible_benchmark() -> ParseResult<()> {
+        let tokens = get_tokens(TERRIBLE_BENCHMARK);
+        dbg!(&tokens);
+
+        assert_eq!(prog![], parse(tokens)?);
+
+        Ok(())
+    }
 
     #[test]
     fn errors_when_a_var_statement_has_no_equal() {

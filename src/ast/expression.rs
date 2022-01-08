@@ -16,8 +16,8 @@ use crate::parser::Parser;
 use crate::parser::Precedence;
 
 #[derive(Debug, Clone, PartialEq)]
+// TODO: Other primitive types
 pub enum Expression {
-    // TODO: Other primitive types
     Number(ast::LiteralNumber),
 
     Identifier(ast::Identifier),
@@ -56,7 +56,7 @@ where
 // TODO: I really don't like that I have tokenkind as another argument.
 // How can I pass a function back that captures a variable but actually have it work w/ types.
 fn get_prefix_fn(token: Token) -> fn(&mut Parser, TokenKind) -> ParseResult<Expression> {
-    match token.kind {
+    match &token.kind {
         TokenKind::Number => |p, _| Ok(Expression::Number(p.parse()?)),
         TokenKind::Identifier => |p, _| Ok(Expression::Identifier(p.parse()?)),
 
@@ -107,7 +107,7 @@ fn get_prefix_fn(token: Token) -> fn(&mut Parser, TokenKind) -> ParseResult<Expr
         TokenKind::RightBracket => todo!("RightBracket"),
 
         // These probably should never happen???
-        kind => todo!("Unhandled prefix kind: {:?}", kind),
+        _ => todo!("Unhandled prefix kind: {:?}", token.clone()),
     }
 }
 
@@ -133,12 +133,13 @@ fn get_infix_fn<'a>(token: Token) -> Option<Box<dyn Fn(&'a mut Parser, Expressio
             }))
         }
         TokenKind::LeftParen => Some(Box::new(|p: &'a mut Parser, left| {
-            Ok(Expression::Call(FunctionCall {
+            let call = Expression::Call(FunctionCall {
                 function: left.into(),
                 // operator: ast::InfixOperator::Call,
                 args: parse_expression_list(p, TokenKind::Comma, TokenKind::RightParen)?,
-                rparen: p.next_token(),
-            }))
+            });
+
+            Ok(call)
         })),
         _ => None,
     }
@@ -162,7 +163,7 @@ fn parse_expresion(p: &mut Parser, precedence: Precedence) -> ParseResult<Expres
     Ok(left)
 }
 
-// NOTE: Leaves the `right` Token as the current token for the parser.
+// NOTE: Consumes the `right` token.
 fn parse_expression_list(p: &mut Parser, separator: TokenKind, right: TokenKind) -> ParseResult<Vec<Expression>> {
     let mut list = Vec::new();
 
@@ -173,14 +174,14 @@ fn parse_expression_list(p: &mut Parser, separator: TokenKind, right: TokenKind)
         list.push(parse_expresion(p, Precedence::Lowest)?);
 
         while p.peek_token().kind == separator {
-            p.next_token();
-            p.next_token();
+            dbg!(p.next_token());
             list.push(parse_expresion(p, Precedence::Lowest)?);
         }
 
         if p.peek_token().kind != right {
             panic!("TODO: This should be an error")
         }
+        p.next_token();
 
         list
     })
@@ -200,7 +201,10 @@ impl CodeGen for Expression {
             Expression::VimVariable(_) => todo!(),
             Expression::Prefix { .. } => todo!(),
             Expression::Infix { left, operator, right } => {
-                match (db.has_shared_behavior(left), db.has_shared_behavior(right)) {
+                match (
+                    db.has_shared_behavior(&None, left),
+                    db.has_shared_behavior(&None, right),
+                ) {
                     (true, true) => {
                         format!("({} {} {})", left.gen(db), operator.gen(db), right.gen(db))
                     }

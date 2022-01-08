@@ -14,20 +14,27 @@ use rmpv::Value;
 use crate::ast;
 use crate::ast::Expression;
 use crate::ast::Identifier;
+use crate::ast::TypeDeclaration;
 use crate::lexer::tokenize_file;
 use crate::parser::parse;
 
+#[derive(Debug)]
+pub struct Variable {
+    pub expr: Expression,
+    pub decl: Option<TypeDeclaration>,
+}
+
 #[derive(Default, Debug)]
 pub struct Scope {
-    lookup: HashMap<Identifier, Expression>,
+    lookup: HashMap<Identifier, Variable>,
 }
 
 impl Scope {
-    fn add_identifier(&mut self, identifier: Identifier, expr: &Expression) {
-        self.lookup.insert(identifier, expr.clone());
+    fn add_var(&mut self, identifier: Identifier, decl: Option<TypeDeclaration>, expr: Expression) {
+        self.lookup.insert(identifier, Variable { decl, expr });
     }
 
-    fn get_identifier(&self, identifier: &Identifier) -> Option<&Expression> {
+    fn get_var(&self, identifier: &Identifier) -> Option<&Variable> {
         self.lookup.get(identifier)
     }
 }
@@ -46,14 +53,14 @@ impl Default for GenDB {
 }
 
 impl GenDB {
-    pub fn add_identifier(&mut self, identifier: Identifier, expr: &Expression) {
+    pub fn add_var(&mut self, identifier: Identifier, decl: Option<TypeDeclaration>, expr: Expression) {
         let scope = self.scopes.last_mut().expect("Should always have at least one scope");
-        scope.add_identifier(identifier, expr);
+        scope.add_var(identifier, decl, expr);
     }
 
-    pub fn get_identifier(&self, identifier: &Identifier) -> Option<&Expression> {
+    pub fn get_var(&self, identifier: &Identifier) -> Option<&Variable> {
         for scope in self.scopes.iter() {
-            if let Some(expr) = scope.get_identifier(identifier) {
+            if let Some(expr) = scope.get_var(identifier) {
                 return Some(expr);
             }
         }
@@ -62,11 +69,13 @@ impl GenDB {
     }
 
     /// Checks whether certain items behave the same in vim9script and lua
-    pub fn has_shared_behavior(&self, expr: &Expression) -> bool {
+    pub fn has_shared_behavior(&self, _decl: &Option<TypeDeclaration>, expr: &Expression) -> bool {
+        // TODO: Actually use decl
+
         match expr {
             Expression::Number(_) => true,
-            Expression::Identifier(identifier) => match self.get_identifier(identifier) {
-                Some(expr) => self.has_shared_behavior(expr),
+            Expression::Identifier(identifier) => match self.get_var(identifier) {
+                Some(variable) => self.has_shared_behavior(&variable.decl, &variable.expr),
                 None => {
                     // If we don't know about this identifier, then we just default back to runtime checks.
                     warn!("unknown identifier: {:?}", identifier);
@@ -75,8 +84,8 @@ impl GenDB {
             },
             Expression::VimVariable(_) => false,
             Expression::Call(_) => false,
-            Expression::Prefix { operator, right } => false,
-            Expression::Infix { left, operator, right } => false,
+            Expression::Prefix { .. } => false,
+            Expression::Infix { .. } => false,
         }
     }
 }
@@ -190,6 +199,7 @@ mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
+    use crate::constants;
 
     #[test]
     fn test_can_eval_number() -> Result<()> {
@@ -228,11 +238,17 @@ mod test {
         assert_eq!(all_of_it("var x = abs(1 - 2)", "x")?, 1.into());
         assert_eq!(all_of_it("var x = abs(1 + 2)", "x")?, 3.into());
 
-        assert_eq!("", to_lua("var x = GLOBAL_VAL + 3"));
         assert_eq!(
             eval_with_setup("GLOBAL_VAL = 5", "var x = GLOBAL_VAL + 3", "x")?,
             8.into()
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_can_eval_terrible_benchmark() -> Result<()> {
+        let lua = to_lua(constants::TERRIBLE_BENCHMARK);
 
         Ok(())
     }

@@ -7,7 +7,10 @@ fn main() {
         let readline = rl.readline(">> ");
         match readline {
             Ok(line) => {
-                println!("Lua:\n{}", to_lua(line.as_str()));
+                let contents = to_lua(line.as_str());
+                let contents = contents.replace("require('vim9jit')", "");
+                let contents = contents.lines().map(|l| format!("  {}", l)).collect::<String>();
+                println!("Lua:\n{}", contents);
             }
             _ => {
                 break;

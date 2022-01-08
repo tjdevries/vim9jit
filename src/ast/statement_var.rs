@@ -56,7 +56,7 @@ impl Parse for StatementVar {
 
 impl CodeGen for StatementVar {
     fn gen(&self, db: &mut GenDB) -> String {
-        db.add_identifier(self.identifier.clone(), &self.expr);
+        db.add_var(self.identifier.clone(), self.type_decl.clone(), self.expr.clone());
         format!("local {} = {}", self.identifier.gen(db), self.expr.gen(db))
     }
 }

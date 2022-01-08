@@ -10,6 +10,8 @@ use crate::parser::Parser;
 pub enum Statement {
     Vim9Script(ast::StatementVim9),
     Var(ast::StatementVar),
+    Def(ast::StatementDef),
+    For(ast::StatementFor),
 
     Empty,
     Error { msg: String },
@@ -17,9 +19,12 @@ pub enum Statement {
 
 impl Parse for Statement {
     fn parse(p: &mut Parser) -> ParseResult<Self> {
-        let token = p.next_token();
+        let mut token = p.next_token();
+        while token.kind == TokenKind::NewLine {
+            token = p.next_token();
+        }
 
-        match token.kind {
+        match &token.kind {
             TokenKind::Vim9Script => {
                 let next_token = p.next_token();
                 if !matches!(next_token.kind, TokenKind::NewLine | TokenKind::EOF) {
@@ -28,9 +33,14 @@ impl Parse for Statement {
                     Ok(ast::Statement::Vim9Script(ast::StatementVim9 {}))
                 }
             }
-            TokenKind::CommandVar => Ok(ast::Statement::Var(p.parse()?)),
-            TokenKind::EOF => Ok(ast::Statement::Empty),
-            unparsed => panic!("AHHHHHHH {:?}", unparsed),
+            TokenKind::CommandVar => Ok(Statement::Var(p.parse()?)),
+            TokenKind::CommandDef => Ok(Statement::Def(p.parse()?)),
+            TokenKind::CommandFor => Ok(Statement::For(p.parse()?)),
+            TokenKind::EOF => Ok(Statement::Empty),
+            _ => {
+                dbg!(p);
+                panic!("AHHHHHHH {:?}", token)
+            }
         }
     }
 }
