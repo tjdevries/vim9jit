@@ -18,6 +18,7 @@ rustyline = "9.1.2"
 env_logger = "0.9.0"
 log = "0.4.14"
 stylua = "0.11.3"
+insta = "1.12.0"
 
 [dev-dependencies]
 pretty_assertions = "1.0.0"

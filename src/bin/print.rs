@@ -43,7 +43,6 @@ fn main() {
     let config = Config::default();
 
     let mut rl = Editor::new();
-    // rl.config_mut()
     rl.set_helper(Some(SemiColon {}));
     loop {
         let readline = rl.readline(">> ");

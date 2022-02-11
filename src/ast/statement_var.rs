@@ -24,11 +24,12 @@ impl Parse for StatementVar {
     fn parse(p: &mut Parser) -> ParseResult<Self> {
         let identifier = p.parse()?;
 
-        let type_decl = if p.peek_token().kind == TokenKind::TypeDeclaration {
-            Some(p.parse()?)
-        } else {
-            None
-        };
+        // let type_decl = if p.peek_token().kind == TokenKind::TypeDeclaration {
+        //     Some(p.parse()?)
+        // } else {
+        //     None
+        // };
+        let type_decl = None;
 
         let equal = if matches!(p.next_token().kind, TokenKind::Equal) {
             p.token()

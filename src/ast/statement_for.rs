@@ -63,6 +63,11 @@ impl Parse for StatementFor {
 
 impl CodeGen for StatementFor {
     fn gen(&self, db: &mut GenDB) -> String {
+        match &self.args {
+            Expression::Identifier(identifier) => db.add_var(identifier.clone(), None, self.iterator.clone()),
+            _ => {}
+        }
+
         format!(
             r#"for _, {} in ipairs({}) do
   {}

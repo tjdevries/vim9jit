@@ -33,7 +33,7 @@ impl std::fmt::Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Token {{{:3}, {:13} }} = {}",
+            "Token {{ {:3}, {:13} }} = {}",
             self.line,
             format!("{:?}", self.kind),
             self.text.replace("\n", "\\n")
@@ -80,7 +80,6 @@ pub enum TokenKind {
 
     Number,
     Identifier,
-    TypeDeclaration,
 
     // Commands
     CommandVar,
@@ -383,7 +382,6 @@ mod tokenizer {
                     Some(ch) => {
                         if ch.is_whitespace() {
                             // TYPE DECLS
-                            // panic!("TYPE DECLS");
                             tokens.push(tok!(Identifier, lexer, text));
                             lexer.read_char();
 
@@ -396,7 +394,7 @@ mod tokenizer {
 
                             // TODO: This could be more complicated here...
                             // I don't know where to put all of this stuff
-                            tokens.push(tok!(TypeDeclaration, lexer, read_while(lexer, |ch| ch != '=')));
+                            tokens.push(tok!(Identifier, lexer, read_while(lexer, |ch| ch != '=')));
                             break;
                         }
                     }
@@ -672,6 +670,15 @@ mod test {
         "hello = 5",
         [Token::dummy(Identifier, "hello"), T![=], Token::dummy(Number, "5")]
     );
+
+    #[test]
+    fn lex_a_def_statement() -> Result<()> {
+        let mut text = "vim9script\n".to_string();
+        text.push_str("def MyFunc(): bool\nenddef");
+
+        insta::assert_debug_snapshot!(tokenize(text, tokenizer::new_file)?);
+        OK(())
+    }
 
     test_tokens!(
         test_parses_a_function_call,
