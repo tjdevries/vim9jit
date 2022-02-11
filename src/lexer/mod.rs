@@ -33,7 +33,7 @@ impl std::fmt::Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Token {{ {:3}, {:13} }} = {}",
+            "Token<{:3},{:13}> = '{}'",
             self.line,
             format!("{:?}", self.kind),
             self.text.replace("\n", "\\n")
@@ -255,13 +255,15 @@ mod tokenizer {
     fn shared(lexer: &mut Lexer) -> Option<Token> {
         let kind = match lexer.ch {
             '#' => return Some(Token::dummy(TokenKind::Comment, read_until_eol(lexer))),
+            ' ' => return Some(Token::dummy(TokenKind::Ignore, read_while(lexer, is_whitespace))),
 
             EOF => TokenKind::EOF,
             EOL => TokenKind::NewLine,
-            ' ' => TokenKind::Ignore,
             '-' => TokenKind::Minus,
             '(' => TokenKind::LeftParen,
             ')' => TokenKind::RightParen,
+            ':' => TokenKind::Colon,
+            '\n' => TokenKind::NewLine,
 
             _ => return None,
         };
@@ -301,8 +303,6 @@ mod tokenizer {
         let tok = match shared(lexer) {
             Some(t) => t,
             None => match lexer.ch {
-                '\n' => tok!(NewLine, lexer, "\n".to_string()),
-
                 scope if lexer.peek_char() == ':' => combinator::scoped_var(lexer, scope),
 
                 val => {
@@ -340,73 +340,11 @@ mod tokenizer {
         Some(State {
             next: if tok.kind == TokenKind::NewLine || tok.kind == TokenKind::Ignore {
                 new_statement
-            } else if tok.kind == TokenKind::CommandVar {
-                new_var
             } else {
                 generic
             },
             tokens: vec![tok],
         })
-    }
-
-    pub fn new_var(lexer: &mut Lexer) -> Option<State> {
-        trace!("new_var:: {:?}", lexer.ch);
-
-        let mut tokens = Vec::new();
-
-        // All vars MUST have a whitespace afterwards...
-        // Not sure if this should be in lexer or not, but it makes life easier to think about this
-        // way.
-        tokens.push(Token::dummy(
-            TokenKind::Ignore,
-            read_while(lexer, |ch| is_whitespace(ch) && ch != EOF),
-        ));
-        lexer.read_char();
-
-        // Now we can have an identifier
-        let mut text = String::new();
-        loop {
-            let ch = lexer.ch;
-            let next = lexer.peek_char();
-
-            text.push(ch);
-            if next == EOF {
-                break;
-            } else if next == '\n' || ch == '\n' {
-                break;
-            } else if next.is_whitespace() {
-                tokens.push(tok!(Identifier, lexer, text));
-                break;
-            } else if next == ':' {
-                match lexer.peek_n(2) {
-                    Some(ch) => {
-                        if ch.is_whitespace() {
-                            // TYPE DECLS
-                            tokens.push(tok!(Identifier, lexer, text));
-                            lexer.read_char();
-
-                            // read ':'
-                            lexer.read_char();
-
-                            // read whitespace until type decl
-                            read_while(lexer, |ch| ch.is_whitespace());
-                            lexer.read_char();
-
-                            // TODO: This could be more complicated here...
-                            // I don't know where to put all of this stuff
-                            tokens.push(tok!(Identifier, lexer, read_while(lexer, |ch| ch != '=')));
-                            break;
-                        }
-                    }
-                    None => unreachable!("new_var problems."),
-                }
-            }
-
-            lexer.read_char();
-        }
-
-        // TODO: Could be generic or new_statement
-        Some(State { next: generic, tokens })
     }
 
     pub fn generic(lexer: &mut Lexer) -> Option<State> {
@@ -677,7 +615,7 @@ mod test {
         text.push_str("def MyFunc(): bool\nenddef");
 
         insta::assert_debug_snapshot!(tokenize(text, tokenizer::new_file)?);
-        OK(())
+        Ok(())
     }
 
     test_tokens!(
@@ -732,6 +670,10 @@ mod test {
 
     #[test]
     fn test_can_parse_terrible_benchmark() {
-        assert!(dbg!(tokenize(constants::TERRIBLE_BENCHMARK.into(), tokenizer::new_file)).is_ok());
+        insta::assert_debug_snapshot!(tokenize(
+            format!("vim9script\n{}", constants::TERRIBLE_BENCHMARK),
+            tokenizer::new_file
+        )
+        .unwrap());
     }
 }

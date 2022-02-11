@@ -1,0 +1,18 @@
+---
+source: src/lexer/mod.rs
+assertion_line: 617
+expression: "tokenize(text, tokenizer::new_file)?"
+
+---
+[
+    Token<  0,Vim9Script   > = 'vim9script',
+    Token<  1,NewLine      > = '\n',
+    Token<  1,CommandDef   > = 'def',
+    Token<  1,Identifier   > = 'MyFunc',
+    Token<  1,LeftParen    > = '(',
+    Token<  1,RightParen   > = ')',
+    Token<  1,Colon        > = ':',
+    Token<  1,Identifier   > = 'bool',
+    Token<  2,NewLine      > = '\n',
+    Token<  2,CommandEndDef> = 'enddef',
+]
