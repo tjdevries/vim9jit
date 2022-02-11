@@ -340,10 +340,7 @@ mod test {
 
     #[test]
     fn parses_terrible_benchmark() -> ParseResult<()> {
-        let tokens = get_tokens(TERRIBLE_BENCHMARK);
-        dbg!(&tokens);
-
-        assert_eq!(prog![], parse(tokens)?);
+        insta::assert_debug_snapshot!(parse(get_tokens(TERRIBLE_BENCHMARK))?);
 
         Ok(())
     }

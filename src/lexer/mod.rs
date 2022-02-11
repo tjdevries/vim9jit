@@ -33,7 +33,7 @@ impl std::fmt::Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Token<{:3},{:13}> = '{}'",
+            "Token<{},{}> = '{}'",
             self.line,
             format!("{:?}", self.kind),
             self.text.replace("\n", "\\n")

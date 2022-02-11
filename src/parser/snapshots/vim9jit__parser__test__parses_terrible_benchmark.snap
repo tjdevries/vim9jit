@@ -1,0 +1,151 @@
+---
+source: src/parser/mod.rs
+assertion_line: 343
+expression: parse(get_tokens(TERRIBLE_BENCHMARK))?
+
+---
+Program {
+    statements: [
+        Vim9Script(
+            StatementVim9,
+        ),
+        Empty,
+        Var(
+            StatementVar {
+                identifier: Identifier {
+                    name: "start",
+                },
+                type_decl: None,
+                equal: Token<2,Equal> = '=',
+                expr: Call(
+                    FunctionCall {
+                        function: Identifier(
+                            Identifier {
+                                name: "reltime",
+                            },
+                        ),
+                        args: [],
+                    },
+                ),
+            },
+        ),
+        Empty,
+        Def(
+            StatementDef {
+                name: Identifier {
+                    name: "VimNew",
+                },
+                body: [
+                    Empty,
+                    Var(
+                        StatementVar {
+                            identifier: Identifier {
+                                name: "sum",
+                            },
+                            type_decl: None,
+                            equal: Token<5,Equal> = '=',
+                            expr: Number(
+                                LiteralNumber {
+                                    value: 1.0,
+                                },
+                            ),
+                        },
+                    ),
+                    Empty,
+                    For(
+                        StatementFor {
+                            open: Token<7,CommandFor> = 'for',
+                            close: Token<9,CommandEndFor> = 'endfor',
+                            args: Identifier(
+                                Identifier {
+                                    name: "i",
+                                },
+                            ),
+                            in_: Identifier {
+                                name: "in",
+                            },
+                            iterator: Call(
+                                FunctionCall {
+                                    function: Identifier(
+                                        Identifier {
+                                            name: "range",
+                                        },
+                                    ),
+                                    args: [
+                                        Number(
+                                            LiteralNumber {
+                                                value: 1.0,
+                                            },
+                                        ),
+                                        Number(
+                                            LiteralNumber {
+                                                value: 2999999.0,
+                                            },
+                                        ),
+                                    ],
+                                },
+                            ),
+                            body: [
+                                Empty,
+                                Expr(
+                                    StatementExpr {
+                                        identifier: Identifier {
+                                            name: "sum",
+                                        },
+                                        equal: Token<8,Equal> = '=',
+                                        expr: Infix {
+                                            left: Identifier(
+                                                Identifier {
+                                                    name: "sum",
+                                                },
+                                            ),
+                                            operator: Add,
+                                            right: Identifier(
+                                                Identifier {
+                                                    name: "i",
+                                                },
+                                            ),
+                                        },
+                                    },
+                                ),
+                                Empty,
+                            ],
+                        },
+                    ),
+                    Empty,
+                    Empty,
+                    Return(
+                        Identifier(
+                            Identifier {
+                                name: "sum",
+                            },
+                        ),
+                    ),
+                    Empty,
+                ],
+            },
+        ),
+        Empty,
+        Empty,
+        Var(
+            StatementVar {
+                identifier: Identifier {
+                    name: "sum",
+                },
+                type_decl: None,
+                equal: Token<14,Equal> = '=',
+                expr: Call(
+                    FunctionCall {
+                        function: Identifier(
+                            Identifier {
+                                name: "VimNew",
+                            },
+                        ),
+                        args: [],
+                    },
+                ),
+            },
+        ),
+        Empty,
+    ],
+}
