@@ -1,3 +1,4 @@
+use crate::lexer::TokenKind;
 use crate::parser::Parse;
 
 // The following builtin types are supported:
@@ -52,5 +53,19 @@ impl Parse for TypeDeclaration {
         })
 
         // Ok(TypeDeclaration::Number)
+    }
+}
+
+impl Parse for Option<TypeDeclaration> {
+    fn parse(p: &mut crate::parser::Parser) -> crate::parser::ParseResult<Self> {
+        match p.peek_token().kind {
+            TokenKind::Colon => {
+                // Consume the colon
+                p.next_token();
+
+                Ok(Some(p.parse()?))
+            }
+            _ => Ok(None),
+        }
     }
 }

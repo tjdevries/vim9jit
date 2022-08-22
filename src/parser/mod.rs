@@ -273,6 +273,17 @@ mod test {
            // };
     }
 
+    macro_rules! test_snap {
+        ($name:ident, $program:literal) => {
+            #[test]
+            fn $name() -> ParseResult<()> {
+                insta::assert_debug_snapshot!(parse(get_tokens($program))?);
+
+                Ok(())
+            }
+        };
+    }
+
     test_prog!(
         parses_a_simple_var,
         "var foobarbaz = 12341234",
@@ -337,6 +348,8 @@ mod test {
         "var x = abs(1)",
         var! { x = call!(abs, [1.into()]) }
     );
+
+    test_snap!(parses_a_complex_type, "var x: number = 1");
 
     #[test]
     fn parses_terrible_benchmark() -> ParseResult<()> {

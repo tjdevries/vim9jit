@@ -33,7 +33,7 @@ impl std::fmt::Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Token<{},{}> = '{}'",
+            "Token<{},{} = '{}'>",
             self.line,
             format!("{:?}", self.kind),
             self.text.replace("\n", "\\n")
@@ -194,7 +194,10 @@ impl Lexer {
 
 pub struct State {
     tokens: Vec<Token>,
-    next: fn(&mut Lexer) -> Option<State>,
+    next: fn(&mut Lexer, State) -> Option<State>,
+
+    // Dumb state things to make vimscript easier
+    newline: bool,
 }
 
 #[macro_export]
@@ -248,6 +251,7 @@ mod tokenizer {
             Some(State {
                 tokens: vec![Token::dummy(TokenKind::ParseError, String::new())],
                 next: panic_next,
+                newline: false,
             })
         };
     }
@@ -271,11 +275,11 @@ mod tokenizer {
         Some(Token::new(kind, lexer.line, &lexer.ch.to_string()))
     }
 
-    fn panic_next(_: &mut Lexer) -> Option<State> {
+    fn panic_next(_: &mut Lexer, _: State) -> Option<State> {
         panic!("PANIC TOKENIZER")
     }
 
-    pub fn new_file(lexer: &mut Lexer) -> Option<State> {
+    pub fn new_file(lexer: &mut Lexer, _: State) -> Option<State> {
         trace!("Newfile token: {:?}", lexer.ch);
 
         if !lexer.is_start() {
@@ -293,61 +297,62 @@ mod tokenizer {
 
         Some(State {
             tokens: vec![tok!(Vim9Script, lexer, &read_until_eol(lexer))],
-            next: new_statement,
+            next: generic,
+            newline: true,
         })
     }
 
-    pub fn new_statement(lexer: &mut Lexer) -> Option<State> {
-        trace!("Current token: {:?}", lexer.ch);
+    // pub fn new_statement(lexer: &mut Lexer, state: State) -> Option<State> {
+    //     trace!("Current token: {:?}", lexer.ch);
+    //
+    //     let tok = match shared(lexer) {
+    //         Some(t) => t,
+    //         None => match lexer.ch {
+    //             scope if lexer.peek_char() == ':' => combinator::scoped_var(lexer, scope),
+    //
+    //             val => {
+    //                 let text = read_while(lexer, |ch| !is_whitespace(ch));
+    //
+    //                 match text.as_str() {
+    //                     // TODO: Need to handle all the different commands here
+    //                     "var" => tok!(CommandVar, lexer, text),
+    //                     "for" => tok!(CommandFor, lexer, text),
+    //                     "endfor" => tok!(CommandEndFor, lexer, text),
+    //                     "def" => tok!(CommandDef, lexer, text),
+    //                     "enddef" => tok!(CommandEndDef, lexer, text),
+    //                     "echo" => tok!(CommandEcho, lexer, text),
+    //                     "return" => tok!(CommandReturn, lexer, text),
+    //
+    //                     // non commands
+    //                     _ => {
+    //                         if is_digit(val) {
+    //                             tok!(Number, lexer, text)
+    //                         } else if text.chars().all(|c| is_identifier(c)) {
+    //                             tok!(Identifier, lexer, text)
+    //                         } else {
+    //                             panic!("Not yet parseable: {}, {:?}", val, lexer)
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         },
+    //     };
+    //
+    //     if tok.kind == TokenKind::EOF {
+    //         return None;
+    //     }
+    //
+    //     Some(State {
+    //         next: if tok.kind == TokenKind::NewLine || tok.kind == TokenKind::Ignore {
+    //             new_statement
+    //         } else {
+    //             generic
+    //         },
+    //         tokens: vec![tok],
+    //     })
+    // }
 
-        let tok = match shared(lexer) {
-            Some(t) => t,
-            None => match lexer.ch {
-                scope if lexer.peek_char() == ':' => combinator::scoped_var(lexer, scope),
-
-                val => {
-                    let text = read_while(lexer, |ch| !is_whitespace(ch));
-
-                    match text.as_str() {
-                        // TODO: Need to handle all the different commands here
-                        "var" => tok!(CommandVar, lexer, text),
-                        "for" => tok!(CommandFor, lexer, text),
-                        "endfor" => tok!(CommandEndFor, lexer, text),
-                        "def" => tok!(CommandDef, lexer, text),
-                        "enddef" => tok!(CommandEndDef, lexer, text),
-                        "echo" => tok!(CommandEcho, lexer, text),
-                        "return" => tok!(CommandReturn, lexer, text),
-
-                        // non commands
-                        _ => {
-                            if is_digit(val) {
-                                tok!(Number, lexer, text)
-                            } else if text.chars().all(|c| is_identifier(c)) {
-                                tok!(Identifier, lexer, text)
-                            } else {
-                                panic!("Not yet parseable: {}, {:?}", val, lexer)
-                            }
-                        }
-                    }
-                }
-            },
-        };
-
-        if tok.kind == TokenKind::EOF {
-            return None;
-        }
-
-        Some(State {
-            next: if tok.kind == TokenKind::NewLine || tok.kind == TokenKind::Ignore {
-                new_statement
-            } else {
-                generic
-            },
-            tokens: vec![tok],
-        })
-    }
-
-    pub fn generic(lexer: &mut Lexer) -> Option<State> {
+    pub fn generic(lexer: &mut Lexer, state: State) -> Option<State> {
         trace!("generic:: {:?}", lexer.ch);
 
         let tok = match shared(lexer) {
@@ -385,13 +390,9 @@ mod tokenizer {
         };
 
         Some(State {
-            next: if tok.kind == TokenKind::NewLine {
-                new_statement
-            } else {
-                generic
-            },
-
             tokens: vec![tok],
+            next: generic,
+            newline: tok.kind == TokenKind::NewLine,
         })
     }
 }
@@ -428,18 +429,24 @@ pub fn tokenize_file(input: String) -> Result<Vec<Token>> {
     tokenize(input, tokenizer::new_file)
 }
 
-fn tokenize(input: String, state: fn(&mut Lexer) -> Option<State>) -> Result<Vec<Token>> {
+fn tokenize(input: String, state: fn(&mut Lexer, State) -> Option<State>) -> Result<Vec<Token>> {
     let mut lexer = Lexer::new(input.chars().collect());
     lexer.read_char();
 
     let mut state_fn = Some(State {
         tokens: vec![],
         next: state,
+        newline: true,
     });
 
     let mut count = 0;
     let mut result = Vec::new();
-    'outer: while let Some(State { tokens, next }) = state_fn {
+    'outer: while let Some(State {
+        tokens,
+        next,
+        newline: newline,
+    }) = state_fn
+    {
         count += 1;
         if count > 1000 {
             panic!("Infinite loop?")
@@ -461,7 +468,7 @@ fn tokenize(input: String, state: fn(&mut Lexer) -> Option<State>) -> Result<Vec
             result.push(tok);
         }
 
-        state_fn = next(&mut lexer);
+        state_fn = next(&mut lexer, State { tokens: tok });
         lexer.read_char();
     }
 
