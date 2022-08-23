@@ -344,7 +344,7 @@ pub fn snapshot_lexing(input: &str) -> String {
 
             output += &" ".repeat(tok.span.start_col);
             output += &"^".repeat(tok.span.end_col + 1 - tok.span.start_col);
-            output += &format!("{:?}", tok);
+            output += &format!(" {:?}", tok);
             output += "\n"
         }
     }
