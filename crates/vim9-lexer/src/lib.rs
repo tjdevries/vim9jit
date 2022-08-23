@@ -361,7 +361,11 @@ mod test {
             #[test]
             fn $name() {
                 let contents = include_str!($path);
-                insta::assert_snapshot!(snapshot_lexing(contents));
+                let mut settings = insta::Settings::clone_current();
+                settings.set_snapshot_path("../testdata/output/");
+                settings.bind(|| {
+                    insta::assert_snapshot!(snapshot_lexing(contents));
+                });
             }
         };
     }

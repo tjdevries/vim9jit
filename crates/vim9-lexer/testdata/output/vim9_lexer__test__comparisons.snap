@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 370
+assertion_line: 374
 expression: snapshot_lexing(contents)
 ---
 vim9script
