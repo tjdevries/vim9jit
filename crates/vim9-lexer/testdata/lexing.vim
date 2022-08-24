@@ -30,3 +30,9 @@ if x == 10 || x >= 10 || x <= 10 || x > 10 || x < 10
   x -= 1
   echo x
 endif
+
+def MyFunc(): number
+  return 5
+enddef
+
+MyFunc()

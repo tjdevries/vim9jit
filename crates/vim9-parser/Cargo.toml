@@ -1,0 +1,13 @@
+[package]
+name = "vim9-parser"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.62"
+vim9-lexer = { path = "../vim9-lexer" }
+
+[dev-dependencies]
+insta = "1.19.0"

@@ -1,0 +1,69 @@
+---
+source: src/lib.rs
+assertion_line: 369
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Def(
+        DefCommand {
+            def: Token(Identifier, "def", (2,0)->(2,3)),
+            name: Identifier(
+                RawIdentifier {
+                    name: "MyFunc",
+                },
+            ),
+            args: Signature {
+                open: Token(LeftParen, "(", (2,10)->(2,10)),
+                close: Token(RightParen, ")", (2,11)->(2,11)),
+            },
+            ret: Some(
+                Type {
+                    colon: Token(Colon, ":", (2,12)->(2,12)),
+                    name: Identifier(
+                        RawIdentifier {
+                            name: "number",
+                        },
+                    ),
+                },
+            ),
+            def_eol: Token(EndOfLine, "\n", (2,20)->(2,20)),
+            body: [
+                Return(
+                    ReturnCommand {
+                        ret: Token(Identifier, "return", (3,2)->(3,8)),
+                        expr: Number(
+                            Number {
+                                value: "\n",
+                            },
+                        ),
+                        eol: Token(EndOfLine, "\n", (3,10)->(3,10)),
+                    },
+                ),
+            ],
+            enddef: Token(Identifier, "enddef", (4,0)->(4,6)),
+            end_eol: Token(EndOfLine, "\n", (4,6)->(4,6)),
+        },
+    ),
+    Call(
+        CallCommand {
+            call: None,
+            name: Identifier(
+                RawIdentifier {
+                    name: "MyFunc",
+                },
+            ),
+            args: Arguments {
+                open: Token(LeftParen, "(", (6,6)->(6,6)),
+                args: [],
+                close: Token(RightParen, ")", (6,7)->(6,7)),
+            },
+            eol: Token(EndOfLine, "\n", (6,8)->(6,8)),
+        },
+    ),
+]

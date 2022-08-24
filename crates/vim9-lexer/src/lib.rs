@@ -3,6 +3,7 @@
 use std::collections::VecDeque;
 use std::fmt::Debug;
 
+#[derive(Clone, PartialEq)]
 pub struct Span {
     start_row: usize,
     start_col: usize,
@@ -20,10 +21,11 @@ impl Debug for Span {
     }
 }
 
+#[derive(Clone, PartialEq)]
 pub struct Token {
-    kind: TokenKind,
-    text: String,
-    span: Span,
+    pub kind: TokenKind,
+    pub text: String,
+    pub span: Span,
 }
 
 impl Debug for Token {
@@ -32,13 +34,13 @@ impl Debug for Token {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum TokenKind {
     Illegal,
     EndOfFile,
 
     // TODO: Is this crazy for this lang??
-    NewLine,
+    EndOfLine,
     Comment,
 
     // Identifiers and literals
@@ -154,12 +156,10 @@ impl Lexer {
 
     pub fn read_char(&mut self) {
         match self.chars.get(self.read_position) {
-            Some(c) => {
-                println!("  Before: {:?}", self);
-                self.ch = Some(*c);
+            Some(&c) => {
+                self.ch = Some(c);
                 self.position = self.read_position;
                 self.read_position += 1;
-                println!("  After: {:?}", self);
             }
             None => {
                 self.ch = None;
@@ -266,7 +266,13 @@ impl Lexer {
                     '&' => self.if_peek('&', TokenKind::Illegal, TokenKind::And),
 
                     ':' => literal!(Colon),
-                    '\n' => literal!(NewLine),
+                    '\n' => literal!(EndOfLine),
+                    '(' => literal!(LeftParen),
+                    ')' => literal!(RightParen),
+                    '[' => literal!(LeftBracket),
+                    ']' => literal!(RightBracket),
+                    '{' => literal!(LeftBrace),
+                    '}' => literal!(RightBrace),
 
                     _ => {
                         // Token
@@ -372,4 +378,7 @@ mod test {
 
     snapshot!(test_lexer_1, "../testdata/snapshots/lexer_1.vim");
     snapshot!(test_comparisons, "../testdata/snapshots/comparisons.vim");
+
+    // TODO: Check more thoroughly
+    snapshot!(test_matchparen, "../testdata/snapshots/matchparen.vim");
 }
