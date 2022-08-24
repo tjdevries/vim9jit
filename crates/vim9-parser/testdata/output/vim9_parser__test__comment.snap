@@ -1,0 +1,19 @@
+---
+source: src/lib.rs
+assertion_line: 373
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Comment(
+        Token(Comment, "# Hello()", (2,0)->(2,9)),
+    ),
+    Comment(
+        Token(Comment, "# \"World\"", (3,0)->(3,9)),
+    ),
+]

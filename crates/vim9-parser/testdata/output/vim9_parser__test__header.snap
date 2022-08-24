@@ -1,0 +1,53 @@
+---
+source: src/lib.rs
+assertion_line: 406
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: true,
+            eol: Token(EndOfLine, "\n", (0,18)->(0,18)),
+        },
+    ),
+    Comment(
+        Token(Comment, "# Exit quickly when loading", (2,0)->(2,27)),
+    ),
+    NoOp(
+        Token(Identifier, "if", (3,0)->(3,2)),
+    ),
+    Call(
+        CallCommand {
+            call: None,
+            name: Identifier(
+                RawIdentifier {
+                    name: "exists",
+                },
+            ),
+            args: Arguments {
+                open: Token(LeftParen, "(", (3,9)->(3,9)),
+                args: [
+                    String(
+                        SingleQuote(
+                            "g:loaded_matchpare",
+                        ),
+                    ),
+                ],
+                close: Token(RightParen, ")", (3,31)->(3,31)),
+            },
+            eol: Token(EndOfLine, "\n", (3,32)->(3,32)),
+        },
+    ),
+    Finish(
+        Token(Identifier, "finish", (4,2)->(4,8)),
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (4,8)->(4,8)),
+    ),
+    NoOp(
+        Token(Identifier, "endif", (5,0)->(5,5)),
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (5,5)->(5,5)),
+    ),
+]

@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 369
+assertion_line: 422
 expression: snapshot_parsing(contents)
 ---
 [
@@ -33,22 +33,27 @@ expression: snapshot_parsing(contents)
                 },
             ),
             def_eol: Token(EndOfLine, "\n", (2,20)->(2,20)),
-            body: [
-                Return(
-                    ReturnCommand {
-                        ret: Token(Identifier, "return", (3,2)->(3,8)),
-                        expr: Number(
-                            Number {
-                                value: "\n",
-                            },
-                        ),
-                        eol: Token(EndOfLine, "\n", (3,10)->(3,10)),
-                    },
-                ),
-            ],
+            body: Body {
+                commands: [
+                    Return(
+                        ReturnCommand {
+                            ret: Token(Identifier, "return", (3,2)->(3,8)),
+                            expr: Number(
+                                Number {
+                                    value: "5",
+                                },
+                            ),
+                            eol: Token(EndOfLine, "\n", (3,10)->(3,10)),
+                        },
+                    ),
+                ],
+            },
             enddef: Token(Identifier, "enddef", (4,0)->(4,6)),
             end_eol: Token(EndOfLine, "\n", (4,6)->(4,6)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (5,0)->(5,0)),
     ),
     Call(
         CallCommand {

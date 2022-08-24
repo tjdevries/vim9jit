@@ -76,6 +76,9 @@ pub enum TokenKind {
     Comma,
     Colon,
 
+    SingleQuoteString,
+    DoubleQuoteString,
+
     LeftParen,
     RightParen,
     LeftBrace,
@@ -180,6 +183,34 @@ impl Lexer {
         }
     }
 
+    fn read_until(&mut self, until: char, kind: TokenKind) -> Token {
+        self.read_char();
+        let position = self.position;
+
+        while let Some(ch) = self.ch && ch != until {
+            self.read_char();
+        }
+
+        Token {
+            kind,
+            text: self.chars[position..self.position - 1].iter().collect(),
+            span: self.make_span(position, self.position - 1),
+        }
+    }
+
+    fn read_comment(&mut self) -> Token {
+        let position = self.position;
+        while let Some(ch) = self.ch && ch != '\n' {
+            self.read_char();
+        }
+
+        Token {
+            kind: TokenKind::Comment,
+            text: self.chars[position..self.position].iter().collect(),
+            span: self.make_span(position, self.position),
+        }
+    }
+
     fn read_identifier(&mut self) -> Token {
         let position = self.position;
         while let Some(ch) = self.ch && is_identifier(ch) {
@@ -266,13 +297,18 @@ impl Lexer {
                     '&' => self.if_peek('&', TokenKind::Illegal, TokenKind::And),
 
                     ':' => literal!(Colon),
-                    '\n' => literal!(EndOfLine),
                     '(' => literal!(LeftParen),
                     ')' => literal!(RightParen),
                     '[' => literal!(LeftBracket),
                     ']' => literal!(RightBracket),
                     '{' => literal!(LeftBrace),
                     '}' => literal!(RightBrace),
+                    '\n' => literal!(EndOfLine),
+                    '#' => self.read_comment(),
+
+                    // TODO: Handle escaped strings.
+                    '\'' => self.read_until('\'', TokenKind::SingleQuoteString),
+                    '"' => self.read_until('"', TokenKind::DoubleQuoteString),
 
                     _ => {
                         // Token
@@ -378,6 +414,7 @@ mod test {
 
     snapshot!(test_lexer_1, "../testdata/snapshots/lexer_1.vim");
     snapshot!(test_comparisons, "../testdata/snapshots/comparisons.vim");
+    snapshot!(test_string, "../testdata/snapshots/string.vim");
 
     // TODO: Check more thoroughly
     snapshot!(test_matchparen, "../testdata/snapshots/matchparen.vim");

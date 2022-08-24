@@ -17,9 +17,13 @@ pub enum ExCommand {
     Var(VarCommand),
     Return(ReturnCommand),
     Def(DefCommand),
+    If(IfCommand),
     Call(CallCommand),
+    Finish(Token),
 
-    Empty,
+    Skip,
+    EndOfFile,
+    Comment(Token),
     NoOp(Token),
 }
 
@@ -54,13 +58,52 @@ impl VarCommand {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct Body {
+    pub commands: Vec<ExCommand>,
+}
+
+impl Body {
+    pub fn parse_until(parser: &mut Parser, identifier: &str) -> Result<Body> {
+        let mut commands = vec![];
+        while parser.current_token.text != identifier {
+            commands.push(parser.parse_command()?);
+        }
+
+        Ok(Body { commands })
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct IfCommand {
+    if_tok: Token,
+    pub condition: Expression,
+    if_eol: Token,
+    pub body: Body,
+    endif_tok: Token,
+    endif_eol: Token,
+}
+
+impl IfCommand {
+    pub fn parser(parser: &mut Parser) -> Result<ExCommand> {
+        Ok(ExCommand::If(IfCommand {
+            if_tok: parser.expect_identifier_with_text("if")?,
+            condition: Expression::parse(parser)?,
+            if_eol: parser.expect_eol()?,
+            body: Body::parse_until(parser, "endif")?,
+            endif_tok: parser.expect_identifier_with_text("endif")?,
+            endif_eol: parser.expect_eol()?,
+        }))
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct DefCommand {
     def: Token,
     pub name: Name,
     pub args: Signature,
     pub ret: Option<Type>,
     def_eol: Token,
-    pub body: Vec<ExCommand>,
+    pub body: Body,
     enddef: Token,
     end_eol: Token,
 }
@@ -82,15 +125,7 @@ impl DefCommand {
                 }
             },
             def_eol: parser.expect_eol()?,
-            body: {
-                let mut body = vec![];
-                while parser.current_token.text != "enddef" {
-                    body.push(parser.parse_command()?);
-                }
-
-                // dbg!(parser.next_token());
-                body
-            },
+            body: Body::parse_until(parser, "enddef")?,
             enddef: parser.expect_identifier_with_text("enddef")?,
             end_eol: parser.expect_eol()?,
         }))
@@ -110,11 +145,7 @@ impl CallCommand {
         Ok(ExCommand::Call(CallCommand {
             call: None,
             name: Name::parse(parser)?,
-            args: Arguments {
-                open: parser.expect_token(TokenKind::LeftParen)?,
-                args: vec![],
-                close: parser.expect_token(TokenKind::RightParen)?,
-            },
+            args: Arguments::parse(parser)?,
             eol: parser.expect_eol()?,
         }))
     }
@@ -125,6 +156,25 @@ pub struct Arguments {
     open: Token,
     pub args: Vec<Expression>,
     close: Token,
+}
+
+impl Arguments {
+    pub fn parse(parser: &mut Parser) -> Result<Arguments> {
+        Ok(Arguments {
+            open: parser.expect_token(TokenKind::LeftParen)?,
+            args: {
+                let mut args = vec![];
+                while parser.current_token.kind != TokenKind::RightParen {
+                    args.push(Expression::parse(parser)?);
+
+                    // TODO: Consume ','?
+                }
+
+                args
+            },
+            close: parser.expect_token(TokenKind::RightParen)?,
+        })
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -149,7 +199,7 @@ impl Signature {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Argument {
+pub struct Parameter {
     pub name: Name,
     colon: Token,
     // pub typ: ,
@@ -191,18 +241,34 @@ impl Name {
 pub enum Expression {
     Name,
     Number(Number),
+    String(VimString),
 }
 
 impl Expression {
     pub fn parse(parser: &mut Parser) -> Result<Expression> {
-        println!("Expression Parsing {:?}", parser);
-        Ok(match &parser.current_token.kind {
+        let expr = match &parser.current_token.kind {
             TokenKind::Integer => Expression::Number(Number {
-                value: parser.next_token().text,
+                value: parser.current_token.text.clone(),
             }),
+            TokenKind::DoubleQuoteString => {
+                Expression::String(VimString::DoubleQuote(parser.current_token.text.clone()))
+            }
+            TokenKind::SingleQuoteString => {
+                Expression::String(VimString::SingleQuote(parser.current_token.text.clone()))
+            }
+
             _ => todo!("expresson parse: {:?}", parser.current_token),
-        })
+        };
+
+        parser.next_token();
+        Ok(expr)
     }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum VimString {
+    SingleQuote(String),
+    DoubleQuote(String),
 }
 
 #[derive(Debug, PartialEq)]
@@ -282,13 +348,15 @@ impl Parser {
     }
 
     pub fn parse_command(&mut self) -> Result<ExCommand> {
-        println!("PARSING COMMAND: {:#?}", self);
-        Ok(match &self.current_token.kind {
+        // For the following branches, you need to return early if it completely consumes
+        // the last character and advances past.
+        //
+        // This is the desired behavior for `parse` which will consume until the end of line
+        // generally speaking.
+        let ex = match &self.current_token.kind {
             TokenKind::EndOfFile => panic!("EndOfFile!"),
-            TokenKind::EndOfLine => {
-                self.next_token();
-                ExCommand::Empty
-            }
+            TokenKind::Comment => ExCommand::Comment(self.current_token.clone()),
+            TokenKind::EndOfLine => ExCommand::NoOp(self.current_token.clone()),
             TokenKind::Identifier => {
                 if self.command_match("vim9script") {
                     self.next_token();
@@ -302,38 +370,38 @@ impl Parser {
                         eol: self.expect_eol()?,
                     })
                 } else if self.command_match("var") {
-                    VarCommand::parse(self)?
+                    return Ok(VarCommand::parse(self)?);
                 } else if self.command_match("def") {
-                    DefCommand::parse(self)?
+                    return Ok(DefCommand::parse(self)?);
                 } else if self.command_match("return") {
-                    let ret = ReturnCommand::parse(self)?;
-                    // panic!("OH NO RETURN TIME: {:?}", ret);
-                    ret
+                    return Ok(ReturnCommand::parse(self)?);
+                } else if self.command_match("if") {
+                    return Ok(IfCommand::parser(self)?);
+                } else if self.command_match("finish") {
+                    ExCommand::Finish(self.current_token.clone())
                 } else {
                     if self.peek_token.kind == TokenKind::LeftParen {
-                        CallCommand::parse(self)?
+                        return Ok(CallCommand::parse(self)?);
                     } else {
-                        ExCommand::NoOp(self.next_token())
+                        ExCommand::NoOp(self.current_token.clone())
                     }
                 }
             }
-            _ => ExCommand::NoOp(self.next_token()),
-        })
+            _ => ExCommand::NoOp(self.current_token.clone()),
+        };
+
+        self.next_token();
+        Ok(ex)
     }
 
     pub fn parse_program(&mut self) -> Program {
         let mut program = Program { commands: vec![] };
 
         while self.current_token.kind != TokenKind::EndOfFile {
-            println!("Parsing Command: {:#?}", self);
-            println!("  Commands: {:#?}", program.commands);
-
             let command = self.parse_command().unwrap();
-            if command != ExCommand::Empty {
+            if command != ExCommand::Skip {
                 program.commands.push(command);
             }
-
-            self.next_token();
         }
 
         program
@@ -368,6 +436,8 @@ mod test {
 
     snapshot!(test_var, "../testdata/snapshots/simple_var.vim");
     snapshot!(test_ret, "../testdata/snapshots/simple_ret.vim");
+    snapshot!(test_comment, "../testdata/snapshots/comment.vim");
+    snapshot!(test_header, "../testdata/snapshots/header.vim");
 
     // TODO: Slowly but surely, we can work towards this
     // snapshot!(test_matchparen, "../testdata/snapshots/matchparen.vim");
