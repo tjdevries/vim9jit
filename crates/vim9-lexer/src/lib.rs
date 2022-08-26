@@ -120,7 +120,14 @@ impl Lexer {
     }
 
     fn make_span(&self, start: usize, end: usize) -> Span {
-        assert!(start <= end, "start must be less than us");
+        // TODO: This is broken for doing stuff with empty strings... :'(
+        assert!(
+            start <= end,
+            "start must be less than end. {} {}\n{:#?}",
+            start,
+            end,
+            self
+        );
 
         let mut span = Span {
             start_row: 0,
@@ -185,6 +192,14 @@ impl Lexer {
 
     fn read_until(&mut self, until: char, kind: TokenKind) -> Token {
         self.read_char();
+        if let Some(ch) = self.ch && ch == until {
+            return Token {
+                kind,
+                text: self.chars[self.position..self.position].iter().collect(),
+                span: self.make_span(self.position, self.position ),
+            };
+        }
+
         let position = self.position;
 
         while let Some(ch) = self.ch && ch != until {
@@ -193,7 +208,7 @@ impl Lexer {
 
         Token {
             kind,
-            text: self.chars[position..self.position - 1].iter().collect(),
+            text: self.chars[position..self.position].iter().collect(),
             span: self.make_span(position, self.position - 1),
         }
     }
@@ -217,9 +232,17 @@ impl Lexer {
             self.read_char();
         }
 
+        let text: String = self.chars[position..self.position].iter().collect();
+        let kind = match text.as_str() {
+            "true" => TokenKind::True,
+            "false" => TokenKind::False,
+            "null" => TokenKind::Null,
+            _ => TokenKind::Identifier,
+        };
+
         Token {
-            kind: TokenKind::Identifier,
-            text: self.chars[position..self.position].iter().collect(),
+            kind,
+            text,
             span: self.make_span(position, self.position),
         }
     }

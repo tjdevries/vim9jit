@@ -1,0 +1,27 @@
+---
+source: src/lib.rs
+assertion_line: 661
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Echo(
+        EchoCommand {
+            echo: Token(Identifier, "echo", (2,0)->(2,4)),
+            expr: String(
+                DoubleQuote(
+                    "hello",
+                ),
+            ),
+            eol: Token(EndOfLine, "\n", (2,12)->(2,12)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (3,0)->(3,0)),
+    ),
+]

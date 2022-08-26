@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 401
+assertion_line: 558
 expression: snapshot_parsing(contents)
 ---
 [
@@ -13,14 +13,14 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (2,0)->(2,3)),
-            name: Identifier(
+            name: Raw(
                 RawIdentifier {
                     name: "x",
                 },
             ),
             equal: Token(Equal, "=", (2,6)->(2,6)),
             expr: Number(
-                Number {
+                VimNumber {
                     value: "5",
                 },
             ),

@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 422
+assertion_line: 559
 expression: snapshot_parsing(contents)
 ---
 [
@@ -13,7 +13,7 @@ expression: snapshot_parsing(contents)
     Def(
         DefCommand {
             def: Token(Identifier, "def", (2,0)->(2,3)),
-            name: Identifier(
+            name: Raw(
                 RawIdentifier {
                     name: "MyFunc",
                 },
@@ -25,7 +25,7 @@ expression: snapshot_parsing(contents)
             ret: Some(
                 Type {
                     colon: Token(Colon, ":", (2,12)->(2,12)),
-                    name: Identifier(
+                    name: Raw(
                         RawIdentifier {
                             name: "number",
                         },
@@ -39,7 +39,7 @@ expression: snapshot_parsing(contents)
                         ReturnCommand {
                             ret: Token(Identifier, "return", (3,2)->(3,8)),
                             expr: Number(
-                                Number {
+                                VimNumber {
                                     value: "5",
                                 },
                             ),
@@ -58,7 +58,7 @@ expression: snapshot_parsing(contents)
     Call(
         CallCommand {
             call: None,
-            name: Identifier(
+            name: Raw(
                 RawIdentifier {
                     name: "MyFunc",
                 },

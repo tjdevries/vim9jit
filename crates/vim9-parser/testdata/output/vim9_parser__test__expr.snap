@@ -1,0 +1,184 @@
+---
+source: src/lib.rs
+assertion_line: 714
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Comment(
+        Token(Comment, "# TODO:", (2,0)->(2,7)),
+    ),
+    Comment(
+        Token(Comment, "# echo x y z", (3,0)->(3,12)),
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (4,0)->(4,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (5,0)->(5,3)),
+            name: Raw(
+                RawIdentifier {
+                    name: "x",
+                },
+            ),
+            equal: Token(Equal, "=", (5,6)->(5,6)),
+            expr: Number(
+                VimNumber {
+                    value: "10",
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (5,10)->(5,10)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (6,0)->(6,3)),
+            name: Raw(
+                RawIdentifier {
+                    name: "y",
+                },
+            ),
+            equal: Token(Equal, "=", (6,6)->(6,6)),
+            expr: Identifier(
+                Raw(
+                    RawIdentifier {
+                        name: "x",
+                    },
+                ),
+            ),
+            eol: Token(EndOfLine, "\n", (6,9)->(6,9)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (7,0)->(7,3)),
+            name: Raw(
+                RawIdentifier {
+                    name: "z",
+                },
+            ),
+            equal: Token(Equal, "=", (7,6)->(7,6)),
+            expr: Prefix(
+                PrefixExpression {
+                    token: Token(Plus, "+", (7,8)->(7,8)),
+                    operator: Plus,
+                    right: Number(
+                        VimNumber {
+                            value: "1",
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (7,10)->(7,10)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (8,0)->(8,3)),
+            name: Raw(
+                RawIdentifier {
+                    name: "foo",
+                },
+            ),
+            equal: Token(Equal, "=", (8,8)->(8,8)),
+            expr: Boolean(
+                VimBoolean {
+                    token: Token(True, "true", (8,10)->(8,14)),
+                    value: true,
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (8,14)->(8,14)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (9,0)->(9,3)),
+            name: Raw(
+                RawIdentifier {
+                    name: "sum",
+                },
+            ),
+            equal: Token(Equal, "=", (9,8)->(9,8)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(Plus, "+", (9,12)->(9,12)),
+                    operator: Plus,
+                    left: Identifier(
+                        Raw(
+                            RawIdentifier {
+                                name: "x",
+                            },
+                        ),
+                    ),
+                    right: Identifier(
+                        Raw(
+                            RawIdentifier {
+                                name: "y",
+                            },
+                        ),
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (9,15)->(9,15)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (10,0)->(10,3)),
+            name: Raw(
+                RawIdentifier {
+                    name: "parened",
+                },
+            ),
+            equal: Token(Equal, "=", (10,12)->(10,12)),
+            expr: Grouped(
+                GroupedExpression {
+                    open: Token(LeftParen, "(", (10,14)->(10,14)),
+                    expr: Grouped(
+                        GroupedExpression {
+                            open: Token(LeftParen, "(", (10,15)->(10,15)),
+                            expr: Grouped(
+                                GroupedExpression {
+                                    open: Token(LeftParen, "(", (10,16)->(10,16)),
+                                    expr: Infix(
+                                        InfixExpression {
+                                            token: Token(Plus, "+", (10,19)->(10,19)),
+                                            operator: Plus,
+                                            left: Identifier(
+                                                Raw(
+                                                    RawIdentifier {
+                                                        name: "x",
+                                                    },
+                                                ),
+                                            ),
+                                            right: Identifier(
+                                                Raw(
+                                                    RawIdentifier {
+                                                        name: "y",
+                                                    },
+                                                ),
+                                            ),
+                                        },
+                                    ),
+                                    close: Token(RightParen, ")", (10,22)->(10,22)),
+                                },
+                            ),
+                            close: Token(RightParen, ")", (10,23)->(10,23)),
+                        },
+                    ),
+                    close: Token(RightParen, ")", (10,24)->(10,24)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (10,25)->(10,25)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (11,0)->(11,0)),
+    ),
+]

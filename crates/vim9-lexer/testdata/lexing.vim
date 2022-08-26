@@ -35,4 +35,5 @@ def MyFunc(): number
   return 5
 enddef
 
-MyFunc()
+echo MyFunc()
+echo x
