@@ -1,0 +1,37 @@
+---
+source: src/lib.rs
+assertion_line: 853
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Statement(
+        Assign(
+            AssignStatement {
+                left: Scope(
+                    ScopedIdentifier {
+                        scope: Global,
+                        colon: Token(Colon, ":", (2,1)->(2,2)),
+                        accessor: Raw(
+                            RawIdentifier {
+                                name: "global_variable",
+                            },
+                        ),
+                    },
+                ),
+                equals: Token(Equal, "=", (2,18)->(2,19)),
+                right: Number(
+                    VimNumber {
+                        value: "1",
+                    },
+                ),
+                eol: Token(EndOfLine, "\n", (2,21)->(2,21)),
+            },
+        ),
+    ),
+]

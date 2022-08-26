@@ -274,13 +274,13 @@ impl Lexer {
                 Token {
                     kind: yes,
                     text: self.chars[position..=self.position].iter().collect(),
-                    span: self.make_span(position, self.position),
+                    span: self.make_span(position, self.position + 1),
                 }
             } else {
                 Token {
                     kind: no,
                     text: self.ch.unwrap().to_string(),
-                    span: self.make_span(self.position, self.position),
+                    span: self.make_span(self.position, self.position + 1),
                 }
             }
         } else {
@@ -302,7 +302,15 @@ impl Lexer {
                         Token {
                             kind: TokenKind::$kind,
                             text: ch.to_string(),
-                            span: self.make_span(self.position, self.position),
+                            span: self.make_span(self.position, self.position + 1),
+                        }
+                    };
+
+                    ($kind:tt, $offset:tt) => {
+                        Token {
+                            kind: TokenKind::$kind,
+                            text: ch.to_string(),
+                            span: self.make_span(self.position, self.position + $offset),
                         }
                     };
                 }
@@ -326,7 +334,7 @@ impl Lexer {
                     ']' => literal!(RightBracket),
                     '{' => literal!(LeftBrace),
                     '}' => literal!(RightBrace),
-                    '\n' => literal!(EndOfLine),
+                    '\n' => literal!(EndOfLine, 0),
                     '#' => self.read_comment(),
 
                     // TODO: Handle escaped strings.
@@ -408,7 +416,7 @@ pub fn snapshot_lexing(input: &str) -> String {
             }
 
             output += &" ".repeat(tok.span.start_col);
-            output += &"^".repeat(tok.span.end_col + 1 - tok.span.start_col);
+            output += &"^".repeat(tok.span.end_col - tok.span.start_col);
             output += &format!(" {:?}", tok);
             output += "\n"
         }
@@ -438,6 +446,7 @@ mod test {
     snapshot!(test_lexer_1, "../testdata/snapshots/lexer_1.vim");
     snapshot!(test_comparisons, "../testdata/snapshots/comparisons.vim");
     snapshot!(test_string, "../testdata/snapshots/string.vim");
+    snapshot!(test_scopes, "../testdata/snapshots/scopes.vim");
 
     // TODO: Check more thoroughly
     snapshot!(test_matchparen, "../testdata/snapshots/matchparen.vim");

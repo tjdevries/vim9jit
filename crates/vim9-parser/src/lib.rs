@@ -9,7 +9,7 @@ use vim9_lexer::TokenKind;
 
 #[derive(Debug)]
 pub struct Program {
-    commands: Vec<ExCommand>,
+    pub commands: Vec<ExCommand>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -22,6 +22,7 @@ pub enum ExCommand {
     If(IfCommand),
     Call(CallCommand),
     Finish(Token),
+    Statement(StatementCommand),
 
     Skip,
     EndOfFile,
@@ -30,8 +31,47 @@ pub enum ExCommand {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum StatementCommand {
+    Assign(AssignStatement),
+}
+
+impl StatementCommand {
+    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+        let identifier = Identifier::parse(parser)?;
+        if parser.current_token.kind == TokenKind::Equal {
+            return Ok(ExCommand::Statement(StatementCommand::Assign(AssignStatement {
+                left: identifier,
+                equals: parser.expect_token(TokenKind::Equal)?,
+                right: {
+                    let right = parser.parse_expression(Precedence::Lowest)?;
+                    parser.next_token();
+                    right
+                },
+                eol: parser.expect_eol()?,
+            })));
+        }
+
+        todo!("expr command: {:?}, {:#?}", identifier, parser)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct AssignStatement {
+    pub left: Identifier,
+    equals: Token,
+    pub right: Expression,
+    eol: Token,
+}
+
+impl AssignStatement {
+    pub fn parse(parser: &mut Parser) -> Result<AssignStatement> {
+        todo!("assign statment")
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct Vim9ScriptCommand {
-    noclear: bool,
+    pub noclear: bool,
     eol: Token,
 }
 
@@ -246,16 +286,53 @@ impl ReturnCommand {
 #[derive(Debug, PartialEq)]
 pub enum Identifier {
     Raw(RawIdentifier),
-    ScopedIdentifier,
+    Scope(ScopedIdentifier),
 }
 
 impl Identifier {
-    fn parse(parser: &mut Parser) -> Result<Identifier> {
-        // Todo: Other names
-        Ok(Identifier::Raw(RawIdentifier {
-            name: parser.expect_token(TokenKind::Identifier)?.text,
-        }))
+    fn parse_in_expression(parser: &mut Parser) -> Result<Identifier> {
+        Ok(if parser.peek_token.kind == TokenKind::Colon {
+            Identifier::Scope(ScopedIdentifier {
+                scope: {
+                    // TODO: get the right scope
+                    parser.next_token();
+                    VimScope::Global
+                },
+                colon: parser.expect_token(TokenKind::Colon)?,
+                accessor: Box::new(Identifier::parse_in_expression(parser)?),
+            })
+        } else {
+            // Todo: Other names
+            Identifier::Raw(RawIdentifier {
+                name: parser.ensure_token(TokenKind::Identifier)?.text,
+            })
+        })
     }
+
+    fn parse(parser: &mut Parser) -> Result<Identifier> {
+        let ret = Self::parse_in_expression(parser)?;
+        parser.next_token();
+
+        Ok(ret)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ScopedIdentifier {
+    pub scope: VimScope,
+    colon: Token,
+    // TODO: This is a lie, we need to handle g:["StringAccess"]
+    pub accessor: Box<Identifier>,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum VimScope {
+    Global,
+    Tab,
+    Window,
+    Buffer,
+    Script,
+    Local,
 }
 
 #[derive(Debug, PartialEq)]
@@ -314,7 +391,7 @@ pub struct InfixExpression {
 
 #[derive(Debug, PartialEq)]
 pub struct VimNumber {
-    value: String,
+    pub value: String,
 }
 
 #[derive(Debug, PartialEq)]
@@ -334,6 +411,7 @@ pub enum Precedence {
     Product,
     Prefix,
     Call,
+    Colon,
 }
 
 // The parseIdentifier method doesn’t do a lot. It only returns a *ast.Identifier with the current
@@ -360,7 +438,7 @@ pub enum VimString {
 
 #[derive(Debug, PartialEq)]
 pub struct RawIdentifier {
-    name: String,
+    pub name: String,
 }
 
 impl Into<Expression> for RawIdentifier {
@@ -466,22 +544,39 @@ mod infix_expr {
         }))
     }
 
+    pub fn parse_colon(parser: &mut Parser, left: Box<Expression>) -> Result<Expression> {
+        Ok(Expression::Identifier(Identifier::Scope(ScopedIdentifier {
+            scope: {
+                // TODO: Use this
+                // match *left {
+                //     Expression::Identifier(id) => todo!("{:?}", id),
+                //     _ => unreachable!(),
+                // }
+                VimScope::Global
+            },
+            colon: parser.expect_token(TokenKind::Colon)?,
+            // accessor: Box::new(parser.parse_expression(Precedence::Lowest)?),
+            accessor: Box::new(Identifier::parse_in_expression(parser)?),
+        })))
+    }
+
     pub fn parser_call_expr(parser: &mut Parser, left: Box<Expression>) -> Result<Expression> {
         Ok(Expression::Call(CallExpression {
             expr: left,
-            // open: parser.expect_peek(TokenKind::LeftParen)?,
-            open: parser.current_token.clone(),
+            open: parser.pop(),
             args: {
-                if parser.peek_token.kind == TokenKind::RightParen {
-                    parser.next_token();
+                // Each of these items, we want to _end_ on the right paren
+                if parser.current_token.kind == TokenKind::RightParen {
                     vec![]
                 } else {
                     // TODO: Comma
+                    let args = vec![parser.parse_expression(Precedence::Lowest)?];
                     parser.next_token();
-                    vec![parser.parse_expression(Precedence::Lowest)?]
+
+                    args
                 }
             },
-            close: parser.expect_peek(TokenKind::RightParen)?,
+            close: parser.ensure_token(TokenKind::RightParen)?,
         }))
     }
 }
@@ -509,6 +604,7 @@ impl Parser {
             TokenKind::Div | TokenKind::Mul => Precedence::Product,
             TokenKind::LeftParen => Precedence::Call,
             TokenKind::RightParen => Precedence::Lowest,
+            TokenKind::Colon => Precedence::Colon,
             _ => panic!("Unexpected precendence kind: {:?}", kind)
             // TokenKind::LessThan => todo!(),
             // TokenKind::LessThanOrEqual => todo!(),
@@ -548,6 +644,7 @@ impl Parser {
         Some(Box::new(match self.peek_token.kind {
             TokenKind::Plus => infix_expr::parse_infix_operator,
             TokenKind::LeftParen => infix_expr::parser_call_expr,
+            TokenKind::Colon => infix_expr::parse_colon,
             TokenKind::Identifier => return None,
             _ => unimplemented!("get_infix_fn: {:#?}", self),
         }))
@@ -576,6 +673,15 @@ impl Parser {
 
     pub fn expect_eol(&mut self) -> Result<Token> {
         self.expect_token(TokenKind::EndOfLine)
+    }
+
+    pub fn ensure_token(&self, kind: TokenKind) -> Result<Token> {
+        let token = self.current_token.clone();
+        if token.kind != kind {
+            return Err(anyhow::anyhow!("Got token: {:?}, Expected: {:?}", token, kind));
+        }
+
+        Ok(token)
     }
 
     pub fn expect_token(&mut self, kind: TokenKind) -> Result<Token> {
@@ -680,6 +786,8 @@ impl Parser {
                 } else {
                     if self.peek_token.kind == TokenKind::LeftParen {
                         return Ok(CallCommand::parse(self)?);
+                    } else if self.peek_token.kind == TokenKind::Colon {
+                        return Ok(StatementCommand::parse(self)?);
                     } else {
                         ExCommand::NoOp(self.current_token.clone())
                     }
@@ -714,6 +822,10 @@ fn snapshot_parsing(input: &str) -> String {
     format!("{:#?}", program.commands)
 }
 
+pub fn new_parser(lexer: Lexer) -> Parser {
+    Parser::new(lexer)
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -738,6 +850,7 @@ mod test {
     snapshot!(test_header, "../testdata/snapshots/header.vim");
     snapshot!(test_expr, "../testdata/snapshots/expr.vim");
     snapshot!(test_echo, "../testdata/snapshots/echo.vim");
+    snapshot!(test_scopes, "../testdata/snapshots/scopes.vim");
 
     // TODO: Slowly but surely, we can work towards this
     // snapshot!(test_matchparen, "../testdata/snapshots/matchparen.vim");

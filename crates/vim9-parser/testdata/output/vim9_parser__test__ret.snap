@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 559
+assertion_line: 738
 expression: snapshot_parsing(contents)
 ---
 [
@@ -19,12 +19,12 @@ expression: snapshot_parsing(contents)
                 },
             ),
             args: Signature {
-                open: Token(LeftParen, "(", (2,10)->(2,10)),
-                close: Token(RightParen, ")", (2,11)->(2,11)),
+                open: Token(LeftParen, "(", (2,10)->(2,11)),
+                close: Token(RightParen, ")", (2,11)->(2,12)),
             },
             ret: Some(
                 Type {
-                    colon: Token(Colon, ":", (2,12)->(2,12)),
+                    colon: Token(Colon, ":", (2,12)->(2,13)),
                     name: Raw(
                         RawIdentifier {
                             name: "number",
@@ -64,9 +64,9 @@ expression: snapshot_parsing(contents)
                 },
             ),
             args: Arguments {
-                open: Token(LeftParen, "(", (6,6)->(6,6)),
+                open: Token(LeftParen, "(", (6,6)->(6,7)),
                 args: [],
-                close: Token(RightParen, ")", (6,7)->(6,7)),
+                close: Token(RightParen, ")", (6,7)->(6,8)),
             },
             eol: Token(EndOfLine, "\n", (6,8)->(6,8)),
         },

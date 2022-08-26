@@ -1,0 +1,18 @@
+---
+source: src/lib.rs
+assertion_line: 449
+expression: snapshot_lexing(contents)
+---
+vim9script
+^^^^^^^^^^ Token(Identifier, "vim9script", (0,0)->(0,10))
+           Token(EndOfLine, "\n", (0,10)->(0,10))
+
+ Token(EndOfLine, "\n", (1,0)->(1,0))
+g:global_variable = 1
+^ Token(Identifier, "g", (2,0)->(2,1))
+ ^ Token(Colon, ":", (2,1)->(2,2))
+  ^^^^^^^^^^^^^^^ Token(Identifier, "global_variable", (2,2)->(2,17))
+                  ^ Token(Equal, "=", (2,18)->(2,19))
+                    ^ Token(Integer, "1", (2,20)->(2,21))
+                      Token(EndOfLine, "\n", (2,21)->(2,21))
+

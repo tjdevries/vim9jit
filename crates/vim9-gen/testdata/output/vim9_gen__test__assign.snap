@@ -1,0 +1,9 @@
+---
+source: src/lib.rs
+assertion_line: 230
+expression: generate(contents)
+---
+-- vim9script
+vim.g.my_var = (1 + 2)
+print(vim.g.my_var)
+

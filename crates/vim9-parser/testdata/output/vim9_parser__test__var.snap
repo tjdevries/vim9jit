@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 558
+assertion_line: 737
 expression: snapshot_parsing(contents)
 ---
 [
@@ -18,7 +18,7 @@ expression: snapshot_parsing(contents)
                     name: "x",
                 },
             ),
-            equal: Token(Equal, "=", (2,6)->(2,6)),
+            equal: Token(Equal, "=", (2,6)->(2,7)),
             expr: Number(
                 VimNumber {
                     value: "5",

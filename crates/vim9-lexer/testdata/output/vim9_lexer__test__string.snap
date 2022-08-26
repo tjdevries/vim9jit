@@ -1,19 +1,19 @@
 ---
 source: src/lib.rs
-assertion_line: 431
+assertion_line: 440
 expression: snapshot_lexing(contents)
 ---
 vim9script
-^^^^^^^^^^^ Token(Identifier, "vim9script", (0,0)->(0,10))
-          ^ Token(EndOfLine, "\n", (0,10)->(0,10))
+^^^^^^^^^^ Token(Identifier, "vim9script", (0,0)->(0,10))
+           Token(EndOfLine, "\n", (0,10)->(0,10))
 
-^ Token(EndOfLine, "\n", (1,0)->(1,0))
+ Token(EndOfLine, "\n", (1,0)->(1,0))
 var x = "hello"
-^^^^ Token(Identifier, "var", (2,0)->(2,3))
-    ^^ Token(Identifier, "x", (2,4)->(2,5))
-      ^ Token(Equal, "=", (2,6)->(2,6))
-         ^^^^^ Token(DoubleQuoteString, "hello", (2,9)->(2,13))
-               ^ Token(EndOfLine, "\n", (2,15)->(2,15))
+^^^ Token(Identifier, "var", (2,0)->(2,3))
+    ^ Token(Identifier, "x", (2,4)->(2,5))
+      ^ Token(Equal, "=", (2,6)->(2,7))
+         ^^^^ Token(DoubleQuoteString, "hello", (2,9)->(2,13))
+                Token(EndOfLine, "\n", (2,15)->(2,15))
 
-^ Token(EndOfLine, "\n", (3,0)->(3,0))
+ Token(EndOfLine, "\n", (3,0)->(3,0))
 

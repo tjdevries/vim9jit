@@ -1,0 +1,9 @@
+---
+source: src/lib.rs
+assertion_line: 228
+expression: generate(contents)
+---
+-- vim9script
+local x = (1 + 2)
+print(x)
+

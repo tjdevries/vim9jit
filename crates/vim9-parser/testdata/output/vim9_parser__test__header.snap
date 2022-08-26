@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 738
+assertion_line: 740
 expression: snapshot_parsing(contents)
 ---
 [
@@ -25,7 +25,7 @@ expression: snapshot_parsing(contents)
                             },
                         ),
                     ),
-                    open: Token(LeftParen, "(", (3,9)->(3,9)),
+                    open: Token(LeftParen, "(", (3,9)->(3,10)),
                     args: [
                         String(
                             SingleQuote(
@@ -33,7 +33,7 @@ expression: snapshot_parsing(contents)
                             ),
                         ),
                     ],
-                    close: Token(RightParen, ")", (3,31)->(3,31)),
+                    close: Token(RightParen, ")", (3,31)->(3,32)),
                 },
             ),
             if_eol: Token(EndOfLine, "\n", (3,32)->(3,32)),

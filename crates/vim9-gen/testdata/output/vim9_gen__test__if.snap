@@ -1,0 +1,11 @@
+---
+source: src/lib.rs
+assertion_line: 229
+expression: generate(contents)
+---
+-- vim9script
+local x = true
+if x then
+  print(x)
+end
+

@@ -1,0 +1,18 @@
+[package]
+name = "vim9-gen"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.62"
+lexer = { path = "../vim9-lexer", package = "vim9-lexer" }
+parser = { path = "../vim9-parser", package = "vim9-parser" }
+rmp = "0.8.11"
+rmpv = "1.0.0"
+
+[features]
+
+[dev-dependencies]
+insta = "1.19.0"
