@@ -4,4 +4,4 @@ def MyCoolFunc(): number
   return 5
 enddef
 
-var x = MyCoolFunc("todo delete") + 1
+var x = MyCoolFunc() + 1

@@ -1,0 +1,60 @@
+---
+source: src/lib.rs
+assertion_line: 1105
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (2,0)->(2,3)),
+            name: Raw(
+                RawIdentifier {
+                    name: "x",
+                },
+            ),
+            equal: Token(Equal, "=", (2,6)->(2,7)),
+            expr: Dict(
+                DictLiteral {
+                    open: Token(LeftBrace, "{", (2,8)->(2,9)),
+                    elements: [
+                        KeyValue {
+                            key: Literal(
+                                Literal {
+                                    token: Token(Identifier, "hello", (2,10)->(2,15)),
+                                },
+                            ),
+                            colon: Token(Colon, ":", (2,15)->(2,16)),
+                            value: String(
+                                DoubleQuote(
+                                    "world",
+                                ),
+                            ),
+                        },
+                        KeyValue {
+                            key: Literal(
+                                Literal {
+                                    token: Token(Identifier, "another", (2,26)->(2,33)),
+                                },
+                            ),
+                            colon: Token(Colon, ":", (2,33)->(2,34)),
+                            value: Boolean(
+                                VimBoolean {
+                                    token: Token(False, "false", (2,35)->(2,40)),
+                                    value: false,
+                                },
+                            ),
+                        },
+                    ],
+                    close: Token(RightBrace, "}", (2,41)->(2,42)),
+                },
+            ),
+            eol: Token(EndOfFile, "", (2,42)->(2,42)),
+        },
+    ),
+]

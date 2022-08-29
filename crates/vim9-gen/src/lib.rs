@@ -1,6 +1,7 @@
 use lexer::new_lexer;
 use parser;
 use parser::new_parser;
+use parser::ArrayLiteral;
 use parser::AssignStatement;
 use parser::Body;
 use parser::CallExpression;
@@ -21,6 +22,7 @@ use parser::VarCommand;
 use parser::Vim9ScriptCommand;
 use parser::VimBoolean;
 use parser::VimNumber;
+use parser::VimString;
 
 mod test_harness;
 
@@ -175,20 +177,66 @@ impl Generate for Expression {
         match self {
             Expression::Identifier(identifier) => identifier.gen(),
             Expression::Number(num) => num.gen(),
-            Expression::String(_) => todo!(),
+            Expression::String(str) => str.gen(),
             Expression::Boolean(bool) => bool.gen(),
             Expression::Grouped(grouped) => grouped.gen(),
             Expression::Call(call) => call.gen(),
             Expression::Prefix(_) => todo!(),
             Expression::Infix(infix) => infix.gen(),
+            Expression::Array(array) => array.gen(),
             Expression::Empty => "".to_string(),
+        }
+    }
+}
+
+impl Generate for ArrayLiteral {
+    fn gen(&self) -> String {
+        format!(
+            "{{ {} }}",
+            self.elements
+                .iter()
+                .map(|x| x.gen())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )
+    }
+}
+
+impl Generate for VimString {
+    fn gen(&self) -> String {
+        match self {
+            VimString::SingleQuote(s) => format!("'{}'", s),
+            VimString::DoubleQuote(s) => format!("\"{}\"", s),
         }
     }
 }
 
 impl Generate for CallExpression {
     fn gen(&self) -> String {
-        format!("{}()", self.expr.gen())
+        let func = match &(*self.expr) {
+            Expression::Identifier(ident) => match ident {
+                Identifier::Raw(raw) => {
+                    if raw.name.to_lowercase() == raw.name {
+                        format!("vim.fn.{}", raw.name)
+                    } else {
+                        raw.name.clone()
+                    }
+                }
+                Identifier::Scope(_) => todo!(),
+            },
+            // Expression::String(_) => todo!(),
+            // Expression::Grouped(_) => todo!(),
+            // Expression::Call(_) => todo!(),
+            // Expression::Prefix(_) => todo!(),
+            // Expression::Infix(_) => todo!(),
+            _ => unimplemented!(),
+        };
+
+        dbg!(format!(
+            "{}({})",
+            func,
+            self.args.iter().map(|e| e.gen()).collect::<Vec<String>>().join(", ")
+        ))
     }
 }
 
@@ -285,10 +333,40 @@ var x = MyCoolFunc() + 1
         let generated = generate(contents);
         let eval = exec_lua(&generated, "x").unwrap();
         assert_eq!(eval, 6.into());
-        // let mut settings = insta::Settings::clone_current();
-        // settings.set_snapshot_path("../testdata/output/");
-        // settings.bind(|| {
-        //     insta::assert_snapshot!();
-        // });
+    }
+
+    #[test]
+    fn test_builtin_func() {
+        let contents = r#"
+vim9script
+
+var x = len("hello")
+"#;
+
+        let generated = generate(contents);
+        let eval = exec_lua(&generated, "x").unwrap();
+        assert_eq!(eval, 5.into());
+    }
+
+    #[test]
+    fn test_augroup_1() {
+        let contents = r#"
+vim9script
+
+augroup matchparen
+  # Replace all matchparen autocommands
+  autocmd! CursorMoved,CursorMovedI,WinEnter * {
+      echo "Block"
+    }
+
+  autocmd WinLeave * echo "Command"
+augroup END
+
+var x = len(nvim_get_autcomds({group: "matchparen"}))
+"#;
+
+        let generated = generate(contents);
+        let eval = exec_lua(&generated, "x").unwrap();
+        assert_eq!(eval, 2.into());
     }
 }

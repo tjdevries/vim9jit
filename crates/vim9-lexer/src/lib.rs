@@ -71,6 +71,7 @@ pub enum TokenKind {
     NotEqualTo,
     Or,
     And,
+    Bang,
 
     // Delimiters
     Comma,
@@ -334,6 +335,8 @@ impl Lexer {
                     ']' => literal!(RightBracket),
                     '{' => literal!(LeftBrace),
                     '}' => literal!(RightBrace),
+                    '!' => literal!(Bang),
+                    ',' => literal!(Comma),
                     '\n' => literal!(EndOfLine, 0),
                     '#' => self.read_comment(),
 
@@ -447,6 +450,7 @@ mod test {
     snapshot!(test_comparisons, "../testdata/snapshots/comparisons.vim");
     snapshot!(test_string, "../testdata/snapshots/string.vim");
     snapshot!(test_scopes, "../testdata/snapshots/scopes.vim");
+    snapshot!(test_autocmd, "../testdata/snapshots/autocmd.vim");
 
     // TODO: Check more thoroughly
     snapshot!(test_matchparen, "../testdata/snapshots/matchparen.vim");

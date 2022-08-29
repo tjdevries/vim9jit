@@ -22,12 +22,142 @@ pub enum ExCommand {
     If(IfCommand),
     Call(CallCommand),
     Finish(Token),
+    Augroup(AugroupCommand),
+    Autocmd(AutocmdCommand),
     Statement(StatementCommand),
 
     Skip,
     EndOfFile,
     Comment(Token),
     NoOp(Token),
+}
+
+#[derive(Debug, PartialEq)]
+pub struct AugroupCommand {
+    augroup: Token,
+    augroup_name: Token,
+    augroup_eol: Token,
+    body: Body,
+    augroup_end: Token,
+    augroup_end_name: Token,
+    augroup_end_eol: Token,
+}
+
+impl AugroupCommand {
+    fn parse(parser: &mut Parser) -> Result<ExCommand> {
+        Ok(ExCommand::Augroup(AugroupCommand {
+            augroup: parser.expect_identifier_with_text("augroup")?,
+            augroup_name: parser.expect_token(TokenKind::Identifier)?,
+            augroup_eol: parser.expect_eol()?,
+            // TODO: This should be until augroup END, unless you can't have nested ones legally
+            body: Body::parse_until(parser, "augroup")?,
+            augroup_end: parser.expect_identifier_with_text("augroup")?,
+            augroup_end_name: parser.expect_identifier_with_text("END")?,
+            augroup_end_eol: parser.expect_eol()?,
+        }))
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct AutocmdCommand {
+    autocmd: Token,
+    bang: bool,
+    events: Vec<Literal>,
+    pattern: Vec<Literal>,
+    block: AutocmdBlock,
+}
+
+impl AutocmdCommand {
+    fn parse(parser: &mut Parser) -> Result<ExCommand> {
+        Ok(ExCommand::Autocmd(AutocmdCommand {
+            // TODO: Accept au! for example
+            autocmd: parser.expect_identifier_with_text("autocmd")?,
+            bang: if parser.current_token.kind == TokenKind::Bang {
+                parser.next_token();
+                true
+            } else {
+                false
+            },
+            events: {
+                let mut events = vec![];
+                loop {
+                    events.push(parser.pop().try_into()?);
+                    if parser.current_token.kind != TokenKind::Comma {
+                        break;
+                    }
+
+                    parser.next_token();
+                }
+
+                events
+            },
+            pattern: {
+                let mut pattern = vec![];
+                loop {
+                    pattern.push(parser.pop().try_into()?);
+                    if parser.current_token.kind != TokenKind::Comma {
+                        break;
+                    }
+
+                    parser.next_token();
+                }
+
+                pattern
+            },
+            block: AutocmdBlock::parse(parser)?,
+        }))
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Literal {
+    pub token: Token,
+}
+
+impl TryFrom<Token> for Literal {
+    type Error = anyhow::Error;
+
+    fn try_from(token: Token) -> Result<Self> {
+        Ok(match token.kind {
+            TokenKind::Identifier => Self { token },
+            TokenKind::Mul => Self { token },
+            _ => unimplemented!("Not valid"),
+        })
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum AutocmdBlock {
+    Command(Box<ExCommand>),
+    Block(Block),
+}
+
+impl AutocmdBlock {
+    pub fn parse(parser: &mut Parser) -> Result<AutocmdBlock> {
+        Ok(match parser.current_token.kind {
+            TokenKind::LeftBrace => AutocmdBlock::Block(Block::parse(parser)?),
+            _ => AutocmdBlock::Command(Box::new(parser.parse_command()?)),
+        })
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Block {
+    open: Token,
+    pub body: Body,
+    close: Token,
+    eol: Token,
+}
+
+impl Block {
+    pub fn parse(parser: &mut Parser) -> Result<Block> {
+        Ok(Self {
+            open: parser.expect_token(TokenKind::LeftBrace)?,
+            body: Body::parse_until(parser, "}")?,
+            close: parser.expect_token(TokenKind::RightBrace)?,
+            eol: parser.expect_eol()?,
+        })
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -126,7 +256,7 @@ pub struct IfCommand {
 }
 
 impl IfCommand {
-    pub fn parser(parser: &mut Parser) -> Result<ExCommand> {
+    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
         Ok(ExCommand::If(IfCommand {
             if_tok: parser.expect_identifier_with_text("if")?,
             condition: Expression::parse(parser, Precedence::Lowest)?,
@@ -344,9 +474,50 @@ pub enum Expression {
     Boolean(VimBoolean),
     Grouped(GroupedExpression),
     Call(CallExpression),
+    Array(ArrayLiteral),
+    Dict(DictLiteral),
 
     Prefix(PrefixExpression),
     Infix(InfixExpression),
+}
+
+#[derive(Debug, PartialEq)]
+pub struct KeyValue {
+    pub key: VimKey,
+    colon: Token,
+    pub value: Expression,
+}
+
+impl KeyValue {
+    pub fn parse(parser: &mut Parser) -> Result<KeyValue> {
+        Ok(Self {
+            key: match parser.current_token.kind {
+                TokenKind::Identifier => VimKey::Literal(parser.pop().try_into()?),
+                _ => unimplemented!("{:?}", parser),
+            },
+            colon: parser.expect_token(TokenKind::Colon)?,
+            value: parser.parse_expression(Precedence::Lowest)?,
+        })
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum VimKey {
+    Literal(Literal),
+}
+
+#[derive(Debug, PartialEq)]
+pub struct DictLiteral {
+    open: Token,
+    pub elements: Vec<KeyValue>,
+    close: Token,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ArrayLiteral {
+    open: Token,
+    pub elements: Vec<Expression>,
+    close: Token,
 }
 
 #[derive(Debug, PartialEq)]
@@ -521,6 +692,22 @@ mod prefix_expr {
             },
         }))
     }
+
+    pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression> {
+        Ok(Expression::Array(ArrayLiteral {
+            open: parser.ensure_token(TokenKind::LeftBracket)?,
+            elements: parser.parse_expression_list(TokenKind::RightBracket)?,
+            close: parser.expect_token(TokenKind::RightBracket)?,
+        }))
+    }
+
+    pub fn parse_dict_literal(parser: &mut Parser) -> Result<Expression> {
+        Ok(Expression::Dict(DictLiteral {
+            open: parser.ensure_token(TokenKind::LeftBrace)?,
+            elements: parser.parse_keyvalue_list(TokenKind::RightBrace)?,
+            close: parser.expect_token(TokenKind::RightBrace)?,
+        }))
+    }
 }
 
 mod infix_expr {
@@ -603,8 +790,13 @@ impl Parser {
             TokenKind::Plus | TokenKind::Minus => Precedence::Sum,
             TokenKind::Div | TokenKind::Mul => Precedence::Product,
             TokenKind::LeftParen => Precedence::Call,
-            TokenKind::RightParen => Precedence::Lowest,
             TokenKind::Colon => Precedence::Colon,
+            TokenKind::EndOfLine | TokenKind::EndOfFile => Precedence::Lowest,
+            TokenKind::Comma => Precedence::Lowest,
+            TokenKind::RightBracket
+                | TokenKind::RightBrace
+                | TokenKind::RightParen
+                => Precedence::Lowest,
             _ => panic!("Unexpected precendence kind: {:?}", kind)
             // TokenKind::LessThan => todo!(),
             // TokenKind::LessThanOrEqual => todo!(),
@@ -634,6 +826,8 @@ impl Parser {
             TokenKind::DoubleQuoteString => prefix_expr::parse_double_string,
             TokenKind::SingleQuoteString => prefix_expr::parse_single_string,
             TokenKind::LeftParen => prefix_expr::parse_grouped_expr,
+            TokenKind::LeftBracket => prefix_expr::parse_array_literal,
+            TokenKind::LeftBrace => prefix_expr::parse_dict_literal,
             TokenKind::True | TokenKind::False => prefix_expr::parse_bool,
             TokenKind::Plus | TokenKind::Minus => prefix_expr::parse_prefix_operator,
             _ => return None,
@@ -672,7 +866,10 @@ impl Parser {
     }
 
     pub fn expect_eol(&mut self) -> Result<Token> {
-        self.expect_token(TokenKind::EndOfLine)
+        match self.expect_token(TokenKind::EndOfLine) {
+            Ok(token) => Ok(token),
+            Err(_) => self.expect_token(TokenKind::EndOfFile),
+        }
     }
 
     pub fn ensure_token(&self, kind: TokenKind) -> Result<Token> {
@@ -687,7 +884,11 @@ impl Parser {
     pub fn expect_token(&mut self, kind: TokenKind) -> Result<Token> {
         let token = self.current_token.clone();
         if token.kind != kind {
-            return Err(anyhow::anyhow!("Got token: {:?}, Expected: {:?}", token, kind));
+            return Err(anyhow::anyhow!(
+                "[expect_token] Got token: {:?}, Expected: {:?}",
+                token,
+                kind
+            ));
         }
 
         self.next_token();
@@ -780,7 +981,11 @@ impl Parser {
                 } else if self.command_match("return") {
                     return Ok(ReturnCommand::parse(self)?);
                 } else if self.command_match("if") {
-                    return Ok(IfCommand::parser(self)?);
+                    return Ok(IfCommand::parse(self)?);
+                } else if self.command_match("augroup") {
+                    return Ok(AugroupCommand::parse(self)?);
+                } else if self.command_match("autocmd") {
+                    return Ok(AutocmdCommand::parse(self)?);
                 } else if self.command_match("finish") {
                     ExCommand::Finish(self.current_token.clone())
                 } else {
@@ -811,6 +1016,50 @@ impl Parser {
         }
 
         program
+    }
+
+    fn parse_expression_list(&mut self, close_kind: TokenKind) -> Result<Vec<Expression>> {
+        let mut results = vec![];
+        if self.current_token.kind == close_kind {
+            self.next_token();
+
+            return Ok(results);
+        }
+
+        self.next_token();
+        results.push(self.parse_expression(Precedence::Lowest)?);
+
+        while self.peek_token.kind == TokenKind::Comma {
+            // Consume end of expression
+            self.next_token();
+
+            // Consume comma
+            self.next_token();
+            results.push(self.parse_expression(Precedence::Lowest)?);
+        }
+
+        self.expect_peek(close_kind)?;
+        Ok(results)
+    }
+
+    fn parse_keyvalue_list(&mut self, close_kind: TokenKind) -> Result<Vec<KeyValue>> {
+        let mut elements: Vec<KeyValue> = vec![];
+        if self.peek_token.kind == TokenKind::RightBrace {
+            self.next_token();
+            return Ok(elements);
+        }
+
+        self.next_token();
+        elements.push(KeyValue::parse(self)?);
+
+        while self.peek_token.kind == TokenKind::Comma {
+            self.next_token();
+            self.next_token();
+            elements.push(KeyValue::parse(self)?);
+        }
+
+        self.expect_peek(close_kind)?;
+        Ok(elements)
     }
 }
 
@@ -851,6 +1100,9 @@ mod test {
     snapshot!(test_expr, "../testdata/snapshots/expr.vim");
     snapshot!(test_echo, "../testdata/snapshots/echo.vim");
     snapshot!(test_scopes, "../testdata/snapshots/scopes.vim");
+    snapshot!(test_autocmd, "../testdata/snapshots/autocmd.vim");
+    snapshot!(test_array, "../testdata/snapshots/array.vim");
+    snapshot!(test_dict, "../testdata/snapshots/dict.vim");
 
     // TODO: Slowly but surely, we can work towards this
     // snapshot!(test_matchparen, "../testdata/snapshots/matchparen.vim");

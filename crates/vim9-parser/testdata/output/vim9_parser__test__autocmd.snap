@@ -1,0 +1,109 @@
+---
+source: src/lib.rs
+assertion_line: 1029
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Augroup(
+        AugroupCommand {
+            augroup: Token(Identifier, "augroup", (2,0)->(2,7)),
+            augroup_name: Token(Identifier, "matchparen", (2,8)->(2,18)),
+            augroup_eol: Token(EndOfLine, "\n", (2,18)->(2,18)),
+            body: Body {
+                commands: [
+                    Comment(
+                        Token(Comment, "# Replace all matchparen autocommands", (3,2)->(3,39)),
+                    ),
+                    Autocmd(
+                        AutocmdCommand {
+                            autocmd: Token(Identifier, "autocmd", (4,2)->(4,9)),
+                            bang: true,
+                            events: [
+                                Literal {
+                                    token: Token(Identifier, "CursorMoved", (4,11)->(4,22)),
+                                },
+                                Literal {
+                                    token: Token(Identifier, "CursorMovedI", (4,23)->(4,35)),
+                                },
+                                Literal {
+                                    token: Token(Identifier, "WinEnter", (4,36)->(4,44)),
+                                },
+                            ],
+                            pattern: [
+                                Literal {
+                                    token: Token(Mul, "*", (4,45)->(4,46)),
+                                },
+                            ],
+                            block: Block(
+                                Block {
+                                    open: Token(LeftBrace, "{", (4,47)->(4,48)),
+                                    body: Body {
+                                        commands: [
+                                            NoOp(
+                                                Token(EndOfLine, "\n", (4,48)->(4,48)),
+                                            ),
+                                            Echo(
+                                                EchoCommand {
+                                                    echo: Token(Identifier, "echo", (5,6)->(5,10)),
+                                                    expr: String(
+                                                        DoubleQuote(
+                                                            "Block",
+                                                        ),
+                                                    ),
+                                                    eol: Token(EndOfLine, "\n", (5,18)->(5,18)),
+                                                },
+                                            ),
+                                        ],
+                                    },
+                                    close: Token(RightBrace, "}", (6,4)->(6,5)),
+                                    eol: Token(EndOfLine, "\n", (6,5)->(6,5)),
+                                },
+                            ),
+                        },
+                    ),
+                    NoOp(
+                        Token(EndOfLine, "\n", (7,0)->(7,0)),
+                    ),
+                    Autocmd(
+                        AutocmdCommand {
+                            autocmd: Token(Identifier, "autocmd", (8,2)->(8,9)),
+                            bang: false,
+                            events: [
+                                Literal {
+                                    token: Token(Identifier, "WinLeave", (8,10)->(8,18)),
+                                },
+                            ],
+                            pattern: [
+                                Literal {
+                                    token: Token(Mul, "*", (8,19)->(8,20)),
+                                },
+                            ],
+                            block: Command(
+                                Echo(
+                                    EchoCommand {
+                                        echo: Token(Identifier, "echo", (8,21)->(8,25)),
+                                        expr: String(
+                                            DoubleQuote(
+                                                "Command",
+                                            ),
+                                        ),
+                                        eol: Token(EndOfLine, "\n", (8,35)->(8,35)),
+                                    },
+                                ),
+                            ),
+                        },
+                    ),
+                ],
+            },
+            augroup_end: Token(Identifier, "augroup", (9,0)->(9,7)),
+            augroup_end_name: Token(Identifier, "END", (9,8)->(9,11)),
+            augroup_end_eol: Token(EndOfLine, "\n", (9,11)->(9,11)),
+        },
+    ),
+]

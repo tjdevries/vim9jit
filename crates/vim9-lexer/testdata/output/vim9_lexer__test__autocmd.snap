@@ -1,0 +1,72 @@
+---
+source: src/lib.rs
+assertion_line: 453
+expression: snapshot_lexing(contents)
+---
+vim9script
+^^^^^^^^^^ Token(Identifier, "vim9script", (0,0)->(0,10))
+           Token(EndOfLine, "\n", (0,10)->(0,10))
+
+ Token(EndOfLine, "\n", (1,0)->(1,0))
+augroup matchparen
+^^^^^^^ Token(Identifier, "augroup", (2,0)->(2,7))
+        ^^^^^^^^^^ Token(Identifier, "matchparen", (2,8)->(2,18))
+                   Token(EndOfLine, "\n", (2,18)->(2,18))
+  # Replace all matchparen autocommands
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Token(Comment, "# Replace all matchparen autocommands", (3,2)->(3,39))
+  autocmd! CursorMoved,CursorMovedI,WinEnter * {
+  ^^^^^^^ Token(Identifier, "autocmd", (4,2)->(4,9))
+         ^ Token(Bang, "!", (4,9)->(4,10))
+           ^^^^^^^^^^^ Token(Identifier, "CursorMoved", (4,11)->(4,22))
+                      ^ Token(Comma, ",", (4,22)->(4,23))
+                       ^^^^^^^^^^^^ Token(Identifier, "CursorMovedI", (4,23)->(4,35))
+                                   ^ Token(Comma, ",", (4,35)->(4,36))
+                                    ^^^^^^^^ Token(Identifier, "WinEnter", (4,36)->(4,44))
+                                             ^ Token(Mul, "*", (4,45)->(4,46))
+                                               ^ Token(LeftBrace, "{", (4,47)->(4,48))
+                                                 Token(EndOfLine, "\n", (4,48)->(4,48))
+      Highlight_Matching_Pair()
+      ^^^^^^^^^^^^^^^^^^^^^^^ Token(Identifier, "Highlight_Matching_Pair", (5,6)->(5,29))
+                             ^ Token(LeftParen, "(", (5,29)->(5,30))
+                              ^ Token(RightParen, ")", (5,30)->(5,31))
+                                Token(EndOfLine, "\n", (5,31)->(5,31))
+    }
+    ^ Token(RightBrace, "}", (6,4)->(6,5))
+      Token(EndOfLine, "\n", (6,5)->(6,5))
+  autocmd! WinLeave * {
+  ^^^^^^^ Token(Identifier, "autocmd", (7,2)->(7,9))
+         ^ Token(Bang, "!", (7,9)->(7,10))
+           ^^^^^^^^ Token(Identifier, "WinLeave", (7,11)->(7,19))
+                    ^ Token(Mul, "*", (7,20)->(7,21))
+                      ^ Token(LeftBrace, "{", (7,22)->(7,23))
+                        Token(EndOfLine, "\n", (7,23)->(7,23))
+      Remove_Matches()
+      ^^^^^^^^^^^^^^ Token(Identifier, "Remove_Matches", (8,6)->(8,20))
+                    ^ Token(LeftParen, "(", (8,20)->(8,21))
+                     ^ Token(RightParen, ")", (8,21)->(8,22))
+                       Token(EndOfLine, "\n", (8,22)->(8,22))
+    }
+    ^ Token(RightBrace, "}", (9,4)->(9,5))
+      Token(EndOfLine, "\n", (9,5)->(9,5))
+  autocmd! TextChanged,TextChangedI * {
+  ^^^^^^^ Token(Identifier, "autocmd", (10,2)->(10,9))
+         ^ Token(Bang, "!", (10,9)->(10,10))
+           ^^^^^^^^^^^ Token(Identifier, "TextChanged", (10,11)->(10,22))
+                      ^ Token(Comma, ",", (10,22)->(10,23))
+                       ^^^^^^^^^^^^ Token(Identifier, "TextChangedI", (10,23)->(10,35))
+                                    ^ Token(Mul, "*", (10,36)->(10,37))
+                                      ^ Token(LeftBrace, "{", (10,38)->(10,39))
+                                        Token(EndOfLine, "\n", (10,39)->(10,39))
+      Highlight_Matching_Pair()
+      ^^^^^^^^^^^^^^^^^^^^^^^ Token(Identifier, "Highlight_Matching_Pair", (11,6)->(11,29))
+                             ^ Token(LeftParen, "(", (11,29)->(11,30))
+                              ^ Token(RightParen, ")", (11,30)->(11,31))
+                                Token(EndOfLine, "\n", (11,31)->(11,31))
+    }
+    ^ Token(RightBrace, "}", (12,4)->(12,5))
+      Token(EndOfLine, "\n", (12,5)->(12,5))
+augroup END
+^^^^^^^ Token(Identifier, "augroup", (13,0)->(13,7))
+        ^^^ Token(Identifier, "END", (13,8)->(13,11))
+            Token(EndOfLine, "\n", (13,11)->(13,11))
+

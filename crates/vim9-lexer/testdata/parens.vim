@@ -13,6 +13,7 @@ echo (xyz)
 def g:MyFunc(): bool
 	var return = false
 	var var = return
+	echo var
 	return return
 enddef
 
@@ -21,3 +22,7 @@ g:["MyOtherThing"] = 2
 echo g:MyOtherThing
 
 g:MyFunc()
+
+autocmd! CursorMoved,CursorMovedI,WinEnter * {
+		g:MyFunc()
+	}

@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 446
+assertion_line: 449
 expression: snapshot_lexing(contents)
 ---
 vim9script
@@ -29,7 +29,7 @@ def Add(x: number, y: number): number
         ^ Token(Identifier, "x", (5,8)->(5,9))
          ^ Token(Colon, ":", (5,9)->(5,10))
            ^^^^^^ Token(Identifier, "number", (5,11)->(5,17))
-                  Token(Illegal, ",", (5,17)->(5,17))
+                 ^ Token(Comma, ",", (5,17)->(5,18))
                    ^ Token(Identifier, "y", (5,19)->(5,20))
                     ^ Token(Colon, ":", (5,20)->(5,21))
                       ^^^^^^ Token(Identifier, "number", (5,22)->(5,28))
@@ -55,7 +55,7 @@ var result = Add(five, ten)
              ^^^ Token(Identifier, "Add", (9,13)->(9,16))
                 ^ Token(LeftParen, "(", (9,16)->(9,17))
                  ^^^^ Token(Identifier, "five", (9,17)->(9,21))
-                      Token(Illegal, ",", (9,21)->(9,21))
+                     ^ Token(Comma, ",", (9,21)->(9,22))
                        ^^^ Token(Identifier, "ten", (9,23)->(9,26))
                           ^ Token(RightParen, ")", (9,26)->(9,27))
                             Token(EndOfLine, "\n", (9,27)->(9,27))
