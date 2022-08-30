@@ -11,6 +11,7 @@ lexer = { path = "../vim9-lexer", package = "vim9-lexer" }
 parser = { path = "../vim9-parser", package = "vim9-parser" }
 rmp = "0.8.11"
 rmpv = "1.0.0"
+stylua = "0.14.3"
 
 [features]
 

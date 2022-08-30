@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 1029
+assertion_line: 1113
 expression: snapshot_parsing(contents)
 ---
 [
@@ -13,7 +13,9 @@ expression: snapshot_parsing(contents)
     Augroup(
         AugroupCommand {
             augroup: Token(Identifier, "augroup", (2,0)->(2,7)),
-            augroup_name: Token(Identifier, "matchparen", (2,8)->(2,18)),
+            augroup_name: Literal {
+                token: Token(Identifier, "matchparen", (2,8)->(2,18)),
+            },
             augroup_eol: Token(EndOfLine, "\n", (2,18)->(2,18)),
             body: Body {
                 commands: [

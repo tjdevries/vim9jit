@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 741
+assertion_line: 1208
 expression: snapshot_parsing(contents)
 ---
 [
@@ -22,11 +22,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (5,0)->(5,3)),
-            name: Raw(
-                RawIdentifier {
-                    name: "x",
-                },
-            ),
+            name: Raw(x),
             equal: Token(Equal, "=", (5,6)->(5,7)),
             expr: Number(
                 VimNumber {
@@ -39,18 +35,10 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (6,0)->(6,3)),
-            name: Raw(
-                RawIdentifier {
-                    name: "y",
-                },
-            ),
+            name: Raw(y),
             equal: Token(Equal, "=", (6,6)->(6,7)),
             expr: Identifier(
-                Raw(
-                    RawIdentifier {
-                        name: "x",
-                    },
-                ),
+                Raw(x),
             ),
             eol: Token(EndOfLine, "\n", (6,9)->(6,9)),
         },
@@ -58,11 +46,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (7,0)->(7,3)),
-            name: Raw(
-                RawIdentifier {
-                    name: "z",
-                },
-            ),
+            name: Raw(z),
             equal: Token(Equal, "=", (7,6)->(7,7)),
             expr: Prefix(
                 PrefixExpression {
@@ -81,11 +65,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (8,0)->(8,3)),
-            name: Raw(
-                RawIdentifier {
-                    name: "foo",
-                },
-            ),
+            name: Raw(foo),
             equal: Token(Equal, "=", (8,8)->(8,9)),
             expr: Boolean(
                 VimBoolean {
@@ -99,29 +79,17 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (9,0)->(9,3)),
-            name: Raw(
-                RawIdentifier {
-                    name: "sum",
-                },
-            ),
+            name: Raw(sum),
             equal: Token(Equal, "=", (9,8)->(9,9)),
             expr: Infix(
                 InfixExpression {
                     token: Token(Plus, "+", (9,12)->(9,13)),
                     operator: Plus,
                     left: Identifier(
-                        Raw(
-                            RawIdentifier {
-                                name: "x",
-                            },
-                        ),
+                        Raw(x),
                     ),
                     right: Identifier(
-                        Raw(
-                            RawIdentifier {
-                                name: "y",
-                            },
-                        ),
+                        Raw(y),
                     ),
                 },
             ),
@@ -131,11 +99,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (10,0)->(10,3)),
-            name: Raw(
-                RawIdentifier {
-                    name: "parened",
-                },
-            ),
+            name: Raw(parened),
             equal: Token(Equal, "=", (10,12)->(10,13)),
             expr: Grouped(
                 GroupedExpression {
@@ -151,18 +115,10 @@ expression: snapshot_parsing(contents)
                                             token: Token(Plus, "+", (10,19)->(10,20)),
                                             operator: Plus,
                                             left: Identifier(
-                                                Raw(
-                                                    RawIdentifier {
-                                                        name: "x",
-                                                    },
-                                                ),
+                                                Raw(x),
                                             ),
                                             right: Identifier(
-                                                Raw(
-                                                    RawIdentifier {
-                                                        name: "y",
-                                                    },
-                                                ),
+                                                Raw(y),
                                             ),
                                         },
                                     ),
@@ -181,11 +137,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (11,0)->(11,3)),
-            name: Raw(
-                RawIdentifier {
-                    name: "if",
-                },
-            ),
+            name: Raw(if),
             equal: Token(Equal, "=", (11,7)->(11,8)),
             expr: Boolean(
                 VimBoolean {
@@ -199,18 +151,10 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (12,0)->(12,3)),
-            name: Raw(
-                RawIdentifier {
-                    name: "var",
-                },
-            ),
+            name: Raw(var),
             equal: Token(Equal, "=", (12,8)->(12,9)),
             expr: Identifier(
-                Raw(
-                    RawIdentifier {
-                        name: "if",
-                    },
-                ),
+                Raw(if),
             ),
             eol: Token(EndOfLine, "\n", (12,12)->(12,12)),
         },
@@ -219,11 +163,7 @@ expression: snapshot_parsing(contents)
         EchoCommand {
             echo: Token(Identifier, "echo", (13,0)->(13,4)),
             expr: Identifier(
-                Raw(
-                    RawIdentifier {
-                        name: "var",
-                    },
-                ),
+                Raw(var),
             ),
             eol: Token(EndOfLine, "\n", (13,8)->(13,8)),
         },

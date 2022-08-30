@@ -1,0 +1,126 @@
+---
+source: src/lib.rs
+assertion_line: 1165
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Comment(
+        Token(Comment, "# multiple expressions", (2,0)->(2,22)),
+    ),
+    If(
+        IfCommand {
+            if_tok: Token(Identifier, "if", (3,0)->(3,2)),
+            condition: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (3,16)->(3,18)),
+                    operator: Or,
+                    left: Call(
+                        CallExpression {
+                            expr: Identifier(
+                                Raw(
+                                    RawIdentifier {
+                                        name: "pumvisible",
+                                    },
+                                ),
+                            ),
+                            open: Token(LeftParen, "(", (3,13)->(3,14)),
+                            args: [],
+                            close: Token(RightParen, ")", (3,14)->(3,15)),
+                        },
+                    ),
+                    right: Grouped(
+                        GroupedExpression {
+                            open: Token(LeftParen, "(", (3,19)->(3,20)),
+                            expr: Infix(
+                                InfixExpression {
+                                    token: Token(And, "&&", (3,38)->(3,40)),
+                                    operator: And,
+                                    left: Infix(
+                                        InfixExpression {
+                                            token: Token(LessThan, "<", (3,34)->(3,35)),
+                                            operator: LessThan,
+                                            left: Call(
+                                                CallExpression {
+                                                    expr: Identifier(
+                                                        Raw(
+                                                            RawIdentifier {
+                                                                name: "str2nr",
+                                                            },
+                                                        ),
+                                                    ),
+                                                    open: Token(LeftParen, "(", (3,26)->(3,27)),
+                                                    args: [
+                                                        VimOption(
+                                                            VimOption {
+                                                                ampersand: Token(Ampersand, "&", (3,27)->(3,28)),
+                                                                option: Literal {
+                                                                    token: Token(Identifier, "t_Co", (3,28)->(3,32)),
+                                                                },
+                                                            },
+                                                        ),
+                                                    ],
+                                                    close: Token(RightParen, ")", (3,32)->(3,33)),
+                                                },
+                                            ),
+                                            right: Number(
+                                                VimNumber {
+                                                    value: "8",
+                                                },
+                                            ),
+                                        },
+                                    ),
+                                    right: Prefix(
+                                        PrefixExpression {
+                                            token: Token(Bang, "!", (3,41)->(3,42)),
+                                            operator: Bang,
+                                            right: Call(
+                                                CallExpression {
+                                                    expr: Identifier(
+                                                        Raw(
+                                                            RawIdentifier {
+                                                                name: "has",
+                                                            },
+                                                        ),
+                                                    ),
+                                                    open: Token(LeftParen, "(", (3,45)->(3,46)),
+                                                    args: [
+                                                        String(
+                                                            SingleQuote(
+                                                                "gui_running",
+                                                            ),
+                                                        ),
+                                                    ],
+                                                    close: Token(RightParen, ")", (3,59)->(3,60)),
+                                                },
+                                            ),
+                                        },
+                                    ),
+                                },
+                            ),
+                            close: Token(RightParen, ")", (3,60)->(3,61)),
+                        },
+                    ),
+                },
+            ),
+            if_eol: Token(EndOfLine, "\n", (3,61)->(3,61)),
+            body: Body {
+                commands: [
+                    Finish(
+                        FinishCommand {
+                            finish: Token(Identifier, "finish", (4,2)->(4,8)),
+                            eol: Token(EndOfLine, "\n", (4,8)->(4,8)),
+                        },
+                    ),
+                ],
+            },
+            endif_tok: Token(Identifier, "endif", (5,0)->(5,5)),
+            endif_eol: Token(EndOfLine, "\n", (5,5)->(5,5)),
+        },
+    ),
+]

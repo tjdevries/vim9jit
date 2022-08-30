@@ -62,6 +62,7 @@ pub enum TokenKind {
     MinusEquals,
     MulEquals,
     DivEquals,
+    Ampersand,
 
     LessThan,
     LessThanOrEqual,
@@ -326,7 +327,7 @@ impl Lexer {
                     '>' => self.if_peek('=', TokenKind::GreaterThan, TokenKind::GreaterThanOrEqual),
                     '<' => self.if_peek('=', TokenKind::LessThan, TokenKind::LessThanOrEqual),
                     '|' => self.if_peek('|', TokenKind::Illegal, TokenKind::Or),
-                    '&' => self.if_peek('&', TokenKind::Illegal, TokenKind::And),
+                    '&' => self.if_peek('&', TokenKind::Ampersand, TokenKind::And),
 
                     ':' => literal!(Colon),
                     '(' => literal!(LeftParen),

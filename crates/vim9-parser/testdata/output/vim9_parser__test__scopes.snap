@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 853
+assertion_line: 1210
 expression: snapshot_parsing(contents)
 ---
 [
@@ -13,17 +13,7 @@ expression: snapshot_parsing(contents)
     Statement(
         Assign(
             AssignStatement {
-                left: Scope(
-                    ScopedIdentifier {
-                        scope: Global,
-                        colon: Token(Colon, ":", (2,1)->(2,2)),
-                        accessor: Raw(
-                            RawIdentifier {
-                                name: "global_variable",
-                            },
-                        ),
-                    },
-                ),
+                left: Scope(ScopedIdentifier { scope: Global, colon: Token(Colon, ":", (2,1)->(2,2)), accessor: Raw(global_variable) }),
                 equals: Token(Equal, "=", (2,18)->(2,19)),
                 right: Number(
                     VimNumber {

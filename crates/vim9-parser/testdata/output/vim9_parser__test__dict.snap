@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 1105
+assertion_line: 1213
 expression: snapshot_parsing(contents)
 ---
 [
@@ -13,11 +13,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (2,0)->(2,3)),
-            name: Raw(
-                RawIdentifier {
-                    name: "x",
-                },
-            ),
+            name: Raw(x),
             equal: Token(Equal, "=", (2,6)->(2,7)),
             expr: Dict(
                 DictLiteral {
@@ -54,7 +50,18 @@ expression: snapshot_parsing(contents)
                     close: Token(RightBrace, "}", (2,41)->(2,42)),
                 },
             ),
-            eol: Token(EndOfFile, "", (2,42)->(2,42)),
+            eol: Token(EndOfLine, "\n", (2,42)->(2,42)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (3,0)->(3,3)),
+            name: Raw(y),
+            equal: Token(Equal, "=", (3,6)->(3,7)),
+            expr: Call(
+                f: Identifier(Raw(len)) arg: ([Call(f: Identifier(Raw(nvim_get_autcomds)) arg: ([Dict(DictLiteral { open: Token(LeftBrace, "{", (3,30)->(3,31)), elements: [KeyValue { key: Literal(Literal { token: Token(Identifier, "group", (3,31)->(3,36)) }), colon: Token(Colon, ":", (3,36)->(3,37)), value: String(DoubleQuote("matchparen")) }], close: Token(RightBrace, "}", (3,50)->(3,51)) })]))]),
+            ),
+            eol: Token(EndOfLine, "\n", (3,53)->(3,53)),
         },
     ),
 ]

@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 740
+assertion_line: 1207
 expression: snapshot_parsing(contents)
 ---
 [
@@ -16,34 +16,31 @@ expression: snapshot_parsing(contents)
     If(
         IfCommand {
             if_tok: Token(Identifier, "if", (3,0)->(3,2)),
-            condition: Call(
-                CallExpression {
-                    expr: Identifier(
-                        Raw(
-                            RawIdentifier {
-                                name: "exists",
-                            },
-                        ),
+            condition: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (3,33)->(3,35)),
+                    operator: Or,
+                    left: Call(
+                        f: Identifier(Raw(exists)) arg: ([String(SingleQuote("g:loaded_matchparen"))]),
                     ),
-                    open: Token(LeftParen, "(", (3,9)->(3,10)),
-                    args: [
-                        String(
-                            SingleQuote(
-                                "g:loaded_matchparen",
-                            ),
-                        ),
-                    ],
-                    close: Token(RightParen, ")", (3,31)->(3,32)),
+                    right: VimOption(
+                        VimOption {
+                            ampersand: Token(Ampersand, "&", (3,36)->(3,37)),
+                            option: Literal {
+                                token: Token(Identifier, "cp", (3,37)->(3,39)),
+                            },
+                        },
+                    ),
                 },
             ),
-            if_eol: Token(EndOfLine, "\n", (3,32)->(3,32)),
+            if_eol: Token(EndOfLine, "\n", (3,39)->(3,39)),
             body: Body {
                 commands: [
                     Finish(
-                        Token(Identifier, "finish", (4,2)->(4,8)),
-                    ),
-                    NoOp(
-                        Token(EndOfLine, "\n", (4,8)->(4,8)),
+                        FinishCommand {
+                            finish: Token(Identifier, "finish", (4,2)->(4,8)),
+                            eol: Token(EndOfLine, "\n", (4,8)->(4,8)),
+                        },
                     ),
                 ],
             },

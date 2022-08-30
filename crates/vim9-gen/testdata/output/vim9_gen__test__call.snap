@@ -1,12 +1,12 @@
 ---
 source: src/lib.rs
-assertion_line: 271
+assertion_line: 424
 expression: generate(contents)
 ---
 -- vim9script
 
 local MyCoolFunc = function()
-  return 5
+	return 5
 end
 -- Token(EndOfLine, "\n", (5,0)->(5,0))
 local x = (MyCoolFunc() + 1)

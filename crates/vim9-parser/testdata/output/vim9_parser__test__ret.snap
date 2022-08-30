@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 738
+assertion_line: 1205
 expression: snapshot_parsing(contents)
 ---
 [
@@ -13,11 +13,7 @@ expression: snapshot_parsing(contents)
     Def(
         DefCommand {
             def: Token(Identifier, "def", (2,0)->(2,3)),
-            name: Raw(
-                RawIdentifier {
-                    name: "MyFunc",
-                },
-            ),
+            name: Raw(MyFunc),
             args: Signature {
                 open: Token(LeftParen, "(", (2,10)->(2,11)),
                 close: Token(RightParen, ")", (2,11)->(2,12)),
@@ -25,11 +21,7 @@ expression: snapshot_parsing(contents)
             ret: Some(
                 Type {
                     colon: Token(Colon, ":", (2,12)->(2,13)),
-                    name: Raw(
-                        RawIdentifier {
-                            name: "number",
-                        },
-                    ),
+                    name: Raw(number),
                 },
             ),
             def_eol: Token(EndOfLine, "\n", (2,20)->(2,20)),
@@ -38,10 +30,12 @@ expression: snapshot_parsing(contents)
                     Return(
                         ReturnCommand {
                             ret: Token(Identifier, "return", (3,2)->(3,8)),
-                            expr: Number(
-                                VimNumber {
-                                    value: "5",
-                                },
+                            expr: Some(
+                                Number(
+                                    VimNumber {
+                                        value: "5",
+                                    },
+                                ),
                             ),
                             eol: Token(EndOfLine, "\n", (3,10)->(3,10)),
                         },
@@ -58,11 +52,7 @@ expression: snapshot_parsing(contents)
     Call(
         CallCommand {
             call: None,
-            name: Raw(
-                RawIdentifier {
-                    name: "MyFunc",
-                },
-            ),
+            name: Raw(MyFunc),
             args: Arguments {
                 open: Token(LeftParen, "(", (6,6)->(6,7)),
                 args: [],

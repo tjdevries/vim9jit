@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 456
+assertion_line: 457
 expression: snapshot_lexing(contents)
 ---
 vim9script noclear
@@ -28,7 +28,7 @@ if exists('g:loaded_matchparen') || &cp
            ^^^^^^^^^^^^^^^^^^ Token(SingleQuoteString, "g:loaded_matchparen", (8,11)->(8,29))
                                ^ Token(RightParen, ")", (8,31)->(8,32))
                                  ^^ Token(Or, "||", (8,33)->(8,35))
-                                    ^ Token(Illegal, "&", (8,36)->(8,37))
+                                    ^ Token(Ampersand, "&", (8,36)->(8,37))
                                      ^^ Token(Identifier, "cp", (8,37)->(8,39))
                                         Token(EndOfLine, "\n", (8,39)->(8,39))
   finish
@@ -198,7 +198,7 @@ def Highlight_Matching_Pair(): void
                      ^ Token(LeftParen, "(", (46,21)->(46,22))
                       ^^^^^^ Token(Identifier, "str2nr", (46,22)->(46,28))
                             ^ Token(LeftParen, "(", (46,28)->(46,29))
-                             ^ Token(Illegal, "&", (46,29)->(46,30))
+                             ^ Token(Ampersand, "&", (46,29)->(46,30))
                               ^^^^ Token(Identifier, "t_Co", (46,30)->(46,34))
                                   ^ Token(RightParen, ")", (46,34)->(46,35))
                                     ^ Token(LessThan, "<", (46,36)->(46,37))
@@ -318,7 +318,7 @@ def Highlight_Matching_Pair(): void
             ^ Token(Equal, "=", (61,12)->(61,13))
               ^^^^^ Token(Identifier, "split", (61,14)->(61,19))
                    ^ Token(LeftParen, "(", (61,19)->(61,20))
-                    ^ Token(Illegal, "&", (61,20)->(61,21))
+                    ^ Token(Ampersand, "&", (61,20)->(61,21))
                      ^^^^^^^^^^ Token(Identifier, "matchpairs", (61,21)->(61,31))
                                ^ Token(Comma, ",", (61,31)->(61,32))
                                   ^^^^^^^ Token(SingleQuoteString, ".\\zs[:,]", (61,34)->(61,41))
@@ -843,7 +843,7 @@ def Highlight_Matching_Pair(): void
                         ^^^ Token(Identifier, "min", (158,24)->(158,27))
                            ^ Token(LeftParen, "(", (158,27)->(158,28))
                             ^ Token(LeftBracket, "[", (158,28)->(158,29))
-                             ^ Token(Illegal, "&", (158,29)->(158,30))
+                             ^ Token(Ampersand, "&", (158,29)->(158,30))
                               ^^^^^^^^^ Token(Identifier, "scrolloff", (158,30)->(158,39))
                                        ^ Token(Comma, ",", (158,39)->(158,40))
                                          ^ Token(LeftParen, "(", (158,41)->(158,42))
@@ -875,7 +875,7 @@ def Highlight_Matching_Pair(): void
                                     ^ Token(Comma, ",", (159,36)->(159,37))
                                       ^^^^^^ Token(Identifier, "c_lnum", (159,38)->(159,44))
                                              ^ Token(Plus, "+", (159,45)->(159,46))
-                                               ^ Token(Illegal, "&", (159,47)->(159,48))
+                                               ^ Token(Ampersand, "&", (159,47)->(159,48))
                                                 ^^^^^ Token(Identifier, "lines", (159,48)->(159,53))
                                                       ^ Token(Minus, "-", (159,54)->(159,55))
                                                         ^^^^^^^^^^^^^^^^^ Token(Identifier, "adjustedScrolloff", (159,56)->(159,73))
@@ -894,7 +894,7 @@ def Highlight_Matching_Pair(): void
                          ^ Token(Comma, ",", (160,25)->(160,26))
                            ^^^^^^ Token(Identifier, "c_lnum", (160,27)->(160,33))
                                   ^ Token(Minus, "-", (160,34)->(160,35))
-                                    ^ Token(Illegal, "&", (160,36)->(160,37))
+                                    ^ Token(Ampersand, "&", (160,36)->(160,37))
                                      ^^^^^ Token(Identifier, "lines", (160,37)->(160,42))
                                            ^ Token(Plus, "+", (160,43)->(160,44))
                                              ^^^^^^^^^^^^^^^^^ Token(Identifier, "adjustedScrolloff", (160,45)->(160,62))
@@ -937,7 +937,7 @@ def Highlight_Matching_Pair(): void
                                                                  Token(SingleQuoteString, ".", (164,64)->(164,64))
                                                                   ^ Token(RightParen, ")", (164,66)->(164,67))
                                                                     ^ Token(Plus, "+", (164,68)->(164,69))
-                                                                      ^ Token(Illegal, "&", (164,70)->(164,71))
+                                                                      ^ Token(Ampersand, "&", (164,70)->(164,71))
                                                                        ^^^ Token(Identifier, "smc", (164,71)->(164,74))
                                                                            ^ Token(Mul, "*", (164,75)->(164,76))
                                                                              ^ Token(Integer, "2", (164,77)->(164,78))
@@ -986,7 +986,7 @@ def Highlight_Matching_Pair(): void
                                                     Token(SingleQuoteString, ".", (168,51)->(168,51))
                                                      ^ Token(RightParen, ")", (168,53)->(168,54))
                                                        ^ Token(Minus, "-", (168,55)->(168,56))
-                                                         ^ Token(Illegal, "&", (168,57)->(168,58))
+                                                         ^ Token(Ampersand, "&", (168,57)->(168,58))
                                                           ^^^ Token(Identifier, "smc", (168,58)->(168,61))
                                                               ^ Token(Mul, "*", (168,62)->(168,63))
                                                                 ^ Token(Integer, "2", (168,64)->(168,65))

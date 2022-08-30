@@ -16,8 +16,7 @@ pub fn exec_lua(preamble: &str, result: &str) -> Result<Value> {
         "#,
         preamble, result
     );
-
-    // dbg!(&contents);
+    println!("{}", contents);
 
     // start a neovim job
     let mut child = Command::new("nvim")
