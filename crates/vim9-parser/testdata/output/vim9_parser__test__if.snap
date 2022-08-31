@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 1165
+assertion_line: 1212
 expression: snapshot_parsing(contents)
 ---
 [
@@ -21,18 +21,7 @@ expression: snapshot_parsing(contents)
                     token: Token(Or, "||", (3,16)->(3,18)),
                     operator: Or,
                     left: Call(
-                        CallExpression {
-                            expr: Identifier(
-                                Raw(
-                                    RawIdentifier {
-                                        name: "pumvisible",
-                                    },
-                                ),
-                            ),
-                            open: Token(LeftParen, "(", (3,13)->(3,14)),
-                            args: [],
-                            close: Token(RightParen, ")", (3,14)->(3,15)),
-                        },
+                        f: Identifier(Raw(pumvisible)) arg: [],
                     ),
                     right: Grouped(
                         GroupedExpression {
@@ -46,27 +35,16 @@ expression: snapshot_parsing(contents)
                                             token: Token(LessThan, "<", (3,34)->(3,35)),
                                             operator: LessThan,
                                             left: Call(
-                                                CallExpression {
-                                                    expr: Identifier(
-                                                        Raw(
-                                                            RawIdentifier {
-                                                                name: "str2nr",
+                                                f: Identifier(Raw(str2nr)) arg: [
+                                                    VimOption(
+                                                        VimOption {
+                                                            ampersand: Token(Ampersand, "&", (3,27)->(3,28)),
+                                                            option: Literal {
+                                                                token: Token(Identifier, "t_Co", (3,28)->(3,32)),
                                                             },
-                                                        ),
+                                                        },
                                                     ),
-                                                    open: Token(LeftParen, "(", (3,26)->(3,27)),
-                                                    args: [
-                                                        VimOption(
-                                                            VimOption {
-                                                                ampersand: Token(Ampersand, "&", (3,27)->(3,28)),
-                                                                option: Literal {
-                                                                    token: Token(Identifier, "t_Co", (3,28)->(3,32)),
-                                                                },
-                                                            },
-                                                        ),
-                                                    ],
-                                                    close: Token(RightParen, ")", (3,32)->(3,33)),
-                                                },
+                                                ],
                                             ),
                                             right: Number(
                                                 VimNumber {
@@ -80,24 +58,13 @@ expression: snapshot_parsing(contents)
                                             token: Token(Bang, "!", (3,41)->(3,42)),
                                             operator: Bang,
                                             right: Call(
-                                                CallExpression {
-                                                    expr: Identifier(
-                                                        Raw(
-                                                            RawIdentifier {
-                                                                name: "has",
-                                                            },
+                                                f: Identifier(Raw(has)) arg: [
+                                                    String(
+                                                        SingleQuote(
+                                                            "gui_running",
                                                         ),
                                                     ),
-                                                    open: Token(LeftParen, "(", (3,45)->(3,46)),
-                                                    args: [
-                                                        String(
-                                                            SingleQuote(
-                                                                "gui_running",
-                                                            ),
-                                                        ),
-                                                    ],
-                                                    close: Token(RightParen, ")", (3,59)->(3,60)),
-                                                },
+                                                ],
                                             ),
                                         },
                                     ),

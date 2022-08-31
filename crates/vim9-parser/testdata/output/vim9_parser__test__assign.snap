@@ -1,0 +1,54 @@
+---
+source: src/lib.rs
+assertion_line: 1378
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (2,0)->(2,3)),
+            ty: None,
+            name: Raw(i),
+            equal: Token(Equal, "=", (2,6)->(2,7)),
+            expr: Call(
+                f: Identifier(Raw(index)) arg: [
+                    Identifier(
+                        Raw(plist),
+                    ),
+                    Identifier(
+                        Raw(c),
+                    ),
+                ],
+            ),
+            eol: Token(EndOfLine, "\n", (2,23)->(2,23)),
+        },
+    ),
+    Statement(
+        Assign(
+            AssignStatement {
+                left: Raw(i),
+                equals: Token(Equal, "=", (3,2)->(3,3)),
+                right: Call(
+                    f: Identifier(Raw(index)) arg: [
+                        Identifier(
+                            Raw(plist),
+                        ),
+                        Identifier(
+                            Raw(c),
+                        ),
+                    ],
+                ),
+                eol: Token(EndOfLine, "\n", (3,19)->(3,19)),
+            },
+        ),
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (4,0)->(4,0)),
+    ),
+]

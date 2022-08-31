@@ -451,7 +451,7 @@ mod test {
     snapshot!(test_assign, "../testdata/snapshots/assign.vim");
     snapshot!(test_call, "../testdata/snapshots/call.vim");
     snapshot!(test_autocmd, "../testdata/snapshots/autocmd.vim");
-    snapshot!(test_matchparen, "../testdata/snapshots/matchparen.vim");
+    snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
 
     #[test]
     fn test_simple_def() {

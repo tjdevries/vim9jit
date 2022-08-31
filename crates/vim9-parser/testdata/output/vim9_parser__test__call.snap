@@ -1,0 +1,99 @@
+---
+source: src/lib.rs
+assertion_line: 1375
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Comment(
+        Token(Comment, "# No arguments", (2,0)->(2,14)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (3,0)->(3,3)),
+            ty: None,
+            name: Raw(no_args),
+            equal: Token(Equal, "=", (3,12)->(3,13)),
+            expr: Call(
+                f: Identifier(Raw(bufnr)) arg: [],
+            ),
+            eol: Token(EndOfLine, "\n", (3,21)->(3,21)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (4,0)->(4,0)),
+    ),
+    Comment(
+        Token(Comment, "# One argument", (5,0)->(5,14)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (6,0)->(6,3)),
+            ty: None,
+            name: Raw(some_args),
+            equal: Token(Equal, "=", (6,14)->(6,15)),
+            expr: Call(
+                f: Identifier(Raw(len)) arg: [
+                    String(
+                        DoubleQuote(
+                            "hello world",
+                        ),
+                    ),
+                ],
+            ),
+            eol: Token(EndOfLine, "\n", (6,34)->(6,34)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (7,0)->(7,0)),
+    ),
+    Comment(
+        Token(Comment, "# More arguments", (8,0)->(8,16)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (9,0)->(9,3)),
+            ty: None,
+            name: Raw(matched),
+            equal: Token(Equal, "=", (9,12)->(9,13)),
+            expr: Call(
+                f: Identifier(Raw(match)) arg: [
+                    Array(
+                        ArrayLiteral {
+                            open: Token(LeftBracket, "[", (9,20)->(9,21)),
+                            elements: [
+                                String(
+                                    DoubleQuote(
+                                        "matched",
+                                    ),
+                                ),
+                                String(
+                                    DoubleQuote(
+                                        "some_args",
+                                    ),
+                                ),
+                            ],
+                            close: Token(RightBracket, "]", (9,43)->(9,44)),
+                        },
+                    ),
+                    String(
+                        DoubleQuote(
+                            "a",
+                        ),
+                    ),
+                    Number(
+                        VimNumber {
+                            value: "1",
+                        },
+                    ),
+                ],
+            ),
+            eol: Token(EndOfLine, "\n", (9,53)->(9,53)),
+        },
+    ),
+]

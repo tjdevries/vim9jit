@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 1207
+assertion_line: 1205
 expression: snapshot_parsing(contents)
 ---
 [
@@ -21,7 +21,13 @@ expression: snapshot_parsing(contents)
                     token: Token(Or, "||", (3,33)->(3,35)),
                     operator: Or,
                     left: Call(
-                        f: Identifier(Raw(exists)) arg: ([String(SingleQuote("g:loaded_matchparen"))]),
+                        f: Identifier(Raw(exists)) arg: [
+                            String(
+                                SingleQuote(
+                                    "g:loaded_matchparen",
+                                ),
+                            ),
+                        ],
                     ),
                     right: VimOption(
                         VimOption {

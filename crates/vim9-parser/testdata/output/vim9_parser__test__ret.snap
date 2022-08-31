@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 1205
+assertion_line: 1372
 expression: snapshot_parsing(contents)
 ---
 [
@@ -20,8 +20,8 @@ expression: snapshot_parsing(contents)
             },
             ret: Some(
                 Type {
-                    colon: Token(Colon, ":", (2,12)->(2,13)),
-                    name: Raw(number),
+                    colon: Token(SpacedColon, ": ", (2,12)->(2,14)),
+                    inner: Number,
                 },
             ),
             def_eol: Token(EndOfLine, "\n", (2,20)->(2,20)),

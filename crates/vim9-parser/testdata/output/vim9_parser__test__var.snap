@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 1204
+assertion_line: 1364
 expression: snapshot_parsing(contents)
 ---
 [
@@ -13,6 +13,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (2,0)->(2,3)),
+            ty: None,
             name: Raw(x),
             equal: Token(Equal, "=", (2,6)->(2,7)),
             expr: Number(

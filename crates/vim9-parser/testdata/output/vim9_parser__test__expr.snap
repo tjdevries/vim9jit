@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 1208
+assertion_line: 1368
 expression: snapshot_parsing(contents)
 ---
 [
@@ -22,6 +22,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (5,0)->(5,3)),
+            ty: None,
             name: Raw(x),
             equal: Token(Equal, "=", (5,6)->(5,7)),
             expr: Number(
@@ -35,6 +36,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (6,0)->(6,3)),
+            ty: None,
             name: Raw(y),
             equal: Token(Equal, "=", (6,6)->(6,7)),
             expr: Identifier(
@@ -46,6 +48,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (7,0)->(7,3)),
+            ty: None,
             name: Raw(z),
             equal: Token(Equal, "=", (7,6)->(7,7)),
             expr: Prefix(
@@ -65,6 +68,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (8,0)->(8,3)),
+            ty: None,
             name: Raw(foo),
             equal: Token(Equal, "=", (8,8)->(8,9)),
             expr: Boolean(
@@ -79,6 +83,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (9,0)->(9,3)),
+            ty: None,
             name: Raw(sum),
             equal: Token(Equal, "=", (9,8)->(9,9)),
             expr: Infix(
@@ -99,6 +104,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (10,0)->(10,3)),
+            ty: None,
             name: Raw(parened),
             equal: Token(Equal, "=", (10,12)->(10,13)),
             expr: Grouped(
@@ -137,6 +143,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (11,0)->(11,3)),
+            ty: None,
             name: Raw(if),
             equal: Token(Equal, "=", (11,7)->(11,8)),
             expr: Boolean(
@@ -151,6 +158,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (12,0)->(12,3)),
+            ty: None,
             name: Raw(var),
             equal: Token(Equal, "=", (12,8)->(12,9)),
             expr: Identifier(

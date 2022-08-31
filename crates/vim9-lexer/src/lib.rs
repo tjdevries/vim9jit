@@ -58,11 +58,15 @@ pub enum TokenKind {
     Minus,
     Mul,
     Div,
+    Percent,
     PlusEquals,
     MinusEquals,
     MulEquals,
     DivEquals,
+    PercentEquals,
     Ampersand,
+    Dot,
+    StringConcat,
 
     LessThan,
     LessThanOrEqual,
@@ -73,10 +77,14 @@ pub enum TokenKind {
     Or,
     And,
     Bang,
+    QuestionMark,
 
     // Delimiters
     Comma,
     Colon,
+    SpacedColon,
+    Caret,
+    Escaped,
 
     SingleQuoteString,
     DoubleQuoteString,
@@ -328,8 +336,20 @@ impl Lexer {
                     '<' => self.if_peek('=', TokenKind::LessThan, TokenKind::LessThanOrEqual),
                     '|' => self.if_peek('|', TokenKind::Illegal, TokenKind::Or),
                     '&' => self.if_peek('&', TokenKind::Ampersand, TokenKind::And),
+                    '.' => self.if_peek('.', TokenKind::Dot, TokenKind::StringConcat),
+                    '%' => self.if_peek('=', TokenKind::Percent, TokenKind::PercentEquals),
+                    '\\' => {
+                        self.read_char();
+                        Token {
+                            kind: TokenKind::Escaped,
+                            text: self.ch.unwrap().to_string(),
+                            span: self.make_span(self.position - 1, self.position),
+                        }
+                    }
 
-                    ':' => literal!(Colon),
+                    ':' => self.if_peek(' ', TokenKind::Colon, TokenKind::SpacedColon),
+                    '?' => literal!(QuestionMark),
+                    '^' => literal!(Caret),
                     '(' => literal!(LeftParen),
                     ')' => literal!(RightParen),
                     '[' => literal!(LeftBracket),
@@ -401,6 +421,10 @@ pub fn snapshot_lexing(input: &str) -> String {
             break;
         }
 
+        if tok.kind == TokenKind::Illegal {
+            panic!("failure: {:#?}", lexer);
+        }
+
         tokens.push_back(tok);
     }
 
@@ -454,5 +478,5 @@ mod test {
     snapshot!(test_autocmd, "../testdata/snapshots/autocmd.vim");
 
     // TODO: Check more thoroughly
-    snapshot!(test_matchparen, "../testdata/snapshots/matchparen.vim");
+    snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
 }

@@ -1,0 +1,40 @@
+---
+source: src/lib.rs
+assertion_line: 1377
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (2,0)->(2,3)),
+            ty: None,
+            name: Unpack([[Raw(c_before), Raw(c)]]),
+            equal: Token(Equal, "=", (2,18)->(2,19)),
+            expr: Array(
+                ArrayLiteral {
+                    open: Token(LeftBracket, "[", (2,20)->(2,21)),
+                    elements: [
+                        String(
+                            SingleQuote(
+                                "",
+                            ),
+                        ),
+                        String(
+                            SingleQuote(
+                                "",
+                            ),
+                        ),
+                    ],
+                    close: Token(RightBracket, "]", (2,27)->(2,28)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (2,28)->(2,28)),
+        },
+    ),
+]

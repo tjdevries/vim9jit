@@ -1,0 +1,54 @@
+---
+source: src/lib.rs
+assertion_line: 1376
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (2,0)->(2,3)),
+            ty: None,
+            name: Raw(matches),
+            equal: Token(Equal, "=", (2,12)->(2,13)),
+            expr: Call(
+                f: Identifier(Raw(matchlist)) arg: [
+                    Identifier(
+                        Raw(text),
+                    ),
+                    Infix(
+                        InfixExpression {
+                            token: Token(StringConcat, "..", (2,51)->(2,53)),
+                            operator: StringConcat,
+                            left: Infix(
+                                InfixExpression {
+                                    token: Token(StringConcat, "..", (2,42)->(2,44)),
+                                    operator: StringConcat,
+                                    left: String(
+                                        SingleQuote(
+                                            "\\(.\\)\\=\\%",
+                                        ),
+                                    ),
+                                    right: Identifier(
+                                        Raw(c_col),
+                                    ),
+                                },
+                            ),
+                            right: String(
+                                SingleQuote(
+                                    "c\\(.\\=\\)",
+                                ),
+                            ),
+                        },
+                    ),
+                ],
+            ),
+            eol: Token(EndOfLine, "\n", (2,65)->(2,65)),
+        },
+    ),
+]

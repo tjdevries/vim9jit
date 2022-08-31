@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 1213
+assertion_line: 1380
 expression: snapshot_parsing(contents)
 ---
 [
@@ -13,6 +13,7 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (2,0)->(2,3)),
+            ty: None,
             name: Raw(x),
             equal: Token(Equal, "=", (2,6)->(2,7)),
             expr: Dict(
@@ -25,7 +26,7 @@ expression: snapshot_parsing(contents)
                                     token: Token(Identifier, "hello", (2,10)->(2,15)),
                                 },
                             ),
-                            colon: Token(Colon, ":", (2,15)->(2,16)),
+                            colon: Token(SpacedColon, ": ", (2,15)->(2,17)),
                             value: String(
                                 DoubleQuote(
                                     "world",
@@ -38,7 +39,7 @@ expression: snapshot_parsing(contents)
                                     token: Token(Identifier, "another", (2,26)->(2,33)),
                                 },
                             ),
-                            colon: Token(Colon, ":", (2,33)->(2,34)),
+                            colon: Token(SpacedColon, ": ", (2,33)->(2,35)),
                             value: Boolean(
                                 VimBoolean {
                                     token: Token(False, "false", (2,35)->(2,40)),
@@ -56,10 +57,37 @@ expression: snapshot_parsing(contents)
     Var(
         VarCommand {
             var: Token(Identifier, "var", (3,0)->(3,3)),
+            ty: None,
             name: Raw(y),
             equal: Token(Equal, "=", (3,6)->(3,7)),
             expr: Call(
-                f: Identifier(Raw(len)) arg: ([Call(f: Identifier(Raw(nvim_get_autcomds)) arg: ([Dict(DictLiteral { open: Token(LeftBrace, "{", (3,30)->(3,31)), elements: [KeyValue { key: Literal(Literal { token: Token(Identifier, "group", (3,31)->(3,36)) }), colon: Token(Colon, ":", (3,36)->(3,37)), value: String(DoubleQuote("matchparen")) }], close: Token(RightBrace, "}", (3,50)->(3,51)) })]))]),
+                f: Identifier(Raw(len)) arg: [
+                    Call(
+                        f: Identifier(Raw(nvim_get_autcomds)) arg: [
+                            Dict(
+                                DictLiteral {
+                                    open: Token(LeftBrace, "{", (3,30)->(3,31)),
+                                    elements: [
+                                        KeyValue {
+                                            key: Literal(
+                                                Literal {
+                                                    token: Token(Identifier, "group", (3,31)->(3,36)),
+                                                },
+                                            ),
+                                            colon: Token(SpacedColon, ": ", (3,36)->(3,38)),
+                                            value: String(
+                                                DoubleQuote(
+                                                    "matchparen",
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                    close: Token(RightBrace, "}", (3,50)->(3,51)),
+                                },
+                            ),
+                        ],
+                    ),
+                ],
             ),
             eol: Token(EndOfLine, "\n", (3,53)->(3,53)),
         },
