@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 480
+assertion_line: 482
 expression: snapshot_lexing(contents)
 ---
 vim9script noclear
@@ -173,7 +173,7 @@ def Highlight_Matching_Pair(): void
     ^^^^^^^^^^^^^^^^^^^^^^^ Token(Identifier, "Highlight_Matching_Pair", (40,4)->(40,27))
                            ^ Token(LeftParen, "(", (40,27)->(40,28))
                             ^ Token(RightParen, ")", (40,28)->(40,29))
-                             ^ Token(Colon, ":", (40,29)->(40,30))
+                             ^^ Token(SpacedColon, ": ", (40,29)->(40,31))
                                ^^^^ Token(Identifier, "void", (40,31)->(40,35))
                                     Token(EndOfLine, "\n", (40,35)->(40,35))
   # Remove any previous match.
@@ -303,7 +303,7 @@ def Highlight_Matching_Pair(): void
                     ^^^^^^^ Token(Identifier, "matches", (59,20)->(59,27))
                            ^ Token(LeftBracket, "[", (59,27)->(59,28))
                             ^ Token(Integer, "1", (59,28)->(59,29))
-                              ^ Token(Colon, ":", (59,30)->(59,31))
+                              ^^ Token(SpacedColon, ": ", (59,30)->(59,32))
                                 ^ Token(Integer, "2", (59,32)->(59,33))
                                  ^ Token(RightBracket, "]", (59,33)->(59,34))
                                    Token(EndOfLine, "\n", (59,34)->(59,34))
@@ -409,13 +409,13 @@ def Highlight_Matching_Pair(): void
   var s_flags: string
   ^^^ Token(Identifier, "var", (76,2)->(76,5))
       ^^^^^^^ Token(Identifier, "s_flags", (76,6)->(76,13))
-             ^ Token(Colon, ":", (76,13)->(76,14))
+             ^^ Token(SpacedColon, ": ", (76,13)->(76,15))
                ^^^^^^ Token(Identifier, "string", (76,15)->(76,21))
                       Token(EndOfLine, "\n", (76,21)->(76,21))
   var c2: string
   ^^^ Token(Identifier, "var", (77,2)->(77,5))
       ^^ Token(Identifier, "c2", (77,6)->(77,8))
-        ^ Token(Colon, ":", (77,8)->(77,9))
+        ^^ Token(SpacedColon, ": ", (77,8)->(77,10))
           ^^^^^^ Token(Identifier, "string", (77,10)->(77,16))
                  Token(EndOfLine, "\n", (77,16)->(77,16))
   # Figure out the arguments for searchpairpos().
@@ -497,7 +497,7 @@ def Highlight_Matching_Pair(): void
   var save_cursor: list<number>
   ^^^ Token(Identifier, "var", (94,2)->(94,5))
       ^^^^^^^^^^^ Token(Identifier, "save_cursor", (94,6)->(94,17))
-                 ^ Token(Colon, ":", (94,17)->(94,18))
+                 ^^ Token(SpacedColon, ": ", (94,17)->(94,19))
                    ^^^^ Token(Identifier, "list", (94,19)->(94,23))
                        ^ Token(LessThan, "<", (94,23)->(94,24))
                         ^^^^^^ Token(Identifier, "number", (94,24)->(94,30))
@@ -534,7 +534,7 @@ def Highlight_Matching_Pair(): void
   var s_skip: string
   ^^^ Token(Identifier, "var", (100,2)->(100,5))
       ^^^^^^ Token(Identifier, "s_skip", (100,6)->(100,12))
-            ^ Token(Colon, ":", (100,12)->(100,13))
+            ^^ Token(SpacedColon, ": ", (100,12)->(100,14))
               ^^^^^^ Token(Identifier, "string", (100,14)->(100,20))
                      Token(EndOfLine, "\n", (100,20)->(100,20))
   if !has('syntax') || !exists('g:syntax_on')
@@ -665,7 +665,7 @@ def Highlight_Matching_Pair(): void
   var stopline: number
   ^^^ Token(Identifier, "var", (130,2)->(130,5))
       ^^^^^^^^ Token(Identifier, "stopline", (130,6)->(130,14))
-              ^ Token(Colon, ":", (130,14)->(130,15))
+              ^^ Token(SpacedColon, ": ", (130,14)->(130,16))
                 ^^^^^^ Token(Identifier, "number", (130,16)->(130,22))
                        Token(EndOfLine, "\n", (130,22)->(130,22))
   if i % 2 == 0
@@ -697,37 +697,37 @@ def Highlight_Matching_Pair(): void
   var timeout: number
   ^^^ Token(Identifier, "var", (137,2)->(137,5))
       ^^^^^^^ Token(Identifier, "timeout", (137,6)->(137,13))
-             ^ Token(Colon, ":", (137,13)->(137,14))
+             ^^ Token(SpacedColon, ": ", (137,13)->(137,15))
                ^^^^^^ Token(Identifier, "number", (137,15)->(137,21))
                       Token(EndOfLine, "\n", (137,21)->(137,21))
   var m_lnum: number
   ^^^ Token(Identifier, "var", (138,2)->(138,5))
       ^^^^^^ Token(Identifier, "m_lnum", (138,6)->(138,12))
-            ^ Token(Colon, ":", (138,12)->(138,13))
+            ^^ Token(SpacedColon, ": ", (138,12)->(138,14))
               ^^^^^^ Token(Identifier, "number", (138,14)->(138,20))
                      Token(EndOfLine, "\n", (138,20)->(138,20))
   var m_col: number
   ^^^ Token(Identifier, "var", (139,2)->(139,5))
       ^^^^^ Token(Identifier, "m_col", (139,6)->(139,11))
-           ^ Token(Colon, ":", (139,11)->(139,12))
+           ^^ Token(SpacedColon, ": ", (139,11)->(139,13))
              ^^^^^^ Token(Identifier, "number", (139,13)->(139,19))
                     Token(EndOfLine, "\n", (139,19)->(139,19))
   var adjustedScrolloff: number
   ^^^ Token(Identifier, "var", (140,2)->(140,5))
       ^^^^^^^^^^^^^^^^^ Token(Identifier, "adjustedScrolloff", (140,6)->(140,23))
-                       ^ Token(Colon, ":", (140,23)->(140,24))
+                       ^^ Token(SpacedColon, ": ", (140,23)->(140,25))
                          ^^^^^^ Token(Identifier, "number", (140,25)->(140,31))
                                 Token(EndOfLine, "\n", (140,31)->(140,31))
   var bottom_viewable: number
   ^^^ Token(Identifier, "var", (141,2)->(141,5))
       ^^^^^^^^^^^^^^^ Token(Identifier, "bottom_viewable", (141,6)->(141,21))
-                     ^ Token(Colon, ":", (141,21)->(141,22))
+                     ^^ Token(SpacedColon, ": ", (141,21)->(141,23))
                        ^^^^^^ Token(Identifier, "number", (141,23)->(141,29))
                               Token(EndOfLine, "\n", (141,29)->(141,29))
   var top_viewable: number
   ^^^ Token(Identifier, "var", (142,2)->(142,5))
       ^^^^^^^^^^^^ Token(Identifier, "top_viewable", (142,6)->(142,18))
-                  ^ Token(Colon, ":", (142,18)->(142,19))
+                  ^^ Token(SpacedColon, ": ", (142,18)->(142,20))
                     ^^^^^^ Token(Identifier, "number", (142,20)->(142,26))
                            Token(EndOfLine, "\n", (142,26)->(142,26))
   # Limit the search time to 300 msec to avoid a hang on very long lines.
@@ -759,7 +759,7 @@ def Highlight_Matching_Pair(): void
                                                       ^ Token(Identifier, "b", (146,54)->(146,55))
                                                        ^ Token(Colon, ":", (146,55)->(146,56))
                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^ Token(Identifier, "matchparen_insert_timeout", (146,56)->(146,81))
-                                                                                  ^ Token(Colon, ":", (146,82)->(146,83))
+                                                                                  ^^ Token(SpacedColon, ": ", (146,82)->(146,84))
                                                                                     ^ Token(Identifier, "g", (146,84)->(146,85))
                                                                                      ^ Token(Colon, ":", (146,85)->(146,86))
                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ Token(Identifier, "matchparen_insert_timeout", (146,86)->(146,111))
@@ -778,7 +778,7 @@ def Highlight_Matching_Pair(): void
                                                ^ Token(Identifier, "b", (148,47)->(148,48))
                                                 ^ Token(Colon, ":", (148,48)->(148,49))
                                                  ^^^^^^^^^^^^^^^^^^ Token(Identifier, "matchparen_timeout", (148,49)->(148,67))
-                                                                    ^ Token(Colon, ":", (148,68)->(148,69))
+                                                                    ^^ Token(SpacedColon, ": ", (148,68)->(148,70))
                                                                       ^ Token(Identifier, "g", (148,70)->(148,71))
                                                                        ^ Token(Colon, ":", (148,71)->(148,72))
                                                                         ^^^^^^^^^^^^^^^^^^ Token(Identifier, "matchparen_timeout", (148,72)->(148,90))

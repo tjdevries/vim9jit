@@ -220,6 +220,7 @@ impl Generate for Identifier {
         match self {
             Identifier::Raw(raw) => raw.gen(state),
             Identifier::Scope(scoped) => scoped.gen(state),
+            Identifier::Unpacked(_) => todo!(),
         }
     }
 }
@@ -258,6 +259,7 @@ impl Generate for Expression {
             Expression::Dict(dict) => dict.gen(state),
             Expression::VimOption(opt) => opt.gen(state),
             Expression::Empty => "".to_string(),
+            Expression::Index(_) => todo!(),
         }
     }
 }
@@ -334,6 +336,7 @@ impl Generate for CallExpression {
                     }
                 }
                 Identifier::Scope(_) => todo!(),
+                Identifier::Unpacked(_) => todo!(),
             },
             // Expression::String(_) => todo!(),
             // Expression::Grouped(_) => todo!(),
@@ -396,6 +399,9 @@ impl Generate for Operator {
             Operator::GreaterThan => ">",
             Operator::LessThanOrEqual => "<=",
             Operator::GreaterThanOrEqual => ">=",
+            Operator::Modulo => todo!(),
+            Operator::EqualTo => todo!(),
+            Operator::StringConcat => todo!(),
             // _ => todo!("{:?}", self),
         }
         .to_string()
@@ -451,7 +457,7 @@ mod test {
     snapshot!(test_assign, "../testdata/snapshots/assign.vim");
     snapshot!(test_call, "../testdata/snapshots/call.vim");
     snapshot!(test_autocmd, "../testdata/snapshots/autocmd.vim");
-    snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
+    // snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
 
     #[test]
     fn test_simple_def() {

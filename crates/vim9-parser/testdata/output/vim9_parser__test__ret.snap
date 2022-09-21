@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 1372
+assertion_line: 1378
 expression: snapshot_parsing(contents)
 ---
 [
@@ -53,11 +53,9 @@ expression: snapshot_parsing(contents)
         CallCommand {
             call: None,
             name: Raw(MyFunc),
-            args: Arguments {
-                open: Token(LeftParen, "(", (6,6)->(6,7)),
-                args: [],
-                close: Token(RightParen, ")", (6,7)->(6,8)),
-            },
+            open: Token(LeftParen, "(", (6,6)->(6,7)),
+            args: [],
+            close: Token(RightParen, ")", (6,7)->(6,8)),
             eol: Token(EndOfLine, "\n", (6,8)->(6,8)),
         },
     ),
