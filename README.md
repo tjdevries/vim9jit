@@ -101,10 +101,10 @@ Well, it would be pretty funny if luajit outperformed native vim9script. We'll h
 ```vim
 vim9script
 
-let start = reltime()
+var start = reltime()
 
 def VimNew(): number
-  let sum = 0
+  var sum = 0
   for i in range(1, 2999999)
     sum = sum + i
   endfor
@@ -125,10 +125,10 @@ echo reltimestr(reltime(start))
 Original vimscript
 vim9script
 
-let start = reltime()
+var start = reltime()
 
 def VimNew(): number
-  let sum = 0
+  var sum = 0
   for i in range(1, 2999999)
     sum = sum + i
   endfor
