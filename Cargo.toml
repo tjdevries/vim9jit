@@ -5,22 +5,15 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-path = "src/lib.rs"
-
 [dependencies]
-thiserror = "1.0.29"
-num = "0.4.0"
-rmp = "0.8.10"
-rmpv = "1.0.0"
-anyhow = "1.0.52"
-rustyline = "9.1.2"
-env_logger = "0.9.0"
-log = "0.4.14"
-stylua = "0.11.3"
-insta = "1.12.0"
 
 [dev-dependencies]
-pretty_assertions = "1.0.0"
 
 [features]
+
+[workspace]
+members = [
+    "crates/vim9-lexer",
+    "crates/vim9-parser",
+    "crates/vim9-gen",
+]

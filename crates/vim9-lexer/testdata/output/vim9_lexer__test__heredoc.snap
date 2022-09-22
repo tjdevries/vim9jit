@@ -1,0 +1,63 @@
+---
+source: crates/vim9-lexer/src/lib.rs
+assertion_line: 563
+expression: snapshot_lexing(contents)
+---
+vim9script
+^^^^^^^^^^ Token(Identifier, "vim9script", (0,0)->(0,10))
+           Token(EndOfLine, "\n", (0,10)->(0,10))
+
+ Token(EndOfLine, "\n", (1,0)->(1,0))
+var x =<< END
+^^^ Token(Identifier, "var", (2,0)->(2,3))
+    ^ Token(Identifier, "x", (2,4)->(2,5))
+      ^^^ Token(HeredocOperator, "<", (2,6)->(2,9))
+          ^^^ Token(Identifier, "END", (2,10)->(2,13))
+              Token(EndOfLine, "\n", (2,13)->(2,13))
+  hello
+  ^^^^^ Token(Identifier, "hello", (3,2)->(3,7))
+        Token(EndOfLine, "\n", (3,7)->(3,7))
+  world
+  ^^^^^ Token(Identifier, "world", (4,2)->(4,7))
+        Token(EndOfLine, "\n", (4,7)->(4,7))
+  this
+  ^^^^ Token(Identifier, "this", (5,2)->(5,6))
+       Token(EndOfLine, "\n", (5,6)->(5,6))
+END
+^^^ Token(Identifier, "END", (6,0)->(6,3))
+    Token(EndOfLine, "\n", (6,3)->(6,3))
+
+ Token(EndOfLine, "\n", (7,0)->(7,0))
+var y =<< trim eval END
+^^^ Token(Identifier, "var", (8,0)->(8,3))
+    ^ Token(Identifier, "y", (8,4)->(8,5))
+      ^^^ Token(HeredocOperator, "<", (8,6)->(8,9))
+          ^^^^ Token(Identifier, "trim", (8,10)->(8,14))
+               ^^^^ Token(Identifier, "eval", (8,15)->(8,19))
+                    ^^^ Token(Identifier, "END", (8,20)->(8,23))
+                        Token(EndOfLine, "\n", (8,23)->(8,23))
+  hello
+  ^^^^^ Token(Identifier, "hello", (9,2)->(9,7))
+        Token(EndOfLine, "\n", (9,7)->(9,7))
+  world
+  ^^^^^ Token(Identifier, "world", (10,2)->(10,7))
+        Token(EndOfLine, "\n", (10,7)->(10,7))
+  +===???asdf<
+  ^^ Token(PlusEquals, "+=", (11,2)->(11,4))
+    ^^ Token(EqualTo, "==", (11,4)->(11,6))
+      ^ Token(QuestionMark, "?", (11,6)->(11,7))
+       ^ Token(QuestionMark, "?", (11,7)->(11,8))
+        ^ Token(QuestionMark, "?", (11,8)->(11,9))
+         ^^^^ Token(Identifier, "asdf", (11,9)->(11,13))
+             ^ Token(LessThan, "<", (11,13)->(11,14))
+               Token(EndOfLine, "\n", (11,14)->(11,14))
+  this
+  ^^^^ Token(Identifier, "this", (12,2)->(12,6))
+       Token(EndOfLine, "\n", (12,6)->(12,6))
+  too
+  ^^^ Token(Identifier, "too", (13,2)->(13,5))
+      Token(EndOfLine, "\n", (13,5)->(13,5))
+END
+^^^ Token(Identifier, "END", (14,0)->(14,3))
+    Token(EndOfLine, "\n", (14,3)->(14,3))
+

@@ -79,6 +79,8 @@ pub enum TokenKind {
     And,
     Bang,
     QuestionMark,
+    HeredocOperator,
+    HeredocMarker,
 
     // Delimiters
     Comma,
@@ -303,6 +305,47 @@ impl Lexer {
         }
     }
 
+    // pub fn next_token(&mut self) -> Token {
+    //     match &self.mode {
+    //         LexerMode::Standard => self.next_standard_token(),
+    //         LexerMode::HeredocStart => {
+    //             // Looking for trim or eval or MARKER
+    //             self.skip_whitespace();
+    //
+    //             let ch = self.ch.unwrap();
+    //             if !ch.is_alphabetic() {
+    //                 return Token {
+    //                     kind: TokenKind::Illegal,
+    //                     text: ch.to_string(),
+    //                     span: self.make_span(self.position, self.position + 1),
+    //                 };
+    //             }
+    //
+    //             let identifier = self.read_identifier();
+    //             match identifier.text.as_str() {
+    //                 "trim" => identifier,
+    //                 "eval" => identifier,
+    //                 _ => {
+    //                     // TODO: Should make sure that it's uppercase and
+    //                     // all this other garbage, but for now, just assume it's fine
+    //                     self.mode = LexerMode::Heredoc {
+    //                         marker: identifier.text.clone(),
+    //                     };
+    //                     Token {
+    //                         kind: TokenKind::HeredocMarker,
+    //                         text: identifier.text,
+    //                         span: identifier.span,
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //         LexerMode::Heredoc { marker } => {
+    //             // Keep consuming ALL the text, until we see ^MARKER$
+    //             todo!()
+    //         }
+    //     }
+    // }
+
     pub fn next_token(&mut self) -> Token {
         self.skip_whitespace();
 
@@ -328,7 +371,7 @@ impl Lexer {
 
                 match ch {
                     // Operators that can optionally have an additional equals
-                    '=' => self.if_peek('=', TokenKind::Equal, TokenKind::EqualTo),
+                    '=' => self.handle_equal(),
                     '+' => self.if_peek('=', TokenKind::Plus, TokenKind::PlusEquals),
                     '-' => self.if_peek('=', TokenKind::Minus, TokenKind::MinusEquals),
                     '*' => self.if_peek('=', TokenKind::Mul, TokenKind::MulEquals),
@@ -391,6 +434,46 @@ impl Lexer {
 
         self.read_char();
         tok
+    }
+
+    fn handle_equal(&mut self) -> Token {
+        let ch = self.peek_char().unwrap();
+        if *ch == '=' {
+            let position = self.position;
+            self.read_char();
+
+            Token {
+                kind: TokenKind::EqualTo,
+                text: self.chars[position..=self.position].iter().collect(),
+                span: self.make_span(position, self.position + 1),
+            }
+        } else if *ch == '<' {
+            let position = self.position;
+            self.read_char();
+
+            // I don't think there is anyway for it not to be =<< vs. =< something else??
+            if *self.peek_char().unwrap() != '<' {
+                Token {
+                    kind: TokenKind::Illegal,
+                    text: self.ch.unwrap().to_string(),
+                    span: self.make_span(position, self.position + 1),
+                }
+            } else {
+                self.read_char();
+
+                Token {
+                    kind: TokenKind::HeredocOperator,
+                    text: self.ch.unwrap().to_string(),
+                    span: self.make_span(position, self.position + 1),
+                }
+            }
+        } else {
+            Token {
+                kind: TokenKind::Equal,
+                text: self.ch.unwrap().to_string(),
+                span: self.make_span(self.position, self.position + 1),
+            }
+        }
     }
 }
 
@@ -477,6 +560,7 @@ mod test {
     snapshot!(test_string, "../testdata/snapshots/string.vim");
     snapshot!(test_scopes, "../testdata/snapshots/scopes.vim");
     snapshot!(test_autocmd, "../testdata/snapshots/autocmd.vim");
+    snapshot!(test_heredoc, "../testdata/snapshots/heredoc.vim");
 
     // TODO: Check more thoroughly
     snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");

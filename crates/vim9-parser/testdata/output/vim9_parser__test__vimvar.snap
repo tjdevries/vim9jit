@@ -1,0 +1,50 @@
+---
+source: src/lib.rs
+assertion_line: 1422
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (2,0)->(2,3)),
+            ty: Some(
+                Type {
+                    colon: Token(SpacedColon, ": ", (2,9)->(2,11)),
+                    inner: Bool,
+                },
+            ),
+            name: Raw(bool1),
+            equal: Token(Equal, "=", (2,16)->(2,17)),
+            expr: Boolean(
+                VimBoolean {
+                    token: Token(True, "true", (2,18)->(2,22)),
+                    value: true,
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (2,22)->(2,22)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (3,0)->(3,3)),
+            ty: Some(
+                Type {
+                    colon: Token(SpacedColon, ": ", (3,9)->(3,11)),
+                    inner: Bool,
+                },
+            ),
+            name: Raw(bool2),
+            equal: Token(Equal, "=", (3,16)->(3,17)),
+            expr: Identifier(
+                Scope(ScopedIdentifier { scope: VimVar, colon: Token(Colon, ":", (3,19)->(3,20)), accessor: Raw(true) }),
+            ),
+            eol: Token(EndOfLine, "\n", (3,24)->(3,24)),
+        },
+    ),
+]

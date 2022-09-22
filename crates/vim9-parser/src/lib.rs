@@ -18,7 +18,7 @@ pub struct Program {
     pub commands: Vec<ExCommand>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ExCommand {
     Vim9Script(Vim9ScriptCommand),
     Var(VarCommand),
@@ -39,7 +39,7 @@ pub enum ExCommand {
     NoOp(Token),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct FinishCommand {
     pub finish: Token,
     eol: Token,
@@ -54,7 +54,7 @@ impl FinishCommand {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct AugroupCommand {
     augroup: Token,
     pub augroup_name: Literal,
@@ -80,7 +80,7 @@ impl AugroupCommand {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct AutocmdCommand {
     autocmd: Token,
     pub bang: bool,
@@ -148,7 +148,7 @@ impl TryFrom<Token> for Literal {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum AutocmdBlock {
     Command(Box<ExCommand>),
     Block(Block),
@@ -163,7 +163,7 @@ impl AutocmdBlock {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Block {
     open: Token,
     pub body: Body,
@@ -182,7 +182,7 @@ impl Block {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum StatementCommand {
     Assign(AssignStatement),
 }
@@ -216,7 +216,7 @@ impl StatementCommand {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct AssignStatement {
     pub left: Identifier,
     equals: Token,
@@ -230,13 +230,13 @@ pub struct AssignStatement {
 //     }
 // }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Vim9ScriptCommand {
     pub noclear: bool,
     eol: Token,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct DeclCommand {
     var: Token,
     pub name: Identifier,
@@ -244,7 +244,7 @@ pub struct DeclCommand {
     eol: Token,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct VarCommand {
     var: Token,
     pub ty: Option<Type>,
@@ -292,7 +292,7 @@ impl VarCommand {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Body {
     pub commands: Vec<ExCommand>,
 }
@@ -308,7 +308,7 @@ impl Body {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct IfCommand {
     if_tok: Token,
     pub condition: Expression,
@@ -331,7 +331,7 @@ impl IfCommand {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct DefCommand {
     def: Token,
     pub name: Identifier,
@@ -364,7 +364,7 @@ impl DefCommand {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct CallCommand {
     call: Option<Token>,
 
@@ -374,6 +374,17 @@ pub struct CallCommand {
     pub args: Vec<Expression>,
     close: Token,
     eol: Token,
+}
+
+impl Into<CallExpression> for &CallCommand {
+    fn into(self) -> CallExpression {
+        CallExpression {
+            expr: Box::new(Expression::Identifier(self.name.clone())),
+            open: self.open.clone(),
+            args: self.args.clone(),
+            close: self.close.clone(),
+        }
+    }
 }
 
 impl CallCommand {
@@ -389,7 +400,7 @@ impl CallCommand {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Arguments {
     open: Token,
     pub args: Vec<Expression>,
@@ -415,13 +426,13 @@ impl Arguments {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Type {
     colon: Token,
     pub inner: InnerType,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum InnerType {
     Bool,
     Number,
@@ -440,7 +451,7 @@ pub enum InnerType {
     Void,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct InnerFuncType {}
 
 impl Type {
@@ -475,7 +486,7 @@ impl InnerType {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Signature {
     open: Token,
     close: Token,
@@ -490,14 +501,14 @@ impl Signature {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Parameter {
     pub name: Identifier,
     colon: Token,
     // pub typ: ,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct EchoCommand {
     echo: Token,
     pub expr: Expression,
@@ -514,7 +525,7 @@ impl EchoCommand {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ReturnCommand {
     ret: Token,
     pub expr: Option<Expression>,
@@ -534,7 +545,7 @@ impl ReturnCommand {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum Identifier {
     Raw(RawIdentifier),
     Scope(ScopedIdentifier),
@@ -547,6 +558,26 @@ impl Debug for Identifier {
             Identifier::Raw(raw) => write!(f, "Raw({})", raw.name),
             Identifier::Scope(scope) => write!(f, "Scope({:?})", scope),
             Identifier::Unpacked(unpack) => write!(f, "Unpack({:?})", unpack),
+        }
+    }
+}
+
+impl TryInto<VimScope> for Identifier {
+    type Error = anyhow::Error;
+
+    fn try_into(self) -> Result<VimScope, Self::Error> {
+        match self {
+            Identifier::Raw(raw) => Ok(match raw.name.as_str() {
+                "g" => VimScope::Global,
+                "v" => VimScope::VimVar,
+                "t" => VimScope::Tab,
+                "w" => VimScope::Window,
+                "b" => VimScope::Buffer,
+                "s" => VimScope::Script,
+                "l" => VimScope::Local,
+                _ => return Err(anyhow::anyhow!("invalid scope: {:?}", raw)),
+            }),
+            _ => Err(anyhow::anyhow!("must be a raw identifier")),
         }
     }
 }
@@ -574,7 +605,15 @@ impl Identifier {
         } else {
             // Todo: Other names
             Identifier::Raw(RawIdentifier {
-                name: parser.ensure_token(TokenKind::Identifier)?.text,
+                name: {
+                    let current = parser.current_token.clone();
+                    anyhow::ensure!(matches!(
+                        current.kind,
+                        TokenKind::Identifier | TokenKind::True | TokenKind::False | TokenKind::Null
+                    ));
+
+                    current.text
+                },
             })
         })
     }
@@ -587,7 +626,7 @@ impl Identifier {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct UnpackIdentifier {
     open: Token,
     identifiers: Vec<Identifier>,
@@ -600,7 +639,7 @@ impl Debug for UnpackIdentifier {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ScopedIdentifier {
     pub scope: VimScope,
     colon: Token,
@@ -608,7 +647,7 @@ pub struct ScopedIdentifier {
     pub accessor: Box<Identifier>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum VimScope {
     Global,
     Tab,
@@ -616,9 +655,10 @@ pub enum VimScope {
     Buffer,
     Script,
     Local,
+    VimVar,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
     Empty,
     Identifier(Identifier),
@@ -636,7 +676,7 @@ pub enum Expression {
     Infix(InfixExpression),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct IndexExpression {
     pub container: Box<Expression>,
     open: Token,
@@ -644,13 +684,13 @@ pub struct IndexExpression {
     close: Token,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct VimOption {
     ampersand: Token,
     pub option: Literal,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct KeyValue {
     pub key: VimKey,
     colon: Token,
@@ -670,26 +710,26 @@ impl KeyValue {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum VimKey {
     Literal(Literal),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct DictLiteral {
     open: Token,
     pub elements: Vec<KeyValue>,
     close: Token,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ArrayLiteral {
     open: Token,
     pub elements: Vec<Expression>,
     close: Token,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct CallExpression {
     pub expr: Box<Expression>,
     open: Token,
@@ -703,14 +743,14 @@ impl Debug for CallExpression {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct GroupedExpression {
     open: Token,
     pub expr: Box<Expression>,
     close: Token,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct VimBoolean {
     token: Token,
     pub value: bool,
@@ -718,7 +758,7 @@ pub struct VimBoolean {
 
 type PrefixFn = Box<dyn Fn(&mut Parser) -> Result<Expression>>;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct PrefixExpression {
     token: Token,
     pub operator: Operator,
@@ -727,7 +767,7 @@ pub struct PrefixExpression {
 
 type InfixFn = Box<dyn Fn(&mut Parser, Box<Expression>) -> Result<Expression>>;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct InfixExpression {
     token: Token,
     pub operator: Operator,
@@ -735,12 +775,12 @@ pub struct InfixExpression {
     pub right: Box<Expression>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct VimNumber {
     pub value: String,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Operator {
     Plus,
     Minus,
@@ -788,13 +828,13 @@ impl Expression {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum VimString {
     SingleQuote(String),
     DoubleQuote(String),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct RawIdentifier {
     pub name: String,
 }
@@ -904,6 +944,8 @@ mod prefix_expr {
 }
 
 mod infix_expr {
+    use anyhow::anyhow;
+
     use super::*;
 
     pub fn parse_infix_operator(parser: &mut Parser, left: Box<Expression>) -> Result<Expression> {
@@ -932,15 +974,14 @@ mod infix_expr {
         }))
     }
 
+    #[tracing::instrument]
     pub fn parse_colon(parser: &mut Parser, left: Box<Expression>) -> Result<Expression> {
         Ok(Expression::Identifier(Identifier::Scope(ScopedIdentifier {
             scope: {
-                // TODO: Use this
-                // match *left {
-                //     Expression::Identifier(id) => todo!("{:?}", id),
-                //     _ => unreachable!(),
-                // }
-                VimScope::Global
+                match *left {
+                    Expression::Identifier(id) => id.try_into()?,
+                    _ => return Err(anyhow!("invalid left for colon expr: {:?}", left)),
+                }
             },
             colon: parser.expect_token(TokenKind::Colon)?,
             accessor: Identifier::parse_in_expression(parser)?.into(),
@@ -1389,6 +1430,9 @@ mod test {
     snapshot!(test_concat, "../testdata/snapshots/concat.vim");
     snapshot!(test_unpack, "../testdata/snapshots/unpack.vim");
     snapshot!(test_assign, "../testdata/snapshots/assign.vim");
+    snapshot!(test_vimvar, "../testdata/snapshots/vimvar.vim");
+    snapshot!(test_busted, "../testdata/snapshots/busted.vim");
+    snapshot!(test_heredoc, "../testdata/snapshots/heredoc.vim");
 
     // TODO: Slowly but surely, we can work towards this
     // snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");

@@ -6,6 +6,7 @@ use parser::AssignStatement;
 use parser::AugroupCommand;
 use parser::AutocmdCommand;
 use parser::Body;
+use parser::CallCommand;
 use parser::CallExpression;
 use parser::DefCommand;
 use parser::DictLiteral;
@@ -16,24 +17,28 @@ use parser::GroupedExpression;
 use parser::Identifier;
 use parser::IfCommand;
 use parser::InfixExpression;
+use parser::InnerType;
 use parser::Literal;
 use parser::Operator;
 use parser::RawIdentifier;
 use parser::ReturnCommand;
 use parser::ScopedIdentifier;
 use parser::StatementCommand;
+use parser::Type;
 use parser::VarCommand;
 use parser::Vim9ScriptCommand;
 use parser::VimBoolean;
 use parser::VimKey;
 use parser::VimNumber;
 use parser::VimOption;
+use parser::VimScope;
 use parser::VimString;
 
 mod test_harness;
 
 pub struct State {
     pub augroup: Option<Literal>,
+    pub is_test: bool,
 }
 
 pub trait Generate {
@@ -52,7 +57,7 @@ impl Generate for ExCommand {
             ExCommand::If(cmd) => cmd.gen(state),
             ExCommand::Augroup(cmd) => cmd.gen(state),
             ExCommand::Autocmd(cmd) => cmd.gen(state),
-            // ExCommand::Call(_) => todo!(),
+            ExCommand::Call(cmd) => cmd.gen(state),
             // ExCommand::Finish(_) => todo!(),
             // ExCommand::Skip => todo!(),
             // ExCommand::EndOfFile => todo!(),
@@ -60,6 +65,13 @@ impl Generate for ExCommand {
             ExCommand::NoOp(token) => format!("-- {:?}", token),
             _ => todo!("Have not yet handled: {:?}", self),
         }
+    }
+}
+
+impl Generate for CallCommand {
+    fn gen(&self, state: &mut State) -> String {
+        let call: CallExpression = self.into();
+        call.gen(state)
     }
 }
 
@@ -126,25 +138,47 @@ impl Generate for ReturnCommand {
 
 impl Generate for DefCommand {
     fn gen(&self, state: &mut State) -> String {
-        // TODO: If this command follows certain patterns,
-        // we will also need to define a vimscript function,
-        // so that this function is available.
-        //
-        // this could be something just like:
-        // function <NAME>(...)
-        //   return luaeval('...', ...)
-        // endfunction
-        //
-        // but we haven't done this part yet.
-        // This is a "must-have" aspect of what we're doing.
-        format!(
-            r#"
-local {} = function()
-  {}
-end"#,
-            self.name.gen(state),
-            self.body.gen(state)
-        )
+        let name = self.name.gen(state);
+
+        if state.is_test && name.starts_with("Test") {
+            format!(
+                r#"
+                    it("{}", function()
+                       -- Set errors to empty
+                       vim.v.errors = {{}}
+
+                       -- Actual test
+                       {}
+
+                       -- Assert that errors is still empty
+                       assert.are.same({{}}, vim.v.errors)
+                    end)
+                "#,
+                name,
+                self.body.gen(state)
+            )
+        } else {
+            // TODO: If this command follows certain patterns,
+            // we will also need to define a vimscript function,
+            // so that this function is available.
+            //
+            // this could be something just like:
+            // function <NAME>(...)
+            //   return luaeval('...', ...)
+            // endfunction
+            //
+            // but we haven't done this part yet.
+            // This is a "must-have" aspect of what we're doing.
+            format!(
+                r#"
+                    local {} = function()
+                      {}
+                    end
+                "#,
+                name,
+                self.body.gen(state)
+            )
+        }
     }
 }
 
@@ -211,7 +245,16 @@ impl Generate for Vim9ScriptCommand {
 
 impl Generate for VarCommand {
     fn gen(&self, state: &mut State) -> String {
-        format!("local {} = {}", self.name.gen(state), self.expr.gen(state))
+        match self.ty {
+            Some(Type {
+                inner: InnerType::Bool, ..
+            }) => format!(
+                "local {} = require('vim9script').convert.decl_bool({})",
+                self.name.gen(state),
+                self.expr.gen(state)
+            ),
+            _ => format!("local {} = {}", self.name.gen(state), self.expr.gen(state)),
+        }
     }
 }
 
@@ -227,14 +270,13 @@ impl Generate for Identifier {
 
 impl Generate for ScopedIdentifier {
     fn gen(&self, state: &mut State) -> String {
-        format!(
-            "{}.{}",
-            match self.scope {
-                parser::VimScope::Global => "vim.g",
-                _ => todo!(),
-            },
-            self.accessor.gen(state)
-        )
+        let scope = match self.scope {
+            VimScope::Global => "vim.g",
+            VimScope::VimVar => "vim.v",
+            _ => todo!(),
+        };
+
+        format!("{}['{}']", scope, self.accessor.gen(state))
     }
 }
 
@@ -335,7 +377,7 @@ impl Generate for CallExpression {
                         raw.name.clone()
                     }
                 }
-                Identifier::Scope(_) => todo!(),
+                Identifier::Scope(_) => todo!("SCOPED OH NO NO NO NO"),
                 Identifier::Unpacked(_) => todo!(),
             },
             // Expression::String(_) => todo!(),
@@ -378,12 +420,31 @@ impl Generate for VimNumber {
 
 impl Generate for InfixExpression {
     fn gen(&self, state: &mut State) -> String {
-        format!(
-            "({} {} {})",
-            self.left.gen(state),
-            self.operator.gen(state),
-            self.right.gen(state)
-        )
+        fn gen_operation(name: &str, left: String, right: String) -> String {
+            format!("require('vim9script').ops.{}({}, {})", name, left, right)
+        }
+
+        match self.operator {
+            Operator::And => gen_operation("AND", self.left.gen(state), self.right.gen(state)),
+            Operator::Or => gen_operation("OR", self.left.gen(state), self.right.gen(state)),
+            // Operator::Plus => todo!(),
+            // Operator::Minus => todo!(),
+            // Operator::Bang => todo!(),
+            // Operator::Modulo => todo!(),
+            // Operator::Or => todo!(),
+            // Operator::EqualTo => todo!(),
+            // Operator::LessThan => todo!(),
+            // Operator::GreaterThan => todo!(),
+            // Operator::LessThanOrEqual => todo!(),
+            // Operator::GreaterThanOrEqual => todo!(),
+            // Operator::StringConcat => todo!(),
+            _ => format!(
+                "({} {} {})",
+                self.left.gen(state),
+                self.operator.gen(state),
+                self.right.gen(state)
+            ),
+        }
     }
 }
 
@@ -408,24 +469,33 @@ impl Generate for Operator {
     }
 }
 
-pub fn eval(program: parser::Program) -> String {
-    let mut state = State { augroup: None };
+pub fn eval(program: parser::Program, is_test: bool) -> String {
+    let mut state = State { augroup: None, is_test };
+
     let mut output = String::new();
+    if is_test {
+        output += "describe(\"filename\", function()\n"
+    }
+
     for command in program.commands.iter() {
         output += &command.gen(&mut state);
         output += "\n";
     }
 
+    if is_test {
+        output += "end)"
+    }
+
     output
 }
 
-pub fn generate(contents: &str) -> String {
+pub fn generate(contents: &str, is_test: bool) -> String {
     let lexer = new_lexer(contents);
     let mut parser = new_parser(lexer);
     let program = parser.parse_program();
 
     stylua_lib::format_code(
-        &eval(program),
+        &eval(program, is_test),
         stylua_lib::Config::default(),
         None,
         stylua_lib::OutputVerification::None,
@@ -435,7 +505,13 @@ pub fn generate(contents: &str) -> String {
 
 #[cfg(test)]
 mod test {
+    use std::fs::File;
+    use std::io::Write;
+
+    use pretty_assertions::assert_eq;
+
     use super::*;
+    use crate::test_harness::exec_busted;
     use crate::test_harness::exec_lua;
 
     macro_rules! snapshot {
@@ -446,11 +522,36 @@ mod test {
                 let mut settings = insta::Settings::clone_current();
                 settings.set_snapshot_path("../testdata/output/");
                 settings.bind(|| {
-                    insta::assert_snapshot!(generate(contents));
+                    insta::assert_snapshot!(generate(contents, false));
                 });
             }
         };
     }
+
+    macro_rules! busted {
+        ($name:tt, $path:tt) => {
+            #[test]
+            fn $name() {
+                let vim_contents = include_str!($path);
+                let lua_contents = generate(vim_contents, true);
+
+                let filepath = concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/testdata/output/",
+                    stringify!($name),
+                    ".lua"
+                );
+                let mut file = File::create(filepath).unwrap();
+                write!(file, "{}", lua_contents).unwrap();
+
+                exec_busted(filepath).unwrap();
+            }
+        };
+    }
+
+    busted!(busted_simple_assign, "../testdata/busted/simple_assign.vim");
+    busted!(busted_operations, "../testdata/busted/operations.vim");
+    busted!(busted_assign, "../testdata/busted/assign.vim");
 
     snapshot!(test_expr, "../testdata/snapshots/expr.vim");
     snapshot!(test_if, "../testdata/snapshots/if.vim");
@@ -471,7 +572,7 @@ enddef
 var x = MyCoolFunc() + 1
 "#;
 
-        let generated = generate(contents);
+        let generated = generate(contents, false);
         let eval = exec_lua(&generated, "x").unwrap();
         assert_eq!(eval, 6.into());
     }
@@ -484,7 +585,7 @@ vim9script
 var x = len("hello")
 "#;
 
-        let generated = generate(contents);
+        let generated = generate(contents, false);
         let eval = exec_lua(&generated, "x").unwrap();
         assert_eq!(eval, 5.into());
     }
@@ -507,7 +608,7 @@ var x = len(nvim_get_autocmds({group: "matchparen"}))
 
 "#;
 
-        let generated = generate(contents);
+        let generated = generate(contents, false);
         let eval = exec_lua(&generated, "x").unwrap();
         assert_eq!(eval, 4.into());
     }
