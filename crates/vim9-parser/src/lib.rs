@@ -22,6 +22,7 @@ pub struct Program {
 pub enum ExCommand {
     Vim9Script(Vim9ScriptCommand),
     Var(VarCommand),
+    Heredoc(Heredoc),
     Decl(DeclCommand),
     Echo(EchoCommand),
     Return(ReturnCommand),
@@ -37,6 +38,19 @@ pub enum ExCommand {
     EndOfFile,
     Comment(Token),
     NoOp(Token),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Heredoc {
+    var: Token,
+    pub ty: Option<Type>,
+    pub name: Identifier,
+    op: Token,
+    pub trim: bool,
+    pub eval: bool,
+    open: Token,
+    pub contents: Vec<String>,
+    close: Token,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -257,12 +271,12 @@ pub struct VarCommand {
 impl VarCommand {
     pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
         let var = parser.expect_token_with_text(TokenKind::Identifier, "var")?;
-        info!("\n\n\n");
         info!(var=?var, cur=?parser.current_token);
         let name = Identifier::parse(parser)?;
         info!(name=?name, cur=?parser.current_token);
         let ty = match parser.current_token.kind {
             TokenKind::Equal => None,
+            TokenKind::HeredocOperator => None,
             TokenKind::EndOfLine => None,
             TokenKind::EndOfFile => None,
             TokenKind::SpacedColon => Some(Type::parse(parser)?),
@@ -270,6 +284,66 @@ impl VarCommand {
         };
 
         match parser.current_token.kind {
+            TokenKind::HeredocOperator => {
+                // todo!("HEREDOX")
+                let op = parser.expect_token(TokenKind::HeredocOperator)?;
+
+                // TODO: Parse these out
+                let mut trim = false;
+                let mut eval = false;
+
+                let open = {
+                    let mut token = parser.expect_token(TokenKind::Identifier)?;
+                    while token.text == "trim" || token.text == "eval" {
+                        if token.text == "trim" {
+                            trim = true;
+                            token = parser.expect_token(TokenKind::Identifier)?;
+                        }
+
+                        if token.text == "eval" {
+                            eval = true;
+                            token = parser.expect_token(TokenKind::Identifier)?;
+                        }
+                    }
+
+                    token
+                };
+
+                parser.expect_eol()?;
+
+                let mut contents = vec![];
+                let close = loop {
+                    let mut line: Vec<Token> = vec![];
+                    while !matches!(parser.peek_token.kind, TokenKind::EndOfLine | TokenKind::EndOfFile) {
+                        let tok = parser.next_token();
+                        line.push(tok);
+                    }
+
+                    if parser.current_token.kind == TokenKind::EndOfFile {
+                        panic!("Failed to do the stuffs... {:?}", contents);
+                    }
+
+                    parser.next_token();
+
+                    if line.len() == 1 && line[0].text == open.text {
+                        break line[0].clone();
+                    }
+
+                    contents.push(line.iter().map(|t| t.text.clone()).collect::<Vec<String>>().concat());
+                };
+
+                Ok(ExCommand::Heredoc(Heredoc {
+                    var,
+                    name,
+                    ty,
+                    op,
+                    trim,
+                    eval,
+                    open,
+                    contents,
+                    close,
+                }))
+            }
             TokenKind::Equal => {
                 Ok(ExCommand::Var(VarCommand {
                     var,

@@ -1,15 +1,12 @@
 vim9script
 
 var x =<< END
-  hello
-  world
-  this
+  hello     this
+    world   that
+  this      other
 END
 
-var y =<< trim eval END
+var y =<< trim END
   hello
   world
-  +===???asdf<
-  this
-  too
 END

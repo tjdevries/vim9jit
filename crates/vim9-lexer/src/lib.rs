@@ -80,7 +80,6 @@ pub enum TokenKind {
     Bang,
     QuestionMark,
     HeredocOperator,
-    HeredocMarker,
 
     // Delimiters
     Comma,

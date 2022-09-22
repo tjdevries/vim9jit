@@ -1,0 +1,55 @@
+---
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 1509
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Heredoc(
+        Heredoc {
+            var: Token(Identifier, "var", (2,0)->(2,3)),
+            ty: None,
+            name: Raw(x),
+            op: Token(HeredocOperator, "<", (2,6)->(2,9)),
+            trim: false,
+            eval: false,
+            open: Token(Identifier, "END", (2,10)->(2,13)),
+            contents: [
+                "this",
+                "worldthat",
+                "thisother",
+            ],
+            close: Token(Identifier, "END", (6,0)->(6,3)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (6,3)->(6,3)),
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (7,0)->(7,0)),
+    ),
+    Heredoc(
+        Heredoc {
+            var: Token(Identifier, "var", (8,0)->(8,3)),
+            ty: None,
+            name: Raw(y),
+            op: Token(HeredocOperator, "<", (8,6)->(8,9)),
+            trim: true,
+            eval: false,
+            open: Token(Identifier, "END", (8,15)->(8,18)),
+            contents: [
+                "",
+                "world",
+            ],
+            close: Token(Identifier, "END", (11,0)->(11,3)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (11,3)->(11,3)),
+    ),
+]
