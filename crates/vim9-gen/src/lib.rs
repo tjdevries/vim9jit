@@ -14,6 +14,7 @@ use parser::EchoCommand;
 use parser::ExCommand;
 use parser::Expression;
 use parser::GroupedExpression;
+use parser::Heredoc;
 use parser::Identifier;
 use parser::IfCommand;
 use parser::InfixExpression;
@@ -63,8 +64,23 @@ impl Generate for ExCommand {
             // ExCommand::EndOfFile => todo!(),
             ExCommand::Comment(token) => format!("-- {}", token.text),
             ExCommand::NoOp(token) => format!("-- {:?}", token),
+            ExCommand::Heredoc(heredoc) => heredoc.gen(state),
             _ => todo!("Have not yet handled: {:?}", self),
         }
+    }
+}
+
+impl Generate for Heredoc {
+    fn gen(&self, state: &mut State) -> String {
+        // this works for non-trim and non-eval heredocs perfect
+        let inner = self
+            .contents
+            .iter()
+            .map(|line| format!("[==[{}]==]", line))
+            .collect::<Vec<String>>()
+            .join(", ");
+
+        format!("local {} = {{ {} }}", self.name.gen(state), inner)
     }
 }
 
@@ -552,6 +568,7 @@ mod test {
     busted!(busted_simple_assign, "../testdata/busted/simple_assign.vim");
     busted!(busted_operations, "../testdata/busted/operations.vim");
     busted!(busted_assign, "../testdata/busted/assign.vim");
+    busted!(busted_heredoc, "../testdata/busted/heredoc.vim");
 
     snapshot!(test_expr, "../testdata/snapshots/expr.vim");
     snapshot!(test_if, "../testdata/snapshots/if.vim");

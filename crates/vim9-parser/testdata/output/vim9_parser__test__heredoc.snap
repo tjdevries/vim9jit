@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 1509
+assertion_line: 1518
 expression: snapshot_parsing(contents)
 ---
 [
@@ -20,15 +20,12 @@ expression: snapshot_parsing(contents)
             eval: false,
             open: Token(Identifier, "END", (2,10)->(2,13)),
             contents: [
-                "this",
-                "worldthat",
-                "thisother",
+                "  hello     this",
+                "    world   that",
+                "  this      other",
             ],
             close: Token(Identifier, "END", (6,0)->(6,3)),
         },
-    ),
-    NoOp(
-        Token(EndOfLine, "\n", (6,3)->(6,3)),
     ),
     NoOp(
         Token(EndOfLine, "\n", (7,0)->(7,0)),
@@ -43,13 +40,10 @@ expression: snapshot_parsing(contents)
             eval: false,
             open: Token(Identifier, "END", (8,15)->(8,18)),
             contents: [
-                "",
-                "world",
+                "  hello",
+                "  world",
             ],
             close: Token(Identifier, "END", (11,0)->(11,3)),
         },
-    ),
-    NoOp(
-        Token(EndOfLine, "\n", (11,3)->(11,3)),
     ),
 ]

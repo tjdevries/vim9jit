@@ -314,9 +314,9 @@ impl VarCommand {
                 let mut contents = vec![];
                 let close = loop {
                     let mut line: Vec<Token> = vec![];
-                    while !matches!(parser.peek_token.kind, TokenKind::EndOfLine | TokenKind::EndOfFile) {
-                        let tok = parser.next_token();
-                        line.push(tok);
+                    while !matches!(parser.current_token.kind, TokenKind::EndOfLine | TokenKind::EndOfFile) {
+                        line.push(parser.current_token.clone());
+                        parser.next_token();
                     }
 
                     if parser.current_token.kind == TokenKind::EndOfFile {
@@ -324,12 +324,22 @@ impl VarCommand {
                     }
 
                     parser.next_token();
-
                     if line.len() == 1 && line[0].text == open.text {
                         break line[0].clone();
                     }
 
-                    contents.push(line.iter().map(|t| t.text.clone()).collect::<Vec<String>>().concat());
+                    // TODO: We might not want to just convert these back to strings?
+                    //  we might want to store a list of tokens?
+                    let mut line_contents = String::new();
+                    let mut prev_end = 0;
+                    for tok in line {
+                        line_contents += " ".repeat(tok.span.start_col - prev_end).as_str();
+                        line_contents += tok.text.as_str();
+
+                        prev_end = tok.span.end_col;
+                    }
+
+                    contents.push(line_contents);
                 };
 
                 Ok(ExCommand::Heredoc(Heredoc {
