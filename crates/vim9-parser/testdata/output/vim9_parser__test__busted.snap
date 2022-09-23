@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 1434
+assertion_line: 1565
 expression: snapshot_parsing(contents)
 ---
 [
@@ -16,6 +16,7 @@ expression: snapshot_parsing(contents)
             name: Raw(Test_assignment_one),
             args: Signature {
                 open: Token(LeftParen, "(", (2,23)->(2,24)),
+                params: [],
                 close: Token(RightParen, ")", (2,24)->(2,25)),
             },
             ret: None,

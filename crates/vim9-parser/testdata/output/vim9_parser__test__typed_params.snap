@@ -1,0 +1,76 @@
+---
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 1570
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Def(
+        DefCommand {
+            def: Token(Identifier, "def", (2,0)->(2,3)),
+            name: Raw(ParamTest),
+            args: Signature {
+                open: Token(LeftParen, "(", (2,13)->(2,14)),
+                params: [
+                    Parameter {
+                        name: Raw(qf),
+                        ty: Some(
+                            Type {
+                                colon: Token(SpacedColon, ": ", (2,16)->(2,18)),
+                                inner: Bool,
+                            },
+                        ),
+                        equal: None,
+                        default_val: None,
+                    },
+                    Parameter {
+                        name: Raw(searchpat),
+                        ty: None,
+                        equal: Some(
+                            Token(Equal, "=", (2,34)->(2,35)),
+                        ),
+                        default_val: Some(
+                            String(
+                                DoubleQuote(
+                                    "hello",
+                                ),
+                            ),
+                        ),
+                    },
+                    Parameter {
+                        name: Raw(bang),
+                        ty: Some(
+                            Type {
+                                colon: Token(SpacedColon, ": ", (2,49)->(2,51)),
+                                inner: String,
+                            },
+                        ),
+                        equal: Some(
+                            Token(Equal, "=", (2,58)->(2,59)),
+                        ),
+                        default_val: Some(
+                            String(
+                                DoubleQuote(
+                                    "world",
+                                ),
+                            ),
+                        ),
+                    },
+                ],
+                close: Token(RightParen, ")", (2,67)->(2,68)),
+            },
+            ret: None,
+            def_eol: Token(EndOfLine, "\n", (2,68)->(2,68)),
+            body: Body {
+                commands: [],
+            },
+            enddef: Token(Identifier, "enddef", (3,0)->(3,6)),
+            end_eol: Token(EndOfLine, "\n", (3,6)->(3,6)),
+        },
+    ),
+]

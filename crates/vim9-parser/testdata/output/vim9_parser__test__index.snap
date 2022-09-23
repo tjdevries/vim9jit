@@ -1,0 +1,188 @@
+---
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 1621
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Def(
+        DefCommand {
+            def: Token(Identifier, "def", (2,0)->(2,3)),
+            name: Raw(Test_can_index),
+            args: Signature {
+                open: Token(LeftParen, "(", (2,18)->(2,19)),
+                params: [],
+                close: Token(RightParen, ")", (2,19)->(2,20)),
+            },
+            ret: None,
+            def_eol: Token(EndOfLine, "\n", (2,20)->(2,20)),
+            body: Body {
+                commands: [
+                    Var(
+                        VarCommand {
+                            var: Token(Identifier, "var", (3,2)->(3,5)),
+                            ty: None,
+                            name: Raw(l),
+                            equal: Token(Equal, "=", (3,8)->(3,9)),
+                            expr: Array(
+                                ArrayLiteral {
+                                    open: Token(LeftBracket, "[", (3,10)->(3,11)),
+                                    elements: [
+                                        Number(
+                                            VimNumber {
+                                                value: "1",
+                                            },
+                                        ),
+                                        Number(
+                                            VimNumber {
+                                                value: "2",
+                                            },
+                                        ),
+                                        Number(
+                                            VimNumber {
+                                                value: "3",
+                                            },
+                                        ),
+                                    ],
+                                    close: Token(RightBracket, "]", (3,18)->(3,19)),
+                                },
+                            ),
+                            eol: Token(EndOfLine, "\n", (3,19)->(3,19)),
+                        },
+                    ),
+                    Call(
+                        CallCommand {
+                            call: None,
+                            name: Raw(assert_equal),
+                            open: Token(LeftParen, "(", (4,14)->(4,15)),
+                            args: [
+                                Array(
+                                    ArrayLiteral {
+                                        open: Token(LeftBracket, "[", (4,15)->(4,16)),
+                                        elements: [
+                                            Number(
+                                                VimNumber {
+                                                    value: "1",
+                                                },
+                                            ),
+                                            Number(
+                                                VimNumber {
+                                                    value: "2",
+                                                },
+                                            ),
+                                            Number(
+                                                VimNumber {
+                                                    value: "3",
+                                                },
+                                            ),
+                                        ],
+                                        close: Token(RightBracket, "]", (4,23)->(4,24)),
+                                    },
+                                ),
+                                Identifier(
+                                    Raw(l),
+                                ),
+                            ],
+                            close: Token(RightParen, ")", (4,27)->(4,28)),
+                            eol: Token(EndOfLine, "\n", (4,28)->(4,28)),
+                        },
+                    ),
+                    Call(
+                        CallCommand {
+                            call: None,
+                            name: Raw(assert_equal),
+                            open: Token(LeftParen, "(", (5,14)->(5,15)),
+                            args: [
+                                Number(
+                                    VimNumber {
+                                        value: "1",
+                                    },
+                                ),
+                                Index(
+                                    IndexExpression {
+                                        container: Identifier(
+                                            Raw(l),
+                                        ),
+                                        open: Token(LeftBracket, "[", (5,19)->(5,20)),
+                                        index: Item(
+                                            Number(
+                                                VimNumber {
+                                                    value: "0",
+                                                },
+                                            ),
+                                        ),
+                                        close: Token(RightBracket, "]", (5,21)->(5,22)),
+                                    },
+                                ),
+                            ],
+                            close: Token(RightParen, ")", (5,22)->(5,23)),
+                            eol: Token(EndOfLine, "\n", (5,23)->(5,23)),
+                        },
+                    ),
+                    Call(
+                        CallCommand {
+                            call: None,
+                            name: Raw(assert_equal),
+                            open: Token(LeftParen, "(", (6,14)->(6,15)),
+                            args: [
+                                Array(
+                                    ArrayLiteral {
+                                        open: Token(LeftBracket, "[", (6,15)->(6,16)),
+                                        elements: [
+                                            Number(
+                                                VimNumber {
+                                                    value: "1",
+                                                },
+                                            ),
+                                            Number(
+                                                VimNumber {
+                                                    value: "2",
+                                                },
+                                            ),
+                                        ],
+                                        close: Token(RightBracket, "]", (6,20)->(6,21)),
+                                    },
+                                ),
+                                Index(
+                                    IndexExpression {
+                                        container: Identifier(
+                                            Raw(l),
+                                        ),
+                                        open: Token(LeftBracket, "[", (6,24)->(6,25)),
+                                        index: Slice {
+                                            start: Some(
+                                                Number(
+                                                    VimNumber {
+                                                        value: "0",
+                                                    },
+                                                ),
+                                            ),
+                                            colon: Token(SpacedColon, ": ", (6,27)->(6,29)),
+                                            finish: Some(
+                                                Number(
+                                                    VimNumber {
+                                                        value: "1",
+                                                    },
+                                                ),
+                                            ),
+                                        },
+                                        close: Token(RightBracket, "]", (6,30)->(6,31)),
+                                    },
+                                ),
+                            ],
+                            close: Token(RightParen, ")", (6,31)->(6,32)),
+                            eol: Token(EndOfLine, "\n", (6,32)->(6,32)),
+                        },
+                    ),
+                ],
+            },
+            enddef: Token(Identifier, "enddef", (7,0)->(7,6)),
+            end_eol: Token(EndOfLine, "\n", (7,6)->(7,6)),
+        },
+    ),
+]

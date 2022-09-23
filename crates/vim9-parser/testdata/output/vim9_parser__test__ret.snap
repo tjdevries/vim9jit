@@ -1,6 +1,6 @@
 ---
-source: src/lib.rs
-assertion_line: 1378
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 1550
 expression: snapshot_parsing(contents)
 ---
 [
@@ -16,6 +16,7 @@ expression: snapshot_parsing(contents)
             name: Raw(MyFunc),
             args: Signature {
                 open: Token(LeftParen, "(", (2,10)->(2,11)),
+                params: [],
                 close: Token(RightParen, ")", (2,11)->(2,12)),
             },
             ret: Some(

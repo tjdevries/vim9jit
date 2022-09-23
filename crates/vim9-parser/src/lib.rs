@@ -518,6 +518,7 @@ pub struct Type {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum InnerType {
+    Any,
     Bool,
     Number,
     Float,
@@ -536,7 +537,9 @@ pub enum InnerType {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct InnerFuncType {}
+pub enum InnerFuncType {
+    Naked,
+}
 
 impl Type {
     fn parse(parser: &mut Parser) -> Result<Type> {
@@ -553,6 +556,7 @@ impl InnerType {
             TokenKind::Identifier => {
                 let literal: Literal = parser.pop().try_into()?;
                 Ok(match literal.token.text.as_str() {
+                    "any" => InnerType::Any,
                     "bool" => InnerType::Bool,
                     "number" => InnerType::Number,
                     "void" => InnerType::Void,
@@ -562,6 +566,7 @@ impl InnerType {
                         inner: InnerType::parse(parser)?.into(),
                         close: parser.expect_token(TokenKind::GreaterThan)?,
                     },
+                    "func" => InnerType::Func(InnerFuncType::Naked),
                     _ => todo!("{:?}", literal.token),
                 })
             }
@@ -573,6 +578,7 @@ impl InnerType {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Signature {
     open: Token,
+    pub params: Vec<Parameter>,
     close: Token,
 }
 
@@ -580,16 +586,65 @@ impl Signature {
     fn parse(parser: &mut Parser) -> Result<Signature> {
         Ok(Self {
             open: parser.expect_token(TokenKind::LeftParen)?,
+            params: {
+                let mut params = Vec::new();
+                while parser.current_token.kind != TokenKind::RightParen {
+                    info!(parser=?parser);
+                    params.push(Parameter::parse(parser)?);
+                    if parser.current_token.kind == TokenKind::Comma {
+                        parser.next_token();
+                    }
+                }
+
+                params
+            },
             close: parser.expect_token(TokenKind::RightParen)?,
         })
     }
 }
 
 #[derive(Debug, PartialEq, Clone)]
+/// Parameter definitions
+///
+/// {arguments} is a sequence of zero or more argument
+/// declarations.  There are three forms:
+///      {name}: {type}
+///      {name} = {value}
+///      {name}: {type} = {value}
 pub struct Parameter {
     pub name: Identifier,
-    colon: Token,
-    // pub typ: ,
+    pub ty: Option<Type>,
+    equal: Option<Token>,
+    pub default_val: Option<Expression>,
+}
+
+impl Parameter {
+    fn parse(parser: &mut Parser) -> Result<Parameter> {
+        let name = Identifier::parse(parser)?;
+
+        info!(parser=?parser, "current parser state");
+        let ty = if parser.current_token.kind == TokenKind::SpacedColon {
+            Some(Type::parse(parser)?)
+        } else {
+            None
+        };
+
+        let (equal, default_val) = if parser.current_token.kind == TokenKind::Equal {
+            (
+                Some(parser.expect_token(TokenKind::Equal)?),
+                Some(Expression::parse(parser, Precedence::Lowest)?),
+            )
+        } else {
+            (None, None)
+        };
+
+        Ok(Parameter {
+            name,
+            ty,
+            equal,
+            default_val,
+        })
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -764,8 +819,18 @@ pub enum Expression {
 pub struct IndexExpression {
     pub container: Box<Expression>,
     open: Token,
-    pub index: Box<Expression>,
+    pub index: Box<IndexType>,
     close: Token,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum IndexType {
+    Item(Expression),
+    Slice {
+        start: Option<Expression>,
+        colon: Token,
+        finish: Option<Expression>,
+    },
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -1087,10 +1152,44 @@ mod infix_expr {
     pub fn parser_index_expr(parser: &mut Parser, left: Box<Expression>) -> Result<Expression> {
         Ok(Expression::Index(IndexExpression {
             container: left,
-            open: parser.ensure_token(TokenKind::LeftBracket)?,
-            index: parser.parse_expression(Precedence::Lowest)?.into(),
+            open: parser.expect_token(TokenKind::LeftBracket)?,
+            index: IndexType::parse(parser)?.into(),
             close: parser.ensure_token(TokenKind::RightBracket)?,
         }))
+    }
+}
+
+impl IndexType {
+    fn parse(parser: &mut Parser) -> Result<IndexType> {
+        match parser.current_token.kind {
+            TokenKind::Colon | TokenKind::SpacedColon => {
+                todo!("index[:number]")
+            }
+            _ => {
+                let left = Expression::parse(parser, Precedence::Lowest)?;
+                if parser.current_token.kind == TokenKind::RightBracket {
+                    return Ok(IndexType::Item(left));
+                }
+
+                let colon = parser.pop();
+                anyhow::ensure!(matches!(colon.kind, TokenKind::Colon | TokenKind::SpacedColon));
+
+                if parser.current_token.kind == TokenKind::RightBracket {
+                    return Ok(IndexType::Slice {
+                        start: Some(left),
+                        colon,
+                        finish: None,
+                    });
+                }
+
+                let right = Expression::parse(parser, Precedence::Lowest)?;
+                return Ok(IndexType::Slice {
+                    start: Some(left),
+                    colon,
+                    finish: Some(right),
+                });
+            }
+        }
     }
 }
 
@@ -1121,6 +1220,7 @@ impl Parser {
             TokenKind::LeftBracket => Precedence::Index,
             TokenKind::Colon => Precedence::Colon,
             TokenKind::Comma => Precedence::Lowest,
+            TokenKind::SpacedColon => Precedence::Lowest,
             TokenKind::Or | TokenKind::And => Precedence::Equals,
             TokenKind::EqualTo
                 | TokenKind::LessThan
@@ -1517,6 +1617,8 @@ mod test {
     snapshot!(test_vimvar, "../testdata/snapshots/vimvar.vim");
     snapshot!(test_busted, "../testdata/snapshots/busted.vim");
     snapshot!(test_heredoc, "../testdata/snapshots/heredoc.vim");
+    snapshot!(test_typed_params, "../testdata/snapshots/typed_params.vim");
+    snapshot!(test_index, "../testdata/snapshots/index.vim");
 
     // TODO: Slowly but surely, we can work towards this
     // snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
