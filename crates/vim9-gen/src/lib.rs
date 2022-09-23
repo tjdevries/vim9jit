@@ -17,6 +17,8 @@ use parser::GroupedExpression;
 use parser::Heredoc;
 use parser::Identifier;
 use parser::IfCommand;
+use parser::IndexExpression;
+use parser::IndexType;
 use parser::InfixExpression;
 use parser::InnerType;
 use parser::Literal;
@@ -80,7 +82,12 @@ impl Generate for Heredoc {
             .collect::<Vec<String>>()
             .join(", ");
 
-        format!("local {} = {{ {} }}", self.name.gen(state), inner)
+        let mut list = format!("{{ {} }}", inner);
+        if self.trim {
+            list = format!("require('vim9script').heredoc.trim({})", list)
+        }
+
+        format!("local {} = {}", self.name.gen(state), list)
     }
 }
 
@@ -317,8 +324,53 @@ impl Generate for Expression {
             Expression::Dict(dict) => dict.gen(state),
             Expression::VimOption(opt) => opt.gen(state),
             Expression::Empty => "".to_string(),
-            Expression::Index(_) => todo!(),
+            Expression::Index(index) => index.gen(state),
+
+            // Some expressions can only be triggered from containing expressions
+            Expression::Slice(_) => unreachable!("cannot gen slice by itself"),
         }
+    }
+}
+
+impl Generate for IndexExpression {
+    fn gen(&self, state: &mut State) -> String {
+        // println!("self.index = {:#?}", self.index);
+
+        match self.index.as_ref() {
+            IndexType::Item(item) => format!("{}[{} + 1]", self.container.gen(state), item.gen(state)),
+            IndexType::Slice(slice) => {
+                // asdf
+                // match (&slice.start, &slice.finish) {
+                //     (Some(start), Some(finish)) => {
+                //         format!(
+                //             "require('vim9script').slice({}, {}, {})",
+                //             self.container.gen(state),
+                //             start.gen(state),
+                //             finish.gen(state)
+                //         )
+                //     }
+                //     (start, finish) => format!(
+                //         "require('vim9script').slice({}, {}, {})",
+                //         self.container.gen(state),
+                //         start.as_ref().map_or("nil".to_string(), |item| item.gen(state)),
+                //         finish.as_ref().map_or("nil".to_string(), |item| item.gen(state)),
+                //     ),
+                // }
+
+                format!(
+                    "require('vim9script').slice({}, {}, {})",
+                    self.container.gen(state),
+                    slice.start.as_ref().map_or("nil".to_string(), |item| item.gen(state)),
+                    slice.finish.as_ref().map_or("nil".to_string(), |item| item.gen(state)),
+                )
+            }
+        }
+
+        // format!(
+        //     "require('vim9script').index({}, {})",
+        //     self.container.gen(state),
+        //     self.index.gen(state)
+        // )
     }
 }
 
@@ -569,12 +621,14 @@ mod test {
     busted!(busted_operations, "../testdata/busted/operations.vim");
     busted!(busted_assign, "../testdata/busted/assign.vim");
     busted!(busted_heredoc, "../testdata/busted/heredoc.vim");
+    busted!(busted_indexing, "../testdata/busted/indexing.vim");
 
     snapshot!(test_expr, "../testdata/snapshots/expr.vim");
     snapshot!(test_if, "../testdata/snapshots/if.vim");
     snapshot!(test_assign, "../testdata/snapshots/assign.vim");
     snapshot!(test_call, "../testdata/snapshots/call.vim");
     snapshot!(test_autocmd, "../testdata/snapshots/autocmd.vim");
+    snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
     // snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
 
     #[test]

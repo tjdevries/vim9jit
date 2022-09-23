@@ -807,6 +807,7 @@ pub enum Expression {
     Grouped(GroupedExpression),
     Call(CallExpression),
     Index(IndexExpression),
+    Slice(VimSlice),
     Array(ArrayLiteral),
     Dict(DictLiteral),
     VimOption(VimOption),
@@ -826,11 +827,14 @@ pub struct IndexExpression {
 #[derive(Debug, PartialEq, Clone)]
 pub enum IndexType {
     Item(Expression),
-    Slice {
-        start: Option<Expression>,
-        colon: Token,
-        finish: Option<Expression>,
-    },
+    Slice(VimSlice),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct VimSlice {
+    pub start: Option<Box<Expression>>,
+    colon: Token,
+    pub finish: Option<Box<Expression>>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -1090,11 +1094,17 @@ mod prefix_expr {
             option: parser.ensure_token(TokenKind::Identifier)?.try_into()?,
         }))
     }
+
+    pub fn parse_prefix_colon(parser: &mut Parser) -> Result<Expression> {
+        todo!("[Colon] I don't think we ever get this in reality?");
+    }
+
+    pub fn parse_prefix_spaced_colon(parser: &mut Parser) -> Result<Expression> {
+        todo!("[SpacedColon] I don't think we ever get this in reality? ");
+    }
 }
 
 mod infix_expr {
-    use anyhow::anyhow;
-
     use super::*;
 
     pub fn parse_infix_operator(parser: &mut Parser, left: Box<Expression>) -> Result<Expression> {
@@ -1125,16 +1135,57 @@ mod infix_expr {
 
     #[tracing::instrument]
     pub fn parse_colon(parser: &mut Parser, left: Box<Expression>) -> Result<Expression> {
-        Ok(Expression::Identifier(Identifier::Scope(ScopedIdentifier {
-            scope: {
-                match *left {
-                    Expression::Identifier(id) => id.try_into()?,
-                    _ => return Err(anyhow!("invalid left for colon expr: {:?}", left)),
+        // White space is required in a sublist (list slice) around the ":", except at
+        // the start and end: >
+        //  otherlist = mylist[v : count]   # v:count has a different meaning
+        //  otherlist = mylist[:]       # make a copy of the List
+        //  otherlist = mylist[v :]
+        //  otherlist = mylist[: v]
+
+        // Options:
+        //  1. scoped variable -> g:var, s:var, w:var, ...
+        //  2. two sided slice, no space -> 0:5, var:other
+        //  3. two side slice, space -> 0 : 5, 0: 5, 0 :5, g : var
+        //  5. right open -> 0: , 0 : , g :var
+
+        // This is an example of a prefix operator, so we shouldn't handle this here.
+        //  4. left open -> :5, : 5,            (illegal? g: var)
+
+        // Attempt to determine if current val is => g:var, w:something, etc.
+        // TODO: Can i get rid of this clone?
+        if let Expression::Identifier(ident) = (*left).clone() {
+            let valid_scope: Result<VimScope> = ident.try_into();
+            if let Ok(scope) = valid_scope {
+                if parser.current_token.kind == TokenKind::Colon {
+                    return Ok(Expression::Identifier(Identifier::Scope(ScopedIdentifier {
+                        scope,
+                        colon: parser.expect_token(TokenKind::Colon)?,
+                        accessor: Identifier::parse_in_expression(parser)?.into(),
+                    })));
                 }
-            },
-            colon: parser.expect_token(TokenKind::Colon)?,
-            accessor: Identifier::parse_in_expression(parser)?.into(),
-        })))
+            }
+        }
+
+        let colon = parser.pop();
+        anyhow::ensure!(
+            matches!(colon.kind, TokenKind::Colon),
+            "token: {:?}, parser: {:?}",
+            colon,
+            parser
+        );
+
+        if parser.current_token.kind == TokenKind::RightBracket {
+            return Ok(Expression::Slice(
+                VimSlice {
+                    start: Some(left),
+                    colon,
+                    finish: None,
+                }
+                .into(),
+            ));
+        }
+
+        todo!("I don't think this should be possible anymore: {:?}", parser)
     }
 
     #[tracing::instrument(skip(parser, left))]
@@ -1161,35 +1212,49 @@ mod infix_expr {
 
 impl IndexType {
     fn parse(parser: &mut Parser) -> Result<IndexType> {
-        match parser.current_token.kind {
-            TokenKind::Colon | TokenKind::SpacedColon => {
-                todo!("index[:number]")
-            }
+        let (colon, left) = match parser.current_token.kind {
+            TokenKind::Colon | TokenKind::SpacedColon => (parser.pop(), None),
             _ => {
-                let left = Expression::parse(parser, Precedence::Lowest)?;
-                if parser.current_token.kind == TokenKind::RightBracket {
+                let left = parser.parse_expression(Precedence::Lowest)?;
+                if let Expression::Slice(slice) = left {
+                    return Ok(IndexType::Slice(slice));
+                }
+
+                if parser.peek_token.kind == TokenKind::RightBracket {
+                    parser.next_token();
                     return Ok(IndexType::Item(left));
                 }
 
-                let colon = parser.pop();
-                anyhow::ensure!(matches!(colon.kind, TokenKind::Colon | TokenKind::SpacedColon));
-
-                if parser.current_token.kind == TokenKind::RightBracket {
-                    return Ok(IndexType::Slice {
-                        start: Some(left),
-                        colon,
-                        finish: None,
-                    });
-                }
-
-                let right = Expression::parse(parser, Precedence::Lowest)?;
-                return Ok(IndexType::Slice {
-                    start: Some(left),
+                let colon = parser.next_token();
+                anyhow::ensure!(
+                    matches!(colon.kind, TokenKind::Colon | TokenKind::SpacedColon),
+                    "[IndexType] token: {:#?}, parser: {:#?}, slice: {:#?}",
                     colon,
-                    finish: Some(right),
-                });
+                    parser,
+                    left
+                );
+
+                // Move past the colon, so that we're on the expression to the right
+                parser.next_token();
+
+                (colon, Some(left.into()))
             }
+        };
+
+        if parser.current_token.kind == TokenKind::RightBracket {
+            return Ok(IndexType::Slice(VimSlice {
+                start: left,
+                colon,
+                finish: None,
+            }));
         }
+
+        let right = Expression::parse(parser, Precedence::Lowest)?;
+        return Ok(IndexType::Slice(VimSlice {
+            start: left,
+            colon,
+            finish: Some(right.into()),
+        }));
     }
 }
 
@@ -1265,6 +1330,8 @@ impl Parser {
             TokenKind::LeftBracket => prefix_expr::parse_array_literal,
             TokenKind::LeftBrace => prefix_expr::parse_dict_literal,
             TokenKind::Ampersand => prefix_expr::parse_vim_option,
+            TokenKind::Colon => prefix_expr::parse_prefix_colon,
+            TokenKind::SpacedColon => prefix_expr::parse_prefix_spaced_colon,
             TokenKind::True | TokenKind::False => prefix_expr::parse_bool,
             TokenKind::Plus | TokenKind::Minus | TokenKind::Bang | TokenKind::Percent => {
                 prefix_expr::parse_prefix_operator
@@ -1288,6 +1355,7 @@ impl Parser {
             | TokenKind::LessThanOrEqual
             | TokenKind::GreaterThanOrEqual => infix_expr::parse_infix_operator,
             TokenKind::Identifier => return None,
+            // TokenKind::SpacedColon => infix_expr::parser_index_type,
             _ => unimplemented!("get_infix_fn: {:#?}", self),
         }))
     }
