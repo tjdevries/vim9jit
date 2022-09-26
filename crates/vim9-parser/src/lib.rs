@@ -1,6 +1,7 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
+use std::collections::VecDeque;
 use std::fmt::Debug;
 
 use anyhow::Result;
@@ -959,10 +960,10 @@ pub enum Precedence {
     Sum,
     Product,
     Modulo,
+    Colon,
     Prefix,
     Call,
     Index,
-    Colon,
 }
 
 // The parseIdentifier method doesn’t do a lot. It only returns a *ast.Identifier with the current
@@ -1003,6 +1004,7 @@ pub struct Parser {
     lexer: Lexer,
     current_token: Token,
     peek_token: Token,
+    token_buffer: VecDeque<Token>,
 }
 
 mod prefix_expr {
@@ -1108,6 +1110,8 @@ mod infix_expr {
     use super::*;
 
     pub fn parse_infix_operator(parser: &mut Parser, left: Box<Expression>) -> Result<Expression> {
+        parser.skip_whitespace();
+
         let prec = parser.current_precedence();
         let token = parser.pop();
         let operator = match token.kind {
@@ -1215,7 +1219,7 @@ impl IndexType {
         let (colon, left) = match parser.current_token.kind {
             TokenKind::Colon | TokenKind::SpacedColon => (parser.pop(), None),
             _ => {
-                let left = parser.parse_expression(Precedence::Lowest)?;
+                let left = parser.parse_expression(Precedence::Colon)?;
                 if let Expression::Slice(slice) = left {
                     return Ok(IndexType::Slice(slice));
                 }
@@ -1225,6 +1229,9 @@ impl IndexType {
                     return Ok(IndexType::Item(left));
                 }
 
+                // Slice { -1, ... }
+                // Negative { Slice ... }
+                info!(parser=?parser, left=?left);
                 let colon = parser.next_token();
                 anyhow::ensure!(
                     matches!(colon.kind, TokenKind::Colon | TokenKind::SpacedColon),
@@ -1263,12 +1270,26 @@ impl Parser {
         Self {
             current_token: lexer.next_token(),
             peek_token: lexer.next_token(),
+            token_buffer: VecDeque::new(),
             lexer,
         }
     }
 
-    fn peek_precedence(&self) -> Precedence {
-        self.get_precedence(&self.peek_token.kind).unwrap_or_default()
+    fn peek_non_whitespace(&mut self) -> Token {
+        let mut peek_index = 1;
+        let mut peek_token = self.peek_token.clone();
+        while peek_token.kind == TokenKind::EndOfLine {
+            peek_index += 1;
+            peek_token = self.peek_n(peek_index);
+            info!(peek_token=?peek_token);
+        }
+
+        peek_token
+    }
+
+    fn peek_precedence(&mut self) -> Precedence {
+        let kind = self.peek_non_whitespace().kind;
+        self.get_precedence(&kind).unwrap_or_default()
     }
 
     fn current_precedence(&self) -> Precedence {
@@ -1297,6 +1318,10 @@ impl Parser {
                 | TokenKind::RightParen
                 => Precedence::Lowest,
             TokenKind::EndOfLine | TokenKind::EndOfFile => Precedence::Lowest,
+            // We have to check new lines to see if we need to handle anything there.
+            //  I'm not sure this is 100% great, but we'll leave it this way for now.
+            TokenKind::Identifier | TokenKind::Comment=> Precedence::Lowest,
+
             _ => panic!("Unexpected precendence kind: {:?}", kind)
             // TokenKind::LessThan => todo!(),
             // TokenKind::LessThanOrEqual => todo!(),
@@ -1340,8 +1365,10 @@ impl Parser {
         }))
     }
 
-    fn get_infix_fn(&self) -> Option<InfixFn> {
-        Some(Box::new(match self.peek_token.kind {
+    fn get_infix_fn(&mut self) -> Option<InfixFn> {
+        let peek_token = self.peek_non_whitespace();
+
+        Some(Box::new(match peek_token.kind {
             TokenKind::Plus | TokenKind::Minus | TokenKind::Percent | TokenKind::StringConcat => {
                 infix_expr::parse_infix_operator
             }
@@ -1362,8 +1389,9 @@ impl Parser {
 
     #[tracing::instrument(skip_all, fields(tok=?self.current_token))]
     fn parse_expression(&mut self, prec: Precedence) -> Result<Expression> {
-        trace!("{:?}", self.current_token);
+        self.skip_whitespace();
 
+        trace!("current_token: {:?}", self.current_token);
         let prefix = self.get_prefix_fn();
 
         let mut left = match prefix {
@@ -1371,7 +1399,15 @@ impl Parser {
             None => return Err(anyhow::anyhow!("Failed to find prefix function for {:#?}", self)),
         };
 
-        while self.current_token.kind != TokenKind::EndOfLine && prec < self.peek_precedence() {
+        // TODO: Some things may not allow newlines, but for now, let's just skip them
+        // while self.current_token.kind == TokenKind::EndOfLine {
+        //     self.next_token();
+        // }
+
+        info!(left = ?left);
+
+        // while self.current_token.kind != TokenKind::EndOfLine && prec < self.peek_precedence() {
+        while prec < self.peek_precedence() {
             let infix = match self.get_infix_fn() {
                 Some(infix) => infix,
                 None => return Ok(left),
@@ -1472,9 +1508,25 @@ impl Parser {
 
     pub fn next_token(&mut self) -> Token {
         self.current_token = self.peek_token.clone();
-        self.peek_token = self.lexer.next_token();
+        self.peek_token = self.token_buffer.pop_front().unwrap_or_else(|| self.lexer.next_token());
 
         self.current_token.clone()
+    }
+
+    pub fn peek_n(&mut self, n: usize) -> Token {
+        if n == 0 {
+            return self.current_token.clone();
+        }
+
+        if n == 1 {
+            self.peek_token.clone()
+        } else {
+            while self.token_buffer.len() < n - 1 {
+                self.token_buffer.push_back(self.lexer.next_token());
+            }
+
+            self.token_buffer.back().unwrap().clone()
+        }
     }
 
     fn command_match(&self, full: &str) -> bool {
@@ -1621,6 +1673,12 @@ impl Parser {
         self.ensure_peek(close_kind)?;
         Ok(elements)
     }
+
+    fn skip_whitespace(&mut self) {
+        while self.current_token.kind == TokenKind::EndOfLine {
+            self.next_token();
+        }
+    }
 }
 
 fn snapshot_parsing(input: &str) -> String {
@@ -1687,6 +1745,20 @@ mod test {
     snapshot!(test_heredoc, "../testdata/snapshots/heredoc.vim");
     snapshot!(test_typed_params, "../testdata/snapshots/typed_params.vim");
     snapshot!(test_index, "../testdata/snapshots/index.vim");
+    snapshot!(test_advanced_index, "../testdata/snapshots/advanced_index.vim");
+    snapshot!(test_multiline, "../testdata/snapshots/multiline.vim");
+
+    #[test]
+    fn test_peek_n() {
+        let input = "vim9script\nvar x = true\n";
+        let lexer = new_lexer(input);
+        let mut parser = Parser::new(lexer);
+        assert_eq!(parser.peek_token.kind, TokenKind::EndOfLine);
+        assert_eq!(parser.peek_n(0).kind, TokenKind::Identifier);
+        assert_eq!(parser.peek_n(1).kind, TokenKind::EndOfLine);
+        assert_eq!(parser.peek_n(2).kind, TokenKind::Identifier);
+        assert_eq!(parser.peek_n(3).kind, TokenKind::Identifier);
+    }
 
     // TODO: Slowly but surely, we can work towards this
     // snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");

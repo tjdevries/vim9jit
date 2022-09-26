@@ -1,0 +1,113 @@
+---
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 1749
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (2,0)->(2,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (3,0)->(3,3)),
+            ty: Some(
+                Type {
+                    colon: Token(SpacedColon, ": ", (3,5)->(3,7)),
+                    inner: Bool,
+                },
+            ),
+            name: Raw(x),
+            equal: Token(Equal, "=", (3,12)->(3,13)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(And, "&&", (3,19)->(3,21)),
+                    operator: And,
+                    left: Boolean(
+                        VimBoolean {
+                            token: Token(True, "true", (3,14)->(3,18)),
+                            value: true,
+                        },
+                    ),
+                    right: Boolean(
+                        VimBoolean {
+                            token: Token(False, "false", (4,2)->(4,7)),
+                            value: false,
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (4,7)->(4,7)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (5,0)->(5,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (6,0)->(6,3)),
+            ty: Some(
+                Type {
+                    colon: Token(SpacedColon, ": ", (6,5)->(6,7)),
+                    inner: Bool,
+                },
+            ),
+            name: Raw(y),
+            equal: Token(Equal, "=", (6,12)->(6,13)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(And, "&&", (7,2)->(7,4)),
+                    operator: And,
+                    left: Boolean(
+                        VimBoolean {
+                            token: Token(True, "true", (6,14)->(6,18)),
+                            value: true,
+                        },
+                    ),
+                    right: Boolean(
+                        VimBoolean {
+                            token: Token(False, "false", (7,5)->(7,10)),
+                            value: false,
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (7,10)->(7,10)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (8,0)->(8,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (9,0)->(9,3)),
+            ty: None,
+            name: Raw(z),
+            equal: Token(Equal, "=", (9,6)->(9,7)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (11,2)->(11,4)),
+                    operator: Or,
+                    left: Boolean(
+                        VimBoolean {
+                            token: Token(True, "true", (9,8)->(9,12)),
+                            value: true,
+                        },
+                    ),
+                    right: Boolean(
+                        VimBoolean {
+                            token: Token(False, "false", (11,5)->(11,10)),
+                            value: false,
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (11,10)->(11,10)),
+        },
+    ),
+]
