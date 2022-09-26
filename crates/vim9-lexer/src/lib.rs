@@ -419,7 +419,7 @@ impl Lexer {
 
                     _ => {
                         // Token
-                        if is_letter(ch) {
+                        if is_letter(ch) || ch == '_' {
                             return self.read_identifier();
                         } else if ch.is_ascii_digit() {
                             return self.read_number();

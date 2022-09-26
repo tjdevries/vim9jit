@@ -622,6 +622,7 @@ mod test {
     busted!(busted_assign, "../testdata/busted/assign.vim");
     busted!(busted_heredoc, "../testdata/busted/heredoc.vim");
     busted!(busted_indexing, "../testdata/busted/indexing.vim");
+    busted!(busted_multiline, "../testdata/busted/multiline.vim");
 
     snapshot!(test_expr, "../testdata/snapshots/expr.vim");
     snapshot!(test_if, "../testdata/snapshots/if.vim");

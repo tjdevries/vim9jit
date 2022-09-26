@@ -812,9 +812,15 @@ pub enum Expression {
     Array(ArrayLiteral),
     Dict(DictLiteral),
     VimOption(VimOption),
+    Register(Register),
 
     Prefix(PrefixExpression),
     Infix(InfixExpression),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Register {
+    pub register: String,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -1025,6 +1031,14 @@ mod prefix_expr {
             name: parser.current_token.text.clone(),
         }
         .into())
+    }
+
+    pub fn parse_register(parser: &mut Parser) -> Result<Expression> {
+        anyhow::ensure!(parser.current_token.kind == TokenKind::Register);
+
+        Ok(Expression::Register(Register {
+            register: parser.current_token.text.clone(),
+        }))
     }
 
     pub fn parse_bool(parser: &mut Parser) -> Result<Expression> {
@@ -1349,6 +1363,7 @@ impl Parser {
         Some(Box::new(match self.current_token.kind {
             TokenKind::Integer => prefix_expr::parse_vim_number,
             TokenKind::Identifier => prefix_expr::parse_identifier,
+            TokenKind::Register => prefix_expr::parse_register,
             TokenKind::DoubleQuoteString => prefix_expr::parse_double_string,
             TokenKind::SingleQuoteString => prefix_expr::parse_single_string,
             TokenKind::LeftParen => prefix_expr::parse_grouped_expr,
@@ -1747,6 +1762,7 @@ mod test {
     snapshot!(test_index, "../testdata/snapshots/index.vim");
     snapshot!(test_advanced_index, "../testdata/snapshots/advanced_index.vim");
     snapshot!(test_multiline, "../testdata/snapshots/multiline.vim");
+    snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
 
     #[test]
     fn test_peek_n() {
