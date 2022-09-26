@@ -80,6 +80,7 @@ pub enum TokenKind {
     Bang,
     QuestionMark,
     HeredocOperator,
+    Register,
 
     // Delimiters
     Comma,
@@ -389,6 +390,14 @@ impl Lexer {
                             span: self.make_span(self.position - 1, self.position),
                         }
                     }
+                    '@' => {
+                        self.read_char();
+                        Token {
+                            kind: TokenKind::Register,
+                            text: self.ch.unwrap().to_string(),
+                            span: self.make_span(self.position - 1, self.position),
+                        }
+                    }
 
                     ':' => self.if_peek(' ', TokenKind::Colon, TokenKind::SpacedColon),
                     '?' => literal!(QuestionMark),
@@ -560,6 +569,7 @@ mod test {
     snapshot!(test_scopes, "../testdata/snapshots/scopes.vim");
     snapshot!(test_autocmd, "../testdata/snapshots/autocmd.vim");
     snapshot!(test_heredoc, "../testdata/snapshots/heredoc.vim");
+    snapshot!(test_register, "../testdata/snapshots/register.vim");
 
     // TODO: Check more thoroughly
     snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
