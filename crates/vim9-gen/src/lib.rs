@@ -134,8 +134,12 @@ impl Generate for AutocmdCommand {
             .join(", ");
 
         let callback = match &self.block {
-            parser::AutocmdBlock::Command(cmd) => format!("function()\n{}\nend", cmd.gen(state)),
-            parser::AutocmdBlock::Block(block) => format!("function()\n{}\nend", block.body.gen(state)),
+            parser::AutocmdBlock::Command(cmd) => {
+                format!("function()\n{}\nend", cmd.gen(state))
+            }
+            parser::AutocmdBlock::Block(block) => {
+                format!("function()\n{}\nend", block.body.gen(state))
+            }
         };
 
         format!(
@@ -270,13 +274,18 @@ impl Generate for VarCommand {
     fn gen(&self, state: &mut State) -> String {
         match self.ty {
             Some(Type {
-                inner: InnerType::Bool, ..
+                inner: InnerType::Bool,
+                ..
             }) => format!(
                 "local {} = require('vim9script').convert.decl_bool({})",
                 self.name.gen(state),
                 self.expr.gen(state)
             ),
-            _ => format!("local {} = {}", self.name.gen(state), self.expr.gen(state)),
+            _ => format!(
+                "local {} = {}",
+                self.name.gen(state),
+                self.expr.gen(state)
+            ),
         }
     }
 }
@@ -337,7 +346,13 @@ impl Generate for IndexExpression {
         // println!("self.index = {:#?}", self.index);
 
         match self.index.as_ref() {
-            IndexType::Item(item) => format!("{}[{} + 1]", self.container.gen(state), item.gen(state)),
+            IndexType::Item(item) => {
+                format!(
+                    "{}[{} + 1]",
+                    self.container.gen(state),
+                    item.gen(state)
+                )
+            }
             IndexType::Slice(slice) => {
                 // asdf
                 // match (&slice.start, &slice.finish) {
@@ -360,8 +375,14 @@ impl Generate for IndexExpression {
                 format!(
                     "require('vim9script').slice({}, {}, {})",
                     self.container.gen(state),
-                    slice.start.as_ref().map_or("nil".to_string(), |item| item.gen(state)),
-                    slice.finish.as_ref().map_or("nil".to_string(), |item| item.gen(state)),
+                    slice
+                        .start
+                        .as_ref()
+                        .map_or("nil".to_string(), |item| item.gen(state)),
+                    slice
+                        .finish
+                        .as_ref()
+                        .map_or("nil".to_string(), |item| item.gen(state)),
                 )
             }
         }
@@ -377,7 +398,10 @@ impl Generate for IndexExpression {
 impl Generate for VimOption {
     fn gen(&self, state: &mut State) -> String {
         // TODO: not sure if i need to do something smarter than this
-        format!("vim.api.nvim_get_option_value('{}', {{}})", self.option.gen(state))
+        format!(
+            "vim.api.nvim_get_option_value('{}', {{}})",
+            self.option.gen(state)
+        )
     }
 }
 
@@ -401,7 +425,11 @@ impl Generate for DictLiteral {
             "{{ {} }}",
             self.elements
                 .iter()
-                .map(|x| format!("{} = {}", x.key.gen(state), x.value.gen(state)))
+                .map(|x| format!(
+                    "{} = {}",
+                    x.key.gen(state),
+                    x.value.gen(state)
+                ))
                 .collect::<Vec<String>>()
                 .join(", ")
         )
@@ -493,8 +521,14 @@ impl Generate for InfixExpression {
         }
 
         match self.operator {
-            Operator::And => gen_operation("AND", self.left.gen(state), self.right.gen(state)),
-            Operator::Or => gen_operation("OR", self.left.gen(state), self.right.gen(state)),
+            Operator::And => gen_operation(
+                "AND",
+                self.left.gen(state),
+                self.right.gen(state),
+            ),
+            Operator::Or => {
+                gen_operation("OR", self.left.gen(state), self.right.gen(state))
+            }
             // Operator::Plus => todo!(),
             // Operator::Minus => todo!(),
             // Operator::Bang => todo!(),
@@ -538,7 +572,10 @@ impl Generate for Operator {
 }
 
 pub fn eval(program: parser::Program, is_test: bool) -> String {
-    let mut state = State { augroup: None, is_test };
+    let mut state = State {
+        augroup: None,
+        is_test,
+    };
 
     let mut output = String::new();
     if is_test {

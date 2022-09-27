@@ -79,7 +79,11 @@ pub fn exec_lua(preamble: &str, result: &str) -> Result<Value> {
     match err {
         Value::Nil => {}
         err => {
-            return Err(anyhow::anyhow!("Error executing Lua:\n\n{}\n\n{}", contents, err));
+            return Err(anyhow::anyhow!(
+                "Error executing Lua:\n\n{}\n\n{}",
+                contents,
+                err
+            ));
         }
     }
 

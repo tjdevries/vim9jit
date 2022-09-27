@@ -46,7 +46,11 @@ impl Token {
 
 impl Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Token({:?}, {:?}, {:?})", self.kind, self.text, self.span)
+        write!(
+            f,
+            "Token({:?}, {:?}, {:?})",
+            self.kind, self.text, self.span
+        )
     }
 }
 
@@ -295,7 +299,12 @@ impl Lexer {
         self.chars.get(self.position + 1)
     }
 
-    fn if_peek(&mut self, peeked: char, no: TokenKind, yes: TokenKind) -> Token {
+    fn if_peek(
+        &mut self,
+        peeked: char,
+        no: TokenKind,
+        yes: TokenKind,
+    ) -> Token {
         if let Some(ch) = self.peek_char() {
             if *ch == peeked {
                 let position = self.position;
@@ -373,7 +382,8 @@ impl Lexer {
                         Token {
                             kind: TokenKind::$kind,
                             text: ch.to_string(),
-                            span: self.make_span(self.position, self.position + 1),
+                            span: self
+                                .make_span(self.position, self.position + 1),
                         }
                     };
 
@@ -381,7 +391,10 @@ impl Lexer {
                         Token {
                             kind: TokenKind::$kind,
                             text: ch.to_string(),
-                            span: self.make_span(self.position, self.position + $offset),
+                            span: self.make_span(
+                                self.position,
+                                self.position + $offset,
+                            ),
                         }
                     };
                 }
@@ -389,22 +402,53 @@ impl Lexer {
                 match ch {
                     // Operators that can optionally have an additional equals
                     '=' => self.handle_equal(),
-                    '+' => self.if_peek('=', TokenKind::Plus, TokenKind::PlusEquals),
-                    '-' => self.if_peek('=', TokenKind::Minus, TokenKind::MinusEquals),
-                    '*' => self.if_peek('=', TokenKind::Mul, TokenKind::MulEquals),
-                    '/' => self.if_peek('=', TokenKind::Div, TokenKind::DivEquals),
-                    '>' => self.if_peek('=', TokenKind::GreaterThan, TokenKind::GreaterThanOrEqual),
-                    '<' => self.if_peek('=', TokenKind::LessThan, TokenKind::LessThanOrEqual),
+                    '+' => self.if_peek(
+                        '=',
+                        TokenKind::Plus,
+                        TokenKind::PlusEquals,
+                    ),
+                    '-' => self.if_peek(
+                        '=',
+                        TokenKind::Minus,
+                        TokenKind::MinusEquals,
+                    ),
+                    '*' => {
+                        self.if_peek('=', TokenKind::Mul, TokenKind::MulEquals)
+                    }
+                    '/' => {
+                        self.if_peek('=', TokenKind::Div, TokenKind::DivEquals)
+                    }
+                    '>' => self.if_peek(
+                        '=',
+                        TokenKind::GreaterThan,
+                        TokenKind::GreaterThanOrEqual,
+                    ),
+                    '<' => self.if_peek(
+                        '=',
+                        TokenKind::LessThan,
+                        TokenKind::LessThanOrEqual,
+                    ),
                     '|' => self.if_peek('|', TokenKind::Illegal, TokenKind::Or),
-                    '&' => self.if_peek('&', TokenKind::Ampersand, TokenKind::And),
-                    '.' => self.if_peek('.', TokenKind::Dot, TokenKind::StringConcat),
-                    '%' => self.if_peek('=', TokenKind::Percent, TokenKind::PercentEquals),
+                    '&' => {
+                        self.if_peek('&', TokenKind::Ampersand, TokenKind::And)
+                    }
+                    '.' => self.if_peek(
+                        '.',
+                        TokenKind::Dot,
+                        TokenKind::StringConcat,
+                    ),
+                    '%' => self.if_peek(
+                        '=',
+                        TokenKind::Percent,
+                        TokenKind::PercentEquals,
+                    ),
                     '\\' => {
                         self.read_char();
                         Token {
                             kind: TokenKind::Escaped,
                             text: self.ch.unwrap().to_string(),
-                            span: self.make_span(self.position - 1, self.position),
+                            span: self
+                                .make_span(self.position - 1, self.position),
                         }
                     }
                     '@' => {
@@ -412,11 +456,16 @@ impl Lexer {
                         Token {
                             kind: TokenKind::Register,
                             text: self.ch.unwrap().to_string(),
-                            span: self.make_span(self.position - 1, self.position),
+                            span: self
+                                .make_span(self.position - 1, self.position),
                         }
                     }
 
-                    ':' => self.if_peek(' ', TokenKind::Colon, TokenKind::SpacedColon),
+                    ':' => self.if_peek(
+                        ' ',
+                        TokenKind::Colon,
+                        TokenKind::SpacedColon,
+                    ),
                     '?' => literal!(QuestionMark),
                     '^' => literal!(Caret),
                     '(' => literal!(LeftParen),
@@ -444,7 +493,8 @@ impl Lexer {
                             Token {
                                 kind: TokenKind::Illegal,
                                 text: ch.to_string(),
-                                span: self.make_span(self.position, self.position),
+                                span: self
+                                    .make_span(self.position, self.position),
                             }
                         }
                     }

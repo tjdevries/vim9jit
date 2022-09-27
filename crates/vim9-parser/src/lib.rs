@@ -84,7 +84,9 @@ impl AugroupCommand {
     fn parse(parser: &mut Parser) -> Result<ExCommand> {
         Ok(ExCommand::Augroup(AugroupCommand {
             augroup: parser.expect_identifier_with_text("augroup")?,
-            augroup_name: parser.expect_token(TokenKind::Identifier)?.try_into()?,
+            augroup_name: parser
+                .expect_token(TokenKind::Identifier)?
+                .try_into()?,
             augroup_eol: parser.expect_eol()?,
             // TODO: This should be until augroup END, unless you can't have nested ones legally
             body: Body::parse_until(parser, "augroup")?,
@@ -215,16 +217,19 @@ impl StatementCommand {
         info!("{:?}", parser);
         let identifier = Identifier::parse(parser)?;
         if parser.current_token.kind == TokenKind::Equal {
-            return Ok(ExCommand::Statement(StatementCommand::Assign(AssignStatement {
-                left: identifier,
-                equals: parser.expect_token(TokenKind::Equal)?,
-                right: {
-                    let right = parser.parse_expression(Precedence::Lowest)?;
-                    parser.next_token();
-                    right
+            return Ok(ExCommand::Statement(StatementCommand::Assign(
+                AssignStatement {
+                    left: identifier,
+                    equals: parser.expect_token(TokenKind::Equal)?,
+                    right: {
+                        let right =
+                            parser.parse_expression(Precedence::Lowest)?;
+                        parser.next_token();
+                        right
+                    },
+                    eol: parser.expect_eol()?,
                 },
-                eol: parser.expect_eol()?,
-            })));
+            )));
         }
 
         todo!("expr command: {:?}, {:#?}", identifier, parser)
@@ -271,7 +276,8 @@ pub struct VarCommand {
 
 impl VarCommand {
     pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
-        let var = parser.expect_token_with_text(TokenKind::Identifier, "var")?;
+        let var =
+            parser.expect_token_with_text(TokenKind::Identifier, "var")?;
         info!(var=?var, cur=?parser.current_token);
         let name = Identifier::parse(parser)?;
         info!(name=?name, cur=?parser.current_token);
@@ -281,7 +287,12 @@ impl VarCommand {
             TokenKind::EndOfLine => None,
             TokenKind::EndOfFile => None,
             TokenKind::SpacedColon => Some(Type::parse(parser)?),
-            _ => return Err(anyhow::anyhow!("invalid type and/or equal for var: {:?}", parser)),
+            _ => {
+                return Err(anyhow::anyhow!(
+                    "invalid type and/or equal for var: {:?}",
+                    parser
+                ))
+            }
         };
 
         match parser.current_token.kind {
@@ -294,16 +305,19 @@ impl VarCommand {
                 let mut eval = false;
 
                 let open = {
-                    let mut token = parser.expect_token(TokenKind::Identifier)?;
+                    let mut token =
+                        parser.expect_token(TokenKind::Identifier)?;
                     while token.text == "trim" || token.text == "eval" {
                         if token.text == "trim" {
                             trim = true;
-                            token = parser.expect_token(TokenKind::Identifier)?;
+                            token =
+                                parser.expect_token(TokenKind::Identifier)?;
                         }
 
                         if token.text == "eval" {
                             eval = true;
-                            token = parser.expect_token(TokenKind::Identifier)?;
+                            token =
+                                parser.expect_token(TokenKind::Identifier)?;
                         }
                     }
 
@@ -315,7 +329,10 @@ impl VarCommand {
                 let mut contents = vec![];
                 let close = loop {
                     let mut line: Vec<Token> = vec![];
-                    while !matches!(parser.current_token.kind, TokenKind::EndOfLine | TokenKind::EndOfFile) {
+                    while !matches!(
+                        parser.current_token.kind,
+                        TokenKind::EndOfLine | TokenKind::EndOfFile
+                    ) {
                         line.push(parser.current_token.clone());
                         parser.next_token();
                     }
@@ -334,7 +351,8 @@ impl VarCommand {
                     let mut line_contents = String::new();
                     let mut prev_end = 0;
                     for tok in line {
-                        line_contents += " ".repeat(tok.span.start_col - prev_end).as_str();
+                        line_contents +=
+                            " ".repeat(tok.span.start_col - prev_end).as_str();
                         line_contents += tok.text.as_str();
 
                         prev_end = tok.span.end_col;
@@ -366,12 +384,14 @@ impl VarCommand {
                     eol: parser.expect_eol()?,
                 }))
             }
-            TokenKind::EndOfLine | TokenKind::EndOfFile => Ok(ExCommand::Decl(DeclCommand {
-                var,
-                name,
-                ty,
-                eol: parser.expect_eol()?,
-            })),
+            TokenKind::EndOfLine | TokenKind::EndOfFile => {
+                Ok(ExCommand::Decl(DeclCommand {
+                    var,
+                    name,
+                    ty,
+                    eol: parser.expect_eol()?,
+                }))
+            }
             _ => Err(anyhow::anyhow!("invalid next character: {:?}", parser)),
         }
     }
@@ -630,14 +650,15 @@ impl Parameter {
             None
         };
 
-        let (equal, default_val) = if parser.current_token.kind == TokenKind::Equal {
-            (
-                Some(parser.expect_token(TokenKind::Equal)?),
-                Some(Expression::parse(parser, Precedence::Lowest)?),
-            )
-        } else {
-            (None, None)
-        };
+        let (equal, default_val) =
+            if parser.current_token.kind == TokenKind::Equal {
+                (
+                    Some(parser.expect_token(TokenKind::Equal)?),
+                    Some(Expression::parse(parser, Precedence::Lowest)?),
+                )
+            } else {
+                (None, None)
+            };
 
         Ok(Parameter {
             name,
@@ -675,7 +696,8 @@ pub struct ReturnCommand {
 impl ReturnCommand {
     pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
         Ok(ExCommand::Return(Self {
-            ret: parser.expect_token_with_text(TokenKind::Identifier, "return")?,
+            ret: parser
+                .expect_token_with_text(TokenKind::Identifier, "return")?,
             expr: match parser.current_token.kind {
                 TokenKind::EndOfLine => None,
                 _ => Some(Expression::parse(parser, Precedence::Lowest)?),
@@ -727,7 +749,8 @@ impl Identifier {
         if parser.current_token.kind == TokenKind::LeftBracket {
             return Ok(Identifier::Unpacked(UnpackIdentifier {
                 open: parser.ensure_token(TokenKind::LeftBracket)?,
-                identifiers: parser.parse_identifier_list(TokenKind::RightBracket)?,
+                identifiers: parser
+                    .parse_identifier_list(TokenKind::RightBracket)?,
                 close: parser.expect_peek(TokenKind::RightBracket)?,
             }));
         }
@@ -749,7 +772,10 @@ impl Identifier {
                     let current = parser.current_token.clone();
                     anyhow::ensure!(matches!(
                         current.kind,
-                        TokenKind::Identifier | TokenKind::True | TokenKind::False | TokenKind::Null
+                        TokenKind::Identifier
+                            | TokenKind::True
+                            | TokenKind::False
+                            | TokenKind::Null
                     ));
 
                     current.text
@@ -849,7 +875,8 @@ impl Lambda {
                             v.push(ExCommand::Return(ReturnCommand {
                                 ret: Token::fake(),
                                 expr: Some({
-                                    let expr = parser.parse_expression(Precedence::Lowest)?;
+                                    let expr = parser
+                                        .parse_expression(Precedence::Lowest)?;
                                     parser.next_token();
                                     expr
                                 }),
@@ -907,7 +934,9 @@ impl KeyValue {
     pub fn parse(parser: &mut Parser) -> Result<KeyValue> {
         Ok(Self {
             key: match parser.current_token.kind {
-                TokenKind::Identifier => VimKey::Literal(parser.pop().try_into()?),
+                TokenKind::Identifier => {
+                    VimKey::Literal(parser.pop().try_into()?)
+                }
                 _ => unimplemented!("{:?}", parser),
             },
             colon: parser.expect_token(TokenKind::SpacedColon)?,
@@ -1141,7 +1170,8 @@ mod prefix_expr {
     pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression> {
         Ok(Expression::Array(ArrayLiteral {
             open: parser.ensure_token(TokenKind::LeftBracket)?,
-            elements: parser.parse_expression_list(TokenKind::RightBracket, false)?,
+            elements: parser
+                .parse_expression_list(TokenKind::RightBracket, false)?,
             close: parser.expect_peek(TokenKind::RightBracket)?,
         }))
     }
@@ -1165,7 +1195,9 @@ mod prefix_expr {
         todo!("[Colon] I don't think we ever get this in reality?");
     }
 
-    pub fn parse_prefix_spaced_colon(parser: &mut Parser) -> Result<Expression> {
+    pub fn parse_prefix_spaced_colon(
+        parser: &mut Parser,
+    ) -> Result<Expression> {
         todo!("[SpacedColon] I don't think we ever get this in reality? ");
     }
 }
@@ -1173,7 +1205,10 @@ mod prefix_expr {
 mod infix_expr {
     use super::*;
 
-    pub fn parse_infix_operator(parser: &mut Parser, left: Box<Expression>) -> Result<Expression> {
+    pub fn parse_infix_operator(
+        parser: &mut Parser,
+        left: Box<Expression>,
+    ) -> Result<Expression> {
         parser.skip_whitespace();
 
         let prec = parser.current_precedence();
@@ -1202,7 +1237,10 @@ mod infix_expr {
     }
 
     #[tracing::instrument]
-    pub fn parse_colon(parser: &mut Parser, left: Box<Expression>) -> Result<Expression> {
+    pub fn parse_colon(
+        parser: &mut Parser,
+        left: Box<Expression>,
+    ) -> Result<Expression> {
         // White space is required in a sublist (list slice) around the ":", except at
         // the start and end: >
         //  otherlist = mylist[v : count]   # v:count has a different meaning
@@ -1225,11 +1263,14 @@ mod infix_expr {
             let valid_scope: Result<VimScope> = ident.try_into();
             if let Ok(scope) = valid_scope {
                 if parser.current_token.kind == TokenKind::Colon {
-                    return Ok(Expression::Identifier(Identifier::Scope(ScopedIdentifier {
-                        scope,
-                        colon: parser.expect_token(TokenKind::Colon)?,
-                        accessor: Identifier::parse_in_expression(parser)?.into(),
-                    })));
+                    return Ok(Expression::Identifier(Identifier::Scope(
+                        ScopedIdentifier {
+                            scope,
+                            colon: parser.expect_token(TokenKind::Colon)?,
+                            accessor: Identifier::parse_in_expression(parser)?
+                                .into(),
+                        },
+                    )));
                 }
             }
         }
@@ -1253,11 +1294,17 @@ mod infix_expr {
             ));
         }
 
-        todo!("I don't think this should be possible anymore: {:?}", parser)
+        todo!(
+            "I don't think this should be possible anymore: {:?}",
+            parser
+        )
     }
 
     #[tracing::instrument(skip(parser, left))]
-    pub fn parser_call_expr(parser: &mut Parser, left: Box<Expression>) -> Result<Expression> {
+    pub fn parser_call_expr(
+        parser: &mut Parser,
+        left: Box<Expression>,
+    ) -> Result<Expression> {
         trace!("peek: {:?} left: {:?}", parser.peek_token, left);
 
         Ok(Expression::Call(CallExpression {
@@ -1268,7 +1315,10 @@ mod infix_expr {
         }))
     }
 
-    pub fn parser_index_expr(parser: &mut Parser, left: Box<Expression>) -> Result<Expression> {
+    pub fn parser_index_expr(
+        parser: &mut Parser,
+        left: Box<Expression>,
+    ) -> Result<Expression> {
         Ok(Expression::Index(IndexExpression {
             container: left,
             open: parser.expect_token(TokenKind::LeftBracket)?,
@@ -1298,7 +1348,10 @@ impl IndexType {
                 info!(parser=?parser, left=?left);
                 let colon = parser.next_token();
                 anyhow::ensure!(
-                    matches!(colon.kind, TokenKind::Colon | TokenKind::SpacedColon),
+                    matches!(
+                        colon.kind,
+                        TokenKind::Colon | TokenKind::SpacedColon
+                    ),
                     "[IndexType] token: {:#?}, parser: {:#?}, slice: {:#?}",
                     colon,
                     parser,
@@ -1343,7 +1396,9 @@ impl Parser {
         let mut peek_index = 0;
         loop {
             let tok = self.peek_n(peek_index);
-            if tok.kind == TokenKind::EndOfLine || tok.kind == TokenKind::EndOfFile {
+            if tok.kind == TokenKind::EndOfLine
+                || tok.kind == TokenKind::EndOfFile
+            {
                 return false;
             } else if tok.kind == kind {
                 return true;
@@ -1371,7 +1426,8 @@ impl Parser {
     }
 
     fn current_precedence(&self) -> Precedence {
-        self.get_precedence(&self.current_token.kind).unwrap_or_default()
+        self.get_precedence(&self.current_token.kind)
+            .unwrap_or_default()
     }
 
     fn get_precedence(&self, kind: &TokenKind) -> Option<Precedence> {
@@ -1437,9 +1493,10 @@ impl Parser {
             TokenKind::Colon => prefix_expr::parse_prefix_colon,
             TokenKind::SpacedColon => prefix_expr::parse_prefix_spaced_colon,
             TokenKind::True | TokenKind::False => prefix_expr::parse_bool,
-            TokenKind::Plus | TokenKind::Minus | TokenKind::Bang | TokenKind::Percent => {
-                prefix_expr::parse_prefix_operator
-            }
+            TokenKind::Plus
+            | TokenKind::Minus
+            | TokenKind::Bang
+            | TokenKind::Percent => prefix_expr::parse_prefix_operator,
             _ => return None,
         }))
     }
@@ -1448,9 +1505,10 @@ impl Parser {
         let peek_token = self.peek_non_whitespace();
 
         Some(Box::new(match peek_token.kind {
-            TokenKind::Plus | TokenKind::Minus | TokenKind::Percent | TokenKind::StringConcat => {
-                infix_expr::parse_infix_operator
-            }
+            TokenKind::Plus
+            | TokenKind::Minus
+            | TokenKind::Percent
+            | TokenKind::StringConcat => infix_expr::parse_infix_operator,
             TokenKind::Or | TokenKind::And => infix_expr::parse_infix_operator,
             TokenKind::LeftParen => infix_expr::parser_call_expr,
             TokenKind::LeftBracket => infix_expr::parser_index_expr,
@@ -1475,7 +1533,12 @@ impl Parser {
 
         let mut left = match prefix {
             Some(prefix) => prefix(self)?,
-            None => return Err(anyhow::anyhow!("Failed to find prefix function for {:#?}", self)),
+            None => {
+                return Err(anyhow::anyhow!(
+                    "Failed to find prefix function for {:#?}",
+                    self
+                ))
+            }
         };
 
         // TODO: Some things may not allow newlines, but for now, let's just skip them
@@ -1501,17 +1564,25 @@ impl Parser {
 
     pub fn expect_eol(&mut self) -> Result<Token> {
         let curkind = &self.current_token.kind;
-        if curkind == &TokenKind::EndOfLine || curkind == &TokenKind::EndOfFile {
+        if curkind == &TokenKind::EndOfLine || curkind == &TokenKind::EndOfFile
+        {
             Ok(self.pop())
         } else {
-            Err(anyhow::anyhow!("expected eol or eof, got: {:?}", self.current_token))
+            Err(anyhow::anyhow!(
+                "expected eol or eof, got: {:?}",
+                self.current_token
+            ))
         }
     }
 
     pub fn ensure_token(&self, kind: TokenKind) -> Result<Token> {
         let token = self.current_token.clone();
         if token.kind != kind {
-            return Err(anyhow::anyhow!("Got token: {:?}, Expected: {:?}", token, kind));
+            return Err(anyhow::anyhow!(
+                "Got token: {:?}, Expected: {:?}",
+                token,
+                kind
+            ));
         }
 
         Ok(token)
@@ -1520,7 +1591,11 @@ impl Parser {
     pub fn ensure_peek(&self, kind: TokenKind) -> Result<Token> {
         let token = self.peek_token.clone();
         if token.kind != kind {
-            return Err(anyhow::anyhow!("Got token: {:?}, Expected: {:?}", token, kind));
+            return Err(anyhow::anyhow!(
+                "Got token: {:?}, Expected: {:?}",
+                token,
+                kind
+            ));
         }
 
         Ok(token)
@@ -1554,7 +1629,11 @@ impl Parser {
         Ok(self.next_token())
     }
 
-    pub fn expect_token_with_text(&mut self, kind: TokenKind, text: &str) -> Result<Token> {
+    pub fn expect_token_with_text(
+        &mut self,
+        kind: TokenKind,
+        text: &str,
+    ) -> Result<Token> {
         let token = self.current_token.clone();
         if token.kind != kind {
             panic!("Got token: {:?}, Expected kind: {:?}", token, kind);
@@ -1571,7 +1650,8 @@ impl Parser {
     }
 
     pub fn peek_identifier_with_text(&self, text: &str) -> bool {
-        self.peek_token.kind == TokenKind::Identifier && self.peek_token.text == text
+        self.peek_token.kind == TokenKind::Identifier
+            && self.peek_token.text == text
     }
 
     pub fn expect_identifier_with_text(&mut self, text: &str) -> Result<Token> {
@@ -1587,7 +1667,10 @@ impl Parser {
 
     pub fn next_token(&mut self) -> Token {
         self.current_token = self.peek_token.clone();
-        self.peek_token = self.token_buffer.pop_front().unwrap_or_else(|| self.lexer.next_token());
+        self.peek_token = self
+            .token_buffer
+            .pop_front()
+            .unwrap_or_else(|| self.lexer.next_token());
 
         self.current_token.clone()
     }
@@ -1621,13 +1704,17 @@ impl Parser {
         // generally speaking.
         let ex = match &self.current_token.kind {
             TokenKind::EndOfFile => panic!("EndOfFile!"),
-            TokenKind::Comment => ExCommand::Comment(self.current_token.clone()),
+            TokenKind::Comment => {
+                ExCommand::Comment(self.current_token.clone())
+            }
             TokenKind::EndOfLine => ExCommand::NoOp(self.current_token.clone()),
             TokenKind::Identifier => {
                 if self.command_match("vim9script") {
                     self.next_token();
                     ExCommand::Vim9Script(Vim9ScriptCommand {
-                        noclear: if self.current_token.kind == TokenKind::EndOfLine {
+                        noclear: if self.current_token.kind
+                            == TokenKind::EndOfLine
+                        {
                             false
                         } else {
                             self.expect_identifier_with_text("noclear")?;
@@ -1689,7 +1776,10 @@ impl Parser {
         program
     }
 
-    fn parse_identifier_list(&mut self, close_kind: TokenKind) -> Result<Vec<Identifier>> {
+    fn parse_identifier_list(
+        &mut self,
+        close_kind: TokenKind,
+    ) -> Result<Vec<Identifier>> {
         let mut results = vec![];
         if self.peek_token.kind == close_kind {
             return Ok(results);
@@ -1709,7 +1799,11 @@ impl Parser {
         Ok(results)
     }
 
-    fn parse_expression_list(&mut self, close_kind: TokenKind, consume_close: bool) -> Result<Vec<Expression>> {
+    fn parse_expression_list(
+        &mut self,
+        close_kind: TokenKind,
+        consume_close: bool,
+    ) -> Result<Vec<Expression>> {
         let mut results = vec![];
         if self.peek_token.kind != close_kind {
             self.next_token();
@@ -1733,7 +1827,10 @@ impl Parser {
         Ok(results)
     }
 
-    fn parse_keyvalue_list(&mut self, close_kind: TokenKind) -> Result<Vec<KeyValue>> {
+    fn parse_keyvalue_list(
+        &mut self,
+        close_kind: TokenKind,
+    ) -> Result<Vec<KeyValue>> {
         let mut elements: Vec<KeyValue> = vec![];
         if self.peek_token.kind == TokenKind::RightBrace {
             self.next_token();
@@ -1824,7 +1921,10 @@ mod test {
     snapshot!(test_heredoc, "../testdata/snapshots/heredoc.vim");
     snapshot!(test_typed_params, "../testdata/snapshots/typed_params.vim");
     snapshot!(test_index, "../testdata/snapshots/index.vim");
-    snapshot!(test_advanced_index, "../testdata/snapshots/advanced_index.vim");
+    snapshot!(
+        test_advanced_index,
+        "../testdata/snapshots/advanced_index.vim"
+    );
     snapshot!(test_multiline, "../testdata/snapshots/multiline.vim");
     snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
     snapshot!(test_lambda, "../testdata/snapshots/lambda.vim");
