@@ -29,6 +29,21 @@ pub struct Token {
     pub span: Span,
 }
 
+impl Token {
+    pub fn fake() -> Token {
+        Token {
+            kind: TokenKind::Virtual,
+            text: "".to_string(),
+            span: Span {
+                start_row: 0,
+                start_col: 0,
+                end_row: 0,
+                end_col: 0,
+            },
+        }
+    }
+}
+
 impl Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Token({:?}, {:?}, {:?})", self.kind, self.text, self.span)
@@ -39,6 +54,7 @@ impl Debug for Token {
 pub enum TokenKind {
     Illegal,
     EndOfFile,
+    Virtual,
 
     // TODO: Is this crazy for this lang??
     EndOfLine,
@@ -88,6 +104,7 @@ pub enum TokenKind {
     SpacedColon,
     Caret,
     Escaped,
+    Arrow,
 
     SingleQuoteString,
     DoubleQuoteString,
@@ -455,6 +472,15 @@ impl Lexer {
                 text: self.chars[position..=self.position].iter().collect(),
                 span: self.make_span(position, self.position + 1),
             }
+        } else if *ch == '>' {
+            let position = self.position;
+            self.read_char();
+
+            Token {
+                kind: TokenKind::Arrow,
+                text: self.chars[position..=self.position].iter().collect(),
+                span: self.make_span(position, self.position + 1),
+            }
         } else if *ch == '<' {
             let position = self.position;
             self.read_char();
@@ -570,6 +596,9 @@ mod test {
     snapshot!(test_autocmd, "../testdata/snapshots/autocmd.vim");
     snapshot!(test_heredoc, "../testdata/snapshots/heredoc.vim");
     snapshot!(test_register, "../testdata/snapshots/register.vim");
+    snapshot!(test_lambda, "../testdata/snapshots/lambda.vim");
+
+    // snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
 
     // TODO: Check more thoroughly
     snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");

@@ -485,31 +485,31 @@ impl CallCommand {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct Arguments {
-    open: Token,
-    pub args: Vec<Expression>,
-    close: Token,
-}
-
-impl Arguments {
-    pub fn parse(parser: &mut Parser) -> Result<Arguments> {
-        Ok(Arguments {
-            open: parser.expect_token(TokenKind::LeftParen)?,
-            args: {
-                let mut args = vec![];
-                while parser.current_token.kind != TokenKind::RightParen {
-                    args.push(Expression::parse(parser, Precedence::Lowest)?);
-
-                    // TODO: Consume ','?
-                }
-
-                args
-            },
-            close: parser.expect_token(TokenKind::RightParen)?,
-        })
-    }
-}
+// #[derive(Debug, PartialEq, Clone)]
+// pub struct Arguments {
+//     open: Token,
+//     pub args: Vec<Expression>,
+//     close: Token,
+// }
+//
+// impl Arguments {
+//     pub fn parse(parser: &mut Parser) -> Result<Arguments> {
+//         Ok(Arguments {
+//             open: parser.expect_token(TokenKind::LeftParen)?,
+//             args: {
+//                 let mut args = vec![];
+//                 while parser.current_token.kind != TokenKind::RightParen {
+//                     args.push(Expression::parse(parser, Precedence::Lowest)?);
+//
+//                     // TODO: Consume ','?
+//                 }
+//
+//                 args
+//             },
+//             close: parser.expect_token(TokenKind::RightParen)?,
+//         })
+//     }
+// }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Type {
@@ -813,9 +813,55 @@ pub enum Expression {
     Dict(DictLiteral),
     VimOption(VimOption),
     Register(Register),
+    Lambda(Lambda),
 
     Prefix(PrefixExpression),
     Infix(InfixExpression),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Lambda {
+    pub args: Signature,
+    pub ret: Option<Type>,
+    arrow: Token,
+    pub body: Body,
+}
+
+impl Lambda {
+    pub fn parse(parser: &mut Parser) -> Result<Lambda> {
+        Ok(Lambda {
+            args: Signature::parse(parser)?,
+            ret: {
+                if parser.current_token.kind == TokenKind::SpacedColon {
+                    Some(Type::parse(parser)?)
+                } else {
+                    None
+                }
+            },
+            arrow: parser.expect_token(TokenKind::Arrow)?,
+            body: {
+                if parser.current_token.kind == TokenKind::LeftBrace {
+                    todo!("parse blocks correctly");
+                } else {
+                    Body {
+                        commands: {
+                            let mut v = Vec::new();
+                            v.push(ExCommand::Return(ReturnCommand {
+                                ret: Token::fake(),
+                                expr: Some({
+                                    let expr = parser.parse_expression(Precedence::Lowest)?;
+                                    parser.next_token();
+                                    expr
+                                }),
+                                eol: parser.expect_eol()?,
+                            }));
+                            v
+                        },
+                    }
+                }
+            },
+        })
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -1081,11 +1127,15 @@ mod prefix_expr {
     }
 
     pub fn parse_grouped_expr(parser: &mut Parser) -> Result<Expression> {
-        Ok(Expression::Grouped(GroupedExpression {
-            open: parser.expect_token(TokenKind::LeftParen)?,
-            expr: parser.parse_expression(Precedence::Lowest)?.into(),
-            close: parser.expect_peek(TokenKind::RightParen)?,
-        }))
+        if parser.line_contains_kind(TokenKind::Arrow) {
+            Ok(Expression::Lambda(Lambda::parse(parser)?))
+        } else {
+            Ok(Expression::Grouped(GroupedExpression {
+                open: parser.expect_token(TokenKind::LeftParen)?,
+                expr: parser.parse_expression(Precedence::Lowest)?.into(),
+                close: parser.expect_peek(TokenKind::RightParen)?,
+            }))
+        }
     }
 
     pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression> {
@@ -1286,6 +1336,20 @@ impl Parser {
             peek_token: lexer.next_token(),
             token_buffer: VecDeque::new(),
             lexer,
+        }
+    }
+
+    fn line_contains_kind(&mut self, kind: TokenKind) -> bool {
+        let mut peek_index = 0;
+        loop {
+            let tok = self.peek_n(peek_index);
+            if tok.kind == TokenKind::EndOfLine || tok.kind == TokenKind::EndOfFile {
+                return false;
+            } else if tok.kind == kind {
+                return true;
+            }
+
+            peek_index += 1
         }
     }
 
@@ -1763,6 +1827,7 @@ mod test {
     snapshot!(test_advanced_index, "../testdata/snapshots/advanced_index.vim");
     snapshot!(test_multiline, "../testdata/snapshots/multiline.vim");
     snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
+    snapshot!(test_lambda, "../testdata/snapshots/lambda.vim");
 
     #[test]
     fn test_peek_n() {
