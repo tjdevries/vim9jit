@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-lexer/src/lib.rs
-assertion_line: 563
+assertion_line: 701
 expression: snapshot_lexing(contents)
 ---
 vim9script
@@ -11,7 +11,7 @@ vim9script
 var x =<< END
 ^^^ Token(Identifier, "var", (2,0)->(2,3))
     ^ Token(Identifier, "x", (2,4)->(2,5))
-      ^^^ Token(HeredocOperator, "<", (2,6)->(2,9))
+      ^^^ Token(HeredocOperator, "=<<", (2,6)->(2,9))
           ^^^ Token(Identifier, "END", (2,10)->(2,13))
               Token(EndOfLine, "\n", (2,13)->(2,13))
   hello
@@ -31,7 +31,7 @@ END
 var y =<< trim eval END
 ^^^ Token(Identifier, "var", (8,0)->(8,3))
     ^ Token(Identifier, "y", (8,4)->(8,5))
-      ^^^ Token(HeredocOperator, "<", (8,6)->(8,9))
+      ^^^ Token(HeredocOperator, "=<<", (8,6)->(8,9))
           ^^^^ Token(Identifier, "trim", (8,10)->(8,14))
                ^^^^ Token(Identifier, "eval", (8,15)->(8,19))
                     ^^^ Token(Identifier, "END", (8,20)->(8,23))
@@ -44,8 +44,7 @@ var y =<< trim eval END
         Token(EndOfLine, "\n", (10,7)->(10,7))
   +===???asdf<
   ^^ Token(PlusEquals, "+=", (11,2)->(11,4))
-    ^^ Token(EqualTo, "==", (11,4)->(11,6))
-      ^ Token(QuestionMark, "?", (11,6)->(11,7))
+    ^^^ Token(EqualToIns, "==?", (11,4)->(11,7))
        ^ Token(QuestionMark, "?", (11,7)->(11,8))
         ^ Token(QuestionMark, "?", (11,8)->(11,9))
          ^^^^ Token(Identifier, "asdf", (11,9)->(11,13))

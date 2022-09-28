@@ -89,12 +89,39 @@ pub enum TokenKind {
     Dot,
     StringConcat,
 
-    LessThan,
-    LessThanOrEqual,
-    GreaterThan,
-    GreaterThanOrEqual,
+    //                  use 'ignorecase'    match case      ignore case
+    // equal                   ==              ==#             ==?
+    // not equal               !=              !=#             !=?
+    // greater than            >               >#              >?
+    // greater than or equal   >=              >=#             >=?
+    // smaller than            <               <#              <?
+    // smaller than or equal   <=              <=#             <=?
+    // regexp matches          =~              =~#             =~?
+    // regexp doesn't match    !~              !~#             !~?
+    // same instance           is              is#             is?
+    // different instance      isnot           isnot#          isnot?
     EqualTo,
+    EqualToIns,
     NotEqualTo,
+    NotEqualToIns,
+    LessThan,
+    LessThanIns,
+    LessThanOrEqual,
+    LessThanOrEqualIns,
+    GreaterThan,
+    GreaterThanIns,
+    GreaterThanOrEqual,
+    GreaterThanOrEqualIns,
+    RegexpMatches,
+    RegexpMatchesIns,
+    NotRegexpMatches,
+    NotRegexpMatchesIns,
+    Is,
+    IsInsensitive,
+    IsNot,
+    IsNotInsensitive,
+
+    // Bools
     Or,
     And,
     Bang,
@@ -271,6 +298,28 @@ impl Lexer {
             "true" => TokenKind::True,
             "false" => TokenKind::False,
             "null" => TokenKind::Null,
+            "is" => match self.peek_char() {
+                Some(&'#') => {
+                    self.read_char();
+                    TokenKind::Is
+                }
+                Some(&'?') => {
+                    self.read_char();
+                    TokenKind::IsInsensitive
+                }
+                _ => TokenKind::Is,
+            },
+            "isnot" => match self.peek_char() {
+                Some(&'#') => {
+                    self.read_char();
+                    TokenKind::IsNot
+                }
+                Some(&'?') => {
+                    self.read_char();
+                    TokenKind::IsNotInsensitive
+                }
+                _ => TokenKind::IsNot,
+            },
             _ => TokenKind::Identifier,
         };
 
@@ -297,6 +346,10 @@ impl Lexer {
 
     fn peek_char(&mut self) -> Option<&char> {
         self.chars.get(self.position + 1)
+    }
+
+    fn peek_n(&self, n: usize) -> Option<&char> {
+        self.chars.get(self.position + n)
     }
 
     fn if_peek(
@@ -402,6 +455,9 @@ impl Lexer {
                 match ch {
                     // Operators that can optionally have an additional equals
                     '=' => self.handle_equal(),
+                    '!' => self.handle_bang(),
+                    '>' => self.handle_gt(),
+                    '<' => self.handle_lt(),
                     '+' => self.if_peek(
                         '=',
                         TokenKind::Plus,
@@ -418,16 +474,6 @@ impl Lexer {
                     '/' => {
                         self.if_peek('=', TokenKind::Div, TokenKind::DivEquals)
                     }
-                    '>' => self.if_peek(
-                        '=',
-                        TokenKind::GreaterThan,
-                        TokenKind::GreaterThanOrEqual,
-                    ),
-                    '<' => self.if_peek(
-                        '=',
-                        TokenKind::LessThan,
-                        TokenKind::LessThanOrEqual,
-                    ),
                     '|' => self.if_peek('|', TokenKind::Illegal, TokenKind::Or),
                     '&' => {
                         self.if_peek('&', TokenKind::Ampersand, TokenKind::And)
@@ -474,7 +520,6 @@ impl Lexer {
                     ']' => literal!(RightBracket),
                     '{' => literal!(LeftBrace),
                     '}' => literal!(RightBrace),
-                    '!' => literal!(Bang),
                     ',' => literal!(Comma),
                     '\n' => literal!(EndOfLine, 0),
                     '#' => self.read_comment(),
@@ -511,52 +556,102 @@ impl Lexer {
         tok
     }
 
+    fn read_one(&mut self, kind: TokenKind) -> Token {
+        Token {
+            kind,
+            text: self.ch.unwrap().to_string(),
+            span: self.make_span(self.position, self.position + 1),
+        }
+    }
+
+    fn read_two(&mut self, kind: TokenKind) -> Token {
+        let position = self.position;
+        self.read_char();
+
+        Token {
+            kind,
+            text: self.chars[position..=self.position].iter().collect(),
+            span: self.make_span(position, self.position + 1),
+        }
+    }
+
+    fn read_three(&mut self, kind: TokenKind) -> Token {
+        let position = self.position;
+        self.read_char();
+        self.read_char();
+
+        Token {
+            kind,
+            text: self.chars[position..=self.position].iter().collect(),
+            span: self.make_span(position, self.position + 1),
+        }
+    }
+
     fn handle_equal(&mut self) -> Token {
-        let ch = self.peek_char().unwrap();
-        if *ch == '=' {
-            let position = self.position;
-            self.read_char();
+        let peeked = (
+            self.peek_n(1).unwrap().to_owned(),
+            self.peek_n(2).unwrap().to_owned(),
+        );
 
-            Token {
-                kind: TokenKind::EqualTo,
-                text: self.chars[position..=self.position].iter().collect(),
-                span: self.make_span(position, self.position + 1),
-            }
-        } else if *ch == '>' {
-            let position = self.position;
-            self.read_char();
+        match peeked {
+            ('=', '#') => self.read_three(TokenKind::EqualTo),
+            ('=', '?') => self.read_three(TokenKind::EqualToIns),
+            ('=', _) => self.read_two(TokenKind::EqualTo),
+            ('<', '<') => self.read_three(TokenKind::HeredocOperator),
+            ('<', _) => self.read_two(TokenKind::Illegal),
+            ('~', '#') => self.read_three(TokenKind::RegexpMatches),
+            ('~', '?') => self.read_three(TokenKind::RegexpMatchesIns),
+            ('~', _) => self.read_two(TokenKind::RegexpMatches),
+            (_, _) => self.read_one(TokenKind::Equal),
+        }
+    }
 
-            Token {
-                kind: TokenKind::Arrow,
-                text: self.chars[position..=self.position].iter().collect(),
-                span: self.make_span(position, self.position + 1),
-            }
-        } else if *ch == '<' {
-            let position = self.position;
-            self.read_char();
+    fn handle_bang(&mut self) -> Token {
+        let peeked = (
+            self.peek_n(1).unwrap().to_owned(),
+            self.peek_n(2).unwrap().to_owned(),
+        );
 
-            // I don't think there is anyway for it not to be =<< vs. =< something else??
-            if *self.peek_char().unwrap() != '<' {
-                Token {
-                    kind: TokenKind::Illegal,
-                    text: self.ch.unwrap().to_string(),
-                    span: self.make_span(position, self.position + 1),
-                }
-            } else {
-                self.read_char();
+        match peeked {
+            ('=', '#') => self.read_three(TokenKind::NotEqualTo),
+            ('=', '?') => self.read_three(TokenKind::NotEqualToIns),
+            ('=', _) => self.read_two(TokenKind::NotEqualTo),
+            ('~', '#') => self.read_three(TokenKind::NotRegexpMatches),
+            ('~', '?') => self.read_three(TokenKind::NotRegexpMatchesIns),
+            ('~', _) => self.read_two(TokenKind::NotRegexpMatches),
+            (_, _) => self.read_one(TokenKind::Bang),
+        }
+    }
 
-                Token {
-                    kind: TokenKind::HeredocOperator,
-                    text: self.ch.unwrap().to_string(),
-                    span: self.make_span(position, self.position + 1),
-                }
-            }
-        } else {
-            Token {
-                kind: TokenKind::Equal,
-                text: self.ch.unwrap().to_string(),
-                span: self.make_span(self.position, self.position + 1),
-            }
+    fn handle_gt(&mut self) -> Token {
+        let peeked = (
+            self.peek_n(1).unwrap().to_owned(),
+            self.peek_n(2).unwrap().to_owned(),
+        );
+
+        match peeked {
+            ('=', '#') => self.read_three(TokenKind::GreaterThanOrEqual),
+            ('=', '?') => self.read_three(TokenKind::GreaterThanOrEqualIns),
+            ('=', _) => self.read_two(TokenKind::GreaterThanOrEqual),
+            ('#', _) => self.read_two(TokenKind::GreaterThan),
+            ('?', _) => self.read_two(TokenKind::GreaterThanIns),
+            (_, _) => self.read_one(TokenKind::GreaterThan),
+        }
+    }
+
+    fn handle_lt(&mut self) -> Token {
+        let peeked = (
+            self.peek_n(1).unwrap().to_owned(),
+            self.peek_n(2).unwrap().to_owned(),
+        );
+
+        match peeked {
+            ('=', '#') => self.read_three(TokenKind::LessThanOrEqual),
+            ('=', '?') => self.read_three(TokenKind::LessThanOrEqualIns),
+            ('=', _) => self.read_two(TokenKind::LessThanOrEqual),
+            ('#', _) => self.read_two(TokenKind::LessThan),
+            ('?', _) => self.read_two(TokenKind::LessThanIns),
+            (_, _) => self.read_one(TokenKind::LessThan),
         }
     }
 }
