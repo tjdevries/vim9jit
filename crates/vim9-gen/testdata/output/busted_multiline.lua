@@ -9,7 +9,7 @@ describe("filename", function()
 		-- Actual test
 		local x = require("vim9script").convert.decl_bool(require("vim9script").ops["And"](true, false))
 		-- Token(EndOfLine, "\n", (6,0)->(6,0))
-		vim.fn.assert_equal(x, false)
+		vim.fn["assert_equal"](x, false)
 
 		-- Assert that errors is still empty
 		assert.are.same({}, vim.v.errors)
@@ -24,7 +24,7 @@ describe("filename", function()
 		-- Actual test
 		local y = require("vim9script").convert.decl_bool(require("vim9script").ops["And"](true, false))
 		-- Token(EndOfLine, "\n", (13,0)->(13,0))
-		vim.fn.assert_equal(y, false)
+		vim.fn["assert_equal"](y, false)
 
 		-- Assert that errors is still empty
 		assert.are.same({}, vim.v.errors)
@@ -39,7 +39,7 @@ describe("filename", function()
 		-- Actual test
 		local z = require("vim9script").ops["Or"](true, false)
 		-- Token(EndOfLine, "\n", (21,0)->(21,0))
-		vim.fn.assert_equal(z, true)
+		vim.fn["assert_equal"](z, true)
 
 		-- Assert that errors is still empty
 		assert.are.same({}, vim.v.errors)

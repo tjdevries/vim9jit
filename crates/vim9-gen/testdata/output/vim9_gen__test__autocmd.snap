@@ -1,7 +1,7 @@
 ---
-source: src/lib.rs
-assertion_line: 429
-expression: generate(contents)
+source: crates/vim9-gen/src/lib.rs
+assertion_line: 850
+expression: "generate(contents, false)"
 ---
 -- vim9script
 
@@ -25,5 +25,5 @@ vim.api.nvim_create_autocmd({ "WinLeave" }, {
 })
 
 -- Token(EndOfLine, "\n", (9,0)->(9,0))
-local x = vim.fn.len(vim.api.nvim_get_autocmds({ group = "matchparen" }))
+local x = vim.fn["len"](vim.api.nvim_get_autocmds({ group = "matchparen" }))
 

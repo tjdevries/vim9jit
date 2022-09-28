@@ -986,7 +986,7 @@ pub struct Expandable {
 pub struct DictAccess {
     pub container: Box<Expression>,
     dot: Token,
-    pub index: Box<Expression>,
+    pub index: RawIdentifier,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -1203,8 +1203,8 @@ pub enum Precedence {
     Colon,
     Prefix,
     Call,
-    Dot,
     Index,
+    Dot,
 }
 
 // The parseIdentifier method doesn’t do a lot. It only returns a *ast.Identifier with the current
@@ -1445,7 +1445,9 @@ mod infix_expr {
         Ok(Expression::DictAccess(DictAccess {
             container: left,
             dot: parser.expect_token(TokenKind::Dot)?,
-            index: parser.parse_expression(Precedence::Lowest)?.into(),
+            index: RawIdentifier {
+                name: parser.ensure_token(TokenKind::Identifier)?.text,
+            },
         }))
     }
 

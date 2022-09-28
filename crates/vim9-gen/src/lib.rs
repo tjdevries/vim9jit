@@ -8,10 +8,15 @@ use parser::AutocmdCommand;
 use parser::Body;
 use parser::CallCommand;
 use parser::CallExpression;
+use parser::DeclCommand;
 use parser::DefCommand;
+use parser::DictAccess;
 use parser::DictLiteral;
 use parser::EchoCommand;
+use parser::ElseCommand;
+use parser::ElseIfCommand;
 use parser::ExCommand;
+use parser::Expandable;
 use parser::Expression;
 use parser::GroupedExpression;
 use parser::Heredoc;
@@ -21,13 +26,17 @@ use parser::IndexExpression;
 use parser::IndexType;
 use parser::InfixExpression;
 use parser::InnerType;
+use parser::Lambda;
 use parser::Literal;
-use parser::Operator;
+use parser::PrefixExpression;
 use parser::RawIdentifier;
+use parser::Register;
 use parser::ReturnCommand;
 use parser::ScopedIdentifier;
+use parser::Signature;
 use parser::StatementCommand;
 use parser::Type;
+use parser::UserCommand;
 use parser::VarCommand;
 use parser::Vim9ScriptCommand;
 use parser::VimBoolean;
@@ -42,6 +51,8 @@ mod test_harness;
 pub struct State {
     pub augroup: Option<Literal>,
     pub is_test: bool,
+
+    pub command_depth: i32,
 }
 
 pub trait Generate {
@@ -61,14 +72,57 @@ impl Generate for ExCommand {
             ExCommand::Augroup(cmd) => cmd.gen(state),
             ExCommand::Autocmd(cmd) => cmd.gen(state),
             ExCommand::Call(cmd) => cmd.gen(state),
+            ExCommand::Decl(cmd) => cmd.gen(state),
             // ExCommand::Finish(_) => todo!(),
             // ExCommand::Skip => todo!(),
             // ExCommand::EndOfFile => todo!(),
             ExCommand::Comment(token) => format!("-- {}", token.text),
             ExCommand::NoOp(token) => format!("-- {:?}", token),
             ExCommand::Heredoc(heredoc) => heredoc.gen(state),
+            ExCommand::UserCommand(usercmd) => usercmd.gen(state),
             _ => todo!("Have not yet handled: {:?}", self),
         }
+    }
+}
+
+fn make_user_command_arg(state: &State) -> String {
+    format!("__vim9_arg_{}", state.command_depth)
+}
+
+impl Generate for UserCommand {
+    fn gen(&self, state: &mut State) -> String {
+        // TODO:
+        // TODO: have not yet handled all the things here
+        state.command_depth += 1;
+
+        let result = format!(
+            r#"
+            vim.api.nvim_create_user_command(
+                "{}",
+                function({})
+                    {}
+                end,
+                {{
+                     nargs = '{}'
+                }}
+            )"#,
+            self.name,
+            make_user_command_arg(state),
+            self.command.gen(state),
+            self.command_nargs.clone().unwrap_or("0".to_string()),
+        );
+
+        state.command_depth -= 1;
+
+        result
+    }
+}
+
+impl Generate for DeclCommand {
+    fn gen(&self, state: &mut State) -> String {
+        // TODO: default value should not be nil for everything here
+        // i think?
+        format!("local {} = {}", self.name.gen(state), "nil")
     }
 }
 
@@ -185,6 +239,9 @@ impl Generate for DefCommand {
                 self.body.gen(state)
             )
         } else {
+            let (signature, default_statements) =
+                gen_signature(state, &self.args);
+
             // TODO: If this command follows certain patterns,
             // we will also need to define a vimscript function,
             // so that this function is available.
@@ -198,15 +255,40 @@ impl Generate for DefCommand {
             // This is a "must-have" aspect of what we're doing.
             format!(
                 r#"
-                    local {} = function()
-                      {}
+                    local {} = function({})
+                        {}
+                        {}
                     end
                 "#,
                 name,
+                signature,
+                default_statements,
                 self.body.gen(state)
             )
         }
     }
+}
+
+fn gen_signature(state: &mut State, args: &Signature) -> (String, String) {
+    (
+        args.params
+            .iter()
+            .map(|p| p.name.gen(state))
+            .collect::<Vec<String>>()
+            .join(", "),
+        args.params
+            .iter()
+            .filter(|p| p.default_val.is_some())
+            .map(|p| {
+                let name = p.name.gen(state);
+                let default_val = p.default_val.clone().unwrap();
+                let default_val = default_val.gen(state);
+
+                format!("{name} = vim.F.if_nil({name}, {default_val}, {name})")
+            })
+            .collect::<Vec<String>>()
+            .join("\n"),
+    )
 }
 
 impl Generate for StatementCommand {
@@ -225,16 +307,48 @@ impl Generate for AssignStatement {
 
 impl Generate for IfCommand {
     fn gen(&self, state: &mut State) -> String {
+        let else_result = match &self.else_command {
+            Some(e) => e.gen(state),
+            None => "".to_string(),
+        };
+
         format!(
             r#"
 if {} then
   {}
+{}
+{}
 end"#,
             self.condition.gen(state),
-            self.body.gen(state)
+            self.body.gen(state),
+            self.elseifs
+                .iter()
+                .map(|e| e.gen(state))
+                .collect::<Vec<String>>()
+                .join("\n"),
+            else_result,
         )
         .trim()
         .to_string()
+    }
+}
+
+impl Generate for ElseIfCommand {
+    fn gen(&self, state: &mut State) -> String {
+        format!(
+            r#"
+        elseif {} then
+            {}
+        "#,
+            self.condition.gen(state),
+            self.body.gen(state)
+        )
+    }
+}
+
+impl Generate for ElseCommand {
+    fn gen(&self, state: &mut State) -> String {
+        format!("else\n{}\n", self.body.gen(state))
     }
 }
 
@@ -327,21 +441,69 @@ impl Generate for Expression {
             Expression::Boolean(bool) => bool.gen(state),
             Expression::Grouped(grouped) => grouped.gen(state),
             Expression::Call(call) => call.gen(state),
-            Expression::Prefix(_) => todo!(),
+            Expression::Prefix(prefix) => prefix.gen(state),
             Expression::Infix(infix) => infix.gen(state),
             Expression::Array(array) => array.gen(state),
             Expression::Dict(dict) => dict.gen(state),
             Expression::VimOption(opt) => opt.gen(state),
             Expression::Empty => "".to_string(),
             Expression::Index(index) => index.gen(state),
-            Expression::DictAccess(_) => todo!(),
-            Expression::Register(_) => todo!(),
-            Expression::Lambda(_) => todo!(),
-            Expression::Expandable(_) => todo!(),
+            Expression::DictAccess(access) => access.gen(state),
+            Expression::Register(reg) => reg.gen(state),
+            Expression::Lambda(lambda) => lambda.gen(state),
+            Expression::Expandable(expandable) => expandable.gen(state),
 
             // Some expressions can only be triggered from containing expressions
             Expression::Slice(_) => unreachable!("cannot gen slice by itself"),
         }
+    }
+}
+
+impl Generate for DictAccess {
+    fn gen(&self, state: &mut State) -> String {
+        format!("{}['{}']", self.container.gen(state), self.index.gen(state))
+    }
+}
+
+impl Generate for Expandable {
+    fn gen(&self, state: &mut State) -> String {
+        match &self.ident {
+            Identifier::Raw(RawIdentifier { name }) if name == "q-args" => {
+                format!("{}.{}", make_user_command_arg(state), "args")
+            }
+            _ => format!("vim.fn.expand('<{}>')", self.ident.gen(state)),
+        }
+    }
+}
+
+impl Generate for Lambda {
+    fn gen(&self, state: &mut State) -> String {
+        let (signature, default_statements) = gen_signature(state, &self.args);
+        format!(
+            r#"(function({})
+                {}
+                {}
+                end)"#,
+            signature,
+            default_statements,
+            self.body.gen(state)
+        )
+    }
+}
+
+impl Generate for Register {
+    fn gen(&self, _: &mut State) -> String {
+        format!("vim.fn.getreg({:?})", self.register)
+    }
+}
+
+impl Generate for PrefixExpression {
+    fn gen(&self, state: &mut State) -> String {
+        format!(
+            "require('vim9script').prefix['{:?}']({})",
+            self.operator,
+            self.right.gen(state)
+        )
     }
 }
 
@@ -470,8 +632,38 @@ impl Generate for CallExpression {
                     if raw.name.to_lowercase() == raw.name {
                         if raw.name.starts_with("nvim_") {
                             format!("vim.api.{}", raw.name)
+                        } else if raw.name == "function" {
+                            assert!(self.args.len() <= 2, "vim.fn.function");
+                            // let mut args = self
+                            //     .args
+                            //     .iter()
+                            //     .skip(1)
+                            //     .map(|e| e.gen(state))
+                            //     .collect::<Vec<String>>();
+                            // args.push("...".to_string());
+                            if self.args.len() == 1 {
+                                return format!(
+                                    r#"function(...) return vim.fn[{}](...) end"#,
+                                    self.args[0].gen(state),
+                                );
+                            } else {
+                                // TODO: Something
+                                return format!(
+                                    r#"
+                                    function(...)
+                                      local copied = vim.deepcopy({})
+                                      for _, val in ipairs({{...}}) do
+                                        table.insert(copied, val)
+                                      end
+                                      return vim.fn['{}'](unpack(copied))
+                                    end
+                                    "#,
+                                    self.args[1].gen(state),
+                                    raw.name
+                                );
+                            }
                         } else {
-                            format!("vim.fn.{}", raw.name)
+                            format!("vim.fn['{}']", raw.name)
                         }
                     } else {
                         raw.name.clone()
@@ -560,6 +752,7 @@ impl Generate for InfixExpression {
 pub fn eval(program: parser::Program, is_test: bool) -> String {
     let mut state = State {
         augroup: None,
+        command_depth: 0,
         is_test,
     };
 
@@ -585,8 +778,10 @@ pub fn generate(contents: &str, is_test: bool) -> String {
     let mut parser = new_parser(lexer);
     let program = parser.parse_program();
 
+    let result = eval(program, is_test);
+    println!("{}", result);
     stylua_lib::format_code(
-        &eval(program, is_test),
+        &result,
         stylua_lib::Config::default(),
         None,
         stylua_lib::OutputVerification::None,
@@ -646,6 +841,7 @@ mod test {
     busted!(busted_heredoc, "../testdata/busted/heredoc.vim");
     busted!(busted_indexing, "../testdata/busted/indexing.vim");
     busted!(busted_multiline, "../testdata/busted/multiline.vim");
+    busted!(busted_function, "../testdata/busted/function.vim");
 
     snapshot!(test_expr, "../testdata/snapshots/expr.vim");
     snapshot!(test_if, "../testdata/snapshots/if.vim");

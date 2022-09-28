@@ -1,22 +1,39 @@
 local M = {}
 
 M.ops = require "vim9script.ops"
+M.prefix = require "vim9script.prefix"
 M.convert = require "vim9script.convert"
 M.heredoc = require "vim9script.heredoc"
 
-M.slice = function(tbl, start, finish)
-  assert(vim.tbl_islist(tbl), "only can use slices on lists")
+M.slice = function(obj, start, finish)
+  local slicer
+  if vim.tbl_islist(obj) then
+    slicer = vim.list_slice
+  elseif type(obj) == "string" then
+    slicer = string.sub
+  else
+    error("invalid type for slicing: " .. vim.inspect(obj))
+  end
+
   if start == nil then
     start = 0
+  end
+
+  if start < 0 then
+    start = #obj - start
   end
   assert(type(start) == "number")
 
   if finish == nil then
-    finish = #tbl
+    finish = #obj
+  end
+
+  if finish < 0 then
+    finish = #obj - finish
   end
   assert(type(finish) == "number")
 
-  return vim.list_slice(tbl, start + 1, finish + 1)
+  return slicer(obj, start + 1, finish + 1)
 end
 
 M.make_source_cmd = function()

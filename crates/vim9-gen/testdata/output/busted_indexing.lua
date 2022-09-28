@@ -8,7 +8,7 @@ describe("filename", function()
 		vim.v.errors = {}
 
 		-- Actual test
-		vim.fn.assert_equal(1, l[0 + 1])
+		vim.fn["assert_equal"](1, l[0 + 1])
 
 		-- Assert that errors is still empty
 		assert.are.same({}, vim.v.errors)
@@ -21,7 +21,7 @@ describe("filename", function()
 		vim.v.errors = {}
 
 		-- Actual test
-		vim.fn.assert_equal({ 1, 2 }, require("vim9script").slice(l, 0, 1))
+		vim.fn["assert_equal"]({ 1, 2 }, require("vim9script").slice(l, 0, 1))
 
 		-- Assert that errors is still empty
 		assert.are.same({}, vim.v.errors)
@@ -34,7 +34,7 @@ describe("filename", function()
 		vim.v.errors = {}
 
 		-- Actual test
-		vim.fn.assert_equal({ 2, 3 }, require("vim9script").slice(l, 1, nil))
+		vim.fn["assert_equal"]({ 2, 3 }, require("vim9script").slice(l, 1, nil))
 
 		-- Assert that errors is still empty
 		assert.are.same({}, vim.v.errors)
@@ -47,7 +47,7 @@ describe("filename", function()
 		vim.v.errors = {}
 
 		-- Actual test
-		vim.fn.assert_equal({ 1, 2 }, require("vim9script").slice(l, nil, 1))
+		vim.fn["assert_equal"]({ 1, 2 }, require("vim9script").slice(l, nil, 1))
 
 		-- Assert that errors is still empty
 		assert.are.same({}, vim.v.errors)
