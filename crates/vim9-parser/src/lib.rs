@@ -34,11 +34,56 @@ pub enum ExCommand {
     Augroup(AugroupCommand),
     Autocmd(AutocmdCommand),
     Statement(StatementCommand),
+    UserCommand(UserCommand),
 
     Skip,
     EndOfFile,
     Comment(Token),
     NoOp(Token),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct UserCommand {
+    tok: Token,
+    pub bang: bool,
+    pub command_nargs: Option<String>,
+    pub command_bang: bool,
+    pub name: String,
+    pub command: Box<ExCommand>,
+}
+
+impl UserCommand {
+    fn parse(parser: &mut Parser) -> Result<ExCommand> {
+        let tok = parser.expect_identifier_with_text("command")?;
+        let bang = parser.consume_if_kind(TokenKind::Bang).is_some();
+
+        let mut command_nargs = None;
+        let mut command_bang = false;
+        while parser.current_token.kind == TokenKind::Minus {
+            parser.next_token();
+            parser.ensure_token(TokenKind::Identifier)?;
+
+            match parser.pop().text.as_ref() {
+                "bang" => {
+                    command_bang = true;
+                }
+                "nargs" => {
+                    parser.expect_token(TokenKind::Equal)?;
+                    command_nargs = Some(parser.pop().text);
+                }
+                _ => panic!("OH NO"),
+            }
+        }
+
+        Ok(ExCommand::UserCommand(UserCommand {
+            tok,
+            bang,
+            command_nargs,
+            command_bang,
+            name: parser.expect_token(TokenKind::Identifier)?.text,
+            command: parser.parse_command()?.into(),
+        }))
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -583,9 +628,26 @@ impl InnerType {
                     "void" => InnerType::Void,
                     "string" => InnerType::String,
                     "list" => InnerType::List {
-                        open: parser.expect_token(TokenKind::LessThan)?,
+                        open: parser.expect_fn(
+                            |k| {
+                                matches!(
+                                    k,
+                                    TokenKind::LessThan | TokenKind::AngleLeft
+                                )
+                            },
+                            true,
+                        )?,
                         inner: InnerType::parse(parser)?.into(),
-                        close: parser.expect_token(TokenKind::GreaterThan)?,
+                        close: parser.expect_fn(
+                            |k| {
+                                matches!(
+                                    k,
+                                    TokenKind::GreaterThan
+                                        | TokenKind::AngleRight
+                                )
+                            },
+                            true,
+                        )?,
                     },
                     "func" => InnerType::Func(InnerFuncType::Naked),
                     _ => todo!("{:?}", literal.token),
@@ -837,12 +899,28 @@ pub enum Expression {
     Slice(VimSlice),
     Array(ArrayLiteral),
     Dict(DictLiteral),
+    DictAccess(DictAccess),
     VimOption(VimOption),
     Register(Register),
     Lambda(Lambda),
+    Expandable(Expandable),
 
     Prefix(PrefixExpression),
     Infix(InfixExpression),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Expandable {
+    left: Token,
+    pub ident: Identifier,
+    right: Token,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct DictAccess {
+    pub container: Box<Expression>,
+    dot: Token,
+    pub index: Box<Expression>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -1059,6 +1137,7 @@ pub enum Precedence {
     Colon,
     Prefix,
     Call,
+    Dot,
     Index,
 }
 
@@ -1215,6 +1294,31 @@ mod prefix_expr {
     ) -> Result<Expression> {
         todo!("[SpacedColon] I don't think we ever get this in reality? ");
     }
+
+    pub fn parse_expandable_sequence(
+        parser: &mut Parser,
+    ) -> Result<Expression> {
+        Ok(Expression::Expandable(Expandable {
+            left: parser.expect_token(TokenKind::AngleLeft)?,
+            ident: {
+                // read until greater than or angle,
+                // smoosh into raw identifier
+                let mut name = String::new();
+                while !matches!(
+                    parser.current_token.kind,
+                    TokenKind::GreaterThan | TokenKind::AngleRight
+                ) {
+                    name += parser.pop().text.as_str();
+                }
+
+                Identifier::Raw(RawIdentifier { name })
+            },
+            right: parser.expect_fn(
+                |k| matches!(k, TokenKind::GreaterThan | TokenKind::AngleRight),
+                false,
+            )?,
+        }))
+    }
 }
 
 mod infix_expr {
@@ -1265,6 +1369,17 @@ mod infix_expr {
             operator,
             left,
             right: parser.parse_expression(prec)?.into(),
+        }))
+    }
+
+    pub fn parse_dot_operator(
+        parser: &mut Parser,
+        left: Box<Expression>,
+    ) -> Result<Expression> {
+        Ok(Expression::DictAccess(DictAccess {
+            container: left,
+            dot: parser.expect_token(TokenKind::Dot)?,
+            index: parser.parse_expression(Precedence::Lowest)?.into(),
         }))
     }
 
@@ -1474,6 +1589,7 @@ impl Parser {
             TokenKind::Comma => Precedence::Lowest,
             TokenKind::SpacedColon => Precedence::Lowest,
             TokenKind::Or | TokenKind::And => Precedence::Equals,
+            TokenKind::Dot => Precedence::Dot,
             TokenKind::EqualTo
             | TokenKind::EqualToIns
             | TokenKind::NotEqualTo
@@ -1495,33 +1611,19 @@ impl Parser {
             | TokenKind::IsNot
             | TokenKind::IsNotInsensitive => Precedence::LessGreater,
             TokenKind::RightBracket
-                | TokenKind::RightBrace
-                | TokenKind::RightParen
-                => Precedence::Lowest,
+            | TokenKind::RightBrace
+            | TokenKind::RightParen => Precedence::Lowest,
             TokenKind::EndOfLine | TokenKind::EndOfFile => Precedence::Lowest,
             // We have to check new lines to see if we need to handle anything there.
             //  I'm not sure this is 100% great, but we'll leave it this way for now.
-            TokenKind::Identifier | TokenKind::Comment=> Precedence::Lowest,
+            TokenKind::Identifier | TokenKind::Comment => Precedence::Lowest,
 
-            _ => panic!("Unexpected precendence kind: {:?}", kind)
-            // TokenKind::LessThan => todo!(),
-            // TokenKind::LessThanOrEqual => todo!(),
-            // TokenKind::GreaterThan => todo!(),
-            // TokenKind::GreaterThanOrEqual => todo!(),
-            // TokenKind::EqualTo => todo!(),
-            // TokenKind::NotEqualTo => todo!(),
-            // TokenKind::Or => todo!(),
-            // TokenKind::And => todo!(),
-            // TokenKind::Comma => todo!(),
-            // TokenKind::Colon => todo!(),
-            // TokenKind::SingleQuoteString => todo!(),
-            // TokenKind::DoubleQuoteString => todo!(),
-            // TokenKind::LeftParen => todo!(),
-            // TokenKind::RightParen => todo!(),
-            // TokenKind::LeftBrace => todo!(),
-            // TokenKind::RightBrace => todo!(),
-            // TokenKind::LeftBracket => todo!(),
-            // TokenKind::RightBracket => todo!(),
+            // TODO: Not confident that this is the right level
+            TokenKind::AngleLeft => Precedence::Lowest,
+
+            _ => {
+                panic!("Unexpected precendence kind: {:?} // {:#?}", kind, self)
+            }
         })
     }
 
@@ -1539,6 +1641,7 @@ impl Parser {
             TokenKind::Ampersand => prefix_expr::parse_vim_option,
             TokenKind::Colon => prefix_expr::parse_prefix_colon,
             TokenKind::SpacedColon => prefix_expr::parse_prefix_spaced_colon,
+            TokenKind::AngleLeft => prefix_expr::parse_expandable_sequence,
             TokenKind::True | TokenKind::False => prefix_expr::parse_bool,
             TokenKind::Plus
             | TokenKind::Minus
@@ -1580,6 +1683,7 @@ impl Parser {
             | TokenKind::IsInsensitive
             | TokenKind::IsNot
             | TokenKind::IsNotInsensitive => infix_expr::parse_infix_operator,
+            TokenKind::Dot => infix_expr::parse_dot_operator,
             TokenKind::Identifier => return None,
             // TokenKind::SpacedColon => infix_expr::parser_index_type,
             _ => unimplemented!("get_infix_fn: {:#?}", self),
@@ -1691,6 +1795,21 @@ impl Parser {
         Ok(self.next_token())
     }
 
+    pub fn expect_fn<F>(&mut self, f: F, consume: bool) -> Result<Token>
+    where
+        F: Fn(&TokenKind) -> bool,
+    {
+        let token = self.current_token.clone();
+        if !f(&token.kind) {
+            return Err(anyhow::anyhow!("[expect_fn] Got token: {:?}", token));
+        }
+
+        if consume {
+            self.next_token();
+        }
+        Ok(token)
+    }
+
     pub fn expect_token_with_text(
         &mut self,
         kind: TokenKind,
@@ -1800,6 +1919,8 @@ impl Parser {
                     return Ok(AutocmdCommand::parse(self)?);
                 } else if self.command_match("finish") {
                     return Ok(FinishCommand::parse(self)?);
+                } else if self.command_match("command") {
+                    return Ok(UserCommand::parse(self)?);
                 } else {
                     if self.peek_token.kind == TokenKind::LeftParen {
                         return Ok(CallCommand::parse(self)?);
@@ -1917,6 +2038,14 @@ impl Parser {
             self.next_token();
         }
     }
+
+    fn consume_if_kind(&mut self, bang: TokenKind) -> Option<Token> {
+        if self.current_token.kind == bang {
+            Some(self.next_token())
+        } else {
+            None
+        }
+    }
 }
 
 fn snapshot_parsing(input: &str) -> String {
@@ -1983,10 +2112,7 @@ mod test {
     snapshot!(test_heredoc, "../testdata/snapshots/heredoc.vim");
     snapshot!(test_typed_params, "../testdata/snapshots/typed_params.vim");
     snapshot!(test_index, "../testdata/snapshots/index.vim");
-    snapshot!(
-        test_advanced_index,
-        "../testdata/snapshots/advanced_index.vim"
-    );
+    snapshot!(test_adv_index, "../testdata/snapshots/adv_index.vim");
     snapshot!(test_multiline, "../testdata/snapshots/multiline.vim");
     snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
     snapshot!(test_lambda, "../testdata/snapshots/lambda.vim");

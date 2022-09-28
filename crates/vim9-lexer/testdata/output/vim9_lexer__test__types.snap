@@ -1,0 +1,37 @@
+---
+source: crates/vim9-lexer/src/lib.rs
+assertion_line: 749
+expression: snapshot_lexing(contents)
+---
+vim9script
+^^^^^^^^^^ Token(Identifier, "vim9script", (0,0)->(0,10))
+           Token(EndOfLine, "\n", (0,10)->(0,10))
+
+ Token(EndOfLine, "\n", (1,0)->(1,0))
+var x: list<number> = [10]
+^^^ Token(Identifier, "var", (2,0)->(2,3))
+    ^ Token(Identifier, "x", (2,4)->(2,5))
+     ^^ Token(SpacedColon, ": ", (2,5)->(2,7))
+       ^^^^ Token(Identifier, "list", (2,7)->(2,11))
+           ^ Token(AngleLeft, "<", (2,11)->(2,12))
+            ^^^^^^ Token(Identifier, "number", (2,12)->(2,18))
+                  ^ Token(GreaterThan, ">", (2,18)->(2,19))
+                    ^ Token(Equal, "=", (2,20)->(2,21))
+                      ^ Token(LeftBracket, "[", (2,22)->(2,23))
+                       ^^ Token(Integer, "10", (2,23)->(2,25))
+                         ^ Token(RightBracket, "]", (2,25)->(2,26))
+                           Token(EndOfLine, "\n", (2,26)->(2,26))
+var y: list< number > = [10]
+^^^ Token(Identifier, "var", (3,0)->(3,3))
+    ^ Token(Identifier, "y", (3,4)->(3,5))
+     ^^ Token(SpacedColon, ": ", (3,5)->(3,7))
+       ^^^^ Token(Identifier, "list", (3,7)->(3,11))
+           ^ Token(LessThan, "<", (3,11)->(3,12))
+             ^^^^^^ Token(Identifier, "number", (3,13)->(3,19))
+                    ^ Token(GreaterThan, ">", (3,20)->(3,21))
+                      ^ Token(Equal, "=", (3,22)->(3,23))
+                        ^ Token(LeftBracket, "[", (3,24)->(3,25))
+                         ^^ Token(Integer, "10", (3,25)->(3,27))
+                           ^ Token(RightBracket, "]", (3,27)->(3,28))
+                             Token(EndOfLine, "\n", (3,28)->(3,28))
+

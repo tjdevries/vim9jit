@@ -1,6 +1,6 @@
 ---
-source: src/lib.rs
-assertion_line: 482
+source: crates/vim9-lexer/src/lib.rs
+assertion_line: 754
 expression: snapshot_lexing(contents)
 ---
 vim9script noclear
@@ -499,7 +499,7 @@ def Highlight_Matching_Pair(): void
       ^^^^^^^^^^^ Token(Identifier, "save_cursor", (94,6)->(94,17))
                  ^^ Token(SpacedColon, ": ", (94,17)->(94,19))
                    ^^^^ Token(Identifier, "list", (94,19)->(94,23))
-                       ^ Token(LessThan, "<", (94,23)->(94,24))
+                       ^ Token(AngleLeft, "<", (94,23)->(94,24))
                         ^^^^^^ Token(Identifier, "number", (94,24)->(94,30))
                               ^ Token(GreaterThan, ">", (94,30)->(94,31))
                                 Token(EndOfLine, "\n", (94,31)->(94,31))

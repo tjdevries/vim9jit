@@ -136,6 +136,8 @@ pub enum TokenKind {
     Caret,
     Escaped,
     Arrow,
+    AngleLeft,
+    AngleRight,
 
     SingleQuoteString,
     DoubleQuoteString,
@@ -636,7 +638,10 @@ impl Lexer {
             ('=', _) => self.read_two(TokenKind::GreaterThanOrEqual),
             ('#', _) => self.read_two(TokenKind::GreaterThan),
             ('?', _) => self.read_two(TokenKind::GreaterThanIns),
-            (_, _) => self.read_one(TokenKind::GreaterThan),
+            (c, _) if c.is_whitespace() => {
+                self.read_one(TokenKind::GreaterThan)
+            }
+            (_, _) => self.read_one(TokenKind::AngleRight),
         }
     }
 
@@ -652,7 +657,8 @@ impl Lexer {
             ('=', _) => self.read_two(TokenKind::LessThanOrEqual),
             ('#', _) => self.read_two(TokenKind::LessThan),
             ('?', _) => self.read_two(TokenKind::LessThanIns),
-            (_, _) => self.read_one(TokenKind::LessThan),
+            (c, _) if c.is_whitespace() => self.read_one(TokenKind::LessThan),
+            (_, _) => self.read_one(TokenKind::AngleLeft),
         }
     }
 }
@@ -743,6 +749,7 @@ mod test {
     snapshot!(test_heredoc, "../testdata/snapshots/heredoc.vim");
     snapshot!(test_register, "../testdata/snapshots/register.vim");
     snapshot!(test_lambda, "../testdata/snapshots/lambda.vim");
+    snapshot!(test_types, "../testdata/snapshots/types.vim");
 
     // snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
 
