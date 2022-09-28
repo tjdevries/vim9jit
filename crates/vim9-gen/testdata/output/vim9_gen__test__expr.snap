@@ -1,9 +1,9 @@
 ---
-source: src/lib.rs
-assertion_line: 228
-expression: generate(contents)
+source: crates/vim9-gen/src/lib.rs
+assertion_line: 650
+expression: "generate(contents, false)"
 ---
 -- vim9script
-local x = (1 + 2)
+local x = require("vim9script").ops["Plus"](1, 2)
 print(x)
 

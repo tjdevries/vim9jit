@@ -1,9 +1,9 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 559
+assertion_line: 652
 expression: "generate(contents, false)"
 ---
 -- vim9script
-vim.g["my_var"] = (1 + 2)
+vim.g["my_var"] = require("vim9script").ops["Plus"](1, 2)
 print(vim.g["my_var"])
 

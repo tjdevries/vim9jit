@@ -334,6 +334,10 @@ impl Generate for Expression {
             Expression::VimOption(opt) => opt.gen(state),
             Expression::Empty => "".to_string(),
             Expression::Index(index) => index.gen(state),
+            Expression::DictAccess(_) => todo!(),
+            Expression::Register(_) => todo!(),
+            Expression::Lambda(_) => todo!(),
+            Expression::Expandable(_) => todo!(),
 
             // Some expressions can only be triggered from containing expressions
             Expression::Slice(_) => unreachable!("cannot gen slice by itself"),
@@ -516,58 +520,40 @@ impl Generate for VimNumber {
 
 impl Generate for InfixExpression {
     fn gen(&self, state: &mut State) -> String {
-        fn gen_operation(name: &str, left: String, right: String) -> String {
-            format!("require('vim9script').ops.{}({}, {})", name, left, right)
-        }
+        format!(
+            "require('vim9script').ops['{:?}']({}, {})",
+            self.operator,
+            self.left.gen(state),
+            self.right.gen(state)
+        )
 
-        match self.operator {
-            Operator::And => gen_operation(
-                "AND",
-                self.left.gen(state),
-                self.right.gen(state),
-            ),
-            Operator::Or => {
-                gen_operation("OR", self.left.gen(state), self.right.gen(state))
-            }
-            // Operator::Plus => todo!(),
-            // Operator::Minus => todo!(),
-            // Operator::Bang => todo!(),
-            // Operator::Modulo => todo!(),
-            // Operator::Or => todo!(),
-            // Operator::EqualTo => todo!(),
-            // Operator::LessThan => todo!(),
-            // Operator::GreaterThan => todo!(),
-            // Operator::LessThanOrEqual => todo!(),
-            // Operator::GreaterThanOrEqual => todo!(),
-            // Operator::StringConcat => todo!(),
-            _ => format!(
-                "({} {} {})",
-                self.left.gen(state),
-                self.operator.gen(state),
-                self.right.gen(state)
-            ),
-        }
-    }
-}
-
-impl Generate for Operator {
-    fn gen(&self, _: &mut State) -> String {
-        match self {
-            Operator::Plus => "+",
-            Operator::Minus => "-",
-            Operator::Bang => "not",
-            Operator::Or => "or",
-            Operator::And => "and",
-            Operator::LessThan => "<",
-            Operator::GreaterThan => ">",
-            Operator::LessThanOrEqual => "<=",
-            Operator::GreaterThanOrEqual => ">=",
-            Operator::Modulo => todo!(),
-            Operator::EqualTo => todo!(),
-            Operator::StringConcat => todo!(),
-            // _ => todo!("{:?}", self),
-        }
-        .to_string()
+        // match self.operator {
+        //     Operator::And => gen_operation(
+        //         "AND",
+        //         self.left.gen(state),
+        //         self.right.gen(state),
+        //     ),
+        //     Operator::Or => {
+        //         gen_operation("OR", self.left.gen(state), self.right.gen(state))
+        //     }
+        //     // Operator::Plus => todo!(),
+        //     // Operator::Minus => todo!(),
+        //     // Operator::Bang => todo!(),
+        //     // Operator::Modulo => todo!(),
+        //     // Operator::Or => todo!(),
+        //     // Operator::EqualTo => todo!(),
+        //     // Operator::LessThan => todo!(),
+        //     // Operator::GreaterThan => todo!(),
+        //     // Operator::LessThanOrEqual => todo!(),
+        //     // Operator::GreaterThanOrEqual => todo!(),
+        //     // Operator::StringConcat => todo!(),
+        //     _ => format!(
+        //         "({} {} {})",
+        //         self.left.gen(state),
+        //         self.operator.gen(state),
+        //         self.right.gen(state)
+        //     ),
+        // }
     }
 }
 

@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 560
+assertion_line: 653
 expression: "generate(contents, false)"
 ---
 -- vim9script
@@ -10,5 +10,5 @@ local MyCoolFunc = function()
 end
 
 -- Token(EndOfLine, "\n", (5,0)->(5,0))
-local x = (MyCoolFunc() + 1)
+local x = require("vim9script").ops["Plus"](MyCoolFunc(), 1)
 

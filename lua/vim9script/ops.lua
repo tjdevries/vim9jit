@@ -14,12 +14,16 @@ local to_vim_bool = function(val)
   error "unhandled type"
 end
 
-ops.AND = function(left, right)
+ops["And"] = function(left, right)
   return to_vim_bool(left) and to_vim_bool(right)
 end
 
-ops.OR = function(left, right)
+ops["Or"] = function(left, right)
   return to_vim_bool(left) or to_vim_bool(right)
+end
+
+ops["Plus"] = function(left, right)
+  return left + right
 end
 
 return ops

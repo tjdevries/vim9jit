@@ -27,6 +27,8 @@ pub fn exec_busted(path: &str) -> Result<()> {
 pub fn exec_lua(preamble: &str, result: &str) -> Result<Value> {
     let contents = format!(
         r#"
+            vim.opt.rtp:append(".")
+
             return (function()
                 {}
                 return {}
@@ -38,6 +40,10 @@ pub fn exec_lua(preamble: &str, result: &str) -> Result<Value> {
 
     // start a neovim job
     let mut child = Command::new("nvim")
+        // TODO: Consider a nicer way to do this, but this puts running from
+        // the root of our project, so we have access to the `lua/` folder available
+        // there
+        .current_dir(concat!(env!("CARGO_MANIFEST_DIR"), "/../../"))
         .args(["--clean", "--embed"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
