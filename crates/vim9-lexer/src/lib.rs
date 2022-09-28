@@ -298,23 +298,23 @@ impl Lexer {
             "true" => TokenKind::True,
             "false" => TokenKind::False,
             "null" => TokenKind::Null,
-            "is" => match self.peek_char() {
-                Some(&'#') => {
+            "is" => match self.ch {
+                Some('#') => {
                     self.read_char();
                     TokenKind::Is
                 }
-                Some(&'?') => {
+                Some('?') => {
                     self.read_char();
                     TokenKind::IsInsensitive
                 }
                 _ => TokenKind::Is,
             },
-            "isnot" => match self.peek_char() {
-                Some(&'#') => {
+            "isnot" => match self.ch {
+                Some('#') => {
                     self.read_char();
                     TokenKind::IsNot
                 }
-                Some(&'?') => {
+                Some('?') => {
                     self.read_char();
                     TokenKind::IsNotInsensitive
                 }
@@ -602,6 +602,7 @@ impl Lexer {
             ('~', '#') => self.read_three(TokenKind::RegexpMatches),
             ('~', '?') => self.read_three(TokenKind::RegexpMatchesIns),
             ('~', _) => self.read_two(TokenKind::RegexpMatches),
+            ('>', _) => self.read_two(TokenKind::Arrow),
             (_, _) => self.read_one(TokenKind::Equal),
         }
     }

@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-lexer/src/lib.rs
-assertion_line: 716
+assertion_line: 738
 expression: snapshot_lexing(contents)
 ---
 vim9script
@@ -255,14 +255,46 @@ var no_reg_ins = a !~? b
                          Token(EndOfLine, "\n", (36,24)->(36,24))
 
  Token(EndOfLine, "\n", (37,0)->(37,0))
-# var is_ = a is b || a is# b
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Token(Comment, "# var is_ = a is b || a is# b", (38,0)->(38,29))
-# var is__ins = a is? b
-^^^^^^^^^^^^^^^^^^^^^^^ Token(Comment, "# var is__ins = a is? b", (39,0)->(39,23))
-# 
-^^ Token(Comment, "# ", (40,0)->(40,2))
-# var is_not = a isnot b || a isnot# b
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Token(Comment, "# var is_not = a isnot b || a isnot# b", (41,0)->(41,38))
-# var is_not_ins = a isnot? b
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Token(Comment, "# var is_not_ins = a isnot? b", (42,0)->(42,29))
+var is_ = a is b || a is# b
+^^^ Token(Identifier, "var", (38,0)->(38,3))
+    ^^^ Token(Identifier, "is_", (38,4)->(38,7))
+        ^ Token(Equal, "=", (38,8)->(38,9))
+          ^ Token(Identifier, "a", (38,10)->(38,11))
+            ^^ Token(Is, "is", (38,12)->(38,14))
+               ^ Token(Identifier, "b", (38,15)->(38,16))
+                 ^^ Token(Or, "||", (38,17)->(38,19))
+                    ^ Token(Identifier, "a", (38,20)->(38,21))
+                      ^^^ Token(Is, "is", (38,22)->(38,25))
+                          ^ Token(Identifier, "b", (38,26)->(38,27))
+                            Token(EndOfLine, "\n", (38,27)->(38,27))
+var is__ins = a is? b
+^^^ Token(Identifier, "var", (39,0)->(39,3))
+    ^^^^^^^ Token(Identifier, "is__ins", (39,4)->(39,11))
+            ^ Token(Equal, "=", (39,12)->(39,13))
+              ^ Token(Identifier, "a", (39,14)->(39,15))
+                ^^^ Token(IsInsensitive, "is", (39,16)->(39,19))
+                    ^ Token(Identifier, "b", (39,20)->(39,21))
+                      Token(EndOfLine, "\n", (39,21)->(39,21))
+
+ Token(EndOfLine, "\n", (40,0)->(40,0))
+var is_not = a isnot b || a isnot# b
+^^^ Token(Identifier, "var", (41,0)->(41,3))
+    ^^^^^^ Token(Identifier, "is_not", (41,4)->(41,10))
+           ^ Token(Equal, "=", (41,11)->(41,12))
+             ^ Token(Identifier, "a", (41,13)->(41,14))
+               ^^^^^ Token(IsNot, "isnot", (41,15)->(41,20))
+                     ^ Token(Identifier, "b", (41,21)->(41,22))
+                       ^^ Token(Or, "||", (41,23)->(41,25))
+                          ^ Token(Identifier, "a", (41,26)->(41,27))
+                            ^^^^^^ Token(IsNot, "isnot", (41,28)->(41,34))
+                                   ^ Token(Identifier, "b", (41,35)->(41,36))
+                                     Token(EndOfLine, "\n", (41,36)->(41,36))
+var is_not_ins = a isnot? b
+^^^ Token(Identifier, "var", (42,0)->(42,3))
+    ^^^^^^^^^^ Token(Identifier, "is_not_ins", (42,4)->(42,14))
+               ^ Token(Equal, "=", (42,15)->(42,16))
+                 ^ Token(Identifier, "a", (42,17)->(42,18))
+                   ^^^^^^ Token(IsNotInsensitive, "isnot", (42,19)->(42,25))
+                          ^ Token(Identifier, "b", (42,26)->(42,27))
+                            Token(EndOfLine, "\n", (42,27)->(42,27))
 

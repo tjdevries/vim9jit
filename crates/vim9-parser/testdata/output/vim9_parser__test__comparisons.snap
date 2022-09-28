@@ -1,0 +1,851 @@
+---
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 1993
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (2,0)->(2,3)),
+            ty: None,
+            name: Raw(x),
+            equal: Token(Equal, "=", (2,6)->(2,7)),
+            expr: Number(
+                VimNumber {
+                    value: "10",
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (2,10)->(2,10)),
+        },
+    ),
+    If(
+        IfCommand {
+            if_tok: Token(Identifier, "if", (3,0)->(3,2)),
+            condition: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (3,43)->(3,45)),
+                    operator: Or,
+                    left: Infix(
+                        InfixExpression {
+                            token: Token(Or, "||", (3,33)->(3,35)),
+                            operator: Or,
+                            left: Infix(
+                                InfixExpression {
+                                    token: Token(Or, "||", (3,22)->(3,24)),
+                                    operator: Or,
+                                    left: Infix(
+                                        InfixExpression {
+                                            token: Token(Or, "||", (3,11)->(3,13)),
+                                            operator: Or,
+                                            left: Infix(
+                                                InfixExpression {
+                                                    token: Token(EqualTo, "==", (3,5)->(3,7)),
+                                                    operator: EqualTo,
+                                                    left: Identifier(
+                                                        Raw(x),
+                                                    ),
+                                                    right: Number(
+                                                        VimNumber {
+                                                            value: "10",
+                                                        },
+                                                    ),
+                                                },
+                                            ),
+                                            right: Infix(
+                                                InfixExpression {
+                                                    token: Token(GreaterThanOrEqual, ">=", (3,16)->(3,18)),
+                                                    operator: GreaterThanOrEqual,
+                                                    left: Identifier(
+                                                        Raw(x),
+                                                    ),
+                                                    right: Number(
+                                                        VimNumber {
+                                                            value: "10",
+                                                        },
+                                                    ),
+                                                },
+                                            ),
+                                        },
+                                    ),
+                                    right: Infix(
+                                        InfixExpression {
+                                            token: Token(LessThanOrEqual, "<=", (3,27)->(3,29)),
+                                            operator: LessThanOrEqual,
+                                            left: Identifier(
+                                                Raw(x),
+                                            ),
+                                            right: Number(
+                                                VimNumber {
+                                                    value: "10",
+                                                },
+                                            ),
+                                        },
+                                    ),
+                                },
+                            ),
+                            right: Infix(
+                                InfixExpression {
+                                    token: Token(GreaterThan, ">", (3,38)->(3,39)),
+                                    operator: GreaterThan,
+                                    left: Identifier(
+                                        Raw(x),
+                                    ),
+                                    right: Number(
+                                        VimNumber {
+                                            value: "10",
+                                        },
+                                    ),
+                                },
+                            ),
+                        },
+                    ),
+                    right: Infix(
+                        InfixExpression {
+                            token: Token(LessThan, "<", (3,48)->(3,49)),
+                            operator: LessThan,
+                            left: Identifier(
+                                Raw(x),
+                            ),
+                            right: Number(
+                                VimNumber {
+                                    value: "10",
+                                },
+                            ),
+                        },
+                    ),
+                },
+            ),
+            if_eol: Token(EndOfLine, "\n", (3,52)->(3,52)),
+            body: Body {
+                commands: [
+                    NoOp(
+                        Token(Identifier, "x", (4,2)->(4,3)),
+                    ),
+                    NoOp(
+                        Token(PlusEquals, "+=", (4,4)->(4,6)),
+                    ),
+                    NoOp(
+                        Token(Integer, "1", (4,7)->(4,8)),
+                    ),
+                    NoOp(
+                        Token(EndOfLine, "\n", (4,8)->(4,8)),
+                    ),
+                    NoOp(
+                        Token(Identifier, "x", (5,2)->(5,3)),
+                    ),
+                    NoOp(
+                        Token(MulEquals, "*=", (5,4)->(5,6)),
+                    ),
+                    NoOp(
+                        Token(Integer, "1", (5,7)->(5,8)),
+                    ),
+                    NoOp(
+                        Token(EndOfLine, "\n", (5,8)->(5,8)),
+                    ),
+                    NoOp(
+                        Token(Identifier, "x", (6,2)->(6,3)),
+                    ),
+                    NoOp(
+                        Token(DivEquals, "/=", (6,4)->(6,6)),
+                    ),
+                    NoOp(
+                        Token(Integer, "1", (6,7)->(6,8)),
+                    ),
+                    NoOp(
+                        Token(EndOfLine, "\n", (6,8)->(6,8)),
+                    ),
+                    NoOp(
+                        Token(Identifier, "x", (7,2)->(7,3)),
+                    ),
+                    NoOp(
+                        Token(MinusEquals, "-=", (7,4)->(7,6)),
+                    ),
+                    NoOp(
+                        Token(Integer, "1", (7,7)->(7,8)),
+                    ),
+                    NoOp(
+                        Token(EndOfLine, "\n", (7,8)->(7,8)),
+                    ),
+                    Echo(
+                        EchoCommand {
+                            echo: Token(Identifier, "echo", (8,2)->(8,6)),
+                            expr: Identifier(
+                                Raw(x),
+                            ),
+                            eol: Token(EndOfLine, "\n", (8,8)->(8,8)),
+                        },
+                    ),
+                ],
+            },
+            endif_tok: Token(Identifier, "endif", (9,0)->(9,5)),
+            endif_eol: Token(EndOfLine, "\n", (9,5)->(9,5)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (10,0)->(10,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (11,0)->(11,3)),
+            ty: None,
+            name: Raw(a),
+            equal: Token(Equal, "=", (11,6)->(11,7)),
+            expr: String(
+                DoubleQuote(
+                    "hello",
+                ),
+            ),
+            eol: Token(EndOfLine, "\n", (11,15)->(11,15)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (12,0)->(12,3)),
+            ty: None,
+            name: Raw(b),
+            equal: Token(Equal, "=", (12,6)->(12,7)),
+            expr: String(
+                DoubleQuote(
+                    "world",
+                ),
+            ),
+            eol: Token(EndOfLine, "\n", (12,15)->(12,15)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (13,0)->(13,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (14,0)->(14,3)),
+            ty: None,
+            name: Raw(equal),
+            equal: Token(Equal, "=", (14,10)->(14,11)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (14,19)->(14,21)),
+                    operator: Or,
+                    left: Infix(
+                        InfixExpression {
+                            token: Token(EqualTo, "==", (14,14)->(14,16)),
+                            operator: EqualTo,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                    right: Infix(
+                        InfixExpression {
+                            token: Token(EqualTo, "==#", (14,24)->(14,27)),
+                            operator: EqualTo,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (14,29)->(14,29)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (15,0)->(15,3)),
+            ty: None,
+            name: Raw(equal_ins),
+            equal: Token(Equal, "=", (15,14)->(15,15)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(EqualToIns, "==?", (15,18)->(15,21)),
+                    operator: EqualToIns,
+                    left: Identifier(
+                        Raw(a),
+                    ),
+                    right: Identifier(
+                        Raw(b),
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (15,23)->(15,23)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (16,0)->(16,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (17,0)->(17,3)),
+            ty: None,
+            name: Raw(neq),
+            equal: Token(Equal, "=", (17,8)->(17,9)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (17,17)->(17,19)),
+                    operator: Or,
+                    left: Infix(
+                        InfixExpression {
+                            token: Token(NotEqualTo, "!=", (17,12)->(17,14)),
+                            operator: NotEqualTo,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                    right: Infix(
+                        InfixExpression {
+                            token: Token(NotEqualTo, "!=#", (17,22)->(17,25)),
+                            operator: NotEqualTo,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (17,27)->(17,27)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (18,0)->(18,3)),
+            ty: None,
+            name: Raw(neq_ins),
+            equal: Token(Equal, "=", (18,12)->(18,13)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(NotEqualToIns, "!=?", (18,16)->(18,19)),
+                    operator: NotEqualToIns,
+                    left: Identifier(
+                        Raw(a),
+                    ),
+                    right: Identifier(
+                        Raw(b),
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (18,21)->(18,21)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (19,0)->(19,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (20,0)->(20,3)),
+            ty: None,
+            name: Raw(gt),
+            equal: Token(Equal, "=", (20,7)->(20,8)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (20,15)->(20,17)),
+                    operator: Or,
+                    left: Infix(
+                        InfixExpression {
+                            token: Token(GreaterThan, ">", (20,11)->(20,12)),
+                            operator: GreaterThan,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                    right: Infix(
+                        InfixExpression {
+                            token: Token(GreaterThan, ">#", (20,20)->(20,22)),
+                            operator: GreaterThan,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (20,24)->(20,24)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (21,0)->(21,3)),
+            ty: None,
+            name: Raw(gt_ins),
+            equal: Token(Equal, "=", (21,11)->(21,12)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(GreaterThanIns, ">?", (21,15)->(21,17)),
+                    operator: GreaterThanIns,
+                    left: Identifier(
+                        Raw(a),
+                    ),
+                    right: Identifier(
+                        Raw(b),
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (21,19)->(21,19)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (22,0)->(22,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (23,0)->(23,3)),
+            ty: None,
+            name: Raw(gte),
+            equal: Token(Equal, "=", (23,8)->(23,9)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (23,17)->(23,19)),
+                    operator: Or,
+                    left: Infix(
+                        InfixExpression {
+                            token: Token(GreaterThanOrEqual, ">=", (23,12)->(23,14)),
+                            operator: GreaterThanOrEqual,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                    right: Infix(
+                        InfixExpression {
+                            token: Token(GreaterThanOrEqual, ">=#", (23,22)->(23,25)),
+                            operator: GreaterThanOrEqual,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (23,27)->(23,27)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (24,0)->(24,3)),
+            ty: None,
+            name: Raw(gte_ins),
+            equal: Token(Equal, "=", (24,12)->(24,13)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(GreaterThanOrEqualIns, ">=?", (24,16)->(24,19)),
+                    operator: GreaterThanOrEqualIns,
+                    left: Identifier(
+                        Raw(a),
+                    ),
+                    right: Identifier(
+                        Raw(b),
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (24,21)->(24,21)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (25,0)->(25,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (26,0)->(26,3)),
+            ty: None,
+            name: Raw(lt),
+            equal: Token(Equal, "=", (26,7)->(26,8)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (26,15)->(26,17)),
+                    operator: Or,
+                    left: Infix(
+                        InfixExpression {
+                            token: Token(LessThan, "<", (26,11)->(26,12)),
+                            operator: LessThan,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                    right: Infix(
+                        InfixExpression {
+                            token: Token(LessThan, "<#", (26,20)->(26,22)),
+                            operator: LessThan,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (26,24)->(26,24)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (27,0)->(27,3)),
+            ty: None,
+            name: Raw(lt_ins),
+            equal: Token(Equal, "=", (27,11)->(27,12)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(LessThanIns, "<?", (27,15)->(27,17)),
+                    operator: LessThanIns,
+                    left: Identifier(
+                        Raw(a),
+                    ),
+                    right: Identifier(
+                        Raw(b),
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (27,19)->(27,19)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (28,0)->(28,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (29,0)->(29,3)),
+            ty: None,
+            name: Raw(lte),
+            equal: Token(Equal, "=", (29,8)->(29,9)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (29,17)->(29,19)),
+                    operator: Or,
+                    left: Infix(
+                        InfixExpression {
+                            token: Token(LessThanOrEqual, "<=", (29,12)->(29,14)),
+                            operator: LessThanOrEqual,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                    right: Infix(
+                        InfixExpression {
+                            token: Token(LessThanOrEqual, "<=#", (29,22)->(29,25)),
+                            operator: LessThanOrEqual,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (29,27)->(29,27)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (30,0)->(30,3)),
+            ty: None,
+            name: Raw(lte_ins),
+            equal: Token(Equal, "=", (30,12)->(30,13)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(LessThanOrEqualIns, "<=?", (30,16)->(30,19)),
+                    operator: LessThanOrEqualIns,
+                    left: Identifier(
+                        Raw(a),
+                    ),
+                    right: Identifier(
+                        Raw(b),
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (30,21)->(30,21)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (31,0)->(31,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (32,0)->(32,3)),
+            ty: None,
+            name: Raw(reg),
+            equal: Token(Equal, "=", (32,8)->(32,9)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (32,17)->(32,19)),
+                    operator: Or,
+                    left: Infix(
+                        InfixExpression {
+                            token: Token(RegexpMatches, "=~", (32,12)->(32,14)),
+                            operator: RegexpMatches,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                    right: Infix(
+                        InfixExpression {
+                            token: Token(RegexpMatches, "=~#", (32,22)->(32,25)),
+                            operator: RegexpMatches,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (32,27)->(32,27)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (33,0)->(33,3)),
+            ty: None,
+            name: Raw(reg_ins),
+            equal: Token(Equal, "=", (33,12)->(33,13)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(RegexpMatchesIns, "=~?", (33,16)->(33,19)),
+                    operator: RegexpMatchesIns,
+                    left: Identifier(
+                        Raw(a),
+                    ),
+                    right: Identifier(
+                        Raw(b),
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (33,21)->(33,21)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (34,0)->(34,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (35,0)->(35,3)),
+            ty: None,
+            name: Raw(no_reg),
+            equal: Token(Equal, "=", (35,11)->(35,12)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (35,20)->(35,22)),
+                    operator: Or,
+                    left: Infix(
+                        InfixExpression {
+                            token: Token(NotRegexpMatches, "!~", (35,15)->(35,17)),
+                            operator: NotRegexpMatches,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                    right: Infix(
+                        InfixExpression {
+                            token: Token(NotRegexpMatches, "!~#", (35,25)->(35,28)),
+                            operator: NotRegexpMatches,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (35,30)->(35,30)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (36,0)->(36,3)),
+            ty: None,
+            name: Raw(no_reg_ins),
+            equal: Token(Equal, "=", (36,15)->(36,16)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(NotRegexpMatchesIns, "!~?", (36,19)->(36,22)),
+                    operator: NotRegexpMatchesIns,
+                    left: Identifier(
+                        Raw(a),
+                    ),
+                    right: Identifier(
+                        Raw(b),
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (36,24)->(36,24)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (37,0)->(37,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (38,0)->(38,3)),
+            ty: None,
+            name: Raw(is_),
+            equal: Token(Equal, "=", (38,8)->(38,9)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (38,17)->(38,19)),
+                    operator: Or,
+                    left: Infix(
+                        InfixExpression {
+                            token: Token(Is, "is", (38,12)->(38,14)),
+                            operator: Is,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                    right: Infix(
+                        InfixExpression {
+                            token: Token(Is, "is", (38,22)->(38,25)),
+                            operator: Is,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (38,27)->(38,27)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (39,0)->(39,3)),
+            ty: None,
+            name: Raw(is__ins),
+            equal: Token(Equal, "=", (39,12)->(39,13)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(IsInsensitive, "is", (39,16)->(39,19)),
+                    operator: IsInsensitive,
+                    left: Identifier(
+                        Raw(a),
+                    ),
+                    right: Identifier(
+                        Raw(b),
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (39,21)->(39,21)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (40,0)->(40,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (41,0)->(41,3)),
+            ty: None,
+            name: Raw(is_not),
+            equal: Token(Equal, "=", (41,11)->(41,12)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(Or, "||", (41,23)->(41,25)),
+                    operator: Or,
+                    left: Infix(
+                        InfixExpression {
+                            token: Token(IsNot, "isnot", (41,15)->(41,20)),
+                            operator: IsNot,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                    right: Infix(
+                        InfixExpression {
+                            token: Token(IsNot, "isnot", (41,28)->(41,34)),
+                            operator: IsNot,
+                            left: Identifier(
+                                Raw(a),
+                            ),
+                            right: Identifier(
+                                Raw(b),
+                            ),
+                        },
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (41,36)->(41,36)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (42,0)->(42,3)),
+            ty: None,
+            name: Raw(is_not_ins),
+            equal: Token(Equal, "=", (42,15)->(42,16)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(IsNotInsensitive, "isnot", (42,19)->(42,25)),
+                    operator: IsNotInsensitive,
+                    left: Identifier(
+                        Raw(a),
+                    ),
+                    right: Identifier(
+                        Raw(b),
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (42,27)->(42,27)),
+        },
+    ),
+]

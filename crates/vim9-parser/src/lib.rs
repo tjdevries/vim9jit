@@ -874,13 +874,11 @@ impl Lambda {
                             let mut v = Vec::new();
                             v.push(ExCommand::Return(ReturnCommand {
                                 ret: Token::fake(),
-                                expr: Some({
-                                    let expr = parser
-                                        .parse_expression(Precedence::Lowest)?;
-                                    parser.next_token();
-                                    expr
-                                }),
-                                eol: parser.expect_eol()?,
+                                expr: Some(
+                                    parser
+                                        .parse_expression(Precedence::Lowest)?,
+                                ),
+                                eol: Token::fake(),
                             }));
                             v
                         },
@@ -1023,12 +1021,29 @@ pub enum Operator {
     Modulo,
     Or,
     And,
-    EqualTo,
-    LessThan,
-    GreaterThan,
-    LessThanOrEqual,
-    GreaterThanOrEqual,
     StringConcat,
+
+    // Comparisons
+    EqualTo,
+    EqualToIns,
+    NotEqualTo,
+    NotEqualToIns,
+    LessThan,
+    LessThanIns,
+    LessThanOrEqual,
+    LessThanOrEqualIns,
+    GreaterThan,
+    GreaterThanIns,
+    GreaterThanOrEqual,
+    GreaterThanOrEqualIns,
+    RegexpMatches,
+    RegexpMatchesIns,
+    NotRegexpMatches,
+    NotRegexpMatchesIns,
+    Is,
+    IsInsensitive,
+    IsNot,
+    IsNotInsensitive,
 }
 
 #[derive(Debug, PartialEq, PartialOrd, Default)]
@@ -1217,14 +1232,31 @@ mod infix_expr {
             TokenKind::Plus => Operator::Plus,
             TokenKind::Minus => Operator::Minus,
             TokenKind::Or => Operator::Or,
-            TokenKind::EqualTo => Operator::EqualTo,
             TokenKind::And => Operator::And,
             TokenKind::Percent => Operator::Modulo,
-            TokenKind::LessThan => Operator::LessThan,
-            TokenKind::GreaterThan => Operator::GreaterThan,
-            TokenKind::LessThanOrEqual => Operator::LessThanOrEqual,
-            TokenKind::GreaterThanOrEqual => Operator::GreaterThanOrEqual,
             TokenKind::StringConcat => Operator::StringConcat,
+            // Comparisons {{{
+            TokenKind::EqualTo => Operator::EqualTo,
+            TokenKind::EqualToIns => Operator::EqualToIns,
+            TokenKind::NotEqualTo => Operator::NotEqualTo,
+            TokenKind::NotEqualToIns => Operator::NotEqualToIns,
+            TokenKind::LessThan => Operator::LessThan,
+            TokenKind::LessThanIns => Operator::LessThanIns,
+            TokenKind::LessThanOrEqual => Operator::LessThanOrEqual,
+            TokenKind::LessThanOrEqualIns => Operator::LessThanOrEqualIns,
+            TokenKind::GreaterThan => Operator::GreaterThan,
+            TokenKind::GreaterThanIns => Operator::GreaterThanIns,
+            TokenKind::GreaterThanOrEqual => Operator::GreaterThanOrEqual,
+            TokenKind::GreaterThanOrEqualIns => Operator::GreaterThanOrEqualIns,
+            TokenKind::RegexpMatches => Operator::RegexpMatches,
+            TokenKind::RegexpMatchesIns => Operator::RegexpMatchesIns,
+            TokenKind::NotRegexpMatches => Operator::NotRegexpMatches,
+            TokenKind::NotRegexpMatchesIns => Operator::NotRegexpMatchesIns,
+            TokenKind::Is => Operator::Is,
+            TokenKind::IsInsensitive => Operator::IsInsensitive,
+            TokenKind::IsNot => Operator::IsNot,
+            TokenKind::IsNotInsensitive => Operator::IsNotInsensitive,
+            // }}}
             _ => unreachable!("Not a valid infix operator: {:?}", token),
         };
 
@@ -1443,10 +1475,25 @@ impl Parser {
             TokenKind::SpacedColon => Precedence::Lowest,
             TokenKind::Or | TokenKind::And => Precedence::Equals,
             TokenKind::EqualTo
-                | TokenKind::LessThan
-                | TokenKind::GreaterThan
-                | TokenKind::LessThanOrEqual
-                | TokenKind::GreaterThanOrEqual => Precedence::LessGreater,
+            | TokenKind::EqualToIns
+            | TokenKind::NotEqualTo
+            | TokenKind::NotEqualToIns
+            | TokenKind::LessThan
+            | TokenKind::LessThanIns
+            | TokenKind::LessThanOrEqual
+            | TokenKind::LessThanOrEqualIns
+            | TokenKind::GreaterThan
+            | TokenKind::GreaterThanIns
+            | TokenKind::GreaterThanOrEqual
+            | TokenKind::GreaterThanOrEqualIns
+            | TokenKind::RegexpMatches
+            | TokenKind::RegexpMatchesIns
+            | TokenKind::NotRegexpMatches
+            | TokenKind::NotRegexpMatchesIns
+            | TokenKind::Is
+            | TokenKind::IsInsensitive
+            | TokenKind::IsNot
+            | TokenKind::IsNotInsensitive => Precedence::LessGreater,
             TokenKind::RightBracket
                 | TokenKind::RightBrace
                 | TokenKind::RightParen
@@ -1514,10 +1561,25 @@ impl Parser {
             TokenKind::LeftBracket => infix_expr::parser_index_expr,
             TokenKind::Colon => infix_expr::parse_colon,
             TokenKind::EqualTo
+            | TokenKind::EqualToIns
+            | TokenKind::NotEqualTo
+            | TokenKind::NotEqualToIns
             | TokenKind::LessThan
-            | TokenKind::GreaterThan
+            | TokenKind::LessThanIns
             | TokenKind::LessThanOrEqual
-            | TokenKind::GreaterThanOrEqual => infix_expr::parse_infix_operator,
+            | TokenKind::LessThanOrEqualIns
+            | TokenKind::GreaterThan
+            | TokenKind::GreaterThanIns
+            | TokenKind::GreaterThanOrEqual
+            | TokenKind::GreaterThanOrEqualIns
+            | TokenKind::RegexpMatches
+            | TokenKind::RegexpMatchesIns
+            | TokenKind::NotRegexpMatches
+            | TokenKind::NotRegexpMatchesIns
+            | TokenKind::Is
+            | TokenKind::IsInsensitive
+            | TokenKind::IsNot
+            | TokenKind::IsNotInsensitive => infix_expr::parse_infix_operator,
             TokenKind::Identifier => return None,
             // TokenKind::SpacedColon => infix_expr::parser_index_type,
             _ => unimplemented!("get_infix_fn: {:#?}", self),
@@ -1928,6 +1990,7 @@ mod test {
     snapshot!(test_multiline, "../testdata/snapshots/multiline.vim");
     snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
     snapshot!(test_lambda, "../testdata/snapshots/lambda.vim");
+    snapshot!(test_comparisons, "../testdata/snapshots/comparisons.vim");
 
     #[test]
     fn test_peek_n() {

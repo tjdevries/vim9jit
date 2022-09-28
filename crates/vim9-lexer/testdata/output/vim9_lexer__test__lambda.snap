@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-lexer/src/lib.rs
-assertion_line: 678
+assertion_line: 745
 expression: snapshot_lexing(contents)
 ---
 vim9script
@@ -17,8 +17,7 @@ var X = (a, b) => a + b
           ^ Token(Comma, ",", (2,10)->(2,11))
             ^ Token(Identifier, "b", (2,12)->(2,13))
              ^ Token(RightParen, ")", (2,13)->(2,14))
-               ^ Token(Equal, "=", (2,15)->(2,16))
-                ^ Token(GreaterThan, ">", (2,16)->(2,17))
+               ^^ Token(Arrow, "=>", (2,15)->(2,17))
                   ^ Token(Identifier, "a", (2,18)->(2,19))
                     ^ Token(Plus, "+", (2,20)->(2,21))
                       ^ Token(Identifier, "b", (2,22)->(2,23))
