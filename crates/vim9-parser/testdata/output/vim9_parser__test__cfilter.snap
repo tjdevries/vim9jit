@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2120
+assertion_line: 2181
 expression: snapshot_parsing(contents)
 ---
 [
@@ -306,99 +306,104 @@ expression: snapshot_parsing(contents)
                                             },
                                         ),
                                     ),
-                                    NoOp(
-                                        Token(Identifier, "else", (34,2)->(34,6)),
-                                    ),
-                                    NoOp(
-                                        Token(EndOfLine, "\n", (34,6)->(34,6)),
-                                    ),
-                                    Statement(
-                                        Assign(
-                                            AssignStatement {
-                                                left: Raw(Xgetlist),
-                                                equals: Token(Equal, "=", (35,13)->(35,14)),
-                                                right: Call(
-                                                    f: Identifier(Raw(function)) arg: [
-                                                        String(
-                                                            SingleQuote(
-                                                                "getloclist",
-                                                            ),
-                                                        ),
-                                                        Array(
-                                                            ArrayLiteral {
-                                                                open: Token(LeftBracket, "[", (35,38)->(35,39)),
-                                                                elements: [
-                                                                    Number(
-                                                                        VimNumber {
-                                                                            value: "0",
-                                                                        },
-                                                                    ),
-                                                                ],
-                                                                close: Token(RightBracket, "]", (35,40)->(35,41)),
-                                                            },
-                                                        ),
-                                                    ],
-                                                ),
-                                                eol: Token(EndOfLine, "\n", (35,42)->(35,42)),
-                                            },
-                                        ),
-                                    ),
-                                    Statement(
-                                        Assign(
-                                            AssignStatement {
-                                                left: Raw(Xsetlist),
-                                                equals: Token(Equal, "=", (36,13)->(36,14)),
-                                                right: Call(
-                                                    f: Identifier(Raw(function)) arg: [
-                                                        String(
-                                                            SingleQuote(
-                                                                "setloclist",
-                                                            ),
-                                                        ),
-                                                        Array(
-                                                            ArrayLiteral {
-                                                                open: Token(LeftBracket, "[", (36,38)->(36,39)),
-                                                                elements: [
-                                                                    Number(
-                                                                        VimNumber {
-                                                                            value: "0",
-                                                                        },
-                                                                    ),
-                                                                ],
-                                                                close: Token(RightBracket, "]", (36,40)->(36,41)),
-                                                            },
-                                                        ),
-                                                    ],
-                                                ),
-                                                eol: Token(EndOfLine, "\n", (36,42)->(36,42)),
-                                            },
-                                        ),
-                                    ),
-                                    Statement(
-                                        Assign(
-                                            AssignStatement {
-                                                left: Raw(cmd),
-                                                equals: Token(Equal, "=", (37,8)->(37,9)),
-                                                right: Infix(
-                                                    InfixExpression {
-                                                        token: Token(StringConcat, "..", (37,21)->(37,23)),
-                                                        operator: StringConcat,
-                                                        left: String(
-                                                            SingleQuote(
-                                                                ":Lfilter",
-                                                            ),
-                                                        ),
-                                                        right: Identifier(
-                                                            Raw(bang),
-                                                        ),
-                                                    },
-                                                ),
-                                                eol: Token(EndOfLine, "\n", (37,28)->(37,28)),
-                                            },
-                                        ),
-                                    ),
                                 ],
                             },
+                            elseifs: [],
+                            else_command: Some(
+                                ElseCommand {
+                                    else_tok: Token(Identifier, "else", (34,2)->(34,6)),
+                                    else_eol: Token(EndOfLine, "\n", (34,6)->(34,6)),
+                                    body: Body {
+                                        commands: [
+                                            Statement(
+                                                Assign(
+                                                    AssignStatement {
+                                                        left: Raw(Xgetlist),
+                                                        equals: Token(Equal, "=", (35,13)->(35,14)),
+                                                        right: Call(
+                                                            f: Identifier(Raw(function)) arg: [
+                                                                String(
+                                                                    SingleQuote(
+                                                                        "getloclist",
+                                                                    ),
+                                                                ),
+                                                                Array(
+                                                                    ArrayLiteral {
+                                                                        open: Token(LeftBracket, "[", (35,38)->(35,39)),
+                                                                        elements: [
+                                                                            Number(
+                                                                                VimNumber {
+                                                                                    value: "0",
+                                                                                },
+                                                                            ),
+                                                                        ],
+                                                                        close: Token(RightBracket, "]", (35,40)->(35,41)),
+                                                                    },
+                                                                ),
+                                                            ],
+                                                        ),
+                                                        eol: Token(EndOfLine, "\n", (35,42)->(35,42)),
+                                                    },
+                                                ),
+                                            ),
+                                            Statement(
+                                                Assign(
+                                                    AssignStatement {
+                                                        left: Raw(Xsetlist),
+                                                        equals: Token(Equal, "=", (36,13)->(36,14)),
+                                                        right: Call(
+                                                            f: Identifier(Raw(function)) arg: [
+                                                                String(
+                                                                    SingleQuote(
+                                                                        "setloclist",
+                                                                    ),
+                                                                ),
+                                                                Array(
+                                                                    ArrayLiteral {
+                                                                        open: Token(LeftBracket, "[", (36,38)->(36,39)),
+                                                                        elements: [
+                                                                            Number(
+                                                                                VimNumber {
+                                                                                    value: "0",
+                                                                                },
+                                                                            ),
+                                                                        ],
+                                                                        close: Token(RightBracket, "]", (36,40)->(36,41)),
+                                                                    },
+                                                                ),
+                                                            ],
+                                                        ),
+                                                        eol: Token(EndOfLine, "\n", (36,42)->(36,42)),
+                                                    },
+                                                ),
+                                            ),
+                                            Statement(
+                                                Assign(
+                                                    AssignStatement {
+                                                        left: Raw(cmd),
+                                                        equals: Token(Equal, "=", (37,8)->(37,9)),
+                                                        right: Infix(
+                                                            InfixExpression {
+                                                                token: Token(StringConcat, "..", (37,21)->(37,23)),
+                                                                operator: StringConcat,
+                                                                left: String(
+                                                                    SingleQuote(
+                                                                        ":Lfilter",
+                                                                    ),
+                                                                ),
+                                                                right: Identifier(
+                                                                    Raw(bang),
+                                                                ),
+                                                            },
+                                                        ),
+                                                        eol: Token(EndOfLine, "\n", (37,28)->(37,28)),
+                                                    },
+                                                ),
+                                            ),
+                                        ],
+                                    },
+                                },
+                            ),
                             endif_tok: Token(Identifier, "endif", (38,2)->(38,7)),
                             endif_eol: Token(EndOfLine, "\n", (38,7)->(38,7)),
                         },
@@ -634,30 +639,37 @@ expression: snapshot_parsing(contents)
                                                     ),
                                                 ],
                                             },
+                                            elseifs: [],
+                                            else_command: None,
                                             endif_tok: Token(Identifier, "endif", (48,4)->(48,9)),
                                             endif_eol: Token(EndOfLine, "\n", (48,9)->(48,9)),
                                         },
                                     ),
-                                    NoOp(
-                                        Token(Identifier, "else", (49,2)->(49,6)),
-                                    ),
-                                    NoOp(
-                                        Token(EndOfLine, "\n", (49,6)->(49,6)),
-                                    ),
-                                    Statement(
-                                        Assign(
-                                            AssignStatement {
-                                                left: Raw(pat),
-                                                equals: Token(Equal, "=", (50,8)->(50,9)),
-                                                right: Identifier(
-                                                    Raw(searchpat),
-                                                ),
-                                                eol: Token(EndOfLine, "\n", (50,19)->(50,19)),
-                                            },
-                                        ),
-                                    ),
                                 ],
                             },
+                            elseifs: [],
+                            else_command: Some(
+                                ElseCommand {
+                                    else_tok: Token(Identifier, "else", (49,2)->(49,6)),
+                                    else_eol: Token(EndOfLine, "\n", (49,6)->(49,6)),
+                                    body: Body {
+                                        commands: [
+                                            Statement(
+                                                Assign(
+                                                    AssignStatement {
+                                                        left: Raw(pat),
+                                                        equals: Token(Equal, "=", (50,8)->(50,9)),
+                                                        right: Identifier(
+                                                            Raw(searchpat),
+                                                        ),
+                                                        eol: Token(EndOfLine, "\n", (50,19)->(50,19)),
+                                                    },
+                                                ),
+                                            ),
+                                        ],
+                                    },
+                                },
+                            ),
                             endif_tok: Token(Identifier, "endif", (51,2)->(51,7)),
                             endif_eol: Token(EndOfLine, "\n", (51,7)->(51,7)),
                         },
@@ -694,6 +706,8 @@ expression: snapshot_parsing(contents)
                                     ),
                                 ],
                             },
+                            elseifs: [],
+                            else_command: None,
                             endif_tok: Token(Identifier, "endif", (55,2)->(55,7)),
                             endif_eol: Token(EndOfLine, "\n", (55,7)->(55,7)),
                         },
@@ -816,109 +830,114 @@ expression: snapshot_parsing(contents)
                                             },
                                         ),
                                     ),
-                                    NoOp(
-                                        Token(Identifier, "else", (59,2)->(59,6)),
-                                    ),
-                                    NoOp(
-                                        Token(EndOfLine, "\n", (59,6)->(59,6)),
-                                    ),
-                                    Statement(
-                                        Assign(
-                                            AssignStatement {
-                                                left: Raw(Cond),
-                                                equals: Token(Equal, "=", (60,9)->(60,10)),
-                                                right: Lambda(
-                                                    Lambda {
-                                                        args: Signature {
-                                                            open: Token(LeftParen, "(", (60,11)->(60,12)),
-                                                            params: [
-                                                                Parameter {
-                                                                    name: Raw(_),
-                                                                    ty: None,
-                                                                    equal: None,
-                                                                    default_val: None,
+                                ],
+                            },
+                            elseifs: [],
+                            else_command: Some(
+                                ElseCommand {
+                                    else_tok: Token(Identifier, "else", (59,2)->(59,6)),
+                                    else_eol: Token(EndOfLine, "\n", (59,6)->(59,6)),
+                                    body: Body {
+                                        commands: [
+                                            Statement(
+                                                Assign(
+                                                    AssignStatement {
+                                                        left: Raw(Cond),
+                                                        equals: Token(Equal, "=", (60,9)->(60,10)),
+                                                        right: Lambda(
+                                                            Lambda {
+                                                                args: Signature {
+                                                                    open: Token(LeftParen, "(", (60,11)->(60,12)),
+                                                                    params: [
+                                                                        Parameter {
+                                                                            name: Raw(_),
+                                                                            ty: None,
+                                                                            equal: None,
+                                                                            default_val: None,
+                                                                        },
+                                                                        Parameter {
+                                                                            name: Raw(val),
+                                                                            ty: None,
+                                                                            equal: None,
+                                                                            default_val: None,
+                                                                        },
+                                                                    ],
+                                                                    close: Token(RightParen, ")", (60,18)->(60,19)),
                                                                 },
-                                                                Parameter {
-                                                                    name: Raw(val),
-                                                                    ty: None,
-                                                                    equal: None,
-                                                                    default_val: None,
-                                                                },
-                                                            ],
-                                                            close: Token(RightParen, ")", (60,18)->(60,19)),
-                                                        },
-                                                        ret: None,
-                                                        arrow: Token(Arrow, "=>", (60,20)->(60,22)),
-                                                        body: Body {
-                                                            commands: [
-                                                                Return(
-                                                                    ReturnCommand {
-                                                                        ret: Token(Virtual, "", (0,0)->(0,0)),
-                                                                        expr: Some(
-                                                                            DictAccess(
-                                                                                DictAccess {
-                                                                                    container: Identifier(
-                                                                                        Raw(val),
-                                                                                    ),
-                                                                                    dot: Token(Dot, ".", (60,26)->(60,27)),
-                                                                                    index: Infix(
-                                                                                        InfixExpression {
-                                                                                            token: Token(Or, "||", (60,40)->(60,42)),
-                                                                                            operator: Or,
-                                                                                            left: Infix(
-                                                                                                InfixExpression {
-                                                                                                    token: Token(RegexpMatches, "=~#", (60,32)->(60,35)),
-                                                                                                    operator: RegexpMatches,
-                                                                                                    left: Identifier(
-                                                                                                        Raw(text),
-                                                                                                    ),
-                                                                                                    right: Identifier(
-                                                                                                        Raw(pat),
-                                                                                                    ),
-                                                                                                },
+                                                                ret: None,
+                                                                arrow: Token(Arrow, "=>", (60,20)->(60,22)),
+                                                                body: Body {
+                                                                    commands: [
+                                                                        Return(
+                                                                            ReturnCommand {
+                                                                                ret: Token(Virtual, "", (0,0)->(0,0)),
+                                                                                expr: Some(
+                                                                                    DictAccess(
+                                                                                        DictAccess {
+                                                                                            container: Identifier(
+                                                                                                Raw(val),
                                                                                             ),
-                                                                                            right: Infix(
+                                                                                            dot: Token(Dot, ".", (60,26)->(60,27)),
+                                                                                            index: Infix(
                                                                                                 InfixExpression {
-                                                                                                    token: Token(RegexpMatches, "=~#", (60,62)->(60,65)),
-                                                                                                    operator: RegexpMatches,
-                                                                                                    left: Call(
-                                                                                                        f: Identifier(Raw(bufname)) arg: [
-                                                                                                            DictAccess(
-                                                                                                                DictAccess {
-                                                                                                                    container: Identifier(
-                                                                                                                        Raw(val),
-                                                                                                                    ),
-                                                                                                                    dot: Token(Dot, ".", (60,54)->(60,55)),
-                                                                                                                    index: Identifier(
-                                                                                                                        Raw(bufnr),
-                                                                                                                    ),
-                                                                                                                },
+                                                                                                    token: Token(Or, "||", (60,40)->(60,42)),
+                                                                                                    operator: Or,
+                                                                                                    left: Infix(
+                                                                                                        InfixExpression {
+                                                                                                            token: Token(RegexpMatches, "=~#", (60,32)->(60,35)),
+                                                                                                            operator: RegexpMatches,
+                                                                                                            left: Identifier(
+                                                                                                                Raw(text),
                                                                                                             ),
-                                                                                                        ],
+                                                                                                            right: Identifier(
+                                                                                                                Raw(pat),
+                                                                                                            ),
+                                                                                                        },
                                                                                                     ),
-                                                                                                    right: Identifier(
-                                                                                                        Raw(pat),
+                                                                                                    right: Infix(
+                                                                                                        InfixExpression {
+                                                                                                            token: Token(RegexpMatches, "=~#", (60,62)->(60,65)),
+                                                                                                            operator: RegexpMatches,
+                                                                                                            left: Call(
+                                                                                                                f: Identifier(Raw(bufname)) arg: [
+                                                                                                                    DictAccess(
+                                                                                                                        DictAccess {
+                                                                                                                            container: Identifier(
+                                                                                                                                Raw(val),
+                                                                                                                            ),
+                                                                                                                            dot: Token(Dot, ".", (60,54)->(60,55)),
+                                                                                                                            index: Identifier(
+                                                                                                                                Raw(bufnr),
+                                                                                                                            ),
+                                                                                                                        },
+                                                                                                                    ),
+                                                                                                                ],
+                                                                                                            ),
+                                                                                                            right: Identifier(
+                                                                                                                Raw(pat),
+                                                                                                            ),
+                                                                                                        },
                                                                                                     ),
                                                                                                 },
                                                                                             ),
                                                                                         },
                                                                                     ),
-                                                                                },
-                                                                            ),
+                                                                                ),
+                                                                                eol: Token(Virtual, "", (0,0)->(0,0)),
+                                                                            },
                                                                         ),
-                                                                        eol: Token(Virtual, "", (0,0)->(0,0)),
-                                                                    },
-                                                                ),
-                                                            ],
-                                                        },
+                                                                    ],
+                                                                },
+                                                            },
+                                                        ),
+                                                        eol: Token(EndOfLine, "\n", (60,69)->(60,69)),
                                                     },
                                                 ),
-                                                eol: Token(EndOfLine, "\n", (60,69)->(60,69)),
-                                            },
-                                        ),
-                                    ),
-                                ],
-                            },
+                                            ),
+                                        ],
+                                    },
+                                },
+                            ),
                             endif_tok: Token(Identifier, "endif", (61,2)->(61,7)),
                             endif_eol: Token(EndOfLine, "\n", (61,7)->(61,7)),
                         },

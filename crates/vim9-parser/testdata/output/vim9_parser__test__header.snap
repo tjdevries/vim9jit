@@ -1,6 +1,6 @@
 ---
-source: src/lib.rs
-assertion_line: 1205
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2115
 expression: snapshot_parsing(contents)
 ---
 [
@@ -50,6 +50,8 @@ expression: snapshot_parsing(contents)
                     ),
                 ],
             },
+            elseifs: [],
+            else_command: None,
             endif_tok: Token(Identifier, "endif", (5,0)->(5,5)),
             endif_eol: Token(EndOfLine, "\n", (5,5)->(5,5)),
         },

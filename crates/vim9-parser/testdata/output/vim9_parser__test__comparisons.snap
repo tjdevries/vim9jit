@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 1993
+assertion_line: 2136
 expression: snapshot_parsing(contents)
 ---
 [
@@ -183,6 +183,8 @@ expression: snapshot_parsing(contents)
                     ),
                 ],
             },
+            elseifs: [],
+            else_command: None,
             endif_tok: Token(Identifier, "endif", (9,0)->(9,5)),
             endif_eol: Token(EndOfLine, "\n", (9,5)->(9,5)),
         },
