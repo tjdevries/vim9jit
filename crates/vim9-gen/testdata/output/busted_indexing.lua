@@ -1,6 +1,7 @@
 describe("filename", function()
 	-- vim9script
 	local l = { 1, 2, 3 }
+
 	-- Token(EndOfLine, "\n", (3,0)->(3,0))
 
 	it("Test_can_index", function()
@@ -8,7 +9,7 @@ describe("filename", function()
 		vim.v.errors = {}
 
 		-- Actual test
-		vim.fn["assert_equal"](1, l[0 + 1])
+		vim.fn["assert_equal"](1, require("vim9script").index(l, 0))
 
 		-- Assert that errors is still empty
 		assert.are.same({}, vim.v.errors)

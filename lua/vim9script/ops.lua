@@ -40,4 +40,8 @@ ops["RegexpMatches"] = function(left, right)
   return vim.regex(right):match_str(left)
 end
 
+ops["Modulo"] = function(left, right)
+  return left % right
+end
+
 return ops

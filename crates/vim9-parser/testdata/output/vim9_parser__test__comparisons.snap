@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2136
+assertion_line: 2316
 expression: snapshot_parsing(contents)
 ---
 [
@@ -124,53 +124,17 @@ expression: snapshot_parsing(contents)
             if_eol: Token(EndOfLine, "\n", (3,52)->(3,52)),
             body: Body {
                 commands: [
-                    NoOp(
-                        Token(Identifier, "x", (4,2)->(4,3)),
+                    Comment(
+                        Token(Comment, "# x += 1", (4,2)->(4,10)),
                     ),
-                    NoOp(
-                        Token(PlusEquals, "+=", (4,4)->(4,6)),
+                    Comment(
+                        Token(Comment, "# x *= 1", (5,2)->(5,10)),
                     ),
-                    NoOp(
-                        Token(Integer, "1", (4,7)->(4,8)),
+                    Comment(
+                        Token(Comment, "# x /= 1", (6,2)->(6,10)),
                     ),
-                    NoOp(
-                        Token(EndOfLine, "\n", (4,8)->(4,8)),
-                    ),
-                    NoOp(
-                        Token(Identifier, "x", (5,2)->(5,3)),
-                    ),
-                    NoOp(
-                        Token(MulEquals, "*=", (5,4)->(5,6)),
-                    ),
-                    NoOp(
-                        Token(Integer, "1", (5,7)->(5,8)),
-                    ),
-                    NoOp(
-                        Token(EndOfLine, "\n", (5,8)->(5,8)),
-                    ),
-                    NoOp(
-                        Token(Identifier, "x", (6,2)->(6,3)),
-                    ),
-                    NoOp(
-                        Token(DivEquals, "/=", (6,4)->(6,6)),
-                    ),
-                    NoOp(
-                        Token(Integer, "1", (6,7)->(6,8)),
-                    ),
-                    NoOp(
-                        Token(EndOfLine, "\n", (6,8)->(6,8)),
-                    ),
-                    NoOp(
-                        Token(Identifier, "x", (7,2)->(7,3)),
-                    ),
-                    NoOp(
-                        Token(MinusEquals, "-=", (7,4)->(7,6)),
-                    ),
-                    NoOp(
-                        Token(Integer, "1", (7,7)->(7,8)),
-                    ),
-                    NoOp(
-                        Token(EndOfLine, "\n", (7,8)->(7,8)),
+                    Comment(
+                        Token(Comment, "# x -= 1", (7,2)->(7,10)),
                     ),
                     Echo(
                         EchoCommand {

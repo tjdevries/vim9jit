@@ -5,6 +5,18 @@ M.prefix = require "vim9script.prefix"
 M.convert = require "vim9script.convert"
 M.heredoc = require "vim9script.heredoc"
 
+M.index = function(obj, idx)
+  if vim.tbl_islist(obj) then
+    return obj[idx + 1]
+  elseif type(obj) == "table" then
+    return obj[idx]
+  elseif type(obj) == "string" then
+    return string.sub(obj, idx + 1, idx + 1)
+  end
+
+  error("invalid type for indexing: " .. vim.inspect(obj))
+end
+
 M.slice = function(obj, start, finish)
   local slicer
   if vim.tbl_islist(obj) then

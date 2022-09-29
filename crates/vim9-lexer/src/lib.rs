@@ -67,6 +67,7 @@ pub enum TokenKind {
     // Identifiers and literals
     Identifier,
     Integer,
+    Float,
 
     // Reserved Tokens
     True,
@@ -136,11 +137,14 @@ pub enum TokenKind {
     Caret,
     Escaped,
     Arrow,
+    MethodArrow,
     AngleLeft,
     AngleRight,
 
     SingleQuoteString,
     DoubleQuoteString,
+    InterpolatedString,
+    InterpolatedLiteralString,
 
     LeftParen,
     RightParen,
@@ -242,14 +246,30 @@ impl Lexer {
 
     fn read_number(&mut self) -> Token {
         let position = self.position;
-        while let Some(ch) = self.ch && ch.is_numeric(){
+        while let Some(ch) = self.ch && ch.is_numeric() {
             self.read_char();
         }
 
-        Token {
-            kind: TokenKind::Integer,
-            text: self.chars[position..self.position].iter().collect(),
-            span: self.make_span(position, self.position),
+        if self.ch == Some('.') {
+            // consume the .
+            self.read_char();
+
+            // read the rest of the number
+            while let Some(ch) = self.ch && ch.is_numeric() {
+                self.read_char();
+            }
+
+            Token {
+                kind: TokenKind::Float,
+                text: self.chars[position..self.position].iter().collect(),
+                span: self.make_span(position, self.position),
+            }
+        } else {
+            Token {
+                kind: TokenKind::Integer,
+                text: self.chars[position..self.position].iter().collect(),
+                span: self.make_span(position, self.position),
+            }
         }
     }
 
@@ -460,15 +480,12 @@ impl Lexer {
                     '!' => self.handle_bang(),
                     '>' => self.handle_gt(),
                     '<' => self.handle_lt(),
+                    '-' => self.handle_dash(),
+                    '$' => self.handle_dollar(),
                     '+' => self.if_peek(
                         '=',
                         TokenKind::Plus,
                         TokenKind::PlusEquals,
-                    ),
-                    '-' => self.if_peek(
-                        '=',
-                        TokenKind::Minus,
-                        TokenKind::MinusEquals,
                     ),
                     '*' => {
                         self.if_peek('=', TokenKind::Mul, TokenKind::MulEquals)
@@ -661,6 +678,32 @@ impl Lexer {
             (_, _) => self.read_one(TokenKind::AngleLeft),
         }
     }
+
+    fn handle_dash(&mut self) -> Token {
+        match self.peek_char().unwrap() {
+            '=' => self.read_two(TokenKind::MinusEquals),
+            '>' => self.read_two(TokenKind::MethodArrow),
+            _ => self.read_one(TokenKind::Minus),
+        }
+    }
+
+    pub fn handle_dollar(&mut self) -> Token {
+        match self.peek_char().unwrap() {
+            '\'' => {
+                self.read_char();
+                self.read_until('\'', TokenKind::InterpolatedLiteralString)
+            }
+            '"' => {
+                self.read_char();
+                self.read_until('\'', TokenKind::InterpolatedString)
+            }
+            _ => Token {
+                kind: TokenKind::Illegal,
+                text: self.ch.unwrap().to_string(),
+                span: self.make_span(self.position, self.position),
+            },
+        }
+    }
 }
 
 fn is_identifier(ch: char) -> bool {
@@ -750,6 +793,7 @@ mod test {
     snapshot!(test_register, "../testdata/snapshots/register.vim");
     snapshot!(test_lambda, "../testdata/snapshots/lambda.vim");
     snapshot!(test_types, "../testdata/snapshots/types.vim");
+    snapshot!(test_methods, "../testdata/snapshots/methods.vim");
 
     // snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
 

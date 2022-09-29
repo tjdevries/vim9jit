@@ -1,0 +1,435 @@
+---
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2261
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (2,0)->(2,3)),
+            ty: None,
+            name: Raw(s),
+            equal: Token(Equal, "=", (2,6)->(2,7)),
+            expr: String(
+                DoubleQuote(
+                    "hello",
+                ),
+            ),
+            eol: Token(EndOfLine, "\n", (2,15)->(2,15)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (3,0)->(3,3)),
+            ty: None,
+            name: Raw(l),
+            equal: Token(Equal, "=", (3,6)->(3,7)),
+            expr: MethodCall(
+                MethodCall {
+                    left: Identifier(
+                        Raw(s),
+                    ),
+                    tok: Token(MethodArrow, "->", (3,9)->(3,11)),
+                    right: f: Identifier(Raw(len)) arg: [],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (3,16)->(3,16)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (4,0)->(4,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (5,0)->(5,3)),
+            ty: None,
+            name: Raw(l2),
+            equal: Token(Equal, "=", (5,7)->(5,8)),
+            expr: MethodCall(
+                MethodCall {
+                    left: String(
+                        DoubleQuote(
+                            "hello",
+                        ),
+                    ),
+                    tok: Token(MethodArrow, "->", (5,16)->(5,18)),
+                    right: f: Identifier(Raw(len)) arg: [],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (5,23)->(5,23)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (6,0)->(6,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (7,0)->(7,3)),
+            ty: None,
+            name: Raw(x),
+            equal: Token(Equal, "=", (7,6)->(7,7)),
+            expr: MethodCall(
+                MethodCall {
+                    left: MethodCall(
+                        MethodCall {
+                            left: MethodCall(
+                                MethodCall {
+                                    left: MethodCall(
+                                        MethodCall {
+                                            left: Array(
+                                                ArrayLiteral {
+                                                    open: Token(LeftBracket, "[", (7,8)->(7,9)),
+                                                    elements: [
+                                                        Number(
+                                                            VimNumber {
+                                                                value: "5",
+                                                            },
+                                                        ),
+                                                        Number(
+                                                            VimNumber {
+                                                                value: "4",
+                                                            },
+                                                        ),
+                                                        Number(
+                                                            VimNumber {
+                                                                value: "2",
+                                                            },
+                                                        ),
+                                                        Number(
+                                                            VimNumber {
+                                                                value: "1",
+                                                            },
+                                                        ),
+                                                        Number(
+                                                            VimNumber {
+                                                                value: "7",
+                                                            },
+                                                        ),
+                                                        Number(
+                                                            VimNumber {
+                                                                value: "12",
+                                                            },
+                                                        ),
+                                                        Number(
+                                                            VimNumber {
+                                                                value: "8",
+                                                            },
+                                                        ),
+                                                    ],
+                                                    close: Token(RightBracket, "]", (7,29)->(7,30)),
+                                                },
+                                            ),
+                                            tok: Token(MethodArrow, "->", (7,30)->(7,32)),
+                                            right: f: Identifier(Raw(sort)) arg: [],
+                                        },
+                                    ),
+                                    tok: Token(MethodArrow, "->", (8,5)->(8,7)),
+                                    right: f: Identifier(Raw(filter)) arg: [
+                                        Lambda(
+                                            Lambda {
+                                                args: Signature {
+                                                    open: Token(LeftParen, "(", (8,14)->(8,15)),
+                                                    params: [
+                                                        Parameter {
+                                                            name: Raw(_),
+                                                            ty: None,
+                                                            equal: None,
+                                                            default_val: None,
+                                                        },
+                                                        Parameter {
+                                                            name: Raw(x),
+                                                            ty: None,
+                                                            equal: None,
+                                                            default_val: None,
+                                                        },
+                                                    ],
+                                                    close: Token(RightParen, ")", (8,19)->(8,20)),
+                                                },
+                                                ret: None,
+                                                arrow: Token(Arrow, "=>", (8,21)->(8,23)),
+                                                body: Body {
+                                                    commands: [
+                                                        Return(
+                                                            ReturnCommand {
+                                                                ret: Token(Virtual, "", (0,0)->(0,0)),
+                                                                expr: Some(
+                                                                    Infix(
+                                                                        InfixExpression {
+                                                                            token: Token(EqualTo, "==", (8,30)->(8,32)),
+                                                                            operator: EqualTo,
+                                                                            left: Infix(
+                                                                                InfixExpression {
+                                                                                    token: Token(Percent, "%", (8,26)->(8,27)),
+                                                                                    operator: Modulo,
+                                                                                    left: Identifier(
+                                                                                        Raw(x),
+                                                                                    ),
+                                                                                    right: Number(
+                                                                                        VimNumber {
+                                                                                            value: "2",
+                                                                                        },
+                                                                                    ),
+                                                                                },
+                                                                            ),
+                                                                            right: Number(
+                                                                                VimNumber {
+                                                                                    value: "0",
+                                                                                },
+                                                                            ),
+                                                                        },
+                                                                    ),
+                                                                ),
+                                                                eol: Token(Virtual, "", (0,0)->(0,0)),
+                                                            },
+                                                        ),
+                                                    ],
+                                                },
+                                            },
+                                        ),
+                                    ],
+                                },
+                            ),
+                            tok: Token(MethodArrow, "->", (9,5)->(9,7)),
+                            right: f: Identifier(Raw(map)) arg: [
+                                Lambda(
+                                    Lambda {
+                                        args: Signature {
+                                            open: Token(LeftParen, "(", (9,11)->(9,12)),
+                                            params: [
+                                                Parameter {
+                                                    name: Raw(_),
+                                                    ty: None,
+                                                    equal: None,
+                                                    default_val: None,
+                                                },
+                                                Parameter {
+                                                    name: Raw(y),
+                                                    ty: None,
+                                                    equal: None,
+                                                    default_val: None,
+                                                },
+                                            ],
+                                            close: Token(RightParen, ")", (9,16)->(9,17)),
+                                        },
+                                        ret: None,
+                                        arrow: Token(Arrow, "=>", (9,18)->(9,20)),
+                                        body: Body {
+                                            commands: [
+                                                Return(
+                                                    ReturnCommand {
+                                                        ret: Token(Virtual, "", (0,0)->(0,0)),
+                                                        expr: Some(
+                                                            Infix(
+                                                                InfixExpression {
+                                                                    token: Token(Plus, "+", (9,23)->(9,24)),
+                                                                    operator: Plus,
+                                                                    left: Identifier(
+                                                                        Raw(y),
+                                                                    ),
+                                                                    right: Number(
+                                                                        VimNumber {
+                                                                            value: "1",
+                                                                        },
+                                                                    ),
+                                                                },
+                                                            ),
+                                                        ),
+                                                        eol: Token(Virtual, "", (0,0)->(0,0)),
+                                                    },
+                                                ),
+                                            ],
+                                        },
+                                    },
+                                ),
+                            ],
+                        },
+                    ),
+                    tok: Token(MethodArrow, "->", (10,5)->(10,7)),
+                    right: f: Identifier(Raw(sort)) arg: [],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (10,13)->(10,13)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (11,0)->(11,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (12,0)->(12,3)),
+            ty: None,
+            name: Raw(expr_prec),
+            equal: Token(Equal, "=", (12,14)->(12,15)),
+            expr: MethodCall(
+                MethodCall {
+                    left: Prefix(
+                        PrefixExpression {
+                            token: Token(Minus, "-", (12,16)->(12,17)),
+                            operator: Minus,
+                            right: Number(
+                                VimNumber {
+                                    value: "1.234",
+                                },
+                            ),
+                        },
+                    ),
+                    tok: Token(MethodArrow, "->", (12,22)->(12,24)),
+                    right: f: Identifier(Raw(string)) arg: [],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (12,32)->(12,32)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (13,0)->(13,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (14,0)->(14,3)),
+            ty: None,
+            name: Raw(foo),
+            equal: Token(Equal, "=", (14,8)->(14,9)),
+            expr: MethodCall(
+                MethodCall {
+                    left: Identifier(
+                        Raw(base),
+                    ),
+                    tok: Token(MethodArrow, "->", (14,14)->(14,16)),
+                    right: f: Identifier(Raw(name)) arg: [
+                        Identifier(
+                            Raw(args),
+                        ),
+                    ],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (14,26)->(14,26)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (15,0)->(15,3)),
+            ty: None,
+            name: Raw(foo),
+            equal: Token(Equal, "=", (15,8)->(15,9)),
+            expr: MethodCall(
+                MethodCall {
+                    left: Identifier(
+                        Raw(base),
+                    ),
+                    tok: Token(MethodArrow, "->", (15,14)->(15,16)),
+                    right: f: DictAccess(DictAccess { container: Identifier(Raw(some)), dot: Token(Dot, ".", (15,20)->(15,21)), index: RawIdentifier { name: "name" } }) arg: [
+                        Identifier(
+                            Raw(args),
+                        ),
+                    ],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (15,31)->(15,31)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (16,0)->(16,3)),
+            ty: None,
+            name: Raw(foo),
+            equal: Token(Equal, "=", (16,8)->(16,9)),
+            expr: MethodCall(
+                MethodCall {
+                    left: Identifier(
+                        Raw(base),
+                    ),
+                    tok: Token(MethodArrow, "->", (16,14)->(16,16)),
+                    right: f: Index(IndexExpression { container: Identifier(Raw(alist)), open: Token(LeftBracket, "[", (16,21)->(16,22)), index: Item(Identifier(Raw(idx))), close: Token(RightBracket, "]", (16,25)->(16,26)) }) arg: [
+                        Identifier(
+                            Raw(args),
+                        ),
+                    ],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (16,32)->(16,32)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (17,0)->(17,3)),
+            ty: None,
+            name: Raw(foo),
+            equal: Token(Equal, "=", (17,8)->(17,9)),
+            expr: MethodCall(
+                MethodCall {
+                    left: Identifier(
+                        Raw(base),
+                    ),
+                    tok: Token(MethodArrow, "->", (17,14)->(17,16)),
+                    right: f: Grouped(GroupedExpression { open: Token(LeftParen, "(", (17,16)->(17,17)), expr: Call(f: Identifier(Raw(getFuncRef)) arg: []), close: Token(RightParen, ")", (17,29)->(17,30)) }) arg: [
+                        Identifier(
+                            Raw(args),
+                        ),
+                    ],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (17,36)->(17,36)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (18,0)->(18,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (19,0)->(19,3)),
+            ty: None,
+            name: Raw(x),
+            equal: Token(Equal, "=", (19,6)->(19,7)),
+            expr: Array(
+                ArrayLiteral {
+                    open: Token(LeftBracket, "[", (19,8)->(19,9)),
+                    elements: [
+                        Number(
+                            VimNumber {
+                                value: "1",
+                            },
+                        ),
+                        Number(
+                            VimNumber {
+                                value: "4",
+                            },
+                        ),
+                        Number(
+                            VimNumber {
+                                value: "2",
+                            },
+                        ),
+                        Number(
+                            VimNumber {
+                                value: "5",
+                            },
+                        ),
+                    ],
+                    close: Token(RightBracket, "]", (19,19)->(19,20)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (19,20)->(19,20)),
+        },
+    ),
+    Eval(
+        EvalCommand {
+            eval: None,
+            expr: MethodCall(
+                MethodCall {
+                    left: Identifier(
+                        Raw(x),
+                    ),
+                    tok: Token(MethodArrow, "->", (20,1)->(20,3)),
+                    right: f: Identifier(Raw(sort)) arg: [],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (20,9)->(20,9)),
+        },
+    ),
+]

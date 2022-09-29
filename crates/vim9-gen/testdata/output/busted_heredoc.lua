@@ -7,6 +7,7 @@ describe("filename", function()
 
 		-- Actual test
 		local x = { [==[hello]==], [==[world]==] }
+
 		-- Token(EndOfLine, "\n", (7,0)->(7,0))
 		vim.fn["assert_equal"]({ "hello", "world" }, x)
 
@@ -22,6 +23,7 @@ describe("filename", function()
 
 		-- Actual test
 		local x = { [==[    hello]==], [==[  world]==] }
+
 		-- Token(EndOfLine, "\n", (16,0)->(16,0))
 		vim.fn["assert_equal"]({ "    hello", "  world" }, x)
 
@@ -37,6 +39,7 @@ describe("filename", function()
 
 		-- Actual test
 		local x = require("vim9script").heredoc.trim({ [==[    hello]==], [==[world]==] })
+
 		-- Token(EndOfLine, "\n", (25,0)->(25,0))
 		vim.fn["assert_equal"]({ "    hello", "world" }, x)
 
@@ -52,6 +55,7 @@ describe("filename", function()
 
 		-- Actual test
 		local x = require("vim9script").heredoc.trim({ [==[        hello]==], [==[          world]==] })
+
 		-- Token(EndOfLine, "\n", (34,0)->(34,0))
 		vim.fn["assert_equal"]({ "hello", "  world" }, x)
 
@@ -60,12 +64,20 @@ describe("filename", function()
 	end)
 
 	-- Token(EndOfLine, "\n", (37,0)->(37,0))
+
 	-- # def Test_simple_heredoc_with_quotes()
+
 	-- #   var x =<< END
+
 	-- #     "hello"
+
 	-- #   world
+
 	-- #   END
+
 	-- #
+
 	-- #   assert_equal(["    "hello"", "  world"], x)
+
 	-- # enddef
 end)

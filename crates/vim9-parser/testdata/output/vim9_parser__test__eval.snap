@@ -1,0 +1,118 @@
+---
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2320
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (2,0)->(2,3)),
+            ty: None,
+            name: Raw(foo),
+            equal: Token(Equal, "=", (2,8)->(2,9)),
+            expr: Array(
+                ArrayLiteral {
+                    open: Token(LeftBracket, "[", (2,10)->(2,11)),
+                    elements: [
+                        Number(
+                            VimNumber {
+                                value: "1",
+                            },
+                        ),
+                    ],
+                    close: Token(RightBracket, "]", (2,12)->(2,13)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (2,13)->(2,13)),
+        },
+    ),
+    Eval(
+        EvalCommand {
+            eval: None,
+            expr: MethodCall(
+                MethodCall {
+                    left: MethodCall(
+                        MethodCall {
+                            left: Identifier(
+                                Raw(foo),
+                            ),
+                            tok: Token(MethodArrow, "->", (3,3)->(3,5)),
+                            right: f: Identifier(Raw(sort)) arg: [],
+                        },
+                    ),
+                    tok: Token(MethodArrow, "->", (3,11)->(3,13)),
+                    right: f: Identifier(Raw(filter)) arg: [
+                        Lambda(
+                            Lambda {
+                                args: Signature {
+                                    open: Token(LeftParen, "(", (3,20)->(3,21)),
+                                    params: [
+                                        Parameter {
+                                            name: Raw(_),
+                                            ty: None,
+                                            equal: None,
+                                            default_val: None,
+                                        },
+                                        Parameter {
+                                            name: Raw(y),
+                                            ty: None,
+                                            equal: None,
+                                            default_val: None,
+                                        },
+                                    ],
+                                    close: Token(RightParen, ")", (3,25)->(3,26)),
+                                },
+                                ret: None,
+                                arrow: Token(Arrow, "=>", (3,27)->(3,29)),
+                                body: Body {
+                                    commands: [
+                                        Return(
+                                            ReturnCommand {
+                                                ret: Token(Virtual, "", (0,0)->(0,0)),
+                                                expr: Some(
+                                                    Infix(
+                                                        InfixExpression {
+                                                            token: Token(EqualTo, "==", (3,36)->(3,38)),
+                                                            operator: EqualTo,
+                                                            left: Infix(
+                                                                InfixExpression {
+                                                                    token: Token(Percent, "%", (3,32)->(3,33)),
+                                                                    operator: Modulo,
+                                                                    left: Identifier(
+                                                                        Raw(y),
+                                                                    ),
+                                                                    right: Number(
+                                                                        VimNumber {
+                                                                            value: "2",
+                                                                        },
+                                                                    ),
+                                                                },
+                                                            ),
+                                                            right: Number(
+                                                                VimNumber {
+                                                                    value: "0",
+                                                                },
+                                                            ),
+                                                        },
+                                                    ),
+                                                ),
+                                                eol: Token(Virtual, "", (0,0)->(0,0)),
+                                            },
+                                        ),
+                                    ],
+                                },
+                            },
+                        ),
+                    ],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (3,41)->(3,41)),
+        },
+    ),
+]
