@@ -23,7 +23,6 @@ end
 
 M.replace = function(orig, new)
   if type(orig) == "table" and type(new) == "table" then
-    print(string.format("replacing %s -> %s", vim.inspect(orig), vim.inspect(new)))
     for k in pairs(orig) do
       orig[k] = nil
     end

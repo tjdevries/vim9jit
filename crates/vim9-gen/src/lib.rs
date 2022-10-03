@@ -119,13 +119,15 @@ impl Generate for UserCommand {
                     {}
                 end,
                 {{
-                     nargs = '{}'
+                     nargs = '{}',
+                     bang = {},
                 }}
             )"#,
             self.name,
             make_user_command_arg(state),
             self.command.gen(state),
             self.command_nargs.clone().unwrap_or("0".to_string()),
+            self.command_bang,
         );
 
         state.command_depth -= 1;
@@ -493,6 +495,13 @@ impl Generate for Expandable {
         match &self.ident {
             Identifier::Raw(RawIdentifier { name }) if name == "q-args" => {
                 format!("{}.{}", make_user_command_arg(state), "args")
+            }
+            Identifier::Raw(RawIdentifier { name }) if name == "q-bang" => {
+                format!(
+                    "({}.{} and '!' or '')",
+                    make_user_command_arg(state),
+                    "bang"
+                )
             }
             _ => format!("vim.fn.expand('<{}>')", self.ident.gen(state)),
         }

@@ -18,6 +18,9 @@ use vim9_lexer::TokenKind;
 pub mod expr_call;
 pub use expr_call::CallExpression;
 
+pub mod user_cmd;
+pub use user_cmd::UserCommand;
+
 #[derive(Debug)]
 pub struct Program {
     pub commands: Vec<ExCommand>,
@@ -72,50 +75,6 @@ impl SharedCommand {
         Ok(ExCommand::SharedCommand(SharedCommand {
             contents,
             eol: parser.expect_eol()?,
-        }))
-    }
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct UserCommand {
-    tok: Token,
-    pub bang: bool,
-    pub command_nargs: Option<String>,
-    pub command_bang: bool,
-    pub name: String,
-    pub command: Box<ExCommand>,
-}
-
-impl UserCommand {
-    fn parse(parser: &mut Parser) -> Result<ExCommand> {
-        let tok = parser.expect_identifier_with_text("command")?;
-        let bang = parser.consume_if_kind(TokenKind::Bang).is_some();
-
-        let mut command_nargs = None;
-        let mut command_bang = false;
-        while parser.current_token.kind == TokenKind::Minus {
-            parser.next_token();
-            parser.ensure_token(TokenKind::Identifier)?;
-
-            match parser.pop().text.as_ref() {
-                "bang" => {
-                    command_bang = true;
-                }
-                "nargs" => {
-                    parser.expect_token(TokenKind::Equal)?;
-                    command_nargs = Some(parser.pop().text);
-                }
-                _ => panic!("OH NO"),
-            }
-        }
-
-        Ok(ExCommand::UserCommand(UserCommand {
-            tok,
-            bang,
-            command_nargs,
-            command_bang,
-            name: parser.expect_token(TokenKind::Identifier)?.text,
-            command: parser.parse_command()?.into(),
         }))
     }
 }

@@ -40,6 +40,10 @@ ops["RegexpMatches"] = function(left, right)
   return vim.regex(right):match_str(left)
 end
 
+ops["NotRegexpMatches"] = function(left, right)
+  return not ops["RegexpMatches"](left, right)
+end
+
 ops["Modulo"] = function(left, right)
   return left % right
 end
