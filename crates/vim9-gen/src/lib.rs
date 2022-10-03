@@ -48,6 +48,7 @@ use parser::VimOption;
 use parser::VimScope;
 use parser::VimString;
 
+pub mod call_expr;
 mod test_harness;
 
 pub struct State {
@@ -55,6 +56,7 @@ pub struct State {
     pub is_test: bool,
 
     pub command_depth: i32,
+    pub method_depth: i32,
 
     // TODO: We could modify the state as we are generating code.
     //  As we generate the code and notice certain identifiers are certain
@@ -86,7 +88,7 @@ impl Generate for ExCommand {
             ExCommand::NoOp(token) => format!("\n-- {:?}", token),
             ExCommand::Heredoc(heredoc) => heredoc.gen(state),
             ExCommand::UserCommand(usercmd) => usercmd.gen(state),
-            ExCommand::Eval(eval) => eval.expr.gen(state),
+            ExCommand::Eval(eval) => format!("{};", eval.expr.gen(state)),
             ExCommand::SharedCommand(shared) => shared.gen(state),
             _ => todo!("Have not yet handled: {:?}", self),
         }
@@ -162,7 +164,7 @@ impl Generate for Heredoc {
 impl Generate for CallCommand {
     fn gen(&self, state: &mut State) -> String {
         let call: CallExpression = self.into();
-        call.gen(state)
+        format!("{};", call.gen(state))
     }
 }
 
@@ -476,12 +478,7 @@ impl Generate for Expression {
 
 impl Generate for MethodCall {
     fn gen(&self, state: &mut State) -> String {
-        let mut expr = *self.right.clone();
-        // TODO: This could be wrong:
-        //  For example, not all methods put it in the first argument Sadge
-        expr.args.insert(0, *self.left.clone());
-
-        expr.gen(state)
+        call_expr::generate_method(self, state)
     }
 }
 
@@ -626,158 +623,9 @@ impl Generate for VimString {
     }
 }
 
-mod call_expr {
-    use std::collections::HashSet;
-
-    use super::*;
-
-    pub fn mutates(name: &str) -> Option<HashSet<usize>> {
-        match name {
-            "sort" | "filter" => Some(HashSet::from_iter(vec![0].into_iter())),
-            _ => None,
-        }
-    }
-
-    pub fn args_to_generated_list(
-        state: &mut State,
-        args: &[Expression],
-    ) -> String {
-        args.iter()
-            .map(|e| e.gen(state))
-            .collect::<Vec<String>>()
-            .join(", ")
-    }
-
-    pub fn inplace(
-        call: &CallExpression,
-        state: &mut State,
-        mutators: &HashSet<usize>,
-    ) -> Option<String> {
-        let args = args_to_generated_list(state, &call.args);
-        let mutator_statements = call
-            .args
-            .iter()
-            .enumerate()
-            .filter_map(|(idx, arg)| {
-                if !mutators.contains(&idx) {
-                    return None;
-                }
-
-                // TODO: Write a check for when we actually should do this...
-                match arg {
-                    Expression::Identifier(ident) => match ident {
-                        Identifier::Raw(raw) => Some(format!(
-                            "{} = __vim9_result[2][{}]",
-                            raw.gen(state),
-                            idx + 1
-                        )),
-                        Identifier::Scope(_) => todo!(),
-                        Identifier::Unpacked(_) => todo!(),
-                    },
-                    Expression::Grouped(_) => todo!(),
-                    Expression::DictAccess(_) => todo!(),
-                    Expression::VimOption(_) => todo!(),
-                    Expression::Prefix(_) => todo!(),
-                    Expression::Infix(_) => todo!(),
-                    Expression::MethodCall(_) => None,
-                    Expression::Number(_) => None,
-                    Expression::String(_) => None,
-                    Expression::Boolean(_) => None,
-                    Expression::Call(_) => None,
-                    Expression::Array(_) => None,
-                    Expression::Dict(_) => None,
-                    Expression::Register(_) => None,
-                    Expression::Lambda(_) => None,
-                    // TODO: I think this is the case...
-                    Expression::Slice(_) => unreachable!("Slice"),
-                    Expression::Index(_) => unreachable!("Index"),
-                    Expression::Empty => unreachable!("Empty"),
-                    Expression::Expandable(_) => unreachable!("Expandable"),
-                }
-            })
-            .collect::<Vec<String>>();
-
-        if mutator_statements.len() == 0 {
-            return None;
-        }
-
-        let mutator_statements = mutator_statements.join("\n");
-        Some(format!(
-            r#"
-                (function()
-                  local __vim9_result = vim.fn["VIM9__CallUserVimlFunc"]("sort", {{ {args} }})
-                  {mutator_statements}
-                  return __vim9_result[1]
-                end)()
-            "#
-        ))
-    }
-}
-
 impl Generate for CallExpression {
     fn gen(&self, state: &mut State) -> String {
-        let func = match &(*self.expr) {
-            Expression::Identifier(ident) => match ident {
-                Identifier::Raw(raw) => {
-                    if let Some(mutators) = call_expr::mutates(&raw.name) {
-                        if let Some(result) =
-                            call_expr::inplace(&self, state, &mutators)
-                        {
-                            return result;
-                        }
-                    }
-
-                    if raw.name.to_lowercase() == raw.name {
-                        if raw.name.starts_with("nvim_") {
-                            format!("vim.api.{}", raw.name)
-                        } else if raw.name == "function" {
-                            if self.args.len() == 1 {
-                                return format!(
-                                    r#"function(...) return vim.fn[{}](...) end"#,
-                                    self.args[0].gen(state),
-                                );
-                            } else {
-                                assert!(
-                                    self.args.len() <= 2,
-                                    "vim.fn.function"
-                                );
-                                return format!(
-                                    r#"
-                                    function(...)
-                                      local copied = vim.deepcopy({})
-                                      for _, val in ipairs({{...}}) do
-                                        table.insert(copied, val)
-                                      end
-                                      return vim.fn['{}'](unpack(copied))
-                                    end
-                                    "#,
-                                    self.args[1].gen(state),
-                                    raw.name
-                                );
-                            }
-                        } else {
-                            format!("vim.fn['{}']", raw.name)
-                        }
-                    } else {
-                        raw.name.clone()
-                    }
-                }
-                Identifier::Scope(_) => todo!("SCOPED OH NO NO NO NO"),
-                Identifier::Unpacked(_) => todo!(),
-            },
-            // Expression::String(_) => todo!(),
-            // Expression::Grouped(_) => todo!(),
-            // Expression::Call(_) => todo!(),
-            // Expression::Prefix(_) => todo!(),
-            // Expression::Infix(_) => todo!(),
-            _ => unimplemented!(),
-        };
-
-        format!(
-            "{}({})",
-            func,
-            call_expr::args_to_generated_list(state, &self.args)
-        )
+        call_expr::generate(self, state)
     }
 }
 
@@ -842,6 +690,7 @@ pub fn eval(program: parser::Program, is_test: bool) -> String {
     let mut state = State {
         augroup: None,
         command_depth: 0,
+        method_depth: 0,
         scopes: vec![],
         is_test,
     };
@@ -870,9 +719,15 @@ pub fn generate(contents: &str, is_test: bool) -> String {
 
     let result = eval(program, is_test);
     println!("{}", result);
+
+    let config = stylua_lib::Config::new()
+        .with_indent_type(stylua_lib::IndentType::Spaces)
+        .with_indent_width(2)
+        .with_column_width(120);
+
     stylua_lib::format_code(
         &result,
-        stylua_lib::Config::default(),
+        config,
         None,
         stylua_lib::OutputVerification::None,
     )
@@ -933,8 +788,9 @@ mod test {
     busted!(busted_multiline, "../testdata/busted/multiline.vim");
     busted!(busted_function, "../testdata/busted/function.vim");
     busted!(busted_methods, "../testdata/busted/methods.vim");
+    busted!(busted_megamethods, "../testdata/busted/megamethods.vim");
     busted!(busted_shared, "../testdata/busted/shared.vim");
-    busted!(busted_vimvars, "../testdata/busted/vimvars.vim");
+    // busted!(busted_vimvars, "../testdata/busted/vimvars.vim");
 
     snapshot!(test_expr, "../testdata/snapshots/expr.vim");
     snapshot!(test_if, "../testdata/snapshots/if.vim");

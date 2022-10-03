@@ -15,6 +15,9 @@ use vim9_lexer::Lexer;
 use vim9_lexer::Token;
 use vim9_lexer::TokenKind;
 
+pub mod expr_call;
+pub use expr_call::CallExpression;
+
 #[derive(Debug)]
 pub struct Program {
     pub commands: Vec<ExCommand>,
@@ -626,8 +629,6 @@ pub struct EvalCommand {
 
 impl EvalCommand {
     fn parse(parser: &mut Parser) -> Result<ExCommand> {
-        println!("eval!");
-
         Ok(ExCommand::Eval(EvalCommand {
             eval: None,
             expr: Expression::parse(parser, Precedence::Lowest)?,
@@ -646,17 +647,6 @@ pub struct CallCommand {
     pub args: Vec<Expression>,
     close: Token,
     eol: Token,
-}
-
-impl Into<CallExpression> for &CallCommand {
-    fn into(self) -> CallExpression {
-        CallExpression {
-            expr: Box::new(Expression::Identifier(self.name.clone())),
-            open: self.open.clone(),
-            args: self.args.clone(),
-            close: self.close.clone(),
-        }
-    }
 }
 
 impl CallCommand {
@@ -1168,28 +1158,6 @@ pub struct ArrayLiteral {
     open: Token,
     pub elements: Vec<Expression>,
     close: Token,
-}
-
-#[derive(PartialEq, Clone)]
-pub struct CallExpression {
-    pub expr: Box<Expression>,
-    open: Token,
-    pub args: Vec<Expression>,
-    close: Token,
-}
-
-impl CallExpression {
-    pub fn parse(
-        parser: &mut Parser,
-        left: Box<Expression>,
-    ) -> Result<CallExpression> {
-        Ok(CallExpression {
-            expr: left,
-            open: parser.ensure_token(TokenKind::LeftParen)?,
-            args: parser.parse_expression_list(TokenKind::RightParen, false)?,
-            close: parser.expect_peek(TokenKind::RightParen)?,
-        })
-    }
 }
 
 impl Debug for CallExpression {
@@ -1905,7 +1873,6 @@ impl Parser {
         //     self.next_token();
         // }
 
-        println!("new left: {:#?}", left);
         while prec < self.peek_precedence() {
             let infix = match self.get_infix_fn() {
                 Some(infix) => infix,
@@ -1914,9 +1881,6 @@ impl Parser {
 
             self.next_token();
             left = infix(self, left.into())?;
-
-            println!("\nleft: {:#?}", left);
-            println!("  peek: {:#?}", self.peek_token);
         }
 
         Ok(left)

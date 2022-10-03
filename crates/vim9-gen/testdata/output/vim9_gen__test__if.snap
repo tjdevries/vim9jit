@@ -1,11 +1,11 @@
 ---
-source: src/lib.rs
-assertion_line: 422
-expression: generate(contents)
+source: crates/vim9-gen/src/lib.rs
+assertion_line: 798
+expression: "generate(contents, false)"
 ---
 -- vim9script
 local x = true
 if x then
-	print(x)
+  print(x)
 end
 

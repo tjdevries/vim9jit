@@ -27,24 +27,17 @@ def Test_inplace()
   assert_equal([1, 2, 4, 5], x)
 enddef
 
-def Test_inplace_inplace()
+def Test_inplace_inplace_multi()
   var x = [1, 4, 2, 5]
-  x->sort()->filter((_, y) => y % 2 == 0)
+  x->sort()
+  x->filter((_, y) => y % 2 == 0)
   assert_equal([2, 4], x)
+enddef
 
+
+def Test_inplace_inplace_single()
   var foo = [1, 4, 2, 5]
-  foo = foo->sort()->filter((_, y) => y % 2 == 0)
+  foo->sort()->filter((_, y) => y % 2 == 0)
 
   assert_equal([2, 4], foo)
 enddef
-
-#->filter((_, x) => x % 2 == 0)
-#->map((_, y) => y + 1)
-#->sort()
-
-# var expr_prec = -1.234->string()
-# 
-# var foo = base->name(args)
-# var foo = base->some.name(args)
-# var foo = base->alist[idx](args)
-# var foo = base->(getFuncRef())(args)

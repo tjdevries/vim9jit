@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 846
+assertion_line: 802
 expression: "generate(contents, false)"
 ---
 -- vim9script
@@ -40,114 +40,119 @@ expression: "generate(contents, false)"
 -- Token(EndOfLine, "\n", (18,0)->(18,0))
 
 local Qf_filter = function(qf, searchpat, bang)
-	local Xgetlist = nil
-	local Xsetlist = nil
-	local cmd = nil
-	local firstchar = nil
-	local lastchar = nil
-	local pat = nil
-	local title = nil
-	local Cond = nil
-	local items = nil
+  local Xgetlist = nil
+  local Xsetlist = nil
+  local cmd = nil
+  local firstchar = nil
+  local lastchar = nil
+  local pat = nil
+  local title = nil
+  local Cond = nil
+  local items = nil
 
-	-- Token(EndOfLine, "\n", (29,0)->(29,0))
-	if qf then
-		Xgetlist = function(...)
-			return vim.fn["getqflist"](...)
-		end
-		Xsetlist = function(...)
-			return vim.fn["setqflist"](...)
-		end
-		cmd = require("vim9script").ops["StringConcat"](":Cfilter", bang)
-	else
-		Xgetlist = function(...)
-			local copied = vim.deepcopy({ 0 })
-			for _, val in ipairs({ ... }) do
-				table.insert(copied, val)
-			end
-			return vim.fn["function"](unpack(copied))
-		end
+  -- Token(EndOfLine, "\n", (29,0)->(29,0))
+  if qf then
+    Xgetlist = function(...)
+      return vim.fn["getqflist"](...)
+    end
+    Xsetlist = function(...)
+      return vim.fn["setqflist"](...)
+    end
+    cmd = require("vim9script").ops["StringConcat"](":Cfilter", bang)
+  else
+    Xgetlist = function(...)
+      local copied = vim.deepcopy({ 0 })
+      for _, val in ipairs({ ... }) do
+        table.insert(copied, val)
+      end
+      return vim.fn["function"](unpack(copied))
+    end
 
-		Xsetlist = function(...)
-			local copied = vim.deepcopy({ 0 })
-			for _, val in ipairs({ ... }) do
-				table.insert(copied, val)
-			end
-			return vim.fn["function"](unpack(copied))
-		end
+    Xsetlist = function(...)
+      local copied = vim.deepcopy({ 0 })
+      for _, val in ipairs({ ... }) do
+        table.insert(copied, val)
+      end
+      return vim.fn["function"](unpack(copied))
+    end
 
-		cmd = require("vim9script").ops["StringConcat"](":Lfilter", bang)
-	end
+    cmd = require("vim9script").ops["StringConcat"](":Lfilter", bang)
+  end
 
-	-- Token(EndOfLine, "\n", (39,0)->(39,0))
-	firstchar = require("vim9script").index(searchpat, 0)
-	lastchar = require("vim9script").slice(searchpat, require("vim9script").prefix["Minus"](1), nil)
-	if
-		require("vim9script").ops["And"](
-			require("vim9script").ops["EqualTo"](firstchar, lastchar),
-			(
-				require("vim9script").ops["Or"](
-					require("vim9script").ops["Or"](
-						require("vim9script").ops["EqualTo"](firstchar, "/"),
-						require("vim9script").ops["EqualTo"](firstchar, '"')
-					),
-					require("vim9script").ops["EqualTo"](firstchar, "'")
-				)
-			)
-		)
-	then
-		pat = require("vim9script").slice(searchpat, 1, require("vim9script").prefix["Minus"](2))
-		if require("vim9script").ops["EqualTo"](pat, "") then
-			-- # Use the last search pattern
-			pat = vim.fn.getreg("/")
-		end
-	else
-		pat = searchpat
-	end
+  -- Token(EndOfLine, "\n", (39,0)->(39,0))
+  firstchar = require("vim9script").index(searchpat, 0)
+  lastchar = require("vim9script").slice(searchpat, require("vim9script").prefix["Minus"](1), nil)
+  if
+    require("vim9script").ops["And"](
+      require("vim9script").ops["EqualTo"](firstchar, lastchar),
+      (
+        require("vim9script").ops["Or"](
+          require("vim9script").ops["Or"](
+            require("vim9script").ops["EqualTo"](firstchar, "/"),
+            require("vim9script").ops["EqualTo"](firstchar, '"')
+          ),
+          require("vim9script").ops["EqualTo"](firstchar, "'")
+        )
+      )
+    )
+  then
+    pat = require("vim9script").slice(searchpat, 1, require("vim9script").prefix["Minus"](2))
+    if require("vim9script").ops["EqualTo"](pat, "") then
+      -- # Use the last search pattern
+      pat = vim.fn.getreg("/")
+    end
+  else
+    pat = searchpat
+  end
 
-	-- Token(EndOfLine, "\n", (52,0)->(52,0))
-	if require("vim9script").ops["EqualTo"](pat, "") then
-		return
-	end
+  -- Token(EndOfLine, "\n", (52,0)->(52,0))
+  if require("vim9script").ops["EqualTo"](pat, "") then
+    return
+  end
 
-	-- Token(EndOfLine, "\n", (56,0)->(56,0))
-	if require("vim9script").ops["EqualTo"](bang, "!") then
-		Cond = function(_, val)
-			return require("vim9script").ops["And"](
-				require("vim9script").ops["NotRegexpMatches"](val["text"], pat),
-				require("vim9script").ops["NotRegexpMatches"](vim.fn["bufname"](val["bufnr"]), pat)
-			)
-		end
-	else
-		Cond = function(_, val)
-			return require("vim9script").ops["Or"](
-				require("vim9script").ops["RegexpMatches"](val["text"], pat),
-				require("vim9script").ops["RegexpMatches"](vim.fn["bufname"](val["bufnr"]), pat)
-			)
-		end
-	end
+  -- Token(EndOfLine, "\n", (56,0)->(56,0))
+  if require("vim9script").ops["EqualTo"](bang, "!") then
+    Cond = function(_, val)
+      return require("vim9script").ops["And"](
+        require("vim9script").ops["NotRegexpMatches"](val["text"], pat),
+        require("vim9script").ops["NotRegexpMatches"](vim.fn["bufname"](val["bufnr"]), pat)
+      )
+    end
+  else
+    Cond = function(_, val)
+      return require("vim9script").ops["Or"](
+        require("vim9script").ops["RegexpMatches"](val["text"], pat),
+        require("vim9script").ops["RegexpMatches"](vim.fn["bufname"](val["bufnr"]), pat)
+      )
+    end
+  end
 
-	-- Token(EndOfLine, "\n", (62,0)->(62,0))
-	items = vim.fn["filter"](Xgetlist(), Cond)
-	title = require("vim9script").ops["StringConcat"](
-		require("vim9script").ops["StringConcat"](require("vim9script").ops["StringConcat"](cmd, " /"), pat),
-		"/"
-	)
-	Xsetlist({}, " ", { title = title, items = items })
+  -- Token(EndOfLine, "\n", (62,0)->(62,0))
+  items = (function()
+    local __vim9_result = vim.fn["VIM9__CallUserVimlFunc"]("filter", { Xgetlist(), Cond })
+
+    return __vim9_result[1]
+  end)()
+
+  title = require("vim9script").ops["StringConcat"](
+    require("vim9script").ops["StringConcat"](require("vim9script").ops["StringConcat"](cmd, " /"), pat),
+    "/"
+  )
+  Xsetlist({}, " ", { title = title, items = items })
 end
 
 -- Token(EndOfLine, "\n", (67,0)->(67,0))
 
 vim.api.nvim_create_user_command("Cfilter", function(__vim9_arg_1)
-	Qf_filter(true, __vim9_arg_1.args, vim.fn.expand("<q-bang>"))
+  Qf_filter(true, __vim9_arg_1.args, vim.fn.expand("<q-bang>"))
 end, {
-	nargs = "+",
+  nargs = "+",
 })
 
 vim.api.nvim_create_user_command("Lfilter", function(__vim9_arg_1)
-	Qf_filter(false, __vim9_arg_1.args, vim.fn.expand("<q-bang>"))
+  Qf_filter(false, __vim9_arg_1.args, vim.fn.expand("<q-bang>"))
 end, {
-	nargs = "+",
+  nargs = "+",
 })
 
 -- Token(EndOfLine, "\n", (70,0)->(70,0))

@@ -22,3 +22,13 @@ def Test_inplace()
   sort([3, 2, 1])
   assert_equal([1, 2, 3], expr_sort)
 enddef
+
+def Test_insert_inplace()
+  var foo = [1, 2, 3]
+  var bar = insert(foo, 4, len(foo))
+  assert_equal(foo, bar)
+
+  insert(bar, 5, len(bar))
+  assert_equal([1, 2, 3, 4, 5], bar)
+  assert_equal(foo, bar)
+enddef

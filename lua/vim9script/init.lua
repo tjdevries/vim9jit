@@ -4,6 +4,39 @@ M.ops = require "vim9script.ops"
 M.prefix = require "vim9script.prefix"
 M.convert = require "vim9script.convert"
 M.heredoc = require "vim9script.heredoc"
+M.fn = require "vim9script.fn"
+
+M.fn_mut = function(name, args, info)
+  local result = vim.fn["vim9script#fn"](name, args)
+  for idx, val in pairs(result[2]) do
+    M.replace(args[idx], val)
+  end
+
+  -- Substitute returning the reference to the
+  -- returned value
+  if info.replace then
+    return args[info.replace + 1]
+  end
+
+  return result[1]
+end
+
+M.replace = function(orig, new)
+  if type(orig) == "table" and type(new) == "table" then
+    print(string.format("replacing %s -> %s", vim.inspect(orig), vim.inspect(new)))
+    for k in pairs(orig) do
+      orig[k] = nil
+    end
+
+    for k, v in pairs(new) do
+      orig[k] = v
+    end
+
+    return orig
+  end
+
+  return new
+end
 
 M.index = function(obj, idx)
   if vim.tbl_islist(obj) then
