@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 802
+assertion_line: 800
 expression: "generate(contents, false)"
 ---
 -- vim9script
@@ -128,12 +128,7 @@ local Qf_filter = function(qf, searchpat, bang)
   end
 
   -- Token(EndOfLine, "\n", (62,0)->(62,0))
-  items = (function()
-    local __vim9_result = vim.fn["VIM9__CallUserVimlFunc"]("filter", { Xgetlist(), Cond })
-
-    return __vim9_result[1]
-  end)()
-
+  items = require("vim9script").fn_mut("filter", { Xgetlist(), Cond }, { replace = 0 })
   title = require("vim9script").ops["StringConcat"](
     require("vim9script").ops["StringConcat"](require("vim9script").ops["StringConcat"](cmd, " /"), pat),
     "/"

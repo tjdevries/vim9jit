@@ -32,3 +32,9 @@ def Test_insert_inplace()
   assert_equal([1, 2, 3, 4, 5], bar)
   assert_equal(foo, bar)
 enddef
+
+def Test_insert_inplace()
+  var foo = [1, 3, 2]
+  reverse(sort(foo))
+  assert_equal([3, 2, 1], foo)
+enddef

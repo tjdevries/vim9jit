@@ -28,8 +28,11 @@ fn expr_is_func_mutable(arg: &Expression) -> bool {
         Expression::Number(_) => false,
         Expression::String(_) => false,
         Expression::Boolean(_) => false,
-        // Expression::Call(call) => expr_is_func_mutable(&call.args[0]),
-        Expression::Call(_) => false,
+        Expression::Call(call) => match call.args.len() {
+            0 => false,
+            _ => expr_is_func_mutable(&call.args[0]),
+        },
+        // Expression::Call(_) => false,
         Expression::Array(_) => false,
         Expression::Dict(_) => false,
         Expression::Register(_) => false,
@@ -142,94 +145,19 @@ pub struct VimFunc {
 }
 
 impl VimFunc {
-    fn mutator_statement(
-        idx: &usize,
-        arg: &Expression,
-        state: &mut State,
-    ) -> Option<String> {
-        match arg {
-            Expression::Identifier(ident) => match ident {
-                Identifier::Raw(raw) => Some(format!(
-                    "{} = require('vim9script').replace({}, __vim9_result[2][{}])",
-                    raw.gen(state),
-                    raw.gen(state),
-                    idx + 1
-                )),
-                Identifier::Scope(_) => todo!(),
-                Identifier::Unpacked(_) => todo!(),
-            },
-            Expression::Grouped(_) => todo!(),
-            Expression::DictAccess(_) => todo!(),
-            Expression::VimOption(_) => todo!(),
-            Expression::Prefix(_) => todo!(),
-            Expression::Infix(_) => todo!(),
-            Expression::MethodCall(_) => None,
-            Expression::Number(_) => None,
-            Expression::String(_) => None,
-            Expression::Boolean(_) => None,
-            Expression::Call(_) => None,
-            Expression::Array(_) => None,
-            Expression::Dict(_) => None,
-            Expression::Register(_) => None,
-            Expression::Lambda(_) => None,
-            // TODO: I think this is the case...
-            Expression::Slice(_) => unreachable!("Slice"),
-            Expression::Index(_) => unreachable!("Index"),
-            Expression::Empty => unreachable!("Empty"),
-            Expression::Expandable(_) => unreachable!("Expandable"),
-        }
-    }
-
     fn inplace(
         &self,
         mutability: &VimFuncMutability,
         state: &mut State,
     ) -> String {
-        let mutator_statements = self
-            .args
-            .iter()
-            .enumerate()
-            .filter_map(|(idx, arg)| {
-                if !mutability.modified_args.contains(&idx) {
-                    return None;
-                }
-
-                if mutability.returned == Some(idx) {
-                    return None;
-                }
-
-                Self::mutator_statement(&idx, arg, state)
-            })
-            .collect::<Vec<String>>()
-            .join("\n");
-
         let name = &self.name;
         let args = self.args.gen(state);
-        let (replaced, returned) = match mutability.returned {
-            Some(returned)
-                if mutability.modified_args.contains(&returned)
-                    && expr_is_func_mutable(&self.args[returned]) =>
-            {
-                // format!("{} = __vim9_result[1]", self.args[returned].gen(state))
-                let replaced = self.args[returned].gen(state);
-                (
-                    format!("{replaced} = require('vim9script').replace({replaced}, __vim9_result[1])"),
-                    format!("{replaced}")
-                )
-            }
-            _ => ("".to_string(), "__vim9_result[1]".to_string()),
+        let replaced = match mutability.returned {
+            Some(idx) => idx.to_string(),
+            None => "nil".to_string(),
         };
 
-        format!(
-            r#"
-                (function()
-                  local __vim9_result = vim.fn["VIM9__CallUserVimlFunc"]("{name}", {{ {args} }})
-                  {mutator_statements}
-                  {replaced}
-                  return {returned}
-                end)()
-            "#
-        )
+        generate_mutable_fn_call(&name, &args, &replaced)
     }
 }
 
@@ -298,7 +226,7 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
             FunctionData::ApiFunc { .. } => {}
             FunctionData::GeneratedFunc { .. } => {}
             FunctionData::OverrideFunc { .. } => {}
-            FunctionData::VimFuncRef { name, arglist, .. } => todo!(),
+            FunctionData::VimFuncRef { .. } => todo!(),
             FunctionData::VimFunc(vimfunc) => {
                 return vimfunc.inplace(&mutability, state);
             }

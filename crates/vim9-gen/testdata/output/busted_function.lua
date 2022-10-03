@@ -28,24 +28,12 @@ describe("filename", function()
 
     -- Actual test
     local explicit = { 3, 2, 1 }
-    explicit = (function()
-      local __vim9_result = vim.fn["VIM9__CallUserVimlFunc"]("sort", { explicit })
-
-      explicit = require("vim9script").replace(explicit, __vim9_result[1])
-      return explicit
-    end)()
-
+    explicit = require("vim9script").fn_mut("sort", { explicit }, { replace = 0 })
     vim.fn["assert_equal"]({ 1, 2, 3 }, explicit)
 
     -- Token(EndOfLine, "\n", (15,0)->(15,0))
-    local inplace = { 3, 2, 1 };
-
-    (function()
-      local __vim9_result = vim.fn["VIM9__CallUserVimlFunc"]("sort", { inplace })
-
-      inplace = require("vim9script").replace(inplace, __vim9_result[1])
-      return inplace
-    end)()
+    local inplace = { 3, 2, 1 }
+    require("vim9script").fn_mut("sort", { inplace }, { replace = 0 })
     vim.fn["assert_equal"]({ 1, 2, 3 }, inplace)
 
     -- Token(EndOfLine, "\n", (19,0)->(19,0))
@@ -72,6 +60,25 @@ describe("filename", function()
     require("vim9script").fn["insert"](bar, 5, vim.fn["len"](bar))
     vim.fn["assert_equal"]({ 1, 2, 3, 4, 5 }, bar)
     vim.fn["assert_equal"](foo, bar)
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  -- Token(EndOfLine, "\n", (34,0)->(34,0))
+
+  it("Test_insert_inplace", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
+    local foo = { 1, 3, 2 }
+    require("vim9script").fn_mut(
+      "reverse",
+      { require("vim9script").fn_mut("sort", { foo }, { replace = 0 }) },
+      { replace = 0 }
+    )
+    vim.fn["assert_equal"]({ 3, 2, 1 }, foo)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
