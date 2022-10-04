@@ -1,12 +1,7 @@
 use anyhow::Result;
-use vim9_lexer::Token;
-use vim9_lexer::TokenKind;
+use vim9_lexer::{Token, TokenKind};
 
-use crate::Block;
-use crate::Body;
-use crate::ExCommand;
-use crate::Literal;
-use crate::Parser;
+use crate::{Block, Body, ExCommand, Literal, Parser};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct AugroupCommand {

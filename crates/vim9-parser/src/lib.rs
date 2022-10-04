@@ -1,19 +1,16 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
-use std::collections::HashSet;
-use std::collections::VecDeque;
-use std::fmt::Debug;
+use std::{
+    collections::{HashSet, VecDeque},
+    fmt::Debug,
+};
 
 use anyhow::Result;
 use once_cell::sync::OnceCell;
-use tracing::info;
-use tracing::trace;
+use tracing::{info, trace};
 use tracing_subscriber::util::SubscriberInitExt;
-use vim9_lexer::new_lexer;
-use vim9_lexer::Lexer;
-use vim9_lexer::Token;
-use vim9_lexer::TokenKind;
+use vim9_lexer::{new_lexer, Lexer, Token, TokenKind};
 
 pub mod expr_call;
 pub use expr_call::CallExpression;
@@ -22,13 +19,10 @@ pub mod usercmd;
 pub use usercmd::UserCommand;
 
 pub mod autocmd;
-pub use autocmd::AugroupCommand;
-pub use autocmd::AutocmdCommand;
+pub use autocmd::{AugroupCommand, AutocmdBlock, AutocmdCommand};
 
 pub mod ifcmd;
-pub use ifcmd::ElseCommand;
-pub use ifcmd::ElseIfCommand;
-pub use ifcmd::IfCommand;
+pub use ifcmd::{ElseCommand, ElseIfCommand, IfCommand};
 
 mod test;
 

@@ -1,11 +1,8 @@
 use std::collections::HashSet;
 
-use parser::CallExpression;
-use parser::Expression;
-use parser::Identifier;
+use parser::{CallExpression, Expression, Identifier};
 
-use crate::Generate;
-use crate::State;
+use crate::{Generate, State};
 
 #[derive(Debug)]
 pub struct VimFuncMutability {

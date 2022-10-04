@@ -1,8 +1,7 @@
 #![feature(let_chains)]
 #![allow(dead_code)]
 
-use std::collections::VecDeque;
-use std::fmt::Debug;
+use std::{collections::VecDeque, fmt::Debug};
 
 #[derive(Clone, PartialEq)]
 pub struct Span {

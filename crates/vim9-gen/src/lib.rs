@@ -1,52 +1,15 @@
 use lexer::new_lexer;
-use parser;
-use parser::new_parser;
-use parser::ArrayLiteral;
-use parser::AssignStatement;
-use parser::AugroupCommand;
-use parser::AutocmdCommand;
-use parser::Body;
-use parser::CallCommand;
-use parser::CallExpression;
-use parser::DeclCommand;
-use parser::DefCommand;
-use parser::DictAccess;
-use parser::DictLiteral;
-use parser::EchoCommand;
-use parser::ElseCommand;
-use parser::ElseIfCommand;
-use parser::ExCommand;
-use parser::Expandable;
-use parser::Expression;
-use parser::GroupedExpression;
-use parser::Heredoc;
-use parser::Identifier;
-use parser::IfCommand;
-use parser::IndexExpression;
-use parser::IndexType;
-use parser::InfixExpression;
-use parser::InnerType;
-use parser::Lambda;
-use parser::Literal;
-use parser::MethodCall;
-use parser::PrefixExpression;
-use parser::RawIdentifier;
-use parser::Register;
-use parser::ReturnCommand;
-use parser::ScopedIdentifier;
-use parser::SharedCommand;
-use parser::Signature;
-use parser::StatementCommand;
-use parser::Type;
-use parser::UserCommand;
-use parser::VarCommand;
-use parser::Vim9ScriptCommand;
-use parser::VimBoolean;
-use parser::VimKey;
-use parser::VimNumber;
-use parser::VimOption;
-use parser::VimScope;
-use parser::VimString;
+use parser::{
+    self, new_parser, ArrayLiteral, AssignStatement, AugroupCommand,
+    AutocmdCommand, Body, CallCommand, CallExpression, DeclCommand, DefCommand,
+    DictAccess, DictLiteral, EchoCommand, ElseCommand, ElseIfCommand,
+    ExCommand, Expandable, Expression, GroupedExpression, Heredoc, Identifier,
+    IfCommand, IndexExpression, IndexType, InfixExpression, InnerType, Lambda,
+    Literal, MethodCall, PrefixExpression, RawIdentifier, Register,
+    ReturnCommand, ScopedIdentifier, SharedCommand, Signature,
+    StatementCommand, Type, UserCommand, VarCommand, Vim9ScriptCommand,
+    VimBoolean, VimKey, VimNumber, VimOption, VimScope, VimString,
+};
 
 pub mod call_expr;
 mod test_harness;
@@ -745,14 +708,12 @@ pub fn generate(contents: &str, is_test: bool) -> String {
 
 #[cfg(test)]
 mod test {
-    use std::fs::File;
-    use std::io::Write;
+    use std::{fs::File, io::Write};
 
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::test_harness::exec_busted;
-    use crate::test_harness::exec_lua;
+    use crate::test_harness::{exec_busted, exec_lua};
 
     macro_rules! snapshot {
         ($name:tt, $path:tt) => {

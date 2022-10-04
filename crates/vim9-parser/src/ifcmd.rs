@@ -3,11 +3,7 @@ use std::collections::HashSet;
 use anyhow::Result;
 use vim9_lexer::Token;
 
-use crate::Body;
-use crate::ExCommand;
-use crate::Expression;
-use crate::Parser;
-use crate::Precedence;
+use crate::{Body, ExCommand, Expression, Parser, Precedence};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct IfCommand {

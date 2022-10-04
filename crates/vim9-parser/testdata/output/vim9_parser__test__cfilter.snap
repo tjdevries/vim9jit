@@ -1,6 +1,6 @@
 ---
-source: crates/vim9-parser/src/lib.rs
-assertion_line: 2185
+source: crates/vim9-parser/src/test.rs
+assertion_line: 44
 expression: snapshot_parsing(contents)
 ---
 [
@@ -1073,10 +1073,16 @@ expression: snapshot_parsing(contents)
         UserCommand {
             tok: Token(Identifier, "command", (68,0)->(68,7)),
             bang: true,
+            command_bang: true,
+            command_bar: false,
+            command_keepscript: false,
+            command_register: None,
             command_nargs: Some(
                 "+",
             ),
-            command_bang: true,
+            command_compl: None,
+            command_range: None,
+            command_addr: None,
             name: "Cfilter",
             command: Call(
                 CallCommand {
@@ -1115,10 +1121,16 @@ expression: snapshot_parsing(contents)
         UserCommand {
             tok: Token(Identifier, "command", (69,0)->(69,7)),
             bang: true,
+            command_bang: true,
+            command_bar: false,
+            command_keepscript: false,
+            command_register: None,
             command_nargs: Some(
                 "+",
             ),
-            command_bang: true,
+            command_compl: None,
+            command_range: None,
+            command_addr: None,
             name: "Lfilter",
             command: Call(
                 CallCommand {

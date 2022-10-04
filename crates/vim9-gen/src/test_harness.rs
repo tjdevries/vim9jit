@@ -1,12 +1,9 @@
 #![allow(dead_code)]
 
-use std::process::Command;
-use std::process::Stdio;
+use std::process::{Command, Stdio};
 
 use anyhow::Result;
-use rmpv::decode::read_value;
-use rmpv::encode::write_value;
-use rmpv::Value;
+use rmpv::{decode::read_value, encode::write_value, Value};
 
 pub fn exec_busted(path: &str) -> Result<()> {
     let child = Command::new("nvim")

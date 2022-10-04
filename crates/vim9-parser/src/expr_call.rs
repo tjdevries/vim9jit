@@ -1,11 +1,7 @@
 use anyhow::Result;
-use vim9_lexer::Token;
-use vim9_lexer::TokenKind;
+use vim9_lexer::{Token, TokenKind};
 
-use crate::CallCommand;
-use crate::Expression;
-use crate::Identifier;
-use crate::Parser;
+use crate::{CallCommand, Expression, Identifier, Parser};
 
 #[derive(PartialEq, Clone)]
 pub struct CallExpression {

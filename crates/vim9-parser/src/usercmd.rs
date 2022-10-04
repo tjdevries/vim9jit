@@ -1,9 +1,7 @@
 use anyhow::Result;
-use vim9_lexer::Token;
-use vim9_lexer::TokenKind;
+use vim9_lexer::{Token, TokenKind};
 
-use crate::ExCommand;
-use crate::Parser;
+use crate::{ExCommand, Parser};
 
 // TODO:
 // - consider how script vars are supposed to work in this context
