@@ -3,8 +3,8 @@ use tracing::info;
 use vim9_lexer::{Token, TokenKind};
 
 use crate::{
-    Body, CallExpression, ExCommand, Expression, Heredoc, Identifier, Parser,
-    Precedence, Signature, Type,
+    Body, ExCommand, Expression, Heredoc, Identifier, Parser, Precedence,
+    Signature, Type,
 };
 
 pub mod cmd_auto;
@@ -15,6 +15,15 @@ pub mod cmd_user;
 pub struct ExportCommand {
     export: Token,
     pub command: Box<ExCommand>,
+}
+
+impl ExportCommand {
+    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+        Ok(ExCommand::ExportCommand(Self {
+            export: parser.expect_identifier_with_text("export")?,
+            command: parser.parse_command()?.into(),
+        }))
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]

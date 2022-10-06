@@ -509,10 +509,13 @@ pub struct KeyValue {
     pub key: VimKey,
     colon: Token,
     pub value: Expression,
+    comma: Option<Token>,
 }
 
 impl KeyValue {
     pub fn parse(parser: &mut Parser) -> Result<KeyValue> {
+        parser.skip_whitespace();
+
         Ok(Self {
             key: match parser.current_token.kind {
                 TokenKind::Identifier => {
@@ -522,6 +525,11 @@ impl KeyValue {
             },
             colon: parser.expect_token(TokenKind::SpacedColon)?,
             value: parser.parse_expression(Precedence::Lowest)?,
+            comma: {
+                parser.skip_whitespace();
+                info!("\n=> Skiped whitespace: {:#?}", parser);
+                parser.expect_peek(TokenKind::Comma).ok()
+            },
         })
     }
 }
@@ -1103,10 +1111,14 @@ impl Parser {
     fn peek_non_whitespace(&mut self) -> Token {
         let mut peek_index = 1;
         let mut peek_token = self.peek_token.clone();
-        while peek_token.kind == TokenKind::EndOfLine {
+        while peek_token.kind.is_whitespace() {
             peek_index += 1;
             peek_token = self.peek_n(peek_index);
             info!(peek_token=?peek_token);
+
+            if peek_token.kind.is_eof() {
+                break;
+            }
         }
 
         peek_token
@@ -1399,6 +1411,13 @@ impl Parser {
         self.current_token.clone()
     }
 
+    pub fn next_real_token(&mut self) -> Token {
+        self.skip_whitespace();
+        let tok = self.next_token();
+        self.skip_whitespace();
+        tok
+    }
+
     pub fn peek_n(&mut self, n: usize) -> Token {
         if n == 0 {
             return self.current_token.clone();
@@ -1439,6 +1458,8 @@ impl Parser {
                     || self.command_match("const")
                 {
                     return Ok(VarCommand::parse(self)?);
+                } else if self.command_match("export") {
+                    return Ok(ExportCommand::parse(self)?);
                 } else if self.command_match("echo") {
                     return Ok(EchoCommand::parse(self)?);
                 } else if self.command_match("def") {
@@ -1547,37 +1568,67 @@ impl Parser {
         Ok(results)
     }
 
+    #[tracing::instrument]
     fn parse_keyvalue_list(
         &mut self,
         close_kind: TokenKind,
     ) -> Result<Vec<KeyValue>> {
         let mut elements: Vec<KeyValue> = vec![];
-        if self.peek_token.kind == TokenKind::RightBrace {
-            self.next_token();
+
+        // self.skip_peeked_whitespace();
+        if self.peek_token.kind == close_kind {
             return Ok(elements);
         }
 
-        self.next_token();
-        elements.push(KeyValue::parse(self)?);
-
-        while self.peek_token.kind == TokenKind::Comma {
-            self.next_token();
-            self.next_token();
+        self.skip_whitespace();
+        while self.peek_non_whitespace().kind != close_kind {
+            self.next_real_token();
             elements.push(KeyValue::parse(self)?);
+            info!("PARSER:\n{:#?}", self);
         }
 
-        self.ensure_peek(close_kind)?;
+        if self.peek_token.kind != close_kind {
+            self.skip_peeked_whitespace();
+        }
+
+        // let result_kind = close_kind.clone();
+        //     .or_else(|_| {
+        //         self.skip_whitespace();
+        //         self.ensure_peek(result_kind)
+        // })
+        self.ensure_peek(close_kind)
+            .expect(&format!("close_kind: {:#?}", self));
+
         Ok(elements)
     }
 
-    fn skip_whitespace(&mut self) {
-        while self.current_token.kind == TokenKind::EndOfLine {
+    #[tracing::instrument]
+    fn skip_peeked_whitespace(&mut self) {
+        if self.peek_token.kind == TokenKind::EndOfFile {
+            return;
+        }
+
+        while self.peek_token.kind.is_whitespace() {
+            if self.peek_token.kind == TokenKind::EndOfFile {
+                break;
+            }
+
             self.next_token();
         }
     }
 
-    fn consume_if_kind(&mut self, bang: TokenKind) -> Option<Token> {
-        if self.current_token.kind == bang {
+    fn skip_whitespace(&mut self) {
+        while self.current_token.kind.is_whitespace() {
+            if self.peek_token.kind == TokenKind::EndOfFile {
+                break;
+            }
+
+            self.next_token();
+        }
+    }
+
+    fn consume_if_kind(&mut self, kind: TokenKind) -> Option<Token> {
+        if self.current_token.kind == kind {
             Some(self.next_token())
         } else {
             None

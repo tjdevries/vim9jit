@@ -1,0 +1,48 @@
+---
+source: crates/vim9-parser/src/test.rs
+assertion_line: 49
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    ExportCommand(
+        ExportCommand {
+            export: Token(Identifier, "export", (2,0)->(2,6)),
+            command: Def(
+                DefCommand {
+                    def: Token(Identifier, "def", (2,7)->(2,10)),
+                    name: Raw(MyFunc),
+                    args: Signature {
+                        open: Token(LeftParen, "(", (2,17)->(2,18)),
+                        params: [],
+                        close: Token(RightParen, ")", (2,18)->(2,19)),
+                    },
+                    ret: None,
+                    def_eol: Token(EndOfLine, "\n", (2,19)->(2,19)),
+                    body: Body {
+                        commands: [
+                            Echo(
+                                EchoCommand {
+                                    echo: Token(Identifier, "echo", (3,2)->(3,6)),
+                                    expr: String(
+                                        DoubleQuote(
+                                            "MyFunc()",
+                                        ),
+                                    ),
+                                    eol: Token(EndOfLine, "\n", (3,17)->(3,17)),
+                                },
+                            ),
+                        ],
+                    },
+                    enddef: Token(Identifier, "enddef", (4,0)->(4,6)),
+                    end_eol: Token(EndOfLine, "\n", (4,6)->(4,6)),
+                },
+            ),
+        },
+    ),
+]

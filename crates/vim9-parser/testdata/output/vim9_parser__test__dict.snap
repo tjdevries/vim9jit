@@ -1,6 +1,6 @@
 ---
-source: src/lib.rs
-assertion_line: 1380
+source: crates/vim9-parser/src/test.rs
+assertion_line: 31
 expression: snapshot_parsing(contents)
 ---
 [
@@ -32,6 +32,9 @@ expression: snapshot_parsing(contents)
                                     "world",
                                 ),
                             ),
+                            comma: Some(
+                                Token(Comma, ",", (2,24)->(2,25)),
+                            ),
                         },
                         KeyValue {
                             key: Literal(
@@ -46,6 +49,7 @@ expression: snapshot_parsing(contents)
                                     value: false,
                                 },
                             ),
+                            comma: None,
                         },
                     ],
                     close: Token(RightBrace, "}", (2,41)->(2,42)),
@@ -80,6 +84,7 @@ expression: snapshot_parsing(contents)
                                                     "matchparen",
                                                 ),
                                             ),
+                                            comma: None,
                                         },
                                     ],
                                     close: Token(RightBrace, "}", (3,50)->(3,51)),
@@ -90,6 +95,166 @@ expression: snapshot_parsing(contents)
                 ],
             ),
             eol: Token(EndOfLine, "\n", (3,53)->(3,53)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (4,0)->(4,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (5,0)->(5,3)),
+            ty: None,
+            name: Raw(multiline),
+            equal: Token(Equal, "=", (5,14)->(5,15)),
+            expr: Dict(
+                DictLiteral {
+                    open: Token(LeftBrace, "{", (5,16)->(5,17)),
+                    elements: [
+                        KeyValue {
+                            key: Literal(
+                                Literal {
+                                    token: Token(Identifier, "x", (6,2)->(6,3)),
+                                },
+                            ),
+                            colon: Token(SpacedColon, ": ", (6,3)->(6,5)),
+                            value: Identifier(
+                                Raw(x),
+                            ),
+                            comma: None,
+                        },
+                    ],
+                    close: Token(RightBrace, "}", (7,0)->(7,1)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (7,1)->(7,1)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (8,0)->(8,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (9,0)->(9,3)),
+            ty: None,
+            name: Raw(multiline_trail),
+            equal: Token(Equal, "=", (9,20)->(9,21)),
+            expr: Dict(
+                DictLiteral {
+                    open: Token(LeftBrace, "{", (9,22)->(9,23)),
+                    elements: [
+                        KeyValue {
+                            key: Literal(
+                                Literal {
+                                    token: Token(Identifier, "x", (10,2)->(10,3)),
+                                },
+                            ),
+                            colon: Token(SpacedColon, ": ", (10,3)->(10,5)),
+                            value: Identifier(
+                                Raw(x),
+                            ),
+                            comma: Some(
+                                Token(Comma, ",", (10,6)->(10,7)),
+                            ),
+                        },
+                    ],
+                    close: Token(RightBrace, "}", (11,0)->(11,1)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (11,1)->(11,1)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (12,0)->(12,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (13,0)->(13,3)),
+            ty: None,
+            name: Raw(multiline_two),
+            equal: Token(Equal, "=", (13,18)->(13,19)),
+            expr: Dict(
+                DictLiteral {
+                    open: Token(LeftBrace, "{", (13,20)->(13,21)),
+                    elements: [
+                        KeyValue {
+                            key: Literal(
+                                Literal {
+                                    token: Token(Identifier, "x", (14,2)->(14,3)),
+                                },
+                            ),
+                            colon: Token(SpacedColon, ": ", (14,3)->(14,5)),
+                            value: Identifier(
+                                Raw(x),
+                            ),
+                            comma: Some(
+                                Token(Comma, ",", (14,6)->(14,7)),
+                            ),
+                        },
+                        KeyValue {
+                            key: Literal(
+                                Literal {
+                                    token: Token(Identifier, "y", (15,2)->(15,3)),
+                                },
+                            ),
+                            colon: Token(SpacedColon, ": ", (15,3)->(15,5)),
+                            value: Identifier(
+                                Raw(y),
+                            ),
+                            comma: None,
+                        },
+                    ],
+                    close: Token(RightBrace, "}", (16,0)->(16,1)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (16,1)->(16,1)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (17,0)->(17,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (18,0)->(18,3)),
+            ty: None,
+            name: Raw(multiline_trail),
+            equal: Token(Equal, "=", (18,20)->(18,21)),
+            expr: Dict(
+                DictLiteral {
+                    open: Token(LeftBrace, "{", (18,22)->(18,23)),
+                    elements: [
+                        KeyValue {
+                            key: Literal(
+                                Literal {
+                                    token: Token(Identifier, "x", (19,2)->(19,3)),
+                                },
+                            ),
+                            colon: Token(SpacedColon, ": ", (19,3)->(19,5)),
+                            value: Identifier(
+                                Raw(x),
+                            ),
+                            comma: Some(
+                                Token(Comma, ",", (19,6)->(19,7)),
+                            ),
+                        },
+                        KeyValue {
+                            key: Literal(
+                                Literal {
+                                    token: Token(Identifier, "y", (20,2)->(20,3)),
+                                },
+                            ),
+                            colon: Token(SpacedColon, ": ", (20,3)->(20,5)),
+                            value: Identifier(
+                                Raw(y),
+                            ),
+                            comma: Some(
+                                Token(Comma, ",", (20,6)->(20,7)),
+                            ),
+                        },
+                    ],
+                    close: Token(RightBrace, "}", (25,0)->(25,1)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (25,1)->(25,1)),
         },
     ),
 ]

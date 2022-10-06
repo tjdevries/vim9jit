@@ -1039,6 +1039,9 @@ expression: snapshot_parsing(contents)
                                                 value: Identifier(
                                                     Raw(title),
                                                 ),
+                                                comma: Some(
+                                                    Token(Comma, ",", (65,33)->(65,34)),
+                                                ),
                                             },
                                             KeyValue {
                                                 key: Literal(
@@ -1050,6 +1053,7 @@ expression: snapshot_parsing(contents)
                                                 value: Identifier(
                                                     Raw(items),
                                                 ),
+                                                comma: None,
                                             },
                                         ],
                                         close: Token(RightBrace, "}", (65,47)->(65,48)),
