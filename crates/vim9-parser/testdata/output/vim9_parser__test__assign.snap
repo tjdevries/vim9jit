@@ -1,6 +1,6 @@
 ---
-source: src/lib.rs
-assertion_line: 1378
+source: crates/vim9-parser/src/test.rs
+assertion_line: 36
 expression: snapshot_parsing(contents)
 ---
 [
@@ -32,7 +32,9 @@ expression: snapshot_parsing(contents)
     Statement(
         Assign(
             AssignStatement {
-                left: Raw(i),
+                left: Identifier(
+                    Raw(i),
+                ),
                 equals: Token(Equal, "=", (3,2)->(3,3)),
                 right: Call(
                     f: Identifier(Raw(index)) arg: [

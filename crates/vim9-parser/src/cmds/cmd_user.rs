@@ -18,6 +18,7 @@ pub struct UserCommand {
     pub command_compl: Option<String>,
     pub command_range: Option<String>,
     pub command_addr: Option<String>,
+    pub command_complete: Option<String>,
     pub name: String,
     pub command: Box<ExCommand>,
 }
@@ -30,6 +31,7 @@ impl UserCommand {
         let mut command_bang = false;
         let mut command_bar = false;
         let mut command_nargs = None;
+        let mut command_complete = None;
         while parser.current_token.kind == TokenKind::Minus {
             parser.next_token();
             parser.ensure_token(TokenKind::Identifier)?;
@@ -45,6 +47,10 @@ impl UserCommand {
                     parser.expect_token(TokenKind::Equal)?;
                     command_nargs = Some(parser.pop().text);
                 }
+                "complete" => {
+                    parser.expect_token(TokenKind::Equal)?;
+                    command_complete = Some(parser.pop().text);
+                }
                 _ => panic!("OH NO"),
             }
         }
@@ -55,6 +61,7 @@ impl UserCommand {
             command_bang,
             command_bar,
             command_nargs,
+            command_complete,
             name: parser.expect_token(TokenKind::Identifier)?.text,
             command: parser.parse_command()?.into(),
             command_keepscript: false,

@@ -77,6 +77,8 @@ pub struct Vim9ScriptCommand {
 
 impl Vim9ScriptCommand {
     pub fn parse(parser: &mut Parser) -> Result<Self> {
+        parser.seen_vim9script = true;
+
         Ok(Self {
             noclear: if parser.current_token.kind == TokenKind::EndOfLine {
                 false

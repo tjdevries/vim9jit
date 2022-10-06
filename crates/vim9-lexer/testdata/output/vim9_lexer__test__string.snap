@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-lexer/src/lib.rs
-assertion_line: 767
+assertion_line: 830
 expression: snapshot_lexing(contents)
 ---
 vim9script
@@ -30,6 +30,8 @@ const X_COMMAND: string = $"{x}"
                ^^ Token(SpacedColon, ": ", (5,15)->(5,17))
                  ^^^^^^ Token(Identifier, "string", (5,17)->(5,23))
                         ^ Token(Equal, "=", (5,24)->(5,25))
-                            ^^^^ Token(InterpolatedString, "{x}\"\n", (5,28)->(5,32))
+                            ^^ Token(InterpolatedString, "{x}", (5,28)->(5,30))
+                                 Token(EndOfLine, "\n", (5,32)->(5,32))
 
+ Token(EndOfLine, "\n", (6,0)->(6,0))
 

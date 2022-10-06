@@ -132,11 +132,11 @@ impl StatementCommand {
 
     pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
         info!("{:?}", parser);
-        let identifier = Identifier::parse(parser)?;
+        let expr = Expression::parse(parser, Precedence::Lowest)?;
         if parser.current_token.kind == TokenKind::Equal {
             return Ok(ExCommand::Statement(StatementCommand::Assign(
                 AssignStatement {
-                    left: identifier,
+                    left: expr,
                     equals: parser.expect_token(TokenKind::Equal)?,
                     right: {
                         let right =
@@ -149,13 +149,13 @@ impl StatementCommand {
             )));
         }
 
-        todo!("expr command: {:?}, {:#?}", identifier, parser)
+        todo!("expr command: {:?}, {:#?}", expr, parser)
     }
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct AssignStatement {
-    pub left: Identifier,
+    pub left: Expression,
     equals: Token,
     pub right: Expression,
     eol: Token,
@@ -686,6 +686,8 @@ pub struct Parser {
     current_token: Token,
     peek_token: Token,
     token_buffer: VecDeque<Token>,
+
+    seen_vim9script: bool,
 }
 
 mod prefix_expr {
@@ -1069,6 +1071,7 @@ impl Parser {
             current_token: lexer.next_token(),
             peek_token: lexer.next_token(),
             token_buffer: VecDeque::new(),
+            seen_vim9script: false,
             lexer,
         }
     }
@@ -1178,6 +1181,7 @@ impl Parser {
 
             // TODO: Not confident that this is the right level
             TokenKind::AngleLeft => Precedence::Lowest,
+            TokenKind::Equal => Precedence::Lowest,
 
             _ => {
                 panic!("Unexpected precendence kind: {:?} // {:#?}", kind, self)
@@ -1454,38 +1458,47 @@ impl Parser {
                 if self.command_match("vim9script") {
                     self.next_token();
                     ExCommand::Vim9Script(Vim9ScriptCommand::parse(self)?)
-                } else if self.command_match("var")
-                    || self.command_match("const")
-                {
-                    return Ok(VarCommand::parse(self)?);
-                } else if self.command_match("export") {
-                    return Ok(ExportCommand::parse(self)?);
-                } else if self.command_match("echo") {
-                    return Ok(EchoCommand::parse(self)?);
-                } else if self.command_match("def") {
-                    return Ok(DefCommand::parse(self)?);
-                } else if self.command_match("return") {
-                    return Ok(ReturnCommand::parse(self)?);
-                } else if self.command_match("if") {
-                    return Ok(IfCommand::parse(self)?);
-                } else if self.command_match("augroup") {
-                    return Ok(AugroupCommand::parse(self)?);
-                } else if self.command_match("autocmd") {
-                    return Ok(AutocmdCommand::parse(self)?);
-                } else if self.command_match("finish") {
-                    return Ok(FinishCommand::parse(self)?);
-                } else if self.command_match("command") {
-                    return Ok(UserCommand::parse(self)?);
                 } else {
-                    if self.peek_token.kind == TokenKind::LeftParen {
-                        return Ok(CallCommand::parse(self)?);
-                    } else if StatementCommand::matches(self) {
-                        return Ok(StatementCommand::parse(self)?);
-                    } else if self.line_contains_kind(TokenKind::MethodArrow) {
-                        return Ok(EvalCommand::parse(self)?);
-                    } else {
-                        // ExCommand::NoOp(self.current_token.clone())
+                    if !self.seen_vim9script {
+                        // return Ok(SharedCommand::parse(parser)
+                    }
+
+                    if self.command_match("var") || self.command_match("const")
+                    {
+                        return Ok(VarCommand::parse(self)?);
+                    } else if self.command_match("export") {
+                        return Ok(ExportCommand::parse(self)?);
+                    } else if self.command_match("echo") {
+                        return Ok(EchoCommand::parse(self)?);
+                    } else if self.command_match("def") {
+                        return Ok(DefCommand::parse(self)?);
+                    } else if self.command_match("return") {
+                        return Ok(ReturnCommand::parse(self)?);
+                    } else if self.command_match("if") {
+                        return Ok(IfCommand::parse(self)?);
+                    } else if self.command_match("augroup") {
+                        return Ok(AugroupCommand::parse(self)?);
+                    } else if self.command_match("autocmd") {
+                        return Ok(AutocmdCommand::parse(self)?);
+                    } else if self.command_match("finish") {
+                        return Ok(FinishCommand::parse(self)?);
+                    } else if self.command_match("command") {
+                        return Ok(UserCommand::parse(self)?);
+                    } else if self.command_match("nnoremap") {
                         return Ok(SharedCommand::parse(self)?);
+                    } else {
+                        if self.peek_token.kind == TokenKind::LeftParen {
+                            return Ok(CallCommand::parse(self)?);
+                        } else if StatementCommand::matches(self) {
+                            return Ok(StatementCommand::parse(self)?);
+                        } else if self
+                            .line_contains_kind(TokenKind::MethodArrow)
+                        {
+                            return Ok(EvalCommand::parse(self)?);
+                        } else {
+                            // ExCommand::NoOp(self.current_token.clone())
+                            return Ok(SharedCommand::parse(self)?);
+                        }
                     }
                 }
             }

@@ -55,6 +55,7 @@ impl Generate for ExCommand {
             ExCommand::Eval(eval) => format!("{};", eval.expr.gen(state)),
             ExCommand::SharedCommand(shared) => shared.gen(state),
             ExCommand::ExportCommand(export) => export.gen(state),
+            ExCommand::Finish(_) => format!("return __VIM9_MODULE"),
             _ => todo!("Have not yet handled: {:?}", self),
         }
     }

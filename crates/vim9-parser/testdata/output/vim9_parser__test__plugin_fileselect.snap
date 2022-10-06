@@ -1,0 +1,364 @@
+---
+source: crates/vim9-parser/src/test.rs
+assertion_line: 50
+expression: snapshot_parsing(contents)
+---
+[
+    If(
+        IfCommand {
+            if_tok: Token(Identifier, "if", (0,0)->(0,2)),
+            condition: Prefix(
+                PrefixExpression {
+                    token: Token(Bang, "!", (0,3)->(0,4)),
+                    operator: Bang,
+                    right: Call(
+                        f: Identifier(Raw(has)) arg: [
+                            String(
+                                SingleQuote(
+                                    "patch-8.2.2261",
+                                ),
+                            ),
+                        ],
+                    ),
+                },
+            ),
+            if_eol: Token(EndOfLine, "\n", (0,25)->(0,25)),
+            body: Body {
+                commands: [
+                    Finish(
+                        FinishCommand {
+                            finish: Token(Identifier, "finish", (1,2)->(1,8)),
+                            eol: Token(EndOfLine, "\n", (1,8)->(1,8)),
+                        },
+                    ),
+                ],
+            },
+            elseifs: [],
+            else_command: None,
+            endif_tok: Token(Identifier, "endif", (2,0)->(2,5)),
+            endif_eol: Token(EndOfLine, "\n", (2,5)->(2,5)),
+        },
+    ),
+    NoOp(
+        Token(Virtual, "", (0,0)->(0,0)),
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (4,0)->(4,0)),
+    ),
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (5,10)->(5,10)),
+        },
+    ),
+    Comment(
+        Token(Comment, "# File: fileselect.vim", (7,0)->(7,22)),
+    ),
+    Comment(
+        Token(Comment, "# Author: Yegappan Lakshmanan (yegappan AT yahoo DOT com)", (8,0)->(8,57)),
+    ),
+    Comment(
+        Token(Comment, "# Version: 1.2", (9,0)->(9,14)),
+    ),
+    Comment(
+        Token(Comment, "# Last Modified: Jan 4, 2021", (10,0)->(10,28)),
+    ),
+    Comment(
+        Token(Comment, "#", (11,0)->(11,1)),
+    ),
+    Comment(
+        Token(Comment, "# Plugin to display a list of file names in a popup menu", (12,0)->(12,56)),
+    ),
+    Comment(
+        Token(Comment, "#", (13,0)->(13,1)),
+    ),
+    Comment(
+        Token(Comment, "# License:   Permission is hereby granted to use and distribute this code,", (14,0)->(14,74)),
+    ),
+    Comment(
+        Token(Comment, "#            with or without modifications, provided that this copyright", (15,0)->(15,72)),
+    ),
+    Comment(
+        Token(Comment, "#            notice is copied with it. Like anything else that's free,", (16,0)->(16,70)),
+    ),
+    Comment(
+        Token(Comment, "#            fileselect plugin is provided *as is* and comes with no warranty", (17,0)->(17,77)),
+    ),
+    Comment(
+        Token(Comment, "#            of any kind, either expressed or implied. In no event will the", (18,0)->(18,75)),
+    ),
+    Comment(
+        Token(Comment, "#            copyright holder be liable for any damages resulting from the use", (19,0)->(19,78)),
+    ),
+    Comment(
+        Token(Comment, "#            of this software.", (20,0)->(20,30)),
+    ),
+    Comment(
+        Token(Comment, "#", (21,0)->(21,1)),
+    ),
+    Comment(
+        Token(Comment, "# =========================================================================", (22,0)->(22,75)),
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (23,0)->(23,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (24,0)->(24,3)),
+            ty: None,
+            name: Raw(fs),
+            equal: Token(Equal, "=", (24,7)->(24,8)),
+            expr: Dict(
+                DictLiteral {
+                    open: Token(LeftBrace, "{", (24,9)->(24,10)),
+                    elements: [],
+                    close: Token(RightBrace, "}", (24,10)->(24,11)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (24,11)->(24,11)),
+        },
+    ),
+    If(
+        IfCommand {
+            if_tok: Token(Identifier, "if", (25,0)->(25,2)),
+            condition: Call(
+                f: Identifier(Raw(has)) arg: [
+                    String(
+                        SingleQuote(
+                            "patch-8.2.4257",
+                        ),
+                    ),
+                ],
+            ),
+            if_eol: Token(EndOfLine, "\n", (25,24)->(25,24)),
+            body: Body {
+                commands: [
+                    SharedCommand(
+                        SharedCommand {
+                            contents: "  import autoload  fileselect.vim",
+                            eol: Token(EndOfLine, "\n", (26,34)->(26,34)),
+                        },
+                    ),
+                    Statement(
+                        Assign(
+                            AssignStatement {
+                                left: DictAccess(
+                                    DictAccess {
+                                        container: Identifier(
+                                            Raw(fs),
+                                        ),
+                                        dot: Token(Dot, ".", (27,4)->(27,5)),
+                                        index: RawIdentifier {
+                                            name: "FileSelectShowMenu",
+                                        },
+                                    },
+                                ),
+                                equals: Token(Equal, "=", (27,24)->(27,25)),
+                                right: DictAccess(
+                                    DictAccess {
+                                        container: Identifier(
+                                            Raw(fileselect),
+                                        ),
+                                        dot: Token(Dot, ".", (27,36)->(27,37)),
+                                        index: RawIdentifier {
+                                            name: "FileSelectShowMenu",
+                                        },
+                                    },
+                                ),
+                                eol: Token(EndOfLine, "\n", (27,55)->(27,55)),
+                            },
+                        ),
+                    ),
+                    Statement(
+                        Assign(
+                            AssignStatement {
+                                left: DictAccess(
+                                    DictAccess {
+                                        container: Identifier(
+                                            Raw(fs),
+                                        ),
+                                        dot: Token(Dot, ".", (28,4)->(28,5)),
+                                        index: RawIdentifier {
+                                            name: "FileSelectToggle",
+                                        },
+                                    },
+                                ),
+                                equals: Token(Equal, "=", (28,22)->(28,23)),
+                                right: DictAccess(
+                                    DictAccess {
+                                        container: Identifier(
+                                            Raw(fileselect),
+                                        ),
+                                        dot: Token(Dot, ".", (28,34)->(28,35)),
+                                        index: RawIdentifier {
+                                            name: "FileSelectToggle",
+                                        },
+                                    },
+                                ),
+                                eol: Token(EndOfLine, "\n", (28,51)->(28,51)),
+                            },
+                        ),
+                    ),
+                ],
+            },
+            elseifs: [],
+            else_command: Some(
+                ElseCommand {
+                    else_tok: Token(Identifier, "else", (29,0)->(29,4)),
+                    else_eol: Token(EndOfLine, "\n", (29,4)->(29,4)),
+                    body: Body {
+                        commands: [
+                            SharedCommand(
+                                SharedCommand {
+                                    contents: "  import {FileSelectShowMenu, FileSelectToggle} from  ../autoload/fileselect.vim",
+                                    eol: Token(EndOfLine, "\n", (30,81)->(30,81)),
+                                },
+                            ),
+                            Statement(
+                                Assign(
+                                    AssignStatement {
+                                        left: DictAccess(
+                                            DictAccess {
+                                                container: Identifier(
+                                                    Raw(fs),
+                                                ),
+                                                dot: Token(Dot, ".", (31,4)->(31,5)),
+                                                index: RawIdentifier {
+                                                    name: "FileSelectShowMenu",
+                                                },
+                                            },
+                                        ),
+                                        equals: Token(Equal, "=", (31,24)->(31,25)),
+                                        right: Identifier(
+                                            Raw(FileSelectShowMenu),
+                                        ),
+                                        eol: Token(EndOfLine, "\n", (31,44)->(31,44)),
+                                    },
+                                ),
+                            ),
+                            Statement(
+                                Assign(
+                                    AssignStatement {
+                                        left: DictAccess(
+                                            DictAccess {
+                                                container: Identifier(
+                                                    Raw(fs),
+                                                ),
+                                                dot: Token(Dot, ".", (32,4)->(32,5)),
+                                                index: RawIdentifier {
+                                                    name: "FileSelectToggle",
+                                                },
+                                            },
+                                        ),
+                                        equals: Token(Equal, "=", (32,22)->(32,23)),
+                                        right: Identifier(
+                                            Raw(FileSelectToggle),
+                                        ),
+                                        eol: Token(EndOfLine, "\n", (32,40)->(32,40)),
+                                    },
+                                ),
+                            ),
+                        ],
+                    },
+                },
+            ),
+            endif_tok: Token(Identifier, "endif", (33,0)->(33,5)),
+            endif_eol: Token(EndOfLine, "\n", (33,5)->(33,5)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (34,0)->(34,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (35,0)->(35,3)),
+            ty: None,
+            name: Raw(TshowMenu),
+            equal: Token(Equal, "=", (35,14)->(35,15)),
+            expr: DictAccess(
+                DictAccess {
+                    container: Identifier(
+                        Raw(fs),
+                    ),
+                    dot: Token(Dot, ".", (35,18)->(35,19)),
+                    index: RawIdentifier {
+                        name: "FileSelectShowMenu",
+                    },
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (35,37)->(35,37)),
+        },
+    ),
+    Statement(
+        Assign(
+            AssignStatement {
+                left: Identifier(
+                    Scope(ScopedIdentifier { scope: Global, colon: Token(Colon, ":", (36,1)->(36,2)), accessor: Raw(FSToggle) }),
+                ),
+                equals: Token(Equal, "=", (36,11)->(36,12)),
+                right: DictAccess(
+                    DictAccess {
+                        container: Identifier(
+                            Raw(fs),
+                        ),
+                        dot: Token(Dot, ".", (36,15)->(36,16)),
+                        index: RawIdentifier {
+                            name: "FileSelectToggle",
+                        },
+                    },
+                ),
+                eol: Token(EndOfLine, "\n", (36,32)->(36,32)),
+            },
+        ),
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (37,0)->(37,0)),
+    ),
+    Comment(
+        Token(Comment, "# User command to open the file select popup menu", (38,0)->(38,49)),
+    ),
+    UserCommand(
+        UserCommand {
+            tok: Token(Identifier, "command", (39,0)->(39,7)),
+            bang: true,
+            command_bang: false,
+            command_bar: false,
+            command_keepscript: false,
+            command_register: None,
+            command_nargs: Some(
+                "*",
+            ),
+            command_compl: None,
+            command_range: None,
+            command_addr: None,
+            command_complete: Some(
+                "dir",
+            ),
+            name: "Fileselect",
+            command: SharedCommand(
+                SharedCommand {
+                    contents: "                                           call TshowMenu(<q-args>, <q-mods>)",
+                    eol: Token(EndOfLine, "\n", (39,77)->(39,77)),
+                },
+            ),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (40,0)->(40,0)),
+    ),
+    Comment(
+        Token(Comment, "# key mapping to toggle the file select popup menu", (41,0)->(41,50)),
+    ),
+    SharedCommand(
+        SharedCommand {
+            contents: "nnoremap <expr> <silent> <Plug>(FileselectToggle) g:FSToggle()",
+            eol: Token(EndOfLine, "\n", (42,62)->(42,62)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (43,0)->(43,0)),
+    ),
+    Comment(
+        Token(Comment, "# vim: shiftwidth=2 sts=2 expandtab", (44,0)->(44,35)),
+    ),
+]

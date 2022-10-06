@@ -47,6 +47,10 @@ snapshot!(test_comparisons, "../testdata/snapshots/comparisons.vim");
 snapshot!(test_methods, "../testdata/snapshots/methods.vim");
 snapshot!(test_eval, "../testdata/snapshots/eval.vim");
 snapshot!(test_export, "../testdata/snapshots/export.vim");
+snapshot!(
+    test_plugin_fileselect,
+    "../testdata/snapshots/plugin_fileselect.vim"
+);
 
 #[test]
 fn test_peek_n() {

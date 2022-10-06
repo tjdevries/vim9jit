@@ -286,27 +286,39 @@ impl Lexer {
         }
     }
 
-    fn read_until(&mut self, until: char, kind: TokenKind) -> Token {
+    fn read_until<F>(
+        &mut self,
+        until: char,
+        kind: TokenKind,
+        fail: F,
+    ) -> Option<Token>
+    where
+        F: Fn(&char) -> bool,
+    {
         self.read_char();
         if let Some(ch) = self.ch && ch == until {
-            return Token {
+            return Some(Token {
                 kind,
                 text: self.chars[self.position..self.position].iter().collect(),
                 span: self.make_span(self.position, self.position ),
-            };
+            });
         }
 
         let position = self.position;
 
         while let Some(ch) = self.ch && ch != until {
+            if fail(&ch) {
+                return None;
+            }
+
             self.read_char();
         }
 
-        Token {
+        Some(Token {
             kind,
             text: self.chars[position..self.position].iter().collect(),
             span: self.make_span(position, self.position - 1),
-        }
+        })
     }
 
     fn read_comment(&mut self) -> Token {
@@ -557,8 +569,16 @@ impl Lexer {
                     '#' => self.read_comment(),
 
                     // TODO: Handle escaped strings.
-                    '\'' => self.read_until('\'', TokenKind::SingleQuoteString),
-                    '"' => self.read_until('"', TokenKind::DoubleQuoteString),
+                    '\'' => self
+                        .read_until('\'', TokenKind::SingleQuoteString, |ch| {
+                            *ch == '\n'
+                        })
+                        .unwrap(),
+                    '"' => self
+                        .read_until('"', TokenKind::DoubleQuoteString, |ch| {
+                            *ch == '\n'
+                        })
+                        .unwrap_or(Token::fake()),
 
                     _ => {
                         // Token
@@ -704,11 +724,19 @@ impl Lexer {
         match self.peek_char().unwrap() {
             '\'' => {
                 self.read_char();
-                self.read_until('\'', TokenKind::InterpolatedLiteralString)
+                self.read_until(
+                    '\'',
+                    TokenKind::InterpolatedLiteralString,
+                    |ch| *ch == '\n',
+                )
+                .unwrap()
             }
             '"' => {
                 self.read_char();
-                self.read_until('\'', TokenKind::InterpolatedString)
+                self.read_until('\"', TokenKind::InterpolatedString, |ch| {
+                    *ch == '\n'
+                })
+                .expect(&format!("{:?}", self))
             }
             _ => Token {
                 kind: TokenKind::Illegal,
