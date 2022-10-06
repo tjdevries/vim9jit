@@ -1,3 +1,4 @@
+local __VIM9_MODULE = {}
 describe("filename", function()
   -- vim9script
 
@@ -7,25 +8,25 @@ describe("filename", function()
 
     -- Actual test
     local bool1 = require("vim9script").convert.decl_bool(true)
-    vim.fn["assert_equal"](vim.v["true"], bool1)
+    require("vim9script").fn["assert_equal"](vim.v["true"], bool1)
     local bool2 = require("vim9script").convert.decl_bool(false)
-    vim.fn["assert_equal"](vim.v["false"], bool2)
+    require("vim9script").fn["assert_equal"](vim.v["false"], bool2)
 
     -- Token(EndOfLine, "\n", (7,0)->(7,0))
     local bool3 = require("vim9script").convert.decl_bool(0)
-    vim.fn["assert_equal"](false, bool3)
+    require("vim9script").fn["assert_equal"](false, bool3)
     local bool4 = require("vim9script").convert.decl_bool(1)
-    vim.fn["assert_equal"](true, bool4)
+    require("vim9script").fn["assert_equal"](true, bool4)
 
     -- Token(EndOfLine, "\n", (12,0)->(12,0))
     local bool5 = require("vim9script").convert.decl_bool(require("vim9script").ops["And"](1, true))
-    vim.fn["assert_equal"](true, bool5)
+    require("vim9script").fn["assert_equal"](true, bool5)
     local bool6 = require("vim9script").convert.decl_bool(require("vim9script").ops["And"](0, 1))
-    vim.fn["assert_equal"](false, bool6)
+    require("vim9script").fn["assert_equal"](false, bool6)
     local bool7 = require("vim9script").convert.decl_bool(
       require("vim9script").ops["And"](require("vim9script").ops["Or"](0, 1), true)
     )
-    vim.fn["assert_equal"](true, bool7)
+    require("vim9script").fn["assert_equal"](true, bool7)
 
     -- Token(EndOfLine, "\n", (19,0)->(19,0))
 
@@ -89,3 +90,4 @@ describe("filename", function()
     assert.are.same({}, vim.v.errors)
   end)
 end)
+return __VIM9_MODULE

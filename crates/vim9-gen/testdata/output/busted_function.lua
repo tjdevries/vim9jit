@@ -1,3 +1,4 @@
+local __VIM9_MODULE = {}
 describe("filename", function()
   -- vim9script
 
@@ -13,8 +14,8 @@ describe("filename", function()
     end
 
     -- Token(EndOfLine, "\n", (6,0)->(6,0))
-    vim.fn["assert_equal"](MyCoolFunc(), 5)
-    vim.fn["assert_equal"](MyCoolFunc(10), 10)
+    require("vim9script").fn["assert_equal"](MyCoolFunc(), 5)
+    require("vim9script").fn["assert_equal"](MyCoolFunc(10), 10)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -29,17 +30,17 @@ describe("filename", function()
     -- Actual test
     local explicit = { 3, 2, 1 }
     explicit = require("vim9script").fn_mut("sort", { explicit }, { replace = 0 })
-    vim.fn["assert_equal"]({ 1, 2, 3 }, explicit)
+    require("vim9script").fn["assert_equal"]({ 1, 2, 3 }, explicit)
 
     -- Token(EndOfLine, "\n", (15,0)->(15,0))
     local inplace = { 3, 2, 1 }
     require("vim9script").fn_mut("sort", { inplace }, { replace = 0 })
-    vim.fn["assert_equal"]({ 1, 2, 3 }, inplace)
+    require("vim9script").fn["assert_equal"]({ 1, 2, 3 }, inplace)
 
     -- Token(EndOfLine, "\n", (19,0)->(19,0))
-    local expr_sort = vim.fn["sort"]({ 3, 2, 1 })
-    vim.fn["sort"]({ 3, 2, 1 })
-    vim.fn["assert_equal"]({ 1, 2, 3 }, expr_sort)
+    local expr_sort = require("vim9script").fn["sort"]({ 3, 2, 1 })
+    require("vim9script").fn["sort"]({ 3, 2, 1 })
+    require("vim9script").fn["assert_equal"]({ 1, 2, 3 }, expr_sort)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -53,13 +54,13 @@ describe("filename", function()
 
     -- Actual test
     local foo = { 1, 2, 3 }
-    local bar = require("vim9script").fn["insert"](foo, 4, vim.fn["len"](foo))
-    vim.fn["assert_equal"](foo, bar)
+    local bar = require("vim9script").fn["insert"](foo, 4, require("vim9script").fn["len"](foo))
+    require("vim9script").fn["assert_equal"](foo, bar)
 
     -- Token(EndOfLine, "\n", (29,0)->(29,0))
-    require("vim9script").fn["insert"](bar, 5, vim.fn["len"](bar))
-    vim.fn["assert_equal"]({ 1, 2, 3, 4, 5 }, bar)
-    vim.fn["assert_equal"](foo, bar)
+    require("vim9script").fn["insert"](bar, 5, require("vim9script").fn["len"](bar))
+    require("vim9script").fn["assert_equal"]({ 1, 2, 3, 4, 5 }, bar)
+    require("vim9script").fn["assert_equal"](foo, bar)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -78,9 +79,10 @@ describe("filename", function()
       { require("vim9script").fn_mut("sort", { foo }, { replace = 0 }) },
       { replace = 0 }
     )
-    vim.fn["assert_equal"]({ 3, 2, 1 }, foo)
+    require("vim9script").fn["assert_equal"]({ 3, 2, 1 }, foo)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
   end)
 end)
+return __VIM9_MODULE

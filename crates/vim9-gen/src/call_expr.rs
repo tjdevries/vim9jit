@@ -51,7 +51,7 @@ pub fn mutates(
     data: &FunctionData,
 ) -> Option<VimFuncMutability> {
     match data {
-        FunctionData::OverrideFunc { .. } => return None,
+        // FunctionData::VimFunc { .. } => return None,
         _ => {}
     };
 
@@ -116,12 +116,6 @@ pub enum FunctionData {
         name: String,
         args: Vec<Expression>,
     },
-    /// Some functions are used often enough,
-    /// it's worth it to just write them in lua
-    OverrideFunc {
-        name: String,
-        args: Vec<Expression>,
-    },
 }
 
 impl FunctionData {
@@ -131,7 +125,6 @@ impl FunctionData {
             FunctionData::VimFunc(vimfunc) => vimfunc.name.as_str(),
             FunctionData::VimFuncRef { name, .. } => name,
             FunctionData::GeneratedFunc { name, .. } => name,
-            FunctionData::OverrideFunc { name, .. } => name,
         }
     }
 }
@@ -184,11 +177,6 @@ fn ident_to_func_data(call: CallExpression, ident: Identifier) -> FunctionData {
                         arglist: call.args.get(1).cloned(),
                         dict: call.args.get(2).cloned(),
                     }
-                } else if matches!(raw.name.as_str(), "insert") {
-                    FunctionData::OverrideFunc {
-                        name: raw.name,
-                        args: call.args,
-                    }
                 } else {
                     FunctionData::VimFunc(VimFunc {
                         name: raw.name,
@@ -222,7 +210,6 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
         Some(mutability) => match func_data {
             FunctionData::ApiFunc { .. } => {}
             FunctionData::GeneratedFunc { .. } => {}
-            FunctionData::OverrideFunc { .. } => {}
             FunctionData::VimFuncRef { .. } => todo!(),
             FunctionData::VimFunc(vimfunc) => {
                 return vimfunc.inplace(&mutability, state);
@@ -235,11 +222,8 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
         FunctionData::ApiFunc { name, args } => {
             format!("vim.api['{}']({})", name, args.gen(state))
         }
-        FunctionData::OverrideFunc { name, args } => {
-            format!("require('vim9script').fn['{}']({})", name, args.gen(state))
-        }
         FunctionData::VimFunc(VimFunc { name, args }) => {
-            format!("vim.fn['{}']({})", name, args.gen(state))
+            format!("require('vim9script').fn['{}']({})", name, args.gen(state))
         }
         FunctionData::VimFuncRef { name, arglist, .. } => match arglist {
             Some(arglist) => {

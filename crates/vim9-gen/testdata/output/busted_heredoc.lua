@@ -1,3 +1,4 @@
+local __VIM9_MODULE = {}
 describe("filename", function()
   -- vim9script
 
@@ -9,7 +10,7 @@ describe("filename", function()
     local x = { [==[hello]==], [==[world]==] }
 
     -- Token(EndOfLine, "\n", (7,0)->(7,0))
-    vim.fn["assert_equal"]({ "hello", "world" }, x)
+    require("vim9script").fn["assert_equal"]({ "hello", "world" }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -25,7 +26,7 @@ describe("filename", function()
     local x = { [==[    hello]==], [==[  world]==] }
 
     -- Token(EndOfLine, "\n", (16,0)->(16,0))
-    vim.fn["assert_equal"]({ "    hello", "  world" }, x)
+    require("vim9script").fn["assert_equal"]({ "    hello", "  world" }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -41,7 +42,7 @@ describe("filename", function()
     local x = require("vim9script").heredoc.trim({ [==[    hello]==], [==[world]==] })
 
     -- Token(EndOfLine, "\n", (25,0)->(25,0))
-    vim.fn["assert_equal"]({ "    hello", "world" }, x)
+    require("vim9script").fn["assert_equal"]({ "    hello", "world" }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -57,7 +58,7 @@ describe("filename", function()
     local x = require("vim9script").heredoc.trim({ [==[        hello]==], [==[          world]==] })
 
     -- Token(EndOfLine, "\n", (34,0)->(34,0))
-    vim.fn["assert_equal"]({ "hello", "  world" }, x)
+    require("vim9script").fn["assert_equal"]({ "hello", "  world" }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -81,3 +82,4 @@ describe("filename", function()
 
   -- # enddef
 end)
+return __VIM9_MODULE

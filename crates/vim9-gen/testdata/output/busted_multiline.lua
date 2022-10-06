@@ -1,3 +1,4 @@
+local __VIM9_MODULE = {}
 describe("filename", function()
   -- vim9script
 
@@ -11,7 +12,7 @@ describe("filename", function()
     local x = require("vim9script").convert.decl_bool(require("vim9script").ops["And"](true, false))
 
     -- Token(EndOfLine, "\n", (6,0)->(6,0))
-    vim.fn["assert_equal"](x, false)
+    require("vim9script").fn["assert_equal"](x, false)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -27,7 +28,7 @@ describe("filename", function()
     local y = require("vim9script").convert.decl_bool(require("vim9script").ops["And"](true, false))
 
     -- Token(EndOfLine, "\n", (13,0)->(13,0))
-    vim.fn["assert_equal"](y, false)
+    require("vim9script").fn["assert_equal"](y, false)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -43,9 +44,10 @@ describe("filename", function()
     local z = require("vim9script").ops["Or"](true, false)
 
     -- Token(EndOfLine, "\n", (21,0)->(21,0))
-    vim.fn["assert_equal"](z, true)
+    require("vim9script").fn["assert_equal"](z, true)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
   end)
 end)
+return __VIM9_MODULE

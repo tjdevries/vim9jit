@@ -1,3 +1,4 @@
+local __VIM9_MODULE = {}
 describe("filename", function()
   -- vim9script
 
@@ -7,9 +8,15 @@ describe("filename", function()
 
     -- Actual test
     vim.cmd([===[  syn keyword Test testkeyword contained]===])
-    vim.fn["assert_equal"](2, vim.fn["len"](vim.fn["split"](vim.fn["execute"]("syntax list Test"), "\n")))
+    require("vim9script").fn["assert_equal"](
+      2,
+      require("vim9script").fn["len"](
+        require("vim9script").fn["split"](require("vim9script").fn["execute"]("syntax list Test"), "\n")
+      )
+    )
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
   end)
 end)
+return __VIM9_MODULE

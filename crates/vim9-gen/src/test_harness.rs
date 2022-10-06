@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 
-use std::process::{Command, Stdio};
+use std::{
+    collections::HashMap,
+    process::{Command, Stdio},
+};
 
 use anyhow::Result;
 use rmpv::{decode::read_value, encode::write_value, Value};
@@ -21,17 +24,14 @@ pub fn exec_busted(path: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn exec_lua(preamble: &str, result: &str) -> Result<Value> {
+pub fn exec_lua(preamble: &str) -> Result<HashMap<String, Value>> {
     let contents = format!(
         r#"
             vim.opt.rtp:append(".")
 
-            return (function()
-                {}
-                return {}
-            end)()
+            {}
         "#,
-        preamble, result
+        preamble
     );
     println!("{}", contents);
 
@@ -98,7 +98,13 @@ pub fn exec_lua(preamble: &str, result: &str) -> Result<Value> {
     assert!(output.status.success());
 
     // We good
-    Ok(val.clone())
+    let val = val.as_map().expect("returns a map");
+    let val =
+        HashMap::from_iter(val.into_iter().map(|(key, value)| {
+            (key.as_str().unwrap().to_owned(), value.clone())
+        }));
+
+    Ok(val)
 }
 
 #[cfg(test)]
@@ -106,22 +112,21 @@ mod test {
     use super::*;
 
     #[test]
-    fn can_eval_numbers() {
-        assert_eq!(exec_lua("", "1").unwrap(), 1.into());
-    }
-
-    #[test]
     fn can_eval_functions() {
-        assert_eq!(
-            exec_lua(
-                r#"
-local x = function()
-  return vim.api.nvim_get_current_buf()
-end"#,
-                "x()"
-            )
-            .unwrap(),
-            1.into()
-        );
+        let val = exec_lua(
+            r#"
+                local x = function()
+                  return vim.api.nvim_get_current_buf()
+                end
+
+                return {
+                    x = x()
+                }
+            "#,
+        )
+        .unwrap();
+
+        let result = val.get("x").expect("get x").clone();
+        assert_eq!(result, 1.into());
     }
 }

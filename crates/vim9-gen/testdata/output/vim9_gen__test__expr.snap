@@ -1,9 +1,11 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 650
+assertion_line: 775
 expression: "generate(contents, false)"
 ---
+local __VIM9_MODULE = {}
 -- vim9script
 local x = require("vim9script").ops["Plus"](1, 2)
 print(x)
+return __VIM9_MODULE
 

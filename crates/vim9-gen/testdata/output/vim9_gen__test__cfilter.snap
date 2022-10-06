@@ -1,8 +1,9 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 809
+assertion_line: 799
 expression: "generate(contents, false)"
 ---
+local __VIM9_MODULE = {}
 -- vim9script
 
 -- # cfilter.vim: Plugin to filter entries from a quickfix/location list
@@ -115,14 +116,14 @@ local Qf_filter = function(qf, searchpat, bang)
     Cond = function(_, val)
       return require("vim9script").ops["And"](
         require("vim9script").ops["NotRegexpMatches"](val["text"], pat),
-        require("vim9script").ops["NotRegexpMatches"](vim.fn["bufname"](val["bufnr"]), pat)
+        require("vim9script").ops["NotRegexpMatches"](require("vim9script").fn["bufname"](val["bufnr"]), pat)
       )
     end
   else
     Cond = function(_, val)
       return require("vim9script").ops["Or"](
         require("vim9script").ops["RegexpMatches"](val["text"], pat),
-        require("vim9script").ops["RegexpMatches"](vim.fn["bufname"](val["bufnr"]), pat)
+        require("vim9script").ops["RegexpMatches"](require("vim9script").fn["bufname"](val["bufnr"]), pat)
       )
     end
   end
@@ -155,4 +156,5 @@ end, {
 -- Token(EndOfLine, "\n", (70,0)->(70,0))
 
 -- # vim: shiftwidth=2 sts=2 expandtab
+return __VIM9_MODULE
 

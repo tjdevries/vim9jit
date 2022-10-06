@@ -153,6 +153,20 @@ pub enum TokenKind {
     RightBracket,
 }
 
+impl TokenKind {
+    pub fn is_whitespace(&self) -> bool {
+        match self {
+            Self::EndOfLine => true,
+            Self::EndOfFile => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_eof(&self) -> bool {
+        *self == Self::EndOfFile
+    }
+}
+
 pub struct Lexer {
     pub input: String,
     pub position: usize,

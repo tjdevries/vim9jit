@@ -1,3 +1,4 @@
+local __VIM9_MODULE = {}
 describe("filename", function()
   -- vim9script
 
@@ -7,10 +8,10 @@ describe("filename", function()
 
     -- Actual test
     local s = "hello"
-    vim.fn["assert_equal"](vim.fn["len"](s), 5)
+    require("vim9script").fn["assert_equal"](require("vim9script").fn["len"](s), 5)
 
     -- Token(EndOfLine, "\n", (5,0)->(5,0))
-    vim.fn["assert_equal"](vim.fn["len"]("hello"), 5)
+    require("vim9script").fn["assert_equal"](require("vim9script").fn["len"]("hello"), 5)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -25,16 +26,16 @@ describe("filename", function()
     vim.v.errors = {}
 
     -- Actual test
-    local x = vim.fn["sort"]({ 5, 4, 2, 1, 7, 12, 8 })
+    local x = require("vim9script").fn["sort"]({ 5, 4, 2, 1, 7, 12, 8 })
 
     -- Token(EndOfLine, "\n", (13,0)->(13,0))
-    vim.fn["assert_equal"]({ 1, 12, 2, 4, 5, 7, 8 }, x)
+    require("vim9script").fn["assert_equal"]({ 1, 12, 2, 4, 5, 7, 8 }, x)
 
     -- Token(EndOfLine, "\n", (15,0)->(15,0))
-    local numeric = vim.fn["sort"]({ 5, 4, 2, 1, 7, 12, 8 }, "n")
+    local numeric = require("vim9script").fn["sort"]({ 5, 4, 2, 1, 7, 12, 8 }, "n")
 
     -- Token(EndOfLine, "\n", (18,0)->(18,0))
-    vim.fn["assert_equal"]({ 1, 2, 4, 5, 7, 8, 12 }, numeric)
+    require("vim9script").fn["assert_equal"]({ 1, 2, 4, 5, 7, 8, 12 }, numeric)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -51,7 +52,7 @@ describe("filename", function()
     require("vim9script").fn_mut("sort", { x }, { replace = 0 })
 
     -- Token(EndOfLine, "\n", (25,0)->(25,0))
-    vim.fn["assert_equal"]({ 1, 2, 4, 5 }, x)
+    require("vim9script").fn["assert_equal"]({ 1, 2, 4, 5 }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -76,7 +77,7 @@ describe("filename", function()
       },
       { replace = 0 }
     )
-    vim.fn["assert_equal"]({ 2, 4 }, x)
+    require("vim9script").fn["assert_equal"]({ 2, 4 }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -104,9 +105,10 @@ describe("filename", function()
     )
 
     -- Token(EndOfLine, "\n", (40,0)->(40,0))
-    vim.fn["assert_equal"]({ 2, 4 }, foo)
+    require("vim9script").fn["assert_equal"]({ 2, 4 }, foo)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
   end)
 end)
+return __VIM9_MODULE

@@ -1,3 +1,4 @@
+local __VIM9_MODULE = {}
 describe("filename", function()
   -- vim9script
   local l = { 1, 2, 3 }
@@ -9,7 +10,7 @@ describe("filename", function()
     vim.v.errors = {}
 
     -- Actual test
-    vim.fn["assert_equal"](1, require("vim9script").index(l, 0))
+    require("vim9script").fn["assert_equal"](1, require("vim9script").index(l, 0))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -22,7 +23,7 @@ describe("filename", function()
     vim.v.errors = {}
 
     -- Actual test
-    vim.fn["assert_equal"]({ 1, 2 }, require("vim9script").slice(l, 0, 1))
+    require("vim9script").fn["assert_equal"]({ 1, 2 }, require("vim9script").slice(l, 0, 1))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -35,7 +36,7 @@ describe("filename", function()
     vim.v.errors = {}
 
     -- Actual test
-    vim.fn["assert_equal"]({ 2, 3 }, require("vim9script").slice(l, 1, nil))
+    require("vim9script").fn["assert_equal"]({ 2, 3 }, require("vim9script").slice(l, 1, nil))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -48,9 +49,10 @@ describe("filename", function()
     vim.v.errors = {}
 
     -- Actual test
-    vim.fn["assert_equal"]({ 1, 2 }, require("vim9script").slice(l, nil, 1))
+    require("vim9script").fn["assert_equal"]({ 1, 2 }, require("vim9script").slice(l, nil, 1))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
   end)
 end)
+return __VIM9_MODULE

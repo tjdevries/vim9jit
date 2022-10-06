@@ -3,12 +3,13 @@ use parser::{
     self, new_parser, ArrayLiteral, AssignStatement, AugroupCommand,
     AutocmdCommand, Body, CallCommand, CallExpression, DeclCommand, DefCommand,
     DictAccess, DictLiteral, EchoCommand, ElseCommand, ElseIfCommand,
-    ExCommand, Expandable, Expression, GroupedExpression, Heredoc, Identifier,
-    IfCommand, IndexExpression, IndexType, InfixExpression, InnerType, Lambda,
-    Literal, MethodCall, PrefixExpression, RawIdentifier, Register,
-    ReturnCommand, ScopedIdentifier, SharedCommand, Signature,
-    StatementCommand, Type, UserCommand, VarCommand, Vim9ScriptCommand,
-    VimBoolean, VimKey, VimNumber, VimOption, VimScope, VimString,
+    ExCommand, Expandable, ExportCommand, Expression, GroupedExpression,
+    Heredoc, Identifier, IfCommand, IndexExpression, IndexType,
+    InfixExpression, InnerType, Lambda, Literal, MethodCall, PrefixExpression,
+    Program, RawIdentifier, Register, ReturnCommand, ScopedIdentifier,
+    SharedCommand, Signature, StatementCommand, Type, UserCommand, VarCommand,
+    Vim9ScriptCommand, VimBoolean, VimKey, VimNumber, VimOption, VimScope,
+    VimString,
 };
 
 pub mod call_expr;
@@ -53,8 +54,26 @@ impl Generate for ExCommand {
             ExCommand::UserCommand(usercmd) => usercmd.gen(state),
             ExCommand::Eval(eval) => format!("{};", eval.expr.gen(state)),
             ExCommand::SharedCommand(shared) => shared.gen(state),
+            ExCommand::ExportCommand(export) => export.gen(state),
             _ => todo!("Have not yet handled: {:?}", self),
         }
+    }
+}
+
+impl Generate for ExportCommand {
+    fn gen(&self, state: &mut State) -> String {
+        let exported = self.command.gen(state);
+        let ident = match self.command.as_ref() {
+            ExCommand::Var(var) => var.name.gen(state),
+            ExCommand::Def(def) => def.name.gen(state),
+            // ExCommand::Heredoc(_) => todo!(),
+            // ExCommand::Decl(_) => todo!(),
+            _ => {
+                unreachable!("not a valid export command: {:#?}", self.command)
+            }
+        };
+
+        format!("{exported};\n__VIM9_MODULE['{ident}'] = {ident};")
     }
 }
 
@@ -658,6 +677,12 @@ impl Generate for InfixExpression {
     }
 }
 
+// impl Generate for Program {
+//     fn gen(&self, state: &mut State) -> String {
+//         todo!()
+//     }
+// }
+
 pub fn eval(program: parser::Program, is_test: bool) -> String {
     let mut state = State {
         augroup: None,
@@ -668,6 +693,8 @@ pub fn eval(program: parser::Program, is_test: bool) -> String {
     };
 
     let mut output = String::new();
+    output += "local __VIM9_MODULE = {}\n";
+
     if is_test {
         output += "describe(\"filename\", function()\n"
     }
@@ -680,6 +707,8 @@ pub fn eval(program: parser::Program, is_test: bool) -> String {
     if is_test {
         output += "end)"
     }
+
+    output += "return __VIM9_MODULE";
 
     output
 }
@@ -768,58 +797,58 @@ mod test {
     snapshot!(test_call, "../testdata/snapshots/call.vim");
     snapshot!(test_autocmd, "../testdata/snapshots/autocmd.vim");
     snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
+    snapshot!(test_export, "../testdata/snapshots/export.vim");
     // snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
 
     #[test]
     fn test_simple_def() {
         let contents = r#"
-vim9script
+            vim9script
 
-def MyCoolFunc(): number
-  return 5
-enddef
+            def MyCoolFunc(): number
+              return 5
+            enddef
 
-var x = MyCoolFunc() + 1
-"#;
+            export var x = MyCoolFunc() + 1
+        "#;
 
         let generated = generate(contents, false);
-        let eval = exec_lua(&generated, "x").unwrap();
-        assert_eq!(eval, 6.into());
+        let eval = exec_lua(&generated).unwrap();
+        assert_eq!(eval["x"], 6.into());
     }
 
     #[test]
     fn test_builtin_func() {
         let contents = r#"
-vim9script
+            vim9script
 
-var x = len("hello")
-"#;
+            export var x = len("hello")
+        "#;
 
         let generated = generate(contents, false);
-        let eval = exec_lua(&generated, "x").unwrap();
-        assert_eq!(eval, 5.into());
+        let eval = exec_lua(&generated).unwrap();
+        assert_eq!(eval["x"], 5.into());
     }
 
     #[test]
     fn test_augroup_1() {
         let contents = r#"
-vim9script
+            vim9script
 
-augroup matchparen
-  # Replace all matchparen autocommands
-  autocmd! CursorMoved,CursorMovedI,WinEnter * {
-      echo "Block"
-    }
+            augroup matchparen
+              # Replace all matchparen autocommands
+              autocmd! CursorMoved,CursorMovedI,WinEnter * {
+                  echo "Block"
+                }
 
-  autocmd WinLeave * echo "Command"
-augroup END
+              autocmd WinLeave * echo "Command"
+            augroup END
 
-var x = len(nvim_get_autocmds({group: "matchparen"}))
-
-"#;
+            export var x = len(nvim_get_autocmds({group: "matchparen"}))
+        "#;
 
         let generated = generate(contents, false);
-        let eval = exec_lua(&generated, "x").unwrap();
-        assert_eq!(eval, 4.into());
+        let eval = exec_lua(&generated).unwrap();
+        assert_eq!(eval["x"], 4.into());
     }
 }
