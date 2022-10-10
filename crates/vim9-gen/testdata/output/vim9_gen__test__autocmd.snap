@@ -1,8 +1,9 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 798
+assertion_line: 1007
 expression: "generate(contents, false)"
 ---
+local NVIM9 = require("vim9script")
 local __VIM9_MODULE = {}
 -- vim9script
 
@@ -11,12 +12,9 @@ vim.api.nvim_create_augroup("matchparen", { clear = false })
 vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "WinEnter" }, {
   group = "matchparen",
   callback = function()
-    -- Token(EndOfLine, "\n", (3,48)->(3,48))
     print("Block")
   end,
 })
-
--- Token(EndOfLine, "\n", (6,0)->(6,0))
 
 vim.api.nvim_create_autocmd({ "WinLeave" }, {
   group = "matchparen",
@@ -25,7 +23,6 @@ vim.api.nvim_create_autocmd({ "WinLeave" }, {
   end,
 })
 
--- Token(EndOfLine, "\n", (9,0)->(9,0))
-local x = require("vim9script").fn["len"](vim.api["nvim_get_autocmds"]({ group = "matchparen" }))
+local x = NVIM9.fn["len"](vim.api["nvim_get_autocmds"]({ group = "matchparen" }))
 return __VIM9_MODULE
 

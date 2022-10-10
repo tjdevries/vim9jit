@@ -20,8 +20,12 @@ fn expr_is_func_mutable(arg: &Expression) -> bool {
         Expression::Grouped(_) => todo!(),
         Expression::VimOption(_) => todo!(),
         Expression::Prefix(_) => todo!(),
-        Expression::Infix(_) => todo!(),
+        Expression::Infix(infix) => expr_is_func_mutable(&infix.left),
         Expression::MethodCall(meth) => expr_is_func_mutable(&meth.left),
+        Expression::Ternary(tern) => {
+            expr_is_func_mutable(&tern.if_true)
+                || expr_is_func_mutable(&tern.if_false)
+        }
         Expression::Number(_) => false,
         Expression::String(_) => false,
         Expression::Boolean(_) => false,
@@ -223,7 +227,7 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
             format!("vim.api['{}']({})", name, args.gen(state))
         }
         FunctionData::VimFunc(VimFunc { name, args }) => {
-            format!("require('vim9script').fn['{}']({})", name, args.gen(state))
+            format!("NVIM9.fn['{}']({})", name, args.gen(state))
         }
         FunctionData::VimFuncRef { name, arglist, .. } => match arglist {
             Some(arglist) => {
@@ -255,7 +259,9 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
 }
 
 fn generate_mutable_fn_call(name: &str, args: &str, replace: &str) -> String {
-    return format!("require('vim9script').fn_mut('{name}', {{ {args} }}, {{ replace = {replace} }})");
+    return format!(
+        "NVIM9.fn_mut('{name}', {{ {args} }}, {{ replace = {replace} }})"
+    );
 }
 
 pub fn generate_method(

@@ -1,20 +1,6 @@
+local to_vim_bool = require("vim9script.convert").to_vim_bool
+
 local ops = {}
-
-local to_vim_bool = function(val)
-  if type(val) == "boolean" then
-    return val
-  elseif type(val) == "number" then
-    return val ~= 0
-  elseif type(val) == "string" then
-    return string.len(val) ~= 0
-  elseif type(val) == "table" then
-    return not vim.tbl_isempty(val)
-  elseif val == nil then
-    return false
-  end
-
-  error("unhandled type: " .. vim.inspect(val))
-end
 
 ops["And"] = function(left, right)
   return to_vim_bool(left) and to_vim_bool(right)
@@ -36,6 +22,22 @@ ops["EqualTo"] = function(left, right)
   return left == right
 end
 
+ops["NotEqualTo"] = function(left, right)
+  return not ops["EqualTo"](left, right)
+end
+
+ops["LessThan"] = function(left, right)
+  return left < right
+end
+
+ops["LessThanOrEqual"] = function(left, right)
+  return left <= right
+end
+
+ops["GreaterThan"] = function(left, right)
+  return left < right
+end
+
 ops["RegexpMatches"] = function(left, right)
   return vim.regex(right):match_str(left)
 end
@@ -46,6 +48,11 @@ end
 
 ops["Modulo"] = function(left, right)
   return left % right
+end
+
+ops["Minus"] = function(left, right)
+  -- TODO: This is not right :)
+  return left - right
 end
 
 return ops

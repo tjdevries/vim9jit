@@ -1,17 +1,21 @@
+use std::path::Path;
+
 use lexer::new_lexer;
 use parser::{
     self, new_parser, ArrayLiteral, AssignStatement, AugroupCommand,
-    AutocmdCommand, Body, CallCommand, CallExpression, DeclCommand, DefCommand,
-    DictAccess, DictLiteral, EchoCommand, ElseCommand, ElseIfCommand,
-    ExCommand, Expandable, ExportCommand, Expression, GroupedExpression,
-    Heredoc, Identifier, IfCommand, IndexExpression, IndexType,
-    InfixExpression, InnerType, Lambda, Literal, MethodCall, PrefixExpression,
-    Program, RawIdentifier, Register, ReturnCommand, ScopedIdentifier,
-    SharedCommand, Signature, StatementCommand, Type, UserCommand, VarCommand,
-    Vim9ScriptCommand, VimBoolean, VimKey, VimNumber, VimOption, VimScope,
-    VimString,
+    AutocmdCommand, Body, BreakCommand, CallCommand, CallExpression,
+    DeclCommand, DefCommand, DictAccess, DictLiteral, EchoCommand, ElseCommand,
+    ElseIfCommand, ExCommand, Expandable, ExportCommand, Expression,
+    ForCommand, GroupedExpression, Heredoc, Identifier, IfCommand,
+    ImportCommand, IndexExpression, IndexType, InfixExpression, InnerType,
+    Lambda, Literal, MethodCall, MutationStatement, PrefixExpression,
+    RawIdentifier, Register, ReturnCommand, ScopedIdentifier, SharedCommand,
+    Signature, StatementCommand, Ternary, TryCommand, Type, UserCommand,
+    VarCommand, Vim9ScriptCommand, VimBoolean, VimKey, VimNumber, VimOption,
+    VimScope, VimString, WhileCommand,
 };
 
+// this word is missspelled
 pub mod call_expr;
 mod test_harness;
 
@@ -26,6 +30,22 @@ pub struct State {
     //  As we generate the code and notice certain identifiers are certain
     //  types, we can use that to do *some* optimizations
     pub scopes: Vec<VimscriptScope>,
+}
+
+impl State {
+    fn is_top_level(&self) -> bool {
+        self.scopes.len() == 0
+    }
+
+    fn with_scope<F, T>(&mut self, f: F) -> T
+    where
+        F: Fn(&mut State) -> T,
+    {
+        self.scopes.push(VimscriptScope {});
+        let res = f(self);
+        self.scopes.pop();
+        res
+    }
 }
 
 pub struct VimscriptScope {}
@@ -48,15 +68,83 @@ impl Generate for ExCommand {
             ExCommand::Autocmd(cmd) => cmd.gen(state),
             ExCommand::Call(cmd) => cmd.gen(state),
             ExCommand::Decl(cmd) => cmd.gen(state),
-            ExCommand::Comment(token) => format!("\n-- {}", token.text),
-            ExCommand::NoOp(token) => format!("\n-- {:?}", token),
+            ExCommand::Comment(token) => format!("-- {}", token.text),
+            ExCommand::NoOp(token) => {
+                if token.kind.is_whitespace() {
+                    String::new()
+                } else {
+                    format!("\n-- {:?}", token)
+                }
+            }
             ExCommand::Heredoc(heredoc) => heredoc.gen(state),
             ExCommand::UserCommand(usercmd) => usercmd.gen(state),
             ExCommand::Eval(eval) => format!("{};", eval.expr.gen(state)),
             ExCommand::SharedCommand(shared) => shared.gen(state),
             ExCommand::ExportCommand(export) => export.gen(state),
+            ExCommand::ImportCommand(import) => import.gen(state),
             ExCommand::Finish(_) => format!("return __VIM9_MODULE"),
+            ExCommand::For(f) => f.gen(state),
+            ExCommand::Try(t) => t.gen(state),
+            ExCommand::While(w) => w.gen(state),
+            ExCommand::Break(b) => b.gen(state),
             _ => todo!("Have not yet handled: {:?}", self),
+        }
+    }
+}
+
+impl Generate for BreakCommand {
+    fn gen(&self, _: &mut State) -> String {
+        format!("break")
+    }
+}
+
+impl Generate for WhileCommand {
+    fn gen(&self, state: &mut State) -> String {
+        format!(
+            "while {}\ndo\n{}\nend",
+            self.condition.gen(state),
+            self.body.gen(state)
+        )
+    }
+}
+
+impl Generate for TryCommand {
+    fn gen(&self, state: &mut State) -> String {
+        // TODO: try and catch LUL
+        self.body.gen(state)
+    }
+}
+
+impl Generate for ForCommand {
+    fn gen(&self, state: &mut State) -> String {
+        format!(
+            "for _, {} in NVIM9.iter({}) do\n{}\nend\n",
+            self.for_identifier.gen(state),
+            self.for_expr.gen(state),
+            self.body.gen(state)
+        )
+    }
+}
+
+impl Generate for ImportCommand {
+    fn gen(&self, state: &mut State) -> String {
+        match self {
+            ImportCommand::ImportImplicit { file, name, autoload, ..} => match name {
+                Some(_) => todo!(),
+                None => {
+                    let filepath = Path::new(file);
+                    let stem = filepath.file_stem().unwrap().to_str().unwrap();
+                    format!(
+                        "local {stem} = NVIM9.import({{ name = '{file}', autoload = {autoload} }})"
+                    )
+                }
+            },
+            ImportCommand::ImportUnpacked { names, file,  .. } => {
+                names.iter().map(|name| {
+                    let name = name.gen(state);
+                    format!("local {name} = NVIM9.import({{ name = '{file}' }})['{name}']")
+                }).collect::<Vec<String>>().join("\n")
+            }
         }
     }
 }
@@ -80,7 +168,7 @@ impl Generate for ExportCommand {
 
 impl Generate for SharedCommand {
     fn gen(&self, _: &mut State) -> String {
-        format!("vim.cmd [===[{}]===]", self.contents)
+        format!("vim.cmd [[ {} ]]", self.contents.trim())
     }
 }
 
@@ -139,7 +227,7 @@ impl Generate for Heredoc {
 
         let mut list = format!("{{ {} }}", inner);
         if self.trim {
-            list = format!("require('vim9script').heredoc.trim({})", list)
+            list = format!("NVIM9.heredoc.trim({})", list)
         }
 
         format!("local {} = {}", self.name.gen(state), list)
@@ -243,6 +331,9 @@ impl Generate for DefCommand {
             let (signature, default_statements) =
                 gen_signature(state, &self.args);
 
+            let local = if state.is_top_level() { "" } else { "local" };
+            let body = state.with_scope(|s| self.body.gen(s));
+
             // TODO: If this command follows certain patterns,
             // we will also need to define a vimscript function,
             // so that this function is available.
@@ -256,15 +347,11 @@ impl Generate for DefCommand {
             // This is a "must-have" aspect of what we're doing.
             format!(
                 r#"
-                    local {} = function({})
-                        {}
-                        {}
-                    end
+                {local} {name} = function({signature})
+                    {default_statements}
+                    {body}
+                end
                 "#,
-                name,
-                signature,
-                default_statements,
-                self.body.gen(state)
             )
         }
     }
@@ -296,13 +383,77 @@ impl Generate for StatementCommand {
     fn gen(&self, state: &mut State) -> String {
         match self {
             StatementCommand::Assign(assign) => assign.gen(state),
+            StatementCommand::Mutate(mutate) => mutate.gen(state),
         }
+    }
+}
+
+impl Generate for MutationStatement {
+    fn gen(&self, state: &mut State) -> String {
+        // format!("--[[ {:#?} ]]", self)
+        let left = self.left.gen(state);
+        let operator = match self.modifier.kind {
+            lexer::TokenKind::PlusEquals => parser::Operator::Plus,
+            lexer::TokenKind::MinusEquals => parser::Operator::Minus,
+            lexer::TokenKind::MulEquals => parser::Operator::Multiply,
+            lexer::TokenKind::DivEquals => parser::Operator::Divide,
+            lexer::TokenKind::PercentEquals => parser::Operator::Modulo,
+            lexer::TokenKind::StringConcatEquals => {
+                parser::Operator::StringConcat
+            }
+            _ => unreachable!(),
+        };
+
+        // TODO(clone)
+        let infix = InfixExpression::new(
+            operator,
+            self.left.clone().into(),
+            self.right.clone().into(),
+        )
+        .gen(state);
+
+        format!("{left} = {infix}")
     }
 }
 
 impl Generate for AssignStatement {
     fn gen(&self, state: &mut State) -> String {
-        format!("{} = {}", self.left.gen(state), self.right.gen(state))
+        let left = match &self.left {
+            Expression::Index(idx) => {
+                format!(
+                    "{}[{} + 1]",
+                    idx.container.gen(state),
+                    match idx.index.as_ref() {
+                        IndexType::Item(item) => item.gen(state),
+                        IndexType::Slice(_) => todo!("Unknown index type"),
+                    }
+                )
+            }
+            // Expression::Empty => todo!(),
+            // Expression::Identifier(_) => todo!(),
+            // Expression::Number(_) => todo!(),
+            // Expression::String(_) => todo!(),
+            // Expression::Boolean(_) => todo!(),
+            // Expression::Grouped(_) => todo!(),
+            // Expression::Call(_) => todo!(),
+            // Expression::Slice(_) => todo!(),
+            // Expression::Array(_) => todo!(),
+            // Expression::Dict(_) => todo!(),
+            // Expression::DictAccess(_) => todo!(),
+            // Expression::VimOption(_) => todo!(),
+            // Expression::Register(_) => todo!(),
+            // Expression::Lambda(_) => todo!(),
+            // Expression::Expandable(_) => todo!(),
+            // Expression::MethodCall(_) => todo!(),
+            // Expression::Ternary(_) => todo!(),
+            // Expression::Prefix(_) => todo!(),
+            // Expression::Infix(_) => todo!(),
+            _ => self.left.gen(state),
+        };
+
+        let right = self.right.gen(state);
+
+        format!("{left} = {right}")
     }
 }
 
@@ -380,7 +531,7 @@ impl Generate for EchoCommand {
 impl Generate for Vim9ScriptCommand {
     fn gen(&self, _: &mut State) -> String {
         // TODO: Actually connect this
-        // format!("require('vim9script').new_script {{ noclear = {} }}", self.noclear)
+        // format!("NVIM9.new_script {{ noclear = {} }}", self.noclear)
         format!("-- vim9script")
     }
 }
@@ -392,7 +543,7 @@ impl Generate for VarCommand {
                 inner: InnerType::Bool,
                 ..
             }) => format!(
-                "local {} = require('vim9script').convert.decl_bool({})",
+                "local {} = NVIM9.convert.decl_bool({})",
                 self.name.gen(state),
                 self.expr.gen(state)
             ),
@@ -454,10 +605,17 @@ impl Generate for Expression {
             Expression::Lambda(lambda) => lambda.gen(state),
             Expression::Expandable(expandable) => expandable.gen(state),
             Expression::MethodCall(method) => method.gen(state),
+            Expression::Ternary(ternary) => ternary.gen(state),
 
             // Some expressions can only be triggered from containing expressions
             Expression::Slice(_) => unreachable!("cannot gen slice by itself"),
         }
+    }
+}
+
+impl Generate for Ternary {
+    fn gen(&self, state: &mut State) -> String {
+        format!("NVIM9.ternary({}, function() return {} end, function() return {} end)", self.cond.gen(state), self.if_true.gen(state), self.if_false.gen(state))
     }
 }
 
@@ -478,6 +636,9 @@ impl Generate for Expandable {
         match &self.ident {
             Identifier::Raw(RawIdentifier { name }) if name == "q-args" => {
                 format!("{}.{}", make_user_command_arg(state), "args")
+            }
+            Identifier::Raw(RawIdentifier { name }) if name == "q-mods" => {
+                format!("{}.{}", make_user_command_arg(state), "mods")
             }
             Identifier::Raw(RawIdentifier { name }) if name == "q-bang" => {
                 format!(
@@ -515,7 +676,7 @@ impl Generate for Register {
 impl Generate for PrefixExpression {
     fn gen(&self, state: &mut State) -> String {
         format!(
-            "require('vim9script').prefix['{:?}']({})",
+            "NVIM9.prefix['{:?}']({})",
             self.operator,
             self.right.gen(state)
         )
@@ -529,14 +690,14 @@ impl Generate for IndexExpression {
         match self.index.as_ref() {
             IndexType::Item(item) => {
                 format!(
-                    "require('vim9script').index({}, {})",
+                    "NVIM9.index({}, {})",
                     self.container.gen(state),
                     item.gen(state)
                 )
             }
             IndexType::Slice(slice) => {
                 format!(
-                    "require('vim9script').slice({}, {}, {})",
+                    "NVIM9.slice({}, {}, {})",
                     self.container.gen(state),
                     slice
                         .start
@@ -556,7 +717,8 @@ impl Generate for VimOption {
     fn gen(&self, state: &mut State) -> String {
         // TODO: not sure if i need to do something smarter than this
         format!(
-            "vim.api.nvim_get_option_value('{}', {{}})",
+            // "vim.api.nvim_get_option_value('{}', {{}})",
+            "vim.o['{}']",
             self.option.gen(state)
         )
     }
@@ -609,7 +771,16 @@ impl Generate for ArrayLiteral {
 impl Generate for VimString {
     fn gen(&self, _: &mut State) -> String {
         match self {
-            VimString::SingleQuote(s) => format!("'{}'", s),
+            VimString::SingleQuote(s) => format!(
+                "'{}'",
+                s.chars()
+                    .map(|c| if c == '\\' {
+                        "\\\\".to_string()
+                    } else {
+                        c.to_string()
+                    })
+                    .collect::<String>()
+            ),
             VimString::DoubleQuote(s) => format!("\"{}\"", s),
         }
     }
@@ -642,7 +813,7 @@ impl Generate for VimNumber {
 impl Generate for InfixExpression {
     fn gen(&self, state: &mut State) -> String {
         format!(
-            "require('vim9script').ops['{:?}']({}, {})",
+            "NVIM9.ops['{:?}']({}, {})",
             self.operator,
             self.left.gen(state),
             self.right.gen(state)
@@ -678,11 +849,38 @@ impl Generate for InfixExpression {
     }
 }
 
-// impl Generate for Program {
-//     fn gen(&self, state: &mut State) -> String {
-//         todo!()
-//     }
-// }
+fn toplevel_id(s: &mut State, command: &ExCommand) -> Option<String> {
+    match command {
+        ExCommand::Decl(decl) => Some(decl.name.gen(s)),
+        ExCommand::Def(def) => Some(def.name.gen(s)),
+        ExCommand::ExportCommand(e) => toplevel_id(s, e.command.as_ref()),
+        ExCommand::Heredoc(here) => Some(here.name.gen(s)),
+        // This might make sense, but I don't think it allows you to do this?
+        ExCommand::Var(_) => None,
+        // These make sense
+        ExCommand::Vim9Script(_) => None,
+        ExCommand::Echo(_) => None,
+        ExCommand::Return(_) => None,
+        ExCommand::If(_) => None,
+        ExCommand::For(_) => None,
+        ExCommand::While(_) => None,
+        ExCommand::Try(_) => None,
+        ExCommand::Call(_) => None,
+        ExCommand::Eval(_) => None,
+        ExCommand::Finish(_) => None,
+        ExCommand::Break(_) => None,
+        ExCommand::Augroup(_) => None,
+        ExCommand::Autocmd(_) => None,
+        ExCommand::Statement(_) => None,
+        ExCommand::UserCommand(_) => None,
+        ExCommand::SharedCommand(_) => None,
+        ExCommand::ImportCommand(_) => None,
+        ExCommand::Skip => None,
+        ExCommand::EndOfFile => None,
+        ExCommand::Comment(_) => None,
+        ExCommand::NoOp(_) => None,
+    }
+}
 
 pub fn eval(program: parser::Program, is_test: bool) -> String {
     let mut state = State {
@@ -694,10 +892,18 @@ pub fn eval(program: parser::Program, is_test: bool) -> String {
     };
 
     let mut output = String::new();
+    output += "local NVIM9 = require('vim9script')";
     output += "local __VIM9_MODULE = {}\n";
 
     if is_test {
         output += "describe(\"filename\", function()\n"
+    }
+
+    // "hoist" top-level declaractions to top of program.
+    for command in program.commands.iter() {
+        if let Some(toplevel) = toplevel_id(&mut state, command) {
+            output += &format!("local {} = nil\n", toplevel);
+        }
     }
 
     for command in program.commands.iter() {
@@ -727,13 +933,15 @@ pub fn generate(contents: &str, is_test: bool) -> String {
         .with_indent_width(2)
         .with_column_width(120);
 
-    stylua_lib::format_code(
+    match stylua_lib::format_code(
         &result,
         config,
         None,
         stylua_lib::OutputVerification::None,
-    )
-    .unwrap()
+    ) {
+        Ok(res) => res,
+        Err(err) => format!("{}\n\n{}", result, err),
+    }
 }
 
 #[cfg(test)]

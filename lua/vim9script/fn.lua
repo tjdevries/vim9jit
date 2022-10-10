@@ -10,6 +10,16 @@ fn.insert = function(list, item, idx)
   return list
 end
 
+fn.popup_menu = function(what, options)
+  vim.cmd.vnew()
+  return vim.api.nvim_get_current_win()
+end
+
+fn.prop_type_add = function(...)
+  local args = { ... }
+  print("[prop_type_add]", vim.inspect(args))
+end
+
 do
   local patch_overrides = {
     -- Include some vim patches that I don't care about

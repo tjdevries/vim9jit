@@ -1,5 +1,9 @@
+local NVIM9 = require("vim9script")
 local __VIM9_MODULE = {}
 describe("filename", function()
+  local Test_inplace_discarded = nil
+  local Test_returned_foo = nil
+  local Test_returned_foo = nil
   -- vim9script
 
   it("Test_inplace_discarded", function()
@@ -7,30 +11,27 @@ describe("filename", function()
     vim.v.errors = {}
 
     -- Actual test
-    require("vim9script").fn["assert_equal"](
+    NVIM9.fn["assert_equal"](
       { 2, 4 },
-      require("vim9script").fn["filter"](
-        require("vim9script").fn["sort"]({ 1, 4, 2, 5 }),
+      NVIM9.fn["filter"](
+        NVIM9.fn["sort"]({ 1, 4, 2, 5 }),
         function(_, y)
-          return require("vim9script").ops["EqualTo"](require("vim9script").ops["Modulo"](y, 2), 0)
+          return NVIM9.ops["EqualTo"](NVIM9.ops["Modulo"](y, 2), 0)
         end
       )
     )
 
-    -- Token(EndOfLine, "\n", (4,0)->(4,0))
-    local foo = require("vim9script").fn["filter"](
-      require("vim9script").fn["sort"]({ 1, 4, 2, 5 }),
+    local foo = NVIM9.fn["filter"](
+      NVIM9.fn["sort"]({ 1, 4, 2, 5 }),
       function(_, y)
-        return require("vim9script").ops["EqualTo"](require("vim9script").ops["Modulo"](y, 2), 0)
+        return NVIM9.ops["EqualTo"](NVIM9.ops["Modulo"](y, 2), 0)
       end
     )
-    require("vim9script").fn["assert_equal"]({ 2, 4 }, foo)
+    NVIM9.fn["assert_equal"]({ 2, 4 }, foo)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
   end)
-
-  -- Token(EndOfLine, "\n", (8,0)->(8,0))
 
   it("Test_returned_foo", function()
     -- Set errors to empty
@@ -38,20 +39,14 @@ describe("filename", function()
 
     -- Actual test
     local foo = { 1, 4, 2, 5 }
-    require("vim9script").fn["assert_equal"](
+    NVIM9.fn["assert_equal"](
       { 5, 4, 2, 1 },
-      require("vim9script").fn_mut(
-        "reverse",
-        { require("vim9script").fn_mut("sort", { foo }, { replace = 0 }) },
-        { replace = 0 }
-      )
+      NVIM9.fn_mut("reverse", { NVIM9.fn_mut("sort", { foo }, { replace = 0 }) }, { replace = 0 })
     )
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
   end)
-
-  -- Token(EndOfLine, "\n", (13,0)->(13,0))
 
   it("Test_returned_foo", function()
     -- Set errors to empty
@@ -60,14 +55,10 @@ describe("filename", function()
     -- Actual test
     local foo = { 1, 4, 2, 5 }
     local bar = foo
-    require("vim9script").fn_mut(
-      "reverse",
-      { require("vim9script").fn_mut("sort", { foo }, { replace = 0 }) },
-      { replace = 0 }
-    )
-    require("vim9script").fn["assert_equal"]({ 5, 4, 2, 1 }, foo)
-    require("vim9script").fn["assert_equal"]({ 5, 4, 2, 1 }, bar)
-    require("vim9script").fn["assert_equal"](foo, bar)
+    NVIM9.fn_mut("reverse", { NVIM9.fn_mut("sort", { foo }, { replace = 0 }) }, { replace = 0 })
+    NVIM9.fn["assert_equal"]({ 5, 4, 2, 1 }, foo)
+    NVIM9.fn["assert_equal"]({ 5, 4, 2, 1 }, bar)
+    NVIM9.fn["assert_equal"](foo, bar)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

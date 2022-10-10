@@ -4,12 +4,67 @@ use vim9_lexer::{Token, TokenKind};
 
 use crate::{
     Body, ExCommand, Expression, Heredoc, Identifier, Parser, Precedence,
-    Signature, Type,
+    Signature, Type, VimString,
 };
 
 pub mod cmd_auto;
 pub mod cmd_if;
+pub mod cmd_try;
 pub mod cmd_user;
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum ImportCommand {
+    ImportImplicit {
+        import: Token,
+        autoload: bool,
+        file: String,
+        name: Option<Expression>,
+    },
+    ImportUnpacked {
+        import: Token,
+        names: Vec<Identifier>,
+        from: Token,
+        file: String,
+    },
+}
+
+impl ImportCommand {
+    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+        let import = parser.expect_identifier_with_text("import")?;
+        let command = match parser.current_token.kind {
+            TokenKind::LeftBrace => ImportCommand::ImportUnpacked {
+                import,
+                names: {
+                    let names =
+                        parser.parse_identifier_list(TokenKind::RightBrace)?;
+                    parser.expect_peek(TokenKind::RightBrace)?;
+                    parser.next_token();
+                    names
+                },
+                from: parser.expect_identifier_with_text("from")?,
+                file: parser.pop().text,
+            },
+            TokenKind::Identifier => {
+                let autoload = if parser.current_token.text == "autoload" {
+                    parser.next_token();
+                    true
+                } else {
+                    false
+                };
+
+                ImportCommand::ImportImplicit {
+                    import,
+                    autoload,
+                    file: parser.pop().text,
+                    name: None,
+                }
+            }
+            _ => unreachable!("{:?}", parser),
+        };
+
+        Ok(ExCommand::ImportCommand(command))
+    }
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ExportCommand {
@@ -55,6 +110,21 @@ impl SharedCommand {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct BreakCommand {
+    pub br: Token,
+    eol: Token,
+}
+
+impl BreakCommand {
+    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+        Ok(ExCommand::Break(BreakCommand {
+            br: parser.expect_identifier_with_text("break")?,
+            eol: parser.expect_eol()?,
+        }))
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct FinishCommand {
     pub finish: Token,
     eol: Token,
@@ -77,8 +147,6 @@ pub struct Vim9ScriptCommand {
 
 impl Vim9ScriptCommand {
     pub fn parse(parser: &mut Parser) -> Result<Self> {
-        parser.seen_vim9script = true;
-
         Ok(Self {
             noclear: if parser.current_token.kind == TokenKind::EndOfLine {
                 false
@@ -296,7 +364,7 @@ pub struct CallCommand {
 impl CallCommand {
     pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
         Ok(ExCommand::Call(CallCommand {
-            call: None,
+            call: parser.expect_identifier_with_text("call").ok(),
             name: Identifier::parse(parser)?,
             open: parser.ensure_token(TokenKind::LeftParen)?,
             args: parser.parse_expression_list(TokenKind::RightParen, true)?,

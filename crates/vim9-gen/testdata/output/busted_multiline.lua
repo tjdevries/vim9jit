@@ -1,50 +1,45 @@
+local NVIM9 = require("vim9script")
 local __VIM9_MODULE = {}
 describe("filename", function()
+  local Test_same_line = nil
+  local Test_next_line = nil
+  local Test_missing_lines = nil
   -- vim9script
-
-  -- Token(EndOfLine, "\n", (2,0)->(2,0))
 
   it("Test_same_line", function()
     -- Set errors to empty
     vim.v.errors = {}
 
     -- Actual test
-    local x = require("vim9script").convert.decl_bool(require("vim9script").ops["And"](true, false))
+    local x = NVIM9.convert.decl_bool(NVIM9.ops["And"](true, false))
 
-    -- Token(EndOfLine, "\n", (6,0)->(6,0))
-    require("vim9script").fn["assert_equal"](x, false)
+    NVIM9.fn["assert_equal"](x, false)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
   end)
-
-  -- Token(EndOfLine, "\n", (9,0)->(9,0))
 
   it("Test_next_line", function()
     -- Set errors to empty
     vim.v.errors = {}
 
     -- Actual test
-    local y = require("vim9script").convert.decl_bool(require("vim9script").ops["And"](true, false))
+    local y = NVIM9.convert.decl_bool(NVIM9.ops["And"](true, false))
 
-    -- Token(EndOfLine, "\n", (13,0)->(13,0))
-    require("vim9script").fn["assert_equal"](y, false)
+    NVIM9.fn["assert_equal"](y, false)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
   end)
-
-  -- Token(EndOfLine, "\n", (16,0)->(16,0))
 
   it("Test_missing_lines", function()
     -- Set errors to empty
     vim.v.errors = {}
 
     -- Actual test
-    local z = require("vim9script").ops["Or"](true, false)
+    local z = NVIM9.ops["Or"](true, false)
 
-    -- Token(EndOfLine, "\n", (21,0)->(21,0))
-    require("vim9script").fn["assert_equal"](z, true)
+    NVIM9.fn["assert_equal"](z, true)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

@@ -88,6 +88,7 @@ pub enum TokenKind {
     Ampersand,
     Dot,
     StringConcat,
+    StringConcatEquals,
 
     //                  use 'ignorecase'    match case      ignore case
     // equal                   ==              ==#             ==?
@@ -154,6 +155,10 @@ pub enum TokenKind {
 }
 
 impl TokenKind {
+    pub fn is_colon(&self) -> bool {
+        *self == Self::Colon || *self == Self::SpacedColon
+    }
+
     pub fn is_whitespace(&self) -> bool {
         match self {
             Self::EndOfLine => true,
@@ -259,7 +264,7 @@ impl Lexer {
 
     fn read_number(&mut self) -> Token {
         let position = self.position;
-        while let Some(ch) = self.ch && ch.is_numeric() {
+        while let Some(ch) = self.ch && (ch.is_numeric() || ch == '\'') {
             self.read_char();
         }
 
@@ -280,7 +285,10 @@ impl Lexer {
         } else {
             Token {
                 kind: TokenKind::Integer,
-                text: self.chars[position..self.position].iter().collect(),
+                text: self.chars[position..self.position]
+                    .iter()
+                    .filter(|c| **c != '\'')
+                    .collect(),
                 span: self.make_span(position, self.position),
             }
         }
@@ -507,6 +515,7 @@ impl Lexer {
                     '<' => self.handle_lt(),
                     '-' => self.handle_dash(),
                     '$' => self.handle_dollar(),
+                    '.' => self.handle_dot(),
                     '+' => self.if_peek(
                         '=',
                         TokenKind::Plus,
@@ -522,11 +531,6 @@ impl Lexer {
                     '&' => {
                         self.if_peek('&', TokenKind::Ampersand, TokenKind::And)
                     }
-                    '.' => self.if_peek(
-                        '.',
-                        TokenKind::Dot,
-                        TokenKind::StringConcat,
-                    ),
                     '%' => self.if_peek(
                         '=',
                         TokenKind::Percent,
@@ -573,7 +577,7 @@ impl Lexer {
                         .read_until('\'', TokenKind::SingleQuoteString, |ch| {
                             *ch == '\n'
                         })
-                        .unwrap(),
+                        .expect(&format!("{:#?}", self)),
                     '"' => self
                         .read_until('"', TokenKind::DoubleQuoteString, |ch| {
                             *ch == '\n'
@@ -743,6 +747,19 @@ impl Lexer {
                 text: self.ch.unwrap().to_string(),
                 span: self.make_span(self.position, self.position),
             },
+        }
+    }
+
+    fn handle_dot(&mut self) -> Token {
+        let peeked = (
+            self.peek_n(1).unwrap().to_owned(),
+            self.peek_n(2).unwrap().to_owned(),
+        );
+
+        match peeked {
+            ('.', '=') => self.read_three(TokenKind::StringConcatEquals),
+            ('.', _) => self.read_two(TokenKind::StringConcat),
+            (_, _) => self.read_one(TokenKind::Dot),
         }
     }
 }

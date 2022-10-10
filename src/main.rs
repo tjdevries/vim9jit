@@ -12,6 +12,48 @@ struct Args {
     dir: String,
 }
 
+fn gen_directory(src: &Path, gen: &Path, subdir: &str) -> Result<()> {
+    // base: /path/src/
+    // subdir: autoload,
+    // subdir: plugin
+
+    let src_subdir = src.join(subdir);
+    anyhow::ensure!(src_subdir.is_dir());
+
+    let gen_subdir = gen.join(subdir);
+    if !gen_subdir.is_dir() {
+        std::fs::create_dir(&gen_subdir)?;
+    }
+
+    for f in src_subdir.read_dir()? {
+        let f = f?;
+        match f.path().extension() {
+            Some(ext) => {
+                if ext != "vim" {
+                    continue;
+                }
+            }
+            None => continue,
+        }
+
+        let contents = std::fs::read_to_string(f.path())?;
+        let path = f.path();
+        let stem = path.file_stem().unwrap();
+        let stem = Path::with_extension(&Path::new(stem), "lua");
+        let generated_file = gen_subdir.join(stem);
+
+        println!("plugin: {:?}", f);
+        println!("  filename: {:?}", generated_file);
+
+        let generated = gen::generate(&contents, false);
+        std::fs::write(generated_file, generated)?;
+
+        // TODO: Go DEEPER
+    }
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
     println!("dir: {}", args.dir);
@@ -24,34 +66,8 @@ fn main() -> Result<()> {
         std::fs::create_dir(dir_gen.clone())?;
     }
 
-    println!("is_dir: {:?}", dir_src.is_dir());
-
-    let src_dir_plugin = dir_src.join("plugin");
-    let gen_dir_plugin = dir_gen.join("plugin");
-    if src_dir_plugin.is_dir() {
-        if !gen_dir_plugin.is_dir() {
-            std::fs::create_dir(&gen_dir_plugin)?;
-        }
-
-        for f in src_dir_plugin.read_dir()? {
-            let f = f?;
-            if f.path().extension().unwrap() != "vim" {
-                continue;
-            }
-
-            let contents = std::fs::read_to_string(f.path())?;
-            let path = f.path();
-            let stem = path.file_stem().unwrap();
-            let stem = Path::with_extension(&Path::new(stem), "lua");
-            let generated_file = gen_dir_plugin.join(stem);
-            println!("plugin: {:?}", f);
-            // println!("  contents: {}", contents);
-            println!("  filename: {:?}", generated_file);
-
-            let generated = gen::generate(&contents, false);
-            std::fs::write(generated_file, generated)?;
-        }
-    }
+    gen_directory(&dir_src, &dir_gen, "plugin")?;
+    gen_directory(&dir_src, &dir_gen, "autoload")?;
 
     Ok(())
 }

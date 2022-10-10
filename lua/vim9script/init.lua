@@ -1,3 +1,8 @@
+-- HACKS {{{
+rawset(vim.v, "version", 900)
+
+-- }}}
+
 local M = {}
 
 M.ops = require "vim9script.ops"
@@ -5,7 +10,10 @@ M.prefix = require "vim9script.prefix"
 M.convert = require "vim9script.convert"
 M.heredoc = require "vim9script.heredoc"
 M.fn = require "vim9script.fn"
+M.import = require "vim9script.import"
 
+--- fn_mut is deprecated
+---@deprecated
 M.fn_mut = function(name, args, info)
   local result = vim.fn["vim9script#fn"](name, args)
   for idx, val in pairs(result[2]) do
@@ -101,6 +109,14 @@ M.make_source_cmd = function()
       vim.api.nvim_exec(table.concat(file, "\n"), false)
     end,
   })
+end
+
+M.iter = function(expr)
+  if vim.tbl_islist(expr) then
+    return ipairs(expr)
+  else
+    return pairs(expr)
+  end
 end
 
 return M

@@ -1,5 +1,7 @@
+local NVIM9 = require("vim9script")
 local __VIM9_MODULE = {}
 describe("filename", function()
+  local Test_assignment_one = nil
   -- vim9script
 
   it("Test_assignment_one", function()
@@ -7,8 +9,8 @@ describe("filename", function()
     vim.v.errors = {}
 
     -- Actual test
-    local bool1 = require("vim9script").convert.decl_bool(true)
-    require("vim9script").fn["assert_equal"](vim.v["true"], bool1)
+    local bool1 = NVIM9.convert.decl_bool(true)
+    NVIM9.fn["assert_equal"](vim.v["true"], bool1)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

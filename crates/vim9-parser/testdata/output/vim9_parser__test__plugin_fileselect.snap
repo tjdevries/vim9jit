@@ -133,11 +133,16 @@ expression: snapshot_parsing(contents)
             if_eol: Token(EndOfLine, "\n", (25,24)->(25,24)),
             body: Body {
                 commands: [
-                    SharedCommand(
-                        SharedCommand {
-                            contents: "  import autoload  fileselect.vim",
-                            eol: Token(EndOfLine, "\n", (26,34)->(26,34)),
+                    ImportCommand(
+                        ImportImplicit {
+                            import: Token(Identifier, "import", (26,2)->(26,8)),
+                            autoload: true,
+                            file: "fileselect.vim",
+                            name: None,
                         },
+                    ),
+                    NoOp(
+                        Token(EndOfLine, "\n", (26,34)->(26,34)),
                     ),
                     Statement(
                         Assign(
@@ -208,11 +213,19 @@ expression: snapshot_parsing(contents)
                     else_eol: Token(EndOfLine, "\n", (29,4)->(29,4)),
                     body: Body {
                         commands: [
-                            SharedCommand(
-                                SharedCommand {
-                                    contents: "  import {FileSelectShowMenu, FileSelectToggle} from  ../autoload/fileselect.vim",
-                                    eol: Token(EndOfLine, "\n", (30,81)->(30,81)),
+                            ImportCommand(
+                                ImportUnpacked {
+                                    import: Token(Identifier, "import", (30,2)->(30,8)),
+                                    names: [
+                                        Raw(FileSelectShowMenu),
+                                        Raw(FileSelectToggle),
+                                    ],
+                                    from: Token(Identifier, "from", (30,48)->(30,52)),
+                                    file: "../autoload/fileselect.vim",
                                 },
+                            ),
+                            NoOp(
+                                Token(EndOfLine, "\n", (30,81)->(30,81)),
                             ),
                             Statement(
                                 Assign(
@@ -335,9 +348,30 @@ expression: snapshot_parsing(contents)
                 "dir",
             ),
             name: "Fileselect",
-            command: SharedCommand(
-                SharedCommand {
-                    contents: "                                           call TshowMenu(<q-args>, <q-mods>)",
+            command: Call(
+                CallCommand {
+                    call: Some(
+                        Token(Identifier, "call", (39,43)->(39,47)),
+                    ),
+                    name: Raw(TshowMenu),
+                    open: Token(LeftParen, "(", (39,57)->(39,58)),
+                    args: [
+                        Expandable(
+                            Expandable {
+                                left: Token(AngleLeft, "<", (39,58)->(39,59)),
+                                ident: Raw(q-args),
+                                right: Token(AngleRight, ">", (39,65)->(39,66)),
+                            },
+                        ),
+                        Expandable(
+                            Expandable {
+                                left: Token(AngleLeft, "<", (39,68)->(39,69)),
+                                ident: Raw(q-mods),
+                                right: Token(AngleRight, ">", (39,75)->(39,76)),
+                            },
+                        ),
+                    ],
+                    close: Token(RightParen, ")", (39,76)->(39,77)),
                     eol: Token(EndOfLine, "\n", (39,77)->(39,77)),
                 },
             ),

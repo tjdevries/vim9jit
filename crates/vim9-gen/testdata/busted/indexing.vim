@@ -6,6 +6,11 @@ def Test_can_index()
   assert_equal(1, l[0])
 enddef
 
+def Test_minus()
+  var index = 1
+  assert_equal(1, l[index - 1])
+enddef
+
 def Test_both()
   assert_equal([1, 2], l[0 : 1])
 enddef

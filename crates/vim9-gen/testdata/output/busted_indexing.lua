@@ -1,55 +1,65 @@
+local NVIM9 = require("vim9script")
 local __VIM9_MODULE = {}
 describe("filename", function()
+  local Test_can_index = nil
+  local Test_minus = nil
+  local Test_both = nil
+  local Test_left = nil
+  local Test_right = nil
   -- vim9script
   local l = { 1, 2, 3 }
-
-  -- Token(EndOfLine, "\n", (3,0)->(3,0))
 
   it("Test_can_index", function()
     -- Set errors to empty
     vim.v.errors = {}
 
     -- Actual test
-    require("vim9script").fn["assert_equal"](1, require("vim9script").index(l, 0))
+    NVIM9.fn["assert_equal"](1, NVIM9.index(l, 0))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
   end)
 
-  -- Token(EndOfLine, "\n", (7,0)->(7,0))
+  it("Test_minus", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
+    local index = 1
+    NVIM9.fn["assert_equal"](1, NVIM9.index(l, NVIM9.ops["Minus"](index, 1)))
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
 
   it("Test_both", function()
     -- Set errors to empty
     vim.v.errors = {}
 
     -- Actual test
-    require("vim9script").fn["assert_equal"]({ 1, 2 }, require("vim9script").slice(l, 0, 1))
+    NVIM9.fn["assert_equal"]({ 1, 2 }, NVIM9.slice(l, 0, 1))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
   end)
-
-  -- Token(EndOfLine, "\n", (11,0)->(11,0))
 
   it("Test_left", function()
     -- Set errors to empty
     vim.v.errors = {}
 
     -- Actual test
-    require("vim9script").fn["assert_equal"]({ 2, 3 }, require("vim9script").slice(l, 1, nil))
+    NVIM9.fn["assert_equal"]({ 2, 3 }, NVIM9.slice(l, 1, nil))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
   end)
-
-  -- Token(EndOfLine, "\n", (15,0)->(15,0))
 
   it("Test_right", function()
     -- Set errors to empty
     vim.v.errors = {}
 
     -- Actual test
-    require("vim9script").fn["assert_equal"]({ 1, 2 }, require("vim9script").slice(l, nil, 1))
+    NVIM9.fn["assert_equal"]({ 1, 2 }, NVIM9.slice(l, nil, 1))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

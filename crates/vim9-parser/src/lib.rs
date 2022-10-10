@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::Result;
 use once_cell::sync::OnceCell;
-use tracing::{info, trace};
+use tracing::info;
 use tracing_subscriber::util::SubscriberInitExt;
 use vim9_lexer::{new_lexer, Lexer, Token, TokenKind};
 
@@ -16,10 +16,11 @@ mod cmds;
 pub use cmds::{
     cmd_auto::{AugroupCommand, AutocmdBlock, AutocmdCommand},
     cmd_if::{ElseCommand, ElseIfCommand, IfCommand},
+    cmd_try::TryCommand,
     cmd_user::UserCommand,
-    CallCommand, DeclCommand, DefCommand, EchoCommand, EvalCommand,
-    ExportCommand, FinishCommand, ReturnCommand, SharedCommand, VarCommand,
-    Vim9ScriptCommand,
+    BreakCommand, CallCommand, DeclCommand, DefCommand, EchoCommand,
+    EvalCommand, ExportCommand, FinishCommand, ImportCommand, ReturnCommand,
+    SharedCommand, VarCommand, Vim9ScriptCommand,
 };
 
 mod expr_call;
@@ -45,20 +46,75 @@ pub enum ExCommand {
     Return(ReturnCommand),
     Def(DefCommand),
     If(IfCommand),
+    For(ForCommand),
+    While(WhileCommand),
+    Try(TryCommand),
     Call(CallCommand),
     Eval(EvalCommand),
     Finish(FinishCommand),
+    Break(BreakCommand),
     Augroup(AugroupCommand),
     Autocmd(AutocmdCommand),
     Statement(StatementCommand),
     UserCommand(UserCommand),
     SharedCommand(SharedCommand),
     ExportCommand(ExportCommand),
+    ImportCommand(ImportCommand),
 
     Skip,
     EndOfFile,
     Comment(Token),
     NoOp(Token),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct ForCommand {
+    for_: Token,
+    pub for_identifier: Identifier,
+    in_: Token,
+    pub for_expr: Expression,
+    eol: Token,
+    pub body: Body,
+    endfor_: Token,
+    endfor_eol: Token,
+}
+
+impl ForCommand {
+    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+        Ok(ExCommand::For(ForCommand {
+            for_: parser.expect_identifier_with_text("for")?,
+            for_identifier: Identifier::parse(parser)?,
+            in_: parser.expect_identifier_with_text("in")?,
+            for_expr: Expression::parse(parser, Precedence::Lowest)?,
+            eol: parser.expect_eol()?,
+            body: Body::parse_until(parser, "endfor")?,
+            endfor_: parser.expect_identifier_with_text("endfor")?,
+            endfor_eol: parser.expect_eol()?,
+        }))
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct WhileCommand {
+    while_: Token,
+    pub condition: Expression,
+    while_eol: Token,
+    pub body: Body,
+    endwhile_: Token,
+    endwhile_eol: Token,
+}
+
+impl WhileCommand {
+    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+        Ok(ExCommand::While(WhileCommand {
+            while_: parser.expect_identifier_with_text("while")?,
+            condition: Expression::parse(parser, Precedence::Lowest)?,
+            while_eol: parser.expect_eol()?,
+            body: Body::parse_until(parser, "endwhile")?,
+            endwhile_: parser.expect_identifier_with_text("endwhile")?,
+            endwhile_eol: parser.expect_eol()?,
+        }))
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -113,6 +169,7 @@ impl Block {
 #[derive(Debug, PartialEq, Clone)]
 pub enum StatementCommand {
     Assign(AssignStatement),
+    Mutate(MutationStatement),
 }
 
 impl StatementCommand {
@@ -126,6 +183,7 @@ impl StatementCommand {
                     | TokenKind::MinusEquals
                     | TokenKind::MulEquals
                     | TokenKind::DivEquals
+                    | TokenKind::StringConcatEquals
             )
         })
     }
@@ -149,8 +207,28 @@ impl StatementCommand {
             )));
         }
 
-        todo!("expr command: {:?}, {:#?}", expr, parser)
+        // todo!("expr command: {:?}, {:#?}", expr, parser)
+        Ok(ExCommand::Statement(StatementCommand::Mutate(
+            MutationStatement {
+                left: expr,
+                modifier: parser.pop(),
+                right: {
+                    let right = parser.parse_expression(Precedence::Lowest)?;
+                    parser.next_token();
+                    right
+                },
+                eol: parser.expect_eol()?,
+            },
+        )))
     }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct MutationStatement {
+    pub left: Expression,
+    pub modifier: Token,
+    pub right: Expression,
+    eol: Token,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -404,9 +482,19 @@ pub enum Expression {
     Lambda(Lambda),
     Expandable(Expandable),
     MethodCall(MethodCall),
+    Ternary(Ternary),
 
     Prefix(PrefixExpression),
     Infix(InfixExpression),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Ternary {
+    pub cond: Box<Expression>,
+    question: Token,
+    pub if_true: Box<Expression>,
+    colon: Token,
+    pub if_false: Box<Expression>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -591,6 +679,21 @@ pub struct InfixExpression {
     pub right: Box<Expression>,
 }
 
+impl InfixExpression {
+    pub fn new(
+        operator: Operator,
+        left: Box<Expression>,
+        right: Box<Expression>,
+    ) -> Self {
+        Self {
+            token: Token::fake(),
+            operator,
+            left,
+            right,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct VimNumber {
     pub value: String,
@@ -605,6 +708,8 @@ pub enum Operator {
     Or,
     And,
     StringConcat,
+    Divide,
+    Multiply,
 
     // Comparisons
     EqualTo,
@@ -629,17 +734,30 @@ pub enum Operator {
     IsNotInsensitive,
 }
 
+// const (
+// _ int = iota
+// LOWEST
+// EQUALS
+// // ==
+// LESSGREATER // > or <
+// SUM// +
+// PRODUCT// *
+// PREFIX// -X or !X
+// CALL// myFunction(X)
+// )
+
 #[derive(Debug, PartialEq, PartialOrd, Default)]
 pub enum Precedence {
     #[default]
     Lowest,
+    Colon,
     Equals,
+    Ternary,
     LessGreater,
     StringConcat,
     Sum,
     Product,
     Modulo,
-    Colon,
     MethodCall,
     Prefix,
     Call,
@@ -686,8 +804,6 @@ pub struct Parser {
     current_token: Token,
     peek_token: Token,
     token_buffer: VecDeque<Token>,
-
-    seen_vim9script: bool,
 }
 
 mod prefix_expr {
@@ -731,6 +847,7 @@ mod prefix_expr {
             },
         }))
     }
+
     pub fn parse_single_string(parser: &mut Parser) -> Result<Expression> {
         Ok(Expression::String(VimString::SingleQuote(
             parser.current_token.text.clone(),
@@ -845,6 +962,7 @@ mod infix_expr {
         let token = parser.pop();
         let operator = match token.kind {
             TokenKind::Plus => Operator::Plus,
+            TokenKind::Div => Operator::Divide,
             TokenKind::Minus => Operator::Minus,
             TokenKind::Or => Operator::Or,
             TokenKind::And => Operator::And,
@@ -993,8 +1111,6 @@ mod infix_expr {
         parser: &mut Parser,
         left: Box<Expression>,
     ) -> Result<Expression> {
-        trace!("peek: {:?} left: {:?}", parser.peek_token, left);
-
         Ok(Expression::Call(CallExpression::parse(parser, left)?))
     }
 
@@ -1007,6 +1123,19 @@ mod infix_expr {
             open: parser.expect_token(TokenKind::LeftBracket)?,
             index: IndexType::parse(parser)?.into(),
             close: parser.ensure_token(TokenKind::RightBracket)?,
+        }))
+    }
+
+    pub fn parse_ternary_expr(
+        parser: &mut Parser,
+        left: Box<Expression>,
+    ) -> Result<Expression> {
+        Ok(Expression::Ternary(Ternary {
+            cond: left,
+            question: parser.expect_token(TokenKind::QuestionMark)?,
+            if_true: Expression::parse(parser, Precedence::Lowest)?.into(),
+            colon: parser.expect_token(TokenKind::SpacedColon)?,
+            if_false: parser.parse_expression(Precedence::Lowest)?.into(),
         }))
     }
 }
@@ -1031,10 +1160,7 @@ impl IndexType {
                 info!(parser=?parser, left=?left);
                 let colon = parser.next_token();
                 anyhow::ensure!(
-                    matches!(
-                        colon.kind,
-                        TokenKind::Colon | TokenKind::SpacedColon
-                    ),
+                    colon.kind.is_colon(),
                     "[IndexType] token: {:#?}, parser: {:#?}, slice: {:#?}",
                     colon,
                     parser,
@@ -1071,7 +1197,6 @@ impl Parser {
             current_token: lexer.next_token(),
             peek_token: lexer.next_token(),
             token_buffer: VecDeque::new(),
-            seen_vim9script: false,
             lexer,
         }
     }
@@ -1181,7 +1306,13 @@ impl Parser {
 
             // TODO: Not confident that this is the right level
             TokenKind::AngleLeft => Precedence::Lowest,
-            TokenKind::Equal => Precedence::Lowest,
+            TokenKind::Equal
+            | TokenKind::PlusEquals
+            | TokenKind::MinusEquals
+            | TokenKind::MulEquals
+            | TokenKind::DivEquals
+            | TokenKind::StringConcatEquals => Precedence::Lowest,
+            TokenKind::QuestionMark => Precedence::Ternary,
 
             _ => {
                 panic!("Unexpected precendence kind: {:?} // {:#?}", kind, self)
@@ -1218,6 +1349,7 @@ impl Parser {
         Some(Box::new(match peek_token.kind {
             TokenKind::Plus
             | TokenKind::Minus
+            | TokenKind::Div
             | TokenKind::Percent
             | TokenKind::StringConcat => infix_expr::parse_infix_operator,
             TokenKind::Or | TokenKind::And => infix_expr::parse_infix_operator,
@@ -1246,6 +1378,7 @@ impl Parser {
             | TokenKind::IsNot
             | TokenKind::IsNotInsensitive => infix_expr::parse_infix_operator,
             TokenKind::Dot => infix_expr::parse_dot_operator,
+            TokenKind::QuestionMark => infix_expr::parse_ternary_expr,
             TokenKind::Identifier => return None,
             // TokenKind::SpacedColon => infix_expr::parser_index_type,
             _ => unimplemented!("get_infix_fn: {:#?}", self),
@@ -1256,7 +1389,6 @@ impl Parser {
     fn parse_expression(&mut self, prec: Precedence) -> Result<Expression> {
         self.skip_whitespace();
 
-        trace!("current_token: {:?}", self.current_token);
         let prefix = self.get_prefix_fn();
 
         let mut left = match prefix {
@@ -1376,13 +1508,19 @@ impl Parser {
     ) -> Result<Token> {
         let token = self.current_token.clone();
         if token.kind != kind {
-            panic!("Got token: {:?}, Expected kind: {:?}", token, kind);
-            // return Err(anyhow::anyhow!("Got token: {:?}, Expected kind: {:?}", token, kind));
+            return Err(anyhow::anyhow!(
+                "Got token: {:?}, Expected kind: {:?}",
+                token,
+                kind
+            ));
         }
 
         if token.text != text {
-            panic!("Got token: {:?}, Expected text: {:?}", token, text);
-            // return Err(anyhow::anyhow!("Got token: {:?}, Expected text: {:?}", token, text));
+            return Err(anyhow::anyhow!(
+                "Got token: {:?}, Expected text: {:?}",
+                token,
+                text
+            ));
         }
 
         self.next_token();
@@ -1459,17 +1597,23 @@ impl Parser {
                     self.next_token();
                     ExCommand::Vim9Script(Vim9ScriptCommand::parse(self)?)
                 } else {
-                    if !self.seen_vim9script {
-                        // return Ok(SharedCommand::parse(parser)
-                    }
-
                     if self.command_match("var") || self.command_match("const")
                     {
                         return Ok(VarCommand::parse(self)?);
                     } else if self.command_match("export") {
                         return Ok(ExportCommand::parse(self)?);
+                    } else if self.command_match("for") {
+                        return Ok(ForCommand::parse(self)?);
+                    } else if self.command_match("while") {
+                        return Ok(WhileCommand::parse(self)?);
+                    } else if self.command_match("try") {
+                        return Ok(TryCommand::parse(self)?);
+                    } else if self.command_match("import") {
+                        return Ok(ImportCommand::parse(self)?);
                     } else if self.command_match("echo") {
                         return Ok(EchoCommand::parse(self)?);
+                    } else if self.command_match("call") {
+                        return Ok(CallCommand::parse(self)?);
                     } else if self.command_match("def") {
                         return Ok(DefCommand::parse(self)?);
                     } else if self.command_match("return") {
@@ -1482,9 +1626,12 @@ impl Parser {
                         return Ok(AutocmdCommand::parse(self)?);
                     } else if self.command_match("finish") {
                         return Ok(FinishCommand::parse(self)?);
+                    } else if self.command_match("break") {
+                        return Ok(BreakCommand::parse(self)?);
                     } else if self.command_match("command") {
                         return Ok(UserCommand::parse(self)?);
                     } else if self.command_match("nnoremap") {
+                        // TODO: Make mapping command
                         return Ok(SharedCommand::parse(self)?);
                     } else {
                         if self.peek_token.kind == TokenKind::LeftParen {
