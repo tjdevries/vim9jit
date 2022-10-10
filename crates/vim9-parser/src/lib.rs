@@ -18,9 +18,9 @@ pub use cmds::{
     cmd_if::{ElseCommand, ElseIfCommand, IfCommand},
     cmd_try::TryCommand,
     cmd_user::UserCommand,
-    BreakCommand, CallCommand, DeclCommand, DefCommand, EchoCommand,
-    EvalCommand, ExportCommand, FinishCommand, ImportCommand, ReturnCommand,
-    SharedCommand, VarCommand, Vim9ScriptCommand,
+    BreakCommand, CallCommand, ContinueCommand, DeclCommand, DefCommand,
+    EchoCommand, EvalCommand, ExportCommand, FinishCommand, ImportCommand,
+    ReturnCommand, SharedCommand, VarCommand, Vim9ScriptCommand,
 };
 
 mod expr_call;
@@ -53,6 +53,7 @@ pub enum ExCommand {
     Eval(EvalCommand),
     Finish(FinishCommand),
     Break(BreakCommand),
+    Continue(ContinueCommand),
     Augroup(AugroupCommand),
     Autocmd(AutocmdCommand),
     Statement(StatementCommand),
@@ -1628,6 +1629,8 @@ impl Parser {
                         return Ok(FinishCommand::parse(self)?);
                     } else if self.command_match("break") {
                         return Ok(BreakCommand::parse(self)?);
+                    } else if self.command_match("continue") {
+                        return Ok(ContinueCommand::parse(self)?);
                     } else if self.command_match("command") {
                         return Ok(UserCommand::parse(self)?);
                     } else if self.command_match("nnoremap") {

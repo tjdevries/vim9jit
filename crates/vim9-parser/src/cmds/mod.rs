@@ -125,6 +125,21 @@ impl BreakCommand {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct ContinueCommand {
+    pub cont: Token,
+    eol: Token,
+}
+
+impl ContinueCommand {
+    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+        Ok(ExCommand::Continue(ContinueCommand {
+            cont: parser.expect_identifier_with_text("continue")?,
+            eol: parser.expect_eol()?,
+        }))
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct FinishCommand {
     pub finish: Token,
     eol: Token,

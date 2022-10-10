@@ -12,6 +12,22 @@ M.heredoc = require "vim9script.heredoc"
 M.fn = require "vim9script.fn"
 M.import = require "vim9script.import"
 
+M.ternary = function(cond, if_true, if_false)
+  if cond then
+    if type(if_true) == "function" then
+      return if_true()
+    else
+      return if_true
+    end
+  else
+    if type(if_false) == "function" then
+      return if_false()
+    else
+      return if_false
+    end
+  end
+end
+
 --- fn_mut is deprecated
 ---@deprecated
 M.fn_mut = function(name, args, info)

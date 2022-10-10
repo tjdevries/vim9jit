@@ -4,21 +4,22 @@ use lexer::new_lexer;
 use parser::{
     self, new_parser, ArrayLiteral, AssignStatement, AugroupCommand,
     AutocmdCommand, Body, BreakCommand, CallCommand, CallExpression,
-    DeclCommand, DefCommand, DictAccess, DictLiteral, EchoCommand, ElseCommand,
-    ElseIfCommand, ExCommand, Expandable, ExportCommand, Expression,
-    ForCommand, GroupedExpression, Heredoc, Identifier, IfCommand,
-    ImportCommand, IndexExpression, IndexType, InfixExpression, InnerType,
-    Lambda, Literal, MethodCall, MutationStatement, PrefixExpression,
-    RawIdentifier, Register, ReturnCommand, ScopedIdentifier, SharedCommand,
-    Signature, StatementCommand, Ternary, TryCommand, Type, UserCommand,
-    VarCommand, Vim9ScriptCommand, VimBoolean, VimKey, VimNumber, VimOption,
-    VimScope, VimString, WhileCommand,
+    ContinueCommand, DeclCommand, DefCommand, DictAccess, DictLiteral,
+    EchoCommand, ElseCommand, ElseIfCommand, ExCommand, Expandable,
+    ExportCommand, Expression, ForCommand, GroupedExpression, Heredoc,
+    Identifier, IfCommand, ImportCommand, IndexExpression, IndexType,
+    InfixExpression, InnerType, Lambda, Literal, MethodCall, MutationStatement,
+    PrefixExpression, RawIdentifier, Register, ReturnCommand, ScopedIdentifier,
+    SharedCommand, Signature, StatementCommand, Ternary, TryCommand, Type,
+    UserCommand, VarCommand, Vim9ScriptCommand, VimBoolean, VimKey, VimNumber,
+    VimOption, VimScope, VimString, WhileCommand,
 };
 
 // this word is missspelled
 pub mod call_expr;
 mod test_harness;
 
+#[derive(Debug)]
 pub struct State {
     pub augroup: Option<Literal>,
     pub is_test: bool,
@@ -37,18 +38,48 @@ impl State {
         self.scopes.len() == 0
     }
 
-    fn with_scope<F, T>(&mut self, f: F) -> T
+    pub fn find_relevant_scope<F>(&self, filter: F) -> Option<&VimscriptScope>
+    where
+        F: Fn(&&VimscriptScope) -> bool,
+    {
+        self.scopes.iter().rev().filter(filter).next()
+    }
+
+    fn with_scope<F, T>(&mut self, kind: ScopeKind, f: F) -> T
     where
         F: Fn(&mut State) -> T,
     {
-        self.scopes.push(VimscriptScope {});
+        self.scopes.push(VimscriptScope { kind });
         let res = f(self);
         self.scopes.pop();
         res
     }
 }
 
-pub struct VimscriptScope {}
+macro_rules! find_scope {
+    ($state:ident, $m:pat) => {{
+        use ScopeKind::*;
+
+        let scope = $state.find_relevant_scope(|s| matches!(s.kind, $m));
+        match scope {
+            Some(scope) => scope,
+            None => panic!("Unexpect failure to find scope: {:#?}", $state),
+        }
+    }};
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub enum ScopeKind {
+    Function,
+    While,
+    For,
+    If,
+}
+
+#[derive(Debug)]
+pub struct VimscriptScope {
+    kind: ScopeKind,
+}
 
 pub trait Generate {
     fn gen(&self, state: &mut State) -> String;
@@ -87,19 +118,55 @@ impl Generate for ExCommand {
             ExCommand::Try(t) => t.gen(state),
             ExCommand::While(w) => w.gen(state),
             ExCommand::Break(b) => b.gen(state),
+            ExCommand::Continue(c) => c.gen(state),
             _ => todo!("Have not yet handled: {:?}", self),
         }
     }
 }
 
+impl Generate for ContinueCommand {
+    fn gen(&self, state: &mut State) -> String {
+        let scope = find_scope!(state, Function | While | For);
+        assert!(scope.kind != ScopeKind::Function, "continue: While/For");
+
+        format!("return true")
+    }
+}
+
 impl Generate for BreakCommand {
-    fn gen(&self, _: &mut State) -> String {
+    fn gen(&self, state: &mut State) -> String {
+        let scope = find_scope!(state, Function | While | For);
+        assert!(scope.kind != ScopeKind::Function, "continue: While/For");
+
         format!("break")
     }
 }
 
 impl Generate for WhileCommand {
     fn gen(&self, state: &mut State) -> String {
+        if continue_exists_in_scope(&self.body) {
+            let body = state.with_scope(ScopeKind::While, |s| self.body.gen(s));
+            let condition = self.condition.gen(state);
+            return format!(
+                r#"
+                    local body = function()
+                        {body}
+
+                        return 0
+                    end
+
+                    while {condition} do
+                        local nvim9_status, nvim9_ret = body()
+                        if nvim9_status == 2 then
+                            break
+                        elseif nvim9_status == 3 then
+                            return nvim9_ret
+                        end
+                    end
+                "#
+            );
+        }
+
         format!(
             "while {}\ndo\n{}\nend",
             self.condition.gen(state),
@@ -115,13 +182,49 @@ impl Generate for TryCommand {
     }
 }
 
+fn continue_exists_in_scope(body: &Body) -> bool {
+    body.commands.iter().any(|c| match c {
+        ExCommand::If(ex) => continue_exists_in_scope(&ex.body),
+        ExCommand::Continue(_) => true,
+        _ => false,
+    })
+}
+
 impl Generate for ForCommand {
+    // 0 => nothing
+    // 1 => continue
+    // 2 => break
+    // 3 => return
     fn gen(&self, state: &mut State) -> String {
+        let body = state.with_scope(ScopeKind::For, |s| self.body.gen(s));
+        if continue_exists_in_scope(&self.body) {
+            let expr = self.for_expr.gen(state);
+            let ident = self.for_identifier.gen(state);
+            return format!(
+                r#"
+                    local body = function(_, {ident})
+                        {body}
+
+                        return 0
+                    end
+
+                    for _, {ident} in NVIM9.iter({expr}) do
+                        local nvim9_status, nvim9_ret = body(_, {ident})
+                        if nvim9_status == 2 then
+                            break
+                        elseif nvim9_status == 3 then
+                            return nvim9_ret
+                        end
+                    end
+                "#
+            );
+        }
+
         format!(
             "for _, {} in NVIM9.iter({}) do\n{}\nend\n",
             self.for_identifier.gen(state),
             self.for_expr.gen(state),
-            self.body.gen(state)
+            body
         )
     }
 }
@@ -332,7 +435,8 @@ impl Generate for DefCommand {
                 gen_signature(state, &self.args);
 
             let local = if state.is_top_level() { "" } else { "local" };
-            let body = state.with_scope(|s| self.body.gen(s));
+            let body =
+                state.with_scope(ScopeKind::Function, |s| self.body.gen(s));
 
             // TODO: If this command follows certain patterns,
             // we will also need to define a vimscript function,
@@ -613,9 +717,76 @@ impl Generate for Expression {
     }
 }
 
+mod expr_utils {
+    use parser::Expression;
+
+    pub fn has_possible_sideffects(expr: &Expression) -> bool {
+        match expr {
+            Expression::Empty => false,
+            Expression::Identifier(_) => false,
+            Expression::Number(_) => false,
+            Expression::String(_) => false,
+            Expression::Boolean(_) => false,
+            Expression::Grouped(g) => has_possible_sideffects(&g.expr),
+            Expression::Slice(s) => {
+                let mut has_side_effect = false;
+                if let Some(start) = &s.start {
+                    has_side_effect |= has_possible_sideffects(&start)
+                }
+
+                if let Some(finish) = &s.finish {
+                    has_side_effect |= has_possible_sideffects(&finish)
+                }
+
+                has_side_effect
+            }
+            Expression::Array(_) => false,
+            Expression::Dict(_) => false,
+            Expression::DictAccess(_) => false,
+            Expression::Lambda(_) => false,
+            Expression::Expandable(_) => false,
+            Expression::Ternary(t) => {
+                has_possible_sideffects(&t.cond)
+                    || has_possible_sideffects(&t.if_true)
+                    || has_possible_sideffects(&t.if_false)
+            }
+            Expression::Prefix(_) => false,
+            Expression::Infix(_) => true,
+            Expression::Call(_) => true,
+            Expression::MethodCall(_) => true,
+            // TODO: Actually not sure which way to go for this,
+            //          Since it could be changed unexpectedly
+            //          by other things executing
+            Expression::Register(_) => true,
+            Expression::VimOption(_) => false,
+            // TODO:
+            Expression::Index(_) => {
+                // has_possible_sideffects(&i.container)
+                //     || has_possible_sideffects(&i.index)
+                true
+            }
+        }
+    }
+}
+
 impl Generate for Ternary {
     fn gen(&self, state: &mut State) -> String {
-        format!("NVIM9.ternary({}, function() return {} end, function() return {} end)", self.cond.gen(state), self.if_true.gen(state), self.if_false.gen(state))
+        let if_true = if expr_utils::has_possible_sideffects(&self.if_true) {
+            format!("function() return {} end", self.if_true.gen(state))
+        } else {
+            self.if_true.gen(state)
+        };
+
+        let if_false = if expr_utils::has_possible_sideffects(&self.if_false) {
+            format!("function() return {} end", self.if_false.gen(state))
+        } else {
+            self.if_false.gen(state)
+        };
+
+        format!(
+            "NVIM9.ternary({}, {if_true}, {if_false})",
+            self.cond.gen(state),
+        )
     }
 }
 
@@ -869,6 +1040,7 @@ fn toplevel_id(s: &mut State, command: &ExCommand) -> Option<String> {
         ExCommand::Eval(_) => None,
         ExCommand::Finish(_) => None,
         ExCommand::Break(_) => None,
+        ExCommand::Continue(_) => None,
         ExCommand::Augroup(_) => None,
         ExCommand::Autocmd(_) => None,
         ExCommand::Statement(_) => None,
@@ -998,6 +1170,7 @@ mod test {
     busted!(busted_methods, "../testdata/busted/methods.vim");
     busted!(busted_megamethods, "../testdata/busted/megamethods.vim");
     busted!(busted_shared, "../testdata/busted/shared.vim");
+    busted!(busted_loops, "../testdata/busted/loops.vim");
     // busted!(busted_vimvars, "../testdata/busted/vimvars.vim");
 
     snapshot!(test_expr, "../testdata/snapshots/expr.vim");
