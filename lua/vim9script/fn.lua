@@ -22,8 +22,12 @@ end
 
 do
   local patch_overrides = {
+    -- We do have vim9script :) that's this plugin
+    ["vim9script"] = true,
+
     -- Include some vim patches that I don't care about
     [ [[patch-8.2.2261]] ] = true,
+    [ [[patch-8.2.4257]] ] = true,
   }
 
   fn.has = function(patch)

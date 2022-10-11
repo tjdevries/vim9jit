@@ -6,6 +6,8 @@ describe("filename", function()
   local Test_both = nil
   local Test_left = nil
   local Test_right = nil
+  local Test_index_with_prefix_spaced = nil
+  local Test_index_with_prefix = nil
   local Test_string = nil
   -- vim9script
   local l = { 1, 2, 3 }
@@ -61,6 +63,28 @@ describe("filename", function()
 
     -- Actual test
     NVIM9.fn["assert_equal"]({ 1, 2 }, NVIM9.slice(l, nil, 1))
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_index_with_prefix_spaced", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
+    NVIM9.fn["assert_equal"]({ 3 }, NVIM9.slice(l, NVIM9.prefix["Minus"](1), nil))
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_index_with_prefix", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
+    NVIM9.fn["assert_equal"]({ 3 }, NVIM9.slice(l, NVIM9.prefix["Minus"](1), nil))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

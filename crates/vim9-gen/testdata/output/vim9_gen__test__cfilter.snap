@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1243
+assertion_line: 1251
 expression: "generate(contents, false)"
 ---
 local NVIM9 = require("vim9script")
@@ -117,6 +117,7 @@ vim.api.nvim_create_user_command("Cfilter", function(__vim9_arg_1)
 end, {
   nargs = "+",
   bang = true,
+  complete = nil,
 })
 
 vim.api.nvim_create_user_command("Lfilter", function(__vim9_arg_1)
@@ -124,6 +125,7 @@ vim.api.nvim_create_user_command("Lfilter", function(__vim9_arg_1)
 end, {
   nargs = "+",
   bang = true,
+  complete = nil,
 })
 
 -- # vim: shiftwidth=2 sts=2 expandtab

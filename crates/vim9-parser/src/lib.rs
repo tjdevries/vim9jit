@@ -19,8 +19,8 @@ pub use cmds::{
     cmd_try::TryCommand,
     cmd_user::UserCommand,
     BreakCommand, CallCommand, ContinueCommand, DeclCommand, DefCommand,
-    EchoCommand, EvalCommand, ExportCommand, FinishCommand, ImportCommand,
-    ReturnCommand, SharedCommand, VarCommand, Vim9ScriptCommand,
+    DeferCommand, EchoCommand, EvalCommand, ExportCommand, FinishCommand,
+    ImportCommand, ReturnCommand, SharedCommand, VarCommand, Vim9ScriptCommand,
 };
 
 mod expr_call;
@@ -50,6 +50,7 @@ pub enum ExCommand {
     While(WhileCommand),
     Try(TryCommand),
     Call(CallCommand),
+    Defer(DeferCommand),
     Eval(EvalCommand),
     Finish(FinishCommand),
     Break(BreakCommand),
@@ -190,7 +191,6 @@ impl StatementCommand {
     }
 
     pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
-        info!("{:?}", parser);
         let expr = Expression::parse(parser, Precedence::Lowest)?;
         if parser.current_token.kind == TokenKind::Equal {
             return Ok(ExCommand::Statement(StatementCommand::Assign(
@@ -288,7 +288,6 @@ impl Signature {
             params: {
                 let mut params = Vec::new();
                 while parser.current_token.kind != TokenKind::RightParen {
-                    info!(parser=?parser);
                     params.push(Parameter::parse(parser)?);
                     if parser.current_token.kind == TokenKind::Comma {
                         parser.next_token();
@@ -321,7 +320,6 @@ impl Parameter {
     fn parse(parser: &mut Parser) -> Result<Parameter> {
         let name = Identifier::parse(parser)?;
 
-        info!(parser=?parser, "current parser state");
         let ty = if parser.current_token.kind == TokenKind::SpacedColon {
             Some(Type::parse(parser)?)
         } else {
@@ -352,6 +350,7 @@ pub enum Identifier {
     Raw(RawIdentifier),
     Scope(ScopedIdentifier),
     Unpacked(UnpackIdentifier),
+    Ellipsis,
 }
 
 impl Debug for Identifier {
@@ -360,6 +359,7 @@ impl Debug for Identifier {
             Identifier::Raw(raw) => write!(f, "Raw({})", raw.name),
             Identifier::Scope(scope) => write!(f, "Scope({:?})", scope),
             Identifier::Unpacked(unpack) => write!(f, "Unpack({:?})", unpack),
+            Identifier::Ellipsis => write!(f, "<Ellipsis>"),
         }
     }
 }
@@ -395,32 +395,37 @@ impl Identifier {
             }));
         }
 
-        Ok(if parser.peek_token.kind == TokenKind::Colon {
-            Identifier::Scope(ScopedIdentifier {
-                scope: {
-                    // TODO: get the right scope
-                    parser.next_token();
-                    VimScope::Global
-                },
-                colon: parser.expect_token(TokenKind::Colon)?,
-                accessor: Identifier::parse_in_expression(parser)?.into(),
-            })
-        } else {
-            // Todo: Other names
-            Identifier::Raw(RawIdentifier {
+        Ok(match parser.peek_token.kind {
+            TokenKind::Colon => {
+                Identifier::Scope(ScopedIdentifier {
+                    scope: {
+                        // TODO: get the right scope
+                        parser.next_token();
+                        VimScope::Global
+                    },
+                    colon: parser.expect_token(TokenKind::Colon)?,
+                    accessor: Identifier::parse_in_expression(parser)?.into(),
+                })
+            }
+            TokenKind::Ellipsis => Identifier::Ellipsis,
+            _ => Identifier::Raw(RawIdentifier {
                 name: {
                     let current = parser.current_token.clone();
-                    anyhow::ensure!(matches!(
-                        current.kind,
-                        TokenKind::Identifier
-                            | TokenKind::True
-                            | TokenKind::False
-                            | TokenKind::Null
-                    ));
+                    anyhow::ensure!(
+                        matches!(
+                            current.kind,
+                            TokenKind::Identifier
+                                | TokenKind::True
+                                | TokenKind::False
+                                | TokenKind::Null
+                        ),
+                        "{:#?}",
+                        current
+                    );
 
                     current.text
                 },
-            })
+            }),
         })
     }
 
@@ -616,7 +621,6 @@ impl KeyValue {
             value: parser.parse_expression(Precedence::Lowest)?,
             comma: {
                 parser.skip_whitespace();
-                info!("\n=> Skiped whitespace: {:#?}", parser);
                 parser.expect_peek(TokenKind::Comma).ok()
             },
         })
@@ -747,12 +751,19 @@ pub enum Operator {
 // CALL// myFunction(X)
 // )
 
+// -g:func()
+// -((g:func)())
+//
+// x[1]()
+// ((x)[1])()
+
 #[derive(Debug, PartialEq, PartialOrd, Default)]
 pub enum Precedence {
     #[default]
     Lowest,
-    Colon,
     Equals,
+    Or,
+    And,
     Ternary,
     LessGreater,
     StringConcat,
@@ -764,6 +775,9 @@ pub enum Precedence {
     Call,
     Index,
     Dot,
+
+    // g:something, x[1 : 2], x[1 :]
+    Colon,
 }
 
 // The parseIdentifier method doesn’t do a lot. It only returns a *ast.Identifier with the current
@@ -915,7 +929,10 @@ mod prefix_expr {
     }
 
     pub fn parse_prefix_colon(parser: &mut Parser) -> Result<Expression> {
-        todo!("[Colon] I don't think we ever get this in reality?");
+        todo!(
+            "[Colon] I don't think we ever get this in reality? {:#?}",
+            parser
+        );
     }
 
     pub fn parse_prefix_spaced_colon(
@@ -1067,6 +1084,7 @@ mod infix_expr {
 
         // Attempt to determine if current val is => g:var, w:something, etc.
         // TODO: Can i get rid of this clone?
+        info!(left=?left);
         if let Expression::Identifier(ident) = (*left).clone() {
             let valid_scope: Result<VimScope> = ident.try_into();
             if let Ok(scope) = valid_scope {
@@ -1146,7 +1164,8 @@ impl IndexType {
         let (colon, left) = match parser.current_token.kind {
             TokenKind::Colon | TokenKind::SpacedColon => (parser.pop(), None),
             _ => {
-                let left = parser.parse_expression(Precedence::Colon)?;
+                let left = parser.parse_expression(Precedence::Lowest)?;
+                info!(left = ?left, "[IndexType]");
                 if let Expression::Slice(slice) = left {
                     return Ok(IndexType::Slice(slice));
                 }
@@ -1158,7 +1177,6 @@ impl IndexType {
 
                 // Slice { -1, ... }
                 // Negative { Slice ... }
-                info!(parser=?parser, left=?left);
                 let colon = parser.next_token();
                 anyhow::ensure!(
                     colon.kind.is_colon(),
@@ -1243,7 +1261,6 @@ impl Parser {
         while peek_token.kind.is_whitespace() {
             peek_index += 1;
             peek_token = self.peek_n(peek_index);
-            info!(peek_token=?peek_token);
 
             if peek_token.kind.is_eof() {
                 break;
@@ -1261,64 +1278,6 @@ impl Parser {
     fn current_precedence(&self) -> Precedence {
         self.get_precedence(&self.current_token.kind)
             .unwrap_or_default()
-    }
-
-    fn get_precedence(&self, kind: &TokenKind) -> Option<Precedence> {
-        Some(match kind {
-            TokenKind::Plus | TokenKind::Minus => Precedence::Sum,
-            TokenKind::Div | TokenKind::Mul => Precedence::Product,
-            TokenKind::Percent => Precedence::Modulo,
-            TokenKind::StringConcat => Precedence::StringConcat,
-            TokenKind::LeftParen => Precedence::Call,
-            TokenKind::LeftBracket => Precedence::Index,
-            TokenKind::Colon => Precedence::Colon,
-            TokenKind::Comma => Precedence::Lowest,
-            TokenKind::SpacedColon => Precedence::Lowest,
-            TokenKind::Or | TokenKind::And => Precedence::Equals,
-            TokenKind::Dot => Precedence::Dot,
-            TokenKind::MethodArrow => Precedence::MethodCall,
-            TokenKind::EqualTo
-            | TokenKind::EqualToIns
-            | TokenKind::NotEqualTo
-            | TokenKind::NotEqualToIns
-            | TokenKind::LessThan
-            | TokenKind::LessThanIns
-            | TokenKind::LessThanOrEqual
-            | TokenKind::LessThanOrEqualIns
-            | TokenKind::GreaterThan
-            | TokenKind::GreaterThanIns
-            | TokenKind::GreaterThanOrEqual
-            | TokenKind::GreaterThanOrEqualIns
-            | TokenKind::RegexpMatches
-            | TokenKind::RegexpMatchesIns
-            | TokenKind::NotRegexpMatches
-            | TokenKind::NotRegexpMatchesIns
-            | TokenKind::Is
-            | TokenKind::IsInsensitive
-            | TokenKind::IsNot
-            | TokenKind::IsNotInsensitive => Precedence::LessGreater,
-            TokenKind::RightBracket
-            | TokenKind::RightBrace
-            | TokenKind::RightParen => Precedence::Lowest,
-            TokenKind::EndOfLine | TokenKind::EndOfFile => Precedence::Lowest,
-            // We have to check new lines to see if we need to handle anything there.
-            //  I'm not sure this is 100% great, but we'll leave it this way for now.
-            TokenKind::Identifier | TokenKind::Comment => Precedence::Lowest,
-
-            // TODO: Not confident that this is the right level
-            TokenKind::AngleLeft => Precedence::Lowest,
-            TokenKind::Equal
-            | TokenKind::PlusEquals
-            | TokenKind::MinusEquals
-            | TokenKind::MulEquals
-            | TokenKind::DivEquals
-            | TokenKind::StringConcatEquals => Precedence::Lowest,
-            TokenKind::QuestionMark => Precedence::Ternary,
-
-            _ => {
-                panic!("Unexpected precendence kind: {:?} // {:#?}", kind, self)
-            }
-        })
     }
 
     fn get_prefix_fn(&self) -> Option<PrefixFn> {
@@ -1342,6 +1301,51 @@ impl Parser {
             | TokenKind::Percent => prefix_expr::parse_prefix_operator,
             _ => return None,
         }))
+    }
+
+    fn get_precedence(&self, kind: &TokenKind) -> Option<Precedence> {
+        Some(match kind {
+            TokenKind::Plus | TokenKind::Minus => Precedence::Sum,
+            TokenKind::Div | TokenKind::Mul => Precedence::Product,
+            TokenKind::Or => Precedence::Or,
+            TokenKind::And => Precedence::And,
+            TokenKind::Dot => Precedence::Dot,
+            TokenKind::Percent => Precedence::Modulo,
+            TokenKind::StringConcat => Precedence::StringConcat,
+            TokenKind::LeftParen => Precedence::Call,
+            TokenKind::LeftBracket => Precedence::Index,
+            TokenKind::Colon => Precedence::Colon,
+            TokenKind::Comma => Precedence::Lowest,
+            TokenKind::MethodArrow => Precedence::MethodCall,
+            t if t.is_comparison() => Precedence::LessGreater,
+            TokenKind::RightBracket
+            | TokenKind::RightBrace
+            | TokenKind::RightParen => Precedence::Lowest,
+            TokenKind::EndOfLine | TokenKind::EndOfFile => Precedence::Lowest,
+
+            // We have to check new lines to see if we need to handle anything there.
+            //  I'm not sure this is 100% great, but we'll leave it this way for now.
+            TokenKind::Identifier | TokenKind::Comment => Precedence::Lowest,
+
+            // TODO: Not confident that this is the right level
+            TokenKind::AngleLeft => Precedence::Lowest,
+            TokenKind::Equal
+            | TokenKind::PlusEquals
+            | TokenKind::MinusEquals
+            | TokenKind::MulEquals
+            | TokenKind::DivEquals
+            | TokenKind::StringConcatEquals => Precedence::Lowest,
+            TokenKind::QuestionMark => Precedence::Ternary,
+
+            TokenKind::SpacedColon => {
+                // panic!("Should not received spaced colon here: {:#?}", self)
+                Precedence::Lowest
+            }
+
+            _ => {
+                panic!("Unexpected precendence kind: {:?} // {:#?}", kind, self)
+            }
+        })
     }
 
     fn get_infix_fn(&mut self) -> Option<InfixFn> {
@@ -1615,6 +1619,8 @@ impl Parser {
                         return Ok(EchoCommand::parse(self)?);
                     } else if self.command_match("call") {
                         return Ok(CallCommand::parse(self)?);
+                    } else if self.command_match("defer") {
+                        return Ok(DeferCommand::parse(self)?);
                     } else if self.command_match("def") {
                         return Ok(DefCommand::parse(self)?);
                     } else if self.command_match("return") {
@@ -1747,18 +1753,12 @@ impl Parser {
         while self.peek_non_whitespace().kind != close_kind {
             self.next_real_token();
             elements.push(KeyValue::parse(self)?);
-            info!("PARSER:\n{:#?}", self);
         }
 
         if self.peek_token.kind != close_kind {
             self.skip_peeked_whitespace();
         }
 
-        // let result_kind = close_kind.clone();
-        //     .or_else(|_| {
-        //         self.skip_whitespace();
-        //         self.ensure_peek(result_kind)
-        // })
         self.ensure_peek(close_kind)
             .expect(&format!("close_kind: {:#?}", self));
 
@@ -1811,7 +1811,7 @@ pub fn new_parser(lexer: Lexer) -> Parser {
     Parser::new(lexer)
 }
 
-fn setup_trace() {
+pub fn setup_trace() {
     static INSTANCE: OnceCell<()> = OnceCell::new();
     INSTANCE.get_or_init(|| {
         tracing_subscriber::fmt()

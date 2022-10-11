@@ -4,10 +4,10 @@ use lexer::new_lexer;
 use parser::{
     self, new_parser, ArrayLiteral, AssignStatement, AugroupCommand,
     AutocmdCommand, Body, BreakCommand, CallCommand, CallExpression,
-    ContinueCommand, DeclCommand, DefCommand, DictAccess, DictLiteral,
-    EchoCommand, ElseCommand, ElseIfCommand, ExCommand, Expandable,
-    ExportCommand, Expression, ForCommand, GroupedExpression, Heredoc,
-    Identifier, IfCommand, ImportCommand, IndexExpression, IndexType,
+    ContinueCommand, DeclCommand, DefCommand, DeferCommand, DictAccess,
+    DictLiteral, EchoCommand, ElseCommand, ElseIfCommand, ExCommand,
+    Expandable, ExportCommand, Expression, ForCommand, GroupedExpression,
+    Heredoc, Identifier, IfCommand, ImportCommand, IndexExpression, IndexType,
     InfixExpression, InnerType, Lambda, Literal, MethodCall, MutationStatement,
     PrefixExpression, RawIdentifier, Register, ReturnCommand, ScopedIdentifier,
     SharedCommand, Signature, StatementCommand, Ternary, TryCommand, Type,
@@ -38,6 +38,18 @@ impl State {
         self.scopes.len() == 1
     }
 
+    pub fn push_defer(&mut self) {
+        let s = self
+            .scopes
+            .iter_mut()
+            .rev()
+            .filter(|s| s.kind == ScopeKind::Function)
+            .next()
+            .unwrap();
+
+        s.deferred += 1
+    }
+
     pub fn find_relevant_scope<F>(&self, filter: F) -> Option<&Scope>
     where
         F: Fn(&&Scope) -> bool,
@@ -45,14 +57,13 @@ impl State {
         self.scopes.iter().rev().filter(filter).next()
     }
 
-    fn with_scope<F, T>(&mut self, kind: ScopeKind, f: F) -> T
+    fn with_scope<F, T>(&mut self, kind: ScopeKind, f: F) -> (T, Scope)
     where
         F: Fn(&mut State) -> T,
     {
-        self.scopes.push(Scope { kind });
+        self.scopes.push(Scope::new(kind));
         let res = f(self);
-        self.scopes.pop();
-        res
+        (res, self.scopes.pop().expect("balanced scopes"))
     }
 }
 
@@ -92,9 +103,14 @@ pub enum ScopeKind {
 #[derive(Debug)]
 pub struct Scope {
     kind: ScopeKind,
+    deferred: usize,
 }
 
 impl Scope {
+    pub fn new(kind: ScopeKind) -> Self {
+        Self { kind, deferred: 0 }
+    }
+
     /// Whether the current scope contains any unique behavior for embedded continues
     pub fn has_continue(&self) -> bool {
         match self.kind {
@@ -143,8 +159,20 @@ impl Generate for ExCommand {
             ExCommand::While(w) => w.gen(state),
             ExCommand::Break(b) => b.gen(state),
             ExCommand::Continue(c) => c.gen(state),
+            ExCommand::Defer(defer) => defer.gen(state),
             _ => todo!("Have not yet handled: {:?}", self),
         }
+    }
+}
+
+impl Generate for DeferCommand {
+    fn gen(&self, state: &mut State) -> String {
+        state.push_defer();
+
+        let expr = self.call.gen(state);
+
+        // format!("-- deferred expression")
+        format!("table.insert(nvim9_deferred, 1, function() {expr} end)")
     }
 }
 
@@ -174,9 +202,10 @@ impl Generate for BreakCommand {
 impl Generate for WhileCommand {
     fn gen(&self, state: &mut State) -> String {
         let has_continue = continue_exists_in_scope(&self.body);
-        let body = state.with_scope(ScopeKind::While { has_continue }, |s| {
-            self.body.gen(s)
-        });
+        let (body, _) = state
+            .with_scope(ScopeKind::While { has_continue }, |s| {
+                self.body.gen(s)
+            });
 
         if has_continue {
             let condition = self.condition.gen(state);
@@ -230,7 +259,7 @@ impl Generate for ForCommand {
     // 3 => return
     fn gen(&self, state: &mut State) -> String {
         let has_continue = continue_exists_in_scope(&self.body);
-        let body = state
+        let (body, _) = state
             .with_scope(ScopeKind::For { has_continue }, |s| self.body.gen(s));
 
         let expr = self.for_expr.gen(state);
@@ -317,12 +346,19 @@ fn make_user_command_arg(state: &State) -> String {
     format!("__vim9_arg_{}", state.command_depth)
 }
 
+fn to_str_or_nil(s: &Option<String>) -> String {
+    if let Some(complete) = s {
+        format!("'{}'", complete)
+    } else {
+        "nil".to_string()
+    }
+}
+
 impl Generate for UserCommand {
     fn gen(&self, state: &mut State) -> String {
-        // TODO:
-        // TODO: have not yet handled all the things here
         state.command_depth += 1;
 
+        let complete = to_str_or_nil(&self.command_complete);
         let result = format!(
             r#"
             vim.api.nvim_create_user_command(
@@ -333,6 +369,7 @@ impl Generate for UserCommand {
                 {{
                      nargs = '{}',
                      bang = {},
+                     complete = {complete},
                 }}
             )"#,
             self.name,
@@ -462,9 +499,12 @@ impl Generate for ReturnCommand {
 impl Generate for DefCommand {
     fn gen(&self, state: &mut State) -> String {
         let name = self.name.gen(state);
-        let body = state.with_scope(ScopeKind::Function, |s| self.body.gen(s));
+        let (body, scope) =
+            state.with_scope(ScopeKind::Function, |s| self.body.gen(s));
 
         if state.is_test && name.starts_with("Test") {
+            assert!(scope.deferred == 0, "have not handled deferred in tests");
+
             format!(
                 r#"
                     it("{name}", function()
@@ -485,25 +525,47 @@ impl Generate for DefCommand {
 
             let local = if state.is_top_level() { "" } else { "local" };
 
-            // TODO: If this command follows certain patterns,
-            // we will also need to define a vimscript function,
-            // so that this function is available.
-            //
-            // this could be something just like:
-            // function <NAME>(...)
-            //   return luaeval('...', ...)
-            // endfunction
-            //
-            // but we haven't done this part yet.
-            // This is a "must-have" aspect of what we're doing.
-            format!(
-                r#"
-                {local} {name} = function({signature})
-                    {default_statements}
-                    {body}
-                end
+            if scope.deferred > 0 {
+                // TODO: Should probably handle errors in default statements or body
+                format!(
+                    r#"
+                    {local} {name} = function({signature})
+                        local nvim9_deferred = {{}}
+
+                        {default_statements}
+                        local _, ret = pcall(function()
+                            {body}
+                        end)
+
+                        for _, nvim9_defer in ipairs(nvim9_deferred) do
+                            pcall(nvim9_defer)
+                        end
+
+                        return ret
+                    end
+                    "#
+                )
+            } else {
+                // TODO: If this command follows certain patterns,
+                // we will also need to define a vimscript function,
+                // so that this function is available.
+                //
+                // this could be something just like:
+                // function <NAME>(...)
+                //   return luaeval('...', ...)
+                // endfunction
+                //
+                // but we haven't done this part yet.
+                // This is a "must-have" aspect of what we're doing.
+                format!(
+                    r#"
+                    {local} {name} = function({signature})
+                        {default_statements}
+                        {body}
+                    end
                 "#,
-            )
+                )
+            }
         }
     }
 }
@@ -713,6 +775,7 @@ impl Generate for Identifier {
             Identifier::Raw(raw) => raw.gen(state),
             Identifier::Scope(scoped) => scoped.gen(state),
             Identifier::Unpacked(_) => todo!(),
+            Identifier::Ellipsis => "...".to_string(),
         }
     }
 }
@@ -1111,6 +1174,7 @@ fn toplevel_id(s: &mut State, command: &ExCommand) -> Option<String> {
         ExCommand::EndOfFile => None,
         ExCommand::Comment(_) => None,
         ExCommand::NoOp(_) => None,
+        ExCommand::Defer(_) => None,
     }
 }
 
@@ -1119,9 +1183,7 @@ pub fn eval(program: parser::Program, is_test: bool) -> String {
         augroup: None,
         command_depth: 0,
         method_depth: 0,
-        scopes: vec![Scope {
-            kind: ScopeKind::TopLevel,
-        }],
+        scopes: vec![Scope::new(ScopeKind::TopLevel)],
         is_test,
     };
 
@@ -1233,6 +1295,7 @@ mod test {
     busted!(busted_megamethods, "../testdata/busted/megamethods.vim");
     busted!(busted_shared, "../testdata/busted/shared.vim");
     busted!(busted_loops, "../testdata/busted/loops.vim");
+    busted!(busted_defer, "../testdata/busted/defer.vim");
     // busted!(busted_vimvars, "../testdata/busted/vimvars.vim");
 
     snapshot!(test_expr, "../testdata/snapshots/expr.vim");

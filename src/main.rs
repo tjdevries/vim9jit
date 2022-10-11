@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, path::Path};
+use std::path::Path;
 
 use anyhow::Result;
 use clap::Parser;
@@ -55,6 +55,7 @@ fn gen_directory(src: &Path, gen: &Path, subdir: &str) -> Result<()> {
 }
 
 fn main() -> Result<()> {
+    parser::setup_trace();
     let args = Args::parse();
     println!("dir: {}", args.dir);
 

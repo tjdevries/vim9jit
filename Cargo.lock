@@ -919,6 +919,7 @@ dependencies = [
  "anyhow",
  "clap 4.0.10",
  "vim9-gen",
+ "vim9-parser",
 ]
 
 [[package]]

@@ -9,6 +9,7 @@ edition = "2021"
 anyhow = "1.0.65"
 clap = { version = "4.0.10", features = ["derive"] }
 gen = { path = "crates/vim9-gen", package = "vim9-gen" }
+parser = { path = "crates/vim9-parser", package = "vim9-parser" }
 
 [dev-dependencies]
 

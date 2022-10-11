@@ -23,6 +23,14 @@ def Test_right()
   assert_equal([1, 2], l[: 1])
 enddef
 
+def Test_index_with_prefix_spaced()
+  assert_equal([3], l[-1 : ])
+enddef
+
+def Test_index_with_prefix()
+  assert_equal([3], l[-1 :])
+enddef
+
 def Test_string()
   var foo = "abcd"
   assert_equal(foo[: -2], "abc")

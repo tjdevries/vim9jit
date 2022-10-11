@@ -16,6 +16,7 @@ fn expr_is_func_mutable(arg: &Expression) -> bool {
             Identifier::Raw(_) => true,
             Identifier::Scope(_) => true,
             Identifier::Unpacked(_) => todo!(),
+            Identifier::Ellipsis => true,
         },
         Expression::Grouped(_) => todo!(),
         Expression::VimOption(_) => todo!(),
@@ -77,14 +78,17 @@ pub fn mutates(
                     modified_args: HashSet::from_iter(vec![0].into_iter()),
                 }),
 
-                "reverse" | "sort" | "filter" => Some(VimFuncMutability {
-                    returned: Some(0),
-                    modified_args: HashSet::from_iter(vec![0].into_iter()),
-                }),
+                "extend" | "reverse" | "sort" | "filter" => {
+                    Some(VimFuncMutability {
+                        returned: Some(0),
+                        modified_args: HashSet::from_iter(vec![0].into_iter()),
+                    })
+                }
                 _ => None,
             },
             Identifier::Scope(_) => todo!(),
             Identifier::Unpacked(_) => None,
+            Identifier::Ellipsis => None,
         },
         None => None,
     }
@@ -155,6 +159,16 @@ impl VimFunc {
             Some(idx) => idx.to_string(),
             None => "nil".to_string(),
         };
+
+        let x = self
+            .args
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, expr)| match expr {
+                Expression::Identifier(id) => Some((idx, id)),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
 
         generate_mutable_fn_call(&name, &args, &replaced)
     }

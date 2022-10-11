@@ -23,7 +23,7 @@ describe("filename", function()
     NVIM9.fn["assert_equal"](true, bool5)
     local bool6 = NVIM9.convert.decl_bool(NVIM9.ops["And"](0, 1))
     NVIM9.fn["assert_equal"](false, bool6)
-    local bool7 = NVIM9.convert.decl_bool(NVIM9.ops["And"](NVIM9.ops["Or"](0, 1), true))
+    local bool7 = NVIM9.convert.decl_bool(NVIM9.ops["Or"](0, NVIM9.ops["And"](1, true)))
     NVIM9.fn["assert_equal"](true, bool7)
 
     -- # var lines =<< trim END

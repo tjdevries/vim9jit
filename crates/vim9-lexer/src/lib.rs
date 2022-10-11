@@ -72,6 +72,7 @@ pub enum TokenKind {
     True,
     False,
     Null,
+    Ellipsis,
 
     // Operators
     Equal,
@@ -169,6 +170,32 @@ impl TokenKind {
 
     pub fn is_eof(&self) -> bool {
         *self == Self::EndOfFile
+    }
+
+    pub fn is_comparison(&self) -> bool {
+        matches!(
+            self,
+            TokenKind::EqualTo
+                | TokenKind::EqualToIns
+                | TokenKind::NotEqualTo
+                | TokenKind::NotEqualToIns
+                | TokenKind::LessThan
+                | TokenKind::LessThanIns
+                | TokenKind::LessThanOrEqual
+                | TokenKind::LessThanOrEqualIns
+                | TokenKind::GreaterThan
+                | TokenKind::GreaterThanIns
+                | TokenKind::GreaterThanOrEqual
+                | TokenKind::GreaterThanOrEqualIns
+                | TokenKind::RegexpMatches
+                | TokenKind::RegexpMatchesIns
+                | TokenKind::NotRegexpMatches
+                | TokenKind::NotRegexpMatchesIns
+                | TokenKind::Is
+                | TokenKind::IsInsensitive
+                | TokenKind::IsNot
+                | TokenKind::IsNotInsensitive
+        )
     }
 }
 
@@ -555,11 +582,7 @@ impl Lexer {
                         }
                     }
 
-                    ':' => self.if_peek(
-                        ' ',
-                        TokenKind::Colon,
-                        TokenKind::SpacedColon,
-                    ),
+                    ':' => self.handle_colon(),
                     '?' => literal!(QuestionMark),
                     '^' => literal!(Caret),
                     '(' => literal!(LeftParen),
@@ -578,6 +601,7 @@ impl Lexer {
                             *ch == '\n'
                         })
                         .expect(&format!("{:#?}", self)),
+
                     '"' => self
                         .read_until('"', TokenKind::DoubleQuoteString, |ch| {
                             *ch == '\n'
@@ -758,8 +782,17 @@ impl Lexer {
 
         match peeked {
             ('.', '=') => self.read_three(TokenKind::StringConcatEquals),
+            ('.', '.') => self.read_three(TokenKind::Ellipsis),
             ('.', _) => self.read_two(TokenKind::StringConcat),
             (_, _) => self.read_one(TokenKind::Dot),
+        }
+    }
+
+    fn handle_colon(&mut self) -> Token {
+        match self.peek_char().unwrap() {
+            ' ' => self.read_two(TokenKind::SpacedColon),
+            ']' => self.read_one(TokenKind::SpacedColon),
+            _ => self.read_one(TokenKind::Colon),
         }
     }
 }

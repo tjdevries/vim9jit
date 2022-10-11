@@ -1,16 +1,46 @@
 use anyhow::Result;
-use tracing::info;
 use vim9_lexer::{Token, TokenKind};
 
 use crate::{
-    Body, ExCommand, Expression, Heredoc, Identifier, Parser, Precedence,
-    Signature, Type, VimString,
+    Body, CallExpression, ExCommand, Expression, Heredoc, Identifier, Parser,
+    Precedence, Signature, Type,
 };
 
 pub mod cmd_auto;
 pub mod cmd_if;
 pub mod cmd_try;
 pub mod cmd_user;
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct DeferCommand {
+    defer_: Token,
+    pub call: CallExpression,
+}
+
+impl DeferCommand {
+    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+        Ok(ExCommand::Defer(DeferCommand {
+            defer_: parser.expect_identifier_with_text("defer")?,
+            call: {
+                // Parse up to the point it would be a call expr
+                let base = Expression::parse(parser, Precedence::Call)
+                    .expect("base")
+                    .into();
+
+                // Create the call expr from the first base expression
+                let right =
+                    CallExpression::parse(parser, base).expect("call").into();
+
+                // Closing on right paren, DO NOT advance
+                parser
+                    .expect_token(TokenKind::RightParen)
+                    .expect("rightparen");
+
+                right
+            },
+        }))
+    }
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum ImportCommand {
@@ -197,9 +227,7 @@ impl VarCommand {
         let var = parser.expect_token(TokenKind::Identifier)?;
         anyhow::ensure!(matches!(var.text.as_str(), "var" | "const"));
 
-        info!(var=?var, cur=?parser.current_token);
         let name = Identifier::parse(parser)?;
-        info!(name=?name, cur=?parser.current_token);
         let ty = match parser.current_token.kind {
             TokenKind::Equal => None,
             TokenKind::HeredocOperator => None,
