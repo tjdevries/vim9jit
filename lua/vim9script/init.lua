@@ -12,6 +12,8 @@ M.heredoc = require "vim9script.heredoc"
 M.fn = require "vim9script.fn"
 M.import = require "vim9script.import"
 
+M.bool = M.convert.to_vim_bool
+
 M.ternary = function(cond, if_true, if_false)
   if cond then
     if type(if_true) == "function" then
@@ -28,8 +30,6 @@ M.ternary = function(cond, if_true, if_false)
   end
 end
 
---- fn_mut is deprecated
----@deprecated
 M.fn_mut = function(name, args, info)
   local result = vim.fn["vim9script#fn"](name, args)
   for idx, val in pairs(result[2]) do
@@ -74,6 +74,24 @@ M.index = function(obj, idx)
 end
 
 M.slice = function(obj, start, finish)
+  if start == nil then
+    start = 0
+  end
+
+  if start < 0 then
+    start = #obj + start
+  end
+  assert(type(start) == "number")
+
+  if finish == nil then
+    finish = #obj
+  end
+
+  if finish < 0 then
+    finish = #obj + finish
+  end
+  assert(type(finish) == "number")
+
   local slicer
   if vim.tbl_islist(obj) then
     slicer = vim.list_slice
@@ -83,24 +101,9 @@ M.slice = function(obj, start, finish)
     error("invalid type for slicing: " .. vim.inspect(obj))
   end
 
-  if start == nil then
-    start = 0
-  end
-
-  if start < 0 then
-    start = #obj - start
-  end
-  assert(type(start) == "number")
-
-  if finish == nil then
-    finish = #obj
-  end
-
-  if finish < 0 then
-    finish = #obj - finish
-  end
-  assert(type(finish) == "number")
-
+  print("OBJ:", obj)
+  print("START", start)
+  print("FINISH", finish)
   return slicer(obj, start + 1, finish + 1)
 end
 
@@ -134,5 +137,10 @@ M.iter = function(expr)
     return pairs(expr)
   end
 end
+
+M.ITER_DEFAULT = 0
+M.ITER_CONTINUE = 1
+M.ITER_BREAK = 2
+M.ITER_RETURN = 3
 
 return M

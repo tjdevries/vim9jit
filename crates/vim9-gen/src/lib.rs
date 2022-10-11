@@ -30,17 +30,17 @@ pub struct State {
     // TODO: We could modify the state as we are generating code.
     //  As we generate the code and notice certain identifiers are certain
     //  types, we can use that to do *some* optimizations
-    pub scopes: Vec<VimscriptScope>,
+    pub scopes: Vec<Scope>,
 }
 
 impl State {
     fn is_top_level(&self) -> bool {
-        self.scopes.len() == 0
+        self.scopes.len() == 1
     }
 
-    pub fn find_relevant_scope<F>(&self, filter: F) -> Option<&VimscriptScope>
+    pub fn find_relevant_scope<F>(&self, filter: F) -> Option<&Scope>
     where
-        F: Fn(&&VimscriptScope) -> bool,
+        F: Fn(&&Scope) -> bool,
     {
         self.scopes.iter().rev().filter(filter).next()
     }
@@ -49,7 +49,7 @@ impl State {
     where
         F: Fn(&mut State) -> T,
     {
-        self.scopes.push(VimscriptScope { kind });
+        self.scopes.push(Scope { kind });
         let res = f(self);
         self.scopes.pop();
         res
@@ -68,17 +68,41 @@ macro_rules! find_scope {
     }};
 }
 
+macro_rules! scope_or_empty {
+    ($state:ident, $m:pat) => {{
+        use ScopeKind::*;
+
+        let scope = $state.find_relevant_scope(|s| matches!(s.kind, $m));
+        match scope {
+            Some(scope) => scope,
+            None => &$state.scopes[0],
+        }
+    }};
+}
+
 #[derive(PartialEq, Eq, Debug)]
 pub enum ScopeKind {
+    TopLevel,
     Function,
-    While,
-    For,
+    While { has_continue: bool },
+    For { has_continue: bool },
     If,
 }
 
 #[derive(Debug)]
-pub struct VimscriptScope {
+pub struct Scope {
     kind: ScopeKind,
+}
+
+impl Scope {
+    /// Whether the current scope contains any unique behavior for embedded continues
+    pub fn has_continue(&self) -> bool {
+        match self.kind {
+            ScopeKind::While { has_continue } => has_continue,
+            ScopeKind::For { has_continue } => has_continue,
+            _ => false,
+        }
+    }
 }
 
 pub trait Generate {
@@ -126,26 +150,35 @@ impl Generate for ExCommand {
 
 impl Generate for ContinueCommand {
     fn gen(&self, state: &mut State) -> String {
-        let scope = find_scope!(state, Function | While | For);
+        let scope = find_scope!(state, Function | While { .. } | For { .. });
         assert!(scope.kind != ScopeKind::Function, "continue: While/For");
+        assert!(scope.has_continue(), "must have continue...");
 
-        format!("return true")
+        format!("return NVIM9.ITER_CONTINUE")
     }
 }
 
 impl Generate for BreakCommand {
     fn gen(&self, state: &mut State) -> String {
-        let scope = find_scope!(state, Function | While | For);
+        let scope = find_scope!(state, Function | While { .. } | For { .. });
         assert!(scope.kind != ScopeKind::Function, "continue: While/For");
 
-        format!("break")
+        if scope.has_continue() {
+            format!("return NVIM9.ITER_BREAK")
+        } else {
+            format!("break")
+        }
     }
 }
 
 impl Generate for WhileCommand {
     fn gen(&self, state: &mut State) -> String {
-        if continue_exists_in_scope(&self.body) {
-            let body = state.with_scope(ScopeKind::While, |s| self.body.gen(s));
+        let has_continue = continue_exists_in_scope(&self.body);
+        let body = state.with_scope(ScopeKind::While { has_continue }, |s| {
+            self.body.gen(s)
+        });
+
+        if has_continue {
             let condition = self.condition.gen(state);
             return format!(
                 r#"
@@ -196,36 +229,41 @@ impl Generate for ForCommand {
     // 2 => break
     // 3 => return
     fn gen(&self, state: &mut State) -> String {
-        let body = state.with_scope(ScopeKind::For, |s| self.body.gen(s));
-        if continue_exists_in_scope(&self.body) {
-            let expr = self.for_expr.gen(state);
-            let ident = self.for_identifier.gen(state);
-            return format!(
+        let has_continue = continue_exists_in_scope(&self.body);
+        let body = state
+            .with_scope(ScopeKind::For { has_continue }, |s| self.body.gen(s));
+
+        let expr = self.for_expr.gen(state);
+        let ident = self.for_identifier.gen(state);
+
+        if has_continue {
+            format!(
                 r#"
                     local body = function(_, {ident})
                         {body}
 
-                        return 0
+                        return NVIM9.ITER_DEFAULT
                     end
 
                     for _, {ident} in NVIM9.iter({expr}) do
                         local nvim9_status, nvim9_ret = body(_, {ident})
-                        if nvim9_status == 2 then
+                        if nvim9_status == NVIM9.ITER_BREAK then
                             break
-                        elseif nvim9_status == 3 then
+                        elseif nvim9_status == NVIM9.ITER_RETURN then
                             return nvim9_ret
                         end
                     end
                 "#
-            );
+            )
+        } else {
+            format!(
+                r#"
+                for _, {ident} in NVIM9.iter({expr}) do
+                    {body}
+                end
+            "#,
+            )
         }
-
-        format!(
-            "for _, {} in NVIM9.iter({}) do\n{}\nend\n",
-            self.for_identifier.gen(state),
-            self.for_expr.gen(state),
-            body
-        )
     }
 }
 
@@ -402,9 +440,21 @@ vim.api.nvim_create_autocmd({{ {} }}, {{
 
 impl Generate for ReturnCommand {
     fn gen(&self, state: &mut State) -> String {
-        match &self.expr {
-            Some(expr) => format!("return {}", expr.gen(state)),
-            None => "return".to_string(),
+        let scope =
+            scope_or_empty!(state, Function | While { .. } | For { .. });
+
+        if scope.has_continue() {
+            match &self.expr {
+                Some(expr) => {
+                    format!("return NVIM9.ITER_RETURN, {}", expr.gen(state))
+                }
+                None => "return NVIM9.ITER_RETURN".to_string(),
+            }
+        } else {
+            match &self.expr {
+                Some(expr) => format!("return {}", expr.gen(state)),
+                None => "return".to_string(),
+            }
         }
     }
 }
@@ -412,31 +462,28 @@ impl Generate for ReturnCommand {
 impl Generate for DefCommand {
     fn gen(&self, state: &mut State) -> String {
         let name = self.name.gen(state);
+        let body = state.with_scope(ScopeKind::Function, |s| self.body.gen(s));
 
         if state.is_test && name.starts_with("Test") {
             format!(
                 r#"
-                    it("{}", function()
+                    it("{name}", function()
                        -- Set errors to empty
                        vim.v.errors = {{}}
 
                        -- Actual test
-                       {}
+                       {body}
 
                        -- Assert that errors is still empty
                        assert.are.same({{}}, vim.v.errors)
                     end)
                 "#,
-                name,
-                self.body.gen(state)
             )
         } else {
             let (signature, default_statements) =
                 gen_signature(state, &self.args);
 
             let local = if state.is_top_level() { "" } else { "local" };
-            let body =
-                state.with_scope(ScopeKind::Function, |s| self.body.gen(s));
 
             // TODO: If this command follows certain patterns,
             // we will also need to define a vimscript function,
@@ -570,7 +617,7 @@ impl Generate for IfCommand {
 
         format!(
             r#"
-if {} then
+if NVIM9.bool({}) then
   {}
 {}
 {}
@@ -952,7 +999,20 @@ impl Generate for VimString {
                     })
                     .collect::<String>()
             ),
-            VimString::DoubleQuote(s) => format!("\"{}\"", s),
+            VimString::DoubleQuote(s) => {
+                let mut cs = s.chars();
+                while let Some(ch) = cs.next() {
+                    if ch == '\\' {
+                        if let Some(ch) = cs.next() {
+                            if ch == '<' {
+                                return format!("vim.api.nvim_replace_termcodes(\"{}\", true, true, true)", s);
+                            }
+                        }
+                    }
+                }
+
+                format!("\"{}\"", s)
+            }
         }
     }
 }
@@ -1059,7 +1119,9 @@ pub fn eval(program: parser::Program, is_test: bool) -> String {
         augroup: None,
         command_depth: 0,
         method_depth: 0,
-        scopes: vec![],
+        scopes: vec![Scope {
+            kind: ScopeKind::TopLevel,
+        }],
         is_test,
     };
 

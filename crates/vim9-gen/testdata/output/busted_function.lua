@@ -13,7 +13,7 @@ describe("filename", function()
 
     -- Actual test
 
-    MyCoolFunc = function(x)
+    local MyCoolFunc = function(x)
       x = vim.F.if_nil(x, 5, x)
       return x
     end

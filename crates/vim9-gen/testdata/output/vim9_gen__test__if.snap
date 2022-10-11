@@ -1,13 +1,13 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1004
+assertion_line: 1239
 expression: "generate(contents, false)"
 ---
 local NVIM9 = require("vim9script")
 local __VIM9_MODULE = {}
 -- vim9script
 local x = true
-if x then
+if NVIM9.bool(x) then
   print(x)
 end
 return __VIM9_MODULE

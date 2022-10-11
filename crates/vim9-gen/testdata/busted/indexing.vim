@@ -22,3 +22,8 @@ enddef
 def Test_right()
   assert_equal([1, 2], l[: 1])
 enddef
+
+def Test_string()
+  var foo = "abcd"
+  assert_equal(foo[: -2], "abc")
+enddef

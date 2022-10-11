@@ -35,11 +35,15 @@ ops["LessThanOrEqual"] = function(left, right)
 end
 
 ops["GreaterThan"] = function(left, right)
-  return left < right
+  return left > right
+end
+
+ops["GreaterThanOrEqual"] = function(left, right)
+  return left >= right
 end
 
 ops["RegexpMatches"] = function(left, right)
-  return vim.regex(right):match_str(left)
+  return not not vim.regex(right):match_str(left)
 end
 
 ops["NotRegexpMatches"] = function(left, right)

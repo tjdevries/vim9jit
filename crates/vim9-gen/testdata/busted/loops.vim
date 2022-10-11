@@ -22,6 +22,23 @@ def Test_can_do_for_loop_with_break()
   assert_equal(3, x)
 enddef
 
+def Test_can_do_for_loop_with_break_with_continue()
+  var x = 0
+  for y in [1, 2, 3, 4, 5]
+    x += y
+
+    if y == 2
+      continue
+    endif
+
+    if y == 3
+      break
+    endif
+  endfor
+
+  assert_equal(6, x)
+enddef
+
 def Test_can_do_for_loop_with_continue()
   var x = 0
   for y in [1, 2, 3]

@@ -70,7 +70,12 @@ pub fn mutates(
         Some(ident) => match ident {
             Identifier::Raw(raw) => match raw.name.as_str() {
                 // We have overriden insert
-                "insert" => None,
+                "add" | "insert" => None,
+
+                "remove" => Some(VimFuncMutability {
+                    returned: None,
+                    modified_args: HashSet::from_iter(vec![0].into_iter()),
+                }),
 
                 "reverse" | "sort" | "filter" => Some(VimFuncMutability {
                     returned: Some(0),
