@@ -1,4 +1,5 @@
 use anyhow::Result;
+use tracing::info;
 use vim9_lexer::{Token, TokenKind};
 
 use crate::{
@@ -48,6 +49,7 @@ pub enum ImportCommand {
         import: Token,
         autoload: bool,
         file: String,
+        // Optional `as` qualifier to rename the import locally
         name: Option<Expression>,
     },
     ImportUnpacked {
@@ -74,7 +76,7 @@ impl ImportCommand {
                 from: parser.expect_identifier_with_text("from")?,
                 file: parser.pop().text,
             },
-            TokenKind::Identifier => {
+            TokenKind::Identifier | TokenKind::SingleQuoteString | TokenKind::DoubleQuoteString=> {
                 let autoload = if parser.current_token.text == "autoload" {
                     parser.next_token();
                     true
@@ -86,7 +88,16 @@ impl ImportCommand {
                     import,
                     autoload,
                     file: parser.pop().text,
-                    name: None,
+                    name: {
+                        if parser.current_token.text == "as" {
+                            // pop as
+                            parser.pop();
+
+                            Some(Expression::parse(parser, Precedence::Lowest)?)
+                        } else {
+                            None
+                        }
+                    },
                 }
             }
             _ => unreachable!("{:?}", parser),
@@ -395,9 +406,7 @@ impl EvalCommand {
 #[derive(Debug, PartialEq, Clone)]
 pub struct CallCommand {
     call: Option<Token>,
-
-    // TODO: Turn this into pub expr: Expression
-    pub name: Identifier,
+    pub expr: Expression,
     open: Token,
     pub args: Vec<Expression>,
     close: Token,
@@ -408,12 +417,20 @@ impl CallCommand {
     pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
         Ok(ExCommand::Call(CallCommand {
             call: parser.expect_identifier_with_text("call").ok(),
-            name: Identifier::parse(parser)?,
+            expr: Expression::parse(parser, Precedence::Call)?,
             open: parser.ensure_token(TokenKind::LeftParen)?,
             args: parser.parse_expression_list(TokenKind::RightParen, true)?,
             close: parser.expect_token(TokenKind::RightParen)?,
             eol: parser.expect_eol()?,
         }))
+    }
+
+    pub fn matches(parser: &mut Parser) -> bool {
+        parser.line_contains_kind(TokenKind::LeftParen)
+            && parser.line_contains_kind(TokenKind::RightParen)
+            && !parser.line_contains_any(|t| {
+                t.kind.is_assignment() || t.kind == TokenKind::MethodArrow
+            })
     }
 }
 

@@ -12,3 +12,9 @@ var parened = (((x + y)))
 var if = true
 var var = if
 echo var
+
+var x = v:false
+echo x
+
+command! -nargs=0 -bar LspGotoDefinition lsp.GotoDefinition(v:false)
+# command! -nargs=0 -bar LspGotoDefinition lsp.GotoDefinition(v:false)

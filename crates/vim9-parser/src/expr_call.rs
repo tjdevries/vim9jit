@@ -35,7 +35,7 @@ impl CallExpression {
 impl Into<CallExpression> for &CallCommand {
     fn into(self) -> CallExpression {
         CallExpression {
-            expr: Box::new(Expression::Identifier(self.name.clone())),
+            expr: self.expr.clone().into(),
             open: Token::fake(),
             args: self.args.clone(),
             close: Token::fake(),

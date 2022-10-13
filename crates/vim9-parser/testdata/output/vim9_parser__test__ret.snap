@@ -1,6 +1,6 @@
 ---
-source: crates/vim9-parser/src/lib.rs
-assertion_line: 1550
+source: crates/vim9-parser/src/test.rs
+assertion_line: 22
 expression: snapshot_parsing(contents)
 ---
 [
@@ -53,7 +53,9 @@ expression: snapshot_parsing(contents)
     Call(
         CallCommand {
             call: None,
-            name: Raw(MyFunc),
+            expr: Identifier(
+                Raw(MyFunc),
+            ),
             open: Token(LeftParen, "(", (6,6)->(6,7)),
             args: [],
             close: Token(RightParen, ")", (6,7)->(6,8)),

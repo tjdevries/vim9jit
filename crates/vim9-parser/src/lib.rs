@@ -385,6 +385,15 @@ impl TryInto<VimScope> for Identifier {
 }
 
 impl Identifier {
+    pub fn is_valid_local(&self) -> bool {
+        match self {
+            Identifier::Raw(_) => true,
+            Identifier::Scope(_) => false,
+            Identifier::Unpacked(_) => todo!(),
+            Identifier::Ellipsis => false,
+        }
+    }
+
     fn parse_in_expression(parser: &mut Parser) -> Result<Identifier> {
         if parser.current_token.kind == TokenKind::LeftBracket {
             return Ok(Identifier::Unpacked(UnpackIdentifier {
@@ -440,7 +449,7 @@ impl Identifier {
 #[derive(PartialEq, Clone)]
 pub struct UnpackIdentifier {
     open: Token,
-    identifiers: Vec<Identifier>,
+    pub identifiers: Vec<Identifier>,
     close: Token,
 }
 
@@ -615,6 +624,24 @@ impl KeyValue {
                 TokenKind::Identifier => {
                     VimKey::Literal(parser.pop().try_into()?)
                 }
+                TokenKind::SingleQuoteString => {
+                    VimKey::Literal(Literal { token: parser.pop() })
+                }
+                TokenKind::LeftBracket => {
+                    // Consume left bracket, we do not want this to parser
+                    // as an array literal.
+                    parser.next_token();
+
+                    let expr = VimKey::Expression(Expression::parse(
+                        parser,
+                        Precedence::Lowest,
+                    )?);
+
+                    // Consume right token, to do the matching right bracket
+                    parser.expect_token(TokenKind::RightBracket)?;
+
+                    expr
+                }
                 _ => unimplemented!("{:?}", parser),
             },
             colon: parser.expect_token(TokenKind::SpacedColon)?,
@@ -630,6 +657,7 @@ impl KeyValue {
 #[derive(Debug, PartialEq, Clone)]
 pub enum VimKey {
     Literal(Literal),
+    Expression(Expression),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -800,6 +828,8 @@ impl Expression {
 pub enum VimString {
     SingleQuote(String),
     DoubleQuote(String),
+    Interpolated(String),
+    InterpolatedLit(String),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -871,6 +901,22 @@ mod prefix_expr {
 
     pub fn parse_double_string(parser: &mut Parser) -> Result<Expression> {
         Ok(Expression::String(VimString::DoubleQuote(
+            parser.current_token.text.clone(),
+        )))
+    }
+
+    pub fn parse_interpolated_string(
+        parser: &mut Parser,
+    ) -> Result<Expression> {
+        Ok(Expression::String(VimString::InterpolatedLit(
+            parser.current_token.text.clone(),
+        )))
+    }
+
+    pub fn parse_interpolated_literal_string(
+        parser: &mut Parser,
+    ) -> Result<Expression> {
+        Ok(Expression::String(VimString::Interpolated(
             parser.current_token.text.clone(),
         )))
     }
@@ -1035,7 +1081,7 @@ mod infix_expr {
     pub fn parse_method_call(
         parser: &mut Parser,
         left: Box<Expression>,
-    ) -> Result<Expression> {
+        ) -> Result<Expression> {
         Ok(Expression::MethodCall(MethodCall {
             left,
             tok: {
@@ -1045,17 +1091,17 @@ mod infix_expr {
             right: {
                 // Parse up to the point it would be a call expr
                 let base = Expression::parse(parser, Precedence::Call)
-                    .expect("base")
-                    .into();
+                .expect("base")
+                .into();
 
                 // Create the call expr from the first base expression
                 let right =
-                    CallExpression::parse(parser, base).expect("call").into();
+                CallExpression::parse(parser, base).expect("call").into();
 
                 // Closing on right paren, DO NOT advance
                 parser
-                    .ensure_token(TokenKind::RightParen)
-                    .expect("rightparen");
+                .ensure_token(TokenKind::RightParen)
+                .expect("rightparen");
 
                 right
             },
@@ -1084,7 +1130,6 @@ mod infix_expr {
 
         // Attempt to determine if current val is => g:var, w:something, etc.
         // TODO: Can i get rid of this clone?
-        info!(left=?left);
         if let Expression::Identifier(ident) = (*left).clone() {
             let valid_scope: Result<VimScope> = ident.try_into();
             if let Ok(scope) = valid_scope {
@@ -1255,6 +1300,25 @@ impl Parser {
         }
     }
 
+    fn line_contains_any<F>(&mut self, f: F) -> bool
+    where
+        F: Fn(&Token) -> bool,
+    {
+        let mut peek_index = 0;
+        loop {
+            let tok = self.peek_n(peek_index);
+            if tok.kind == TokenKind::EndOfLine
+                || tok.kind == TokenKind::EndOfFile
+            {
+                return false;
+            } else if f(&tok) {
+                return true;
+            }
+
+            peek_index += 1
+        }
+    }
+
     fn peek_non_whitespace(&mut self) -> Token {
         let mut peek_index = 1;
         let mut peek_token = self.peek_token.clone();
@@ -1287,6 +1351,12 @@ impl Parser {
             TokenKind::Register => prefix_expr::parse_register,
             TokenKind::DoubleQuoteString => prefix_expr::parse_double_string,
             TokenKind::SingleQuoteString => prefix_expr::parse_single_string,
+            TokenKind::InterpolatedString => {
+                prefix_expr::parse_interpolated_string
+            }
+            TokenKind::InterpolatedLiteralString => {
+                prefix_expr::parse_interpolated_literal_string
+            }
             TokenKind::LeftParen => prefix_expr::parse_grouped_expr,
             TokenKind::LeftBracket => prefix_expr::parse_array_literal,
             TokenKind::LeftBrace => prefix_expr::parse_dict_literal,
@@ -1639,11 +1709,13 @@ impl Parser {
                         return Ok(ContinueCommand::parse(self)?);
                     } else if self.command_match("command") {
                         return Ok(UserCommand::parse(self)?);
-                    } else if self.command_match("nnoremap") {
+                    } else if self.command_match("nnoremap")
+                        || self.command_match("anoremenu")
+                    {
                         // TODO: Make mapping command
                         return Ok(SharedCommand::parse(self)?);
                     } else {
-                        if self.peek_token.kind == TokenKind::LeftParen {
+                        if CallCommand::matches(self) {
                             return Ok(CallCommand::parse(self)?);
                         } else if StatementCommand::matches(self) {
                             return Ok(StatementCommand::parse(self)?);
@@ -1792,7 +1864,7 @@ impl Parser {
 
     fn consume_if_kind(&mut self, kind: TokenKind) -> Option<Token> {
         if self.current_token.kind == kind {
-            Some(self.next_token())
+            Some(self.pop())
         } else {
             None
         }

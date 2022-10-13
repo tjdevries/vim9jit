@@ -27,6 +27,10 @@ fn gen_directory(src: &Path, gen: &Path, subdir: &str) -> Result<()> {
 
     for f in src_subdir.read_dir()? {
         let f = f?;
+        if f.file_type()?.is_dir() {
+            gen_directory(src, gen, f.path().to_str().unwrap())?
+        }
+
         match f.path().extension() {
             Some(ext) => {
                 if ext != "vim" {

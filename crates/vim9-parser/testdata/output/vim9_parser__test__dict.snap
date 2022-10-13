@@ -257,4 +257,58 @@ expression: snapshot_parsing(contents)
             eol: Token(EndOfLine, "\n", (25,1)->(25,1)),
         },
     ),
+    NoOp(
+        Token(EndOfLine, "\n", (26,0)->(26,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (27,0)->(27,3)),
+            ty: None,
+            name: Raw(keyed),
+            equal: Token(Equal, "=", (27,10)->(27,11)),
+            expr: Dict(
+                DictLiteral {
+                    open: Token(LeftBrace, "{", (27,12)->(27,13)),
+                    elements: [
+                        KeyValue {
+                            key: Expression(
+                                String(
+                                    DoubleQuote(
+                                        "hello",
+                                    ),
+                                ),
+                            ),
+                            colon: Token(SpacedColon, ": ", (28,13)->(28,15)),
+                            value: String(
+                                DoubleQuote(
+                                    "world",
+                                ),
+                            ),
+                            comma: Some(
+                                Token(Comma, ",", (28,22)->(28,23)),
+                            ),
+                        },
+                        KeyValue {
+                            key: Expression(
+                                String(
+                                    Interpolated(
+                                        "{bnr}",
+                                    ),
+                                ),
+                            ),
+                            colon: Token(SpacedColon, ": ", (29,14)->(29,16)),
+                            value: Identifier(
+                                Raw(diag_by_lnum),
+                            ),
+                            comma: Some(
+                                Token(Comma, ",", (29,28)->(29,29)),
+                            ),
+                        },
+                    ],
+                    close: Token(RightBrace, "}", (30,0)->(30,1)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (30,1)->(30,1)),
+        },
+    ),
 ]

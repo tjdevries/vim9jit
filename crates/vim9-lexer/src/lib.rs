@@ -197,6 +197,19 @@ impl TokenKind {
                 | TokenKind::IsNotInsensitive
         )
     }
+
+    pub fn is_assignment(&self) -> bool {
+        use TokenKind::*;
+        matches!(
+            self,
+            Equal
+                | PlusEquals
+                | MinusEquals
+                | MulEquals
+                | DivEquals
+                | StringConcatEquals
+        )
+    }
 }
 
 pub struct Lexer {
@@ -318,6 +331,46 @@ impl Lexer {
                     .collect(),
                 span: self.make_span(position, self.position),
             }
+        }
+    }
+
+    fn read_until_or<F>(
+        &mut self,
+        until: char,
+        fail: F,
+        passed: TokenKind,
+        failed: TokenKind,
+    ) -> Token
+    where
+        F: Fn(&char) -> bool,
+    {
+        self.read_char();
+        if let Some(ch) = self.ch && ch == until {
+            return Token {
+                kind: passed,
+                text: self.chars[self.position..self.position].iter().collect(),
+                span: self.make_span(self.position, self.position),
+            };
+        }
+
+        let position = self.position;
+
+        while let Some(ch) = self.ch && ch != until {
+            if fail(&ch) {
+                return Token {
+                    kind: failed,
+                    text: self.chars[self.position..self.position].iter().collect(),
+                    span: self.make_span(self.position, self.position),
+                };
+            }
+
+            self.read_char();
+        }
+
+        Token {
+            kind: passed,
+            text: self.chars[position..self.position].iter().collect(),
+            span: self.make_span(position, self.position - 1),
         }
     }
 
@@ -507,33 +560,29 @@ impl Lexer {
     //     }
     // }
 
+    fn literal(&mut self, ch: char, kind: TokenKind) -> Token {
+        Token {
+            kind,
+            text: ch.to_string(),
+            span: self.make_span(self.position, self.position + 1),
+        }
+    }
+
+    fn empty_literal(&mut self, ch: char, kind: TokenKind) -> Token {
+        Token {
+            kind,
+            text: ch.to_string(),
+            span: self.make_span(self.position, self.position),
+        }
+    }
+
     pub fn next_token(&mut self) -> Token {
+        use TokenKind::*;
+
         self.skip_whitespace();
 
         let tok = match self.ch {
             Some(ch) => {
-                macro_rules! literal {
-                    ($kind:tt) => {
-                        Token {
-                            kind: TokenKind::$kind,
-                            text: ch.to_string(),
-                            span: self
-                                .make_span(self.position, self.position + 1),
-                        }
-                    };
-
-                    ($kind:tt, $offset:tt) => {
-                        Token {
-                            kind: TokenKind::$kind,
-                            text: ch.to_string(),
-                            span: self.make_span(
-                                self.position,
-                                self.position + $offset,
-                            ),
-                        }
-                    };
-                }
-
                 match ch {
                     // Operators that can optionally have an additional equals
                     '=' => self.handle_equal(),
@@ -543,30 +592,16 @@ impl Lexer {
                     '-' => self.handle_dash(),
                     '$' => self.handle_dollar(),
                     '.' => self.handle_dot(),
-                    '+' => self.if_peek(
-                        '=',
-                        TokenKind::Plus,
-                        TokenKind::PlusEquals,
-                    ),
-                    '*' => {
-                        self.if_peek('=', TokenKind::Mul, TokenKind::MulEquals)
-                    }
-                    '/' => {
-                        self.if_peek('=', TokenKind::Div, TokenKind::DivEquals)
-                    }
-                    '|' => self.if_peek('|', TokenKind::Illegal, TokenKind::Or),
-                    '&' => {
-                        self.if_peek('&', TokenKind::Ampersand, TokenKind::And)
-                    }
-                    '%' => self.if_peek(
-                        '=',
-                        TokenKind::Percent,
-                        TokenKind::PercentEquals,
-                    ),
+                    '+' => self.if_peek('=', Plus, PlusEquals),
+                    '*' => self.if_peek('=', Mul, MulEquals),
+                    '/' => self.if_peek('=', Div, DivEquals),
+                    '|' => self.if_peek('|', Illegal, Or),
+                    '&' => self.if_peek('&', Ampersand, And),
+                    '%' => self.if_peek('=', Percent, PercentEquals),
                     '\\' => {
                         self.read_char();
                         Token {
-                            kind: TokenKind::Escaped,
+                            kind: Escaped,
                             text: self.ch.unwrap().to_string(),
                             span: self
                                 .make_span(self.position - 1, self.position),
@@ -575,7 +610,7 @@ impl Lexer {
                     '@' => {
                         self.read_char();
                         Token {
-                            kind: TokenKind::Register,
+                            kind: Register,
                             text: self.ch.unwrap().to_string(),
                             span: self
                                 .make_span(self.position - 1, self.position),
@@ -583,30 +618,29 @@ impl Lexer {
                     }
 
                     ':' => self.handle_colon(),
-                    '?' => literal!(QuestionMark),
-                    '^' => literal!(Caret),
-                    '(' => literal!(LeftParen),
-                    ')' => literal!(RightParen),
-                    '[' => literal!(LeftBracket),
-                    ']' => literal!(RightBracket),
-                    '{' => literal!(LeftBrace),
-                    '}' => literal!(RightBrace),
-                    ',' => literal!(Comma),
-                    '\n' => literal!(EndOfLine, 0),
+                    '?' => self.literal(ch, QuestionMark),
+                    '^' => self.literal(ch, Caret),
+                    '(' => self.literal(ch, LeftParen),
+                    ')' => self.literal(ch, RightParen),
+                    '[' => self.literal(ch, LeftBracket),
+                    ']' => self.literal(ch, RightBracket),
+                    '{' => self.literal(ch, LeftBrace),
+                    '}' => self.literal(ch, RightBrace),
+                    ',' => self.literal(ch, Comma),
+                    '\n' => self.empty_literal(ch, EndOfLine),
                     '#' => self.read_comment(),
 
                     // TODO: Handle escaped strings.
                     '\'' => self
-                        .read_until('\'', TokenKind::SingleQuoteString, |ch| {
-                            *ch == '\n'
-                        })
+                        .read_until('\'', SingleQuoteString, |ch| *ch == '\n')
                         .expect(&format!("{:#?}", self)),
 
-                    '"' => self
-                        .read_until('"', TokenKind::DoubleQuoteString, |ch| {
-                            *ch == '\n'
-                        })
-                        .unwrap_or(Token::fake()),
+                    '"' => self.read_until_or(
+                        '"',
+                        |ch| *ch == '\n',
+                        DoubleQuoteString,
+                        Comment,
+                    ),
 
                     _ => {
                         // Token
@@ -616,7 +650,7 @@ impl Lexer {
                             return self.read_number();
                         } else {
                             Token {
-                                kind: TokenKind::Illegal,
+                                kind: Illegal,
                                 text: ch.to_string(),
                                 span: self
                                     .make_span(self.position, self.position),
@@ -626,7 +660,7 @@ impl Lexer {
                 }
             }
             None => Token {
-                kind: TokenKind::EndOfFile,
+                kind: EndOfFile,
                 text: "".to_string(),
                 span: self.make_span(self.position, self.position),
             },

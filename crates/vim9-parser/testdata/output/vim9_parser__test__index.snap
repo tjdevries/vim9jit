@@ -61,7 +61,9 @@ expression: snapshot_parsing(contents)
                     Call(
                         CallCommand {
                             call: None,
-                            name: Raw(assert_equal),
+                            expr: Identifier(
+                                Raw(assert_equal),
+                            ),
                             open: Token(LeftParen, "(", (5,14)->(5,15)),
                             args: [
                                 Number(
@@ -129,7 +131,9 @@ expression: snapshot_parsing(contents)
                     Call(
                         CallCommand {
                             call: None,
-                            name: Raw(assert_equal),
+                            expr: Identifier(
+                                Raw(assert_equal),
+                            ),
                             open: Token(LeftParen, "(", (10,14)->(10,15)),
                             args: [
                                 Number(
@@ -192,7 +196,9 @@ expression: snapshot_parsing(contents)
                     Call(
                         CallCommand {
                             call: None,
-                            name: Raw(assert_equal),
+                            expr: Identifier(
+                                Raw(assert_equal),
+                            ),
                             open: Token(LeftParen, "(", (14,14)->(14,15)),
                             args: [
                                 Array(
@@ -271,7 +277,9 @@ expression: snapshot_parsing(contents)
                     Call(
                         CallCommand {
                             call: None,
-                            name: Raw(assert_equal),
+                            expr: Identifier(
+                                Raw(assert_equal),
+                            ),
                             open: Token(LeftParen, "(", (18,14)->(18,15)),
                             args: [
                                 Array(
@@ -344,7 +352,9 @@ expression: snapshot_parsing(contents)
                     Call(
                         CallCommand {
                             call: None,
-                            name: Raw(assert_equal),
+                            expr: Identifier(
+                                Raw(assert_equal),
+                            ),
                             open: Token(LeftParen, "(", (22,14)->(22,15)),
                             args: [
                                 Array(

@@ -478,7 +478,7 @@ expression: snapshot_parsing(contents)
                                                         },
                                                     ),
                                                 ),
-                                                colon: Token(Colon, ":", (41,26)->(41,27)),
+                                                colon: Token(SpacedColon, ":", (41,26)->(41,27)),
                                                 finish: None,
                                             },
                                         ),
@@ -1040,7 +1040,9 @@ expression: snapshot_parsing(contents)
                     Call(
                         CallCommand {
                             call: None,
-                            name: Raw(Xsetlist),
+                            expr: Identifier(
+                                Raw(Xsetlist),
+                            ),
                             open: Token(LeftParen, "(", (65,10)->(65,11)),
                             args: [
                                 Array(
@@ -1122,7 +1124,9 @@ expression: snapshot_parsing(contents)
             command: Call(
                 CallCommand {
                     call: None,
-                    name: Raw(Qf_filter),
+                    expr: Identifier(
+                        Raw(Qf_filter),
+                    ),
                     open: Token(LeftParen, "(", (68,41)->(68,42)),
                     args: [
                         Boolean(
@@ -1171,7 +1175,9 @@ expression: snapshot_parsing(contents)
             command: Call(
                 CallCommand {
                     call: None,
-                    name: Raw(Qf_filter),
+                    expr: Identifier(
+                        Raw(Qf_filter),
+                    ),
                     open: Token(LeftParen, "(", (69,41)->(69,42)),
                     args: [
                         Boolean(

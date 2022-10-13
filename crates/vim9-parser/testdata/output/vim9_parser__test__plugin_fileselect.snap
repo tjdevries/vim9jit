@@ -39,8 +39,8 @@ expression: snapshot_parsing(contents)
             endif_eol: Token(EndOfLine, "\n", (2,5)->(2,5)),
         },
     ),
-    NoOp(
-        Token(Virtual, "", (0,0)->(0,0)),
+    Comment(
+        Token(Comment, "", (3,30)->(3,30)),
     ),
     NoOp(
         Token(EndOfLine, "\n", (4,0)->(4,0)),
@@ -353,7 +353,9 @@ expression: snapshot_parsing(contents)
                     call: Some(
                         Token(Identifier, "call", (39,43)->(39,47)),
                     ),
-                    name: Raw(TshowMenu),
+                    expr: Identifier(
+                        Raw(TshowMenu),
+                    ),
                     open: Token(LeftParen, "(", (39,57)->(39,58)),
                     args: [
                         Expandable(

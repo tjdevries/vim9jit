@@ -2,6 +2,7 @@ local NVIM9 = require("vim9script")
 local __VIM9_MODULE = {}
 describe("filename", function()
   local Test_assignment_bool = nil
+  local Test_unpacked_identifiers = nil
   -- vim9script
 
   it("Test_assignment_bool", function()
@@ -54,6 +55,19 @@ describe("filename", function()
     -- # v9.CheckDefAndScriptFailure(['var x: bool = "x"'], 'E1012:')
 
     -- # v9.CheckDefAndScriptFailure(['var x: bool = "x"', '', 'eval 0'], 'E1012:', 1)
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_unpacked_identifiers", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
+    local x, y = unpack({ 1, 2 })
+    NVIM9.fn["assert_equal"](1, x)
+    NVIM9.fn["assert_equal"](2, y)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

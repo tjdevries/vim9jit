@@ -20,7 +20,7 @@ fn expr_is_func_mutable(arg: &Expression) -> bool {
         },
         Expression::Grouped(_) => todo!(),
         Expression::VimOption(_) => todo!(),
-        Expression::Prefix(_) => todo!(),
+        Expression::Prefix(pre) => expr_is_func_mutable(&pre.right),
         Expression::Infix(infix) => expr_is_func_mutable(&infix.left),
         Expression::MethodCall(meth) => expr_is_func_mutable(&meth.left),
         Expression::Ternary(tern) => {
@@ -129,6 +129,10 @@ pub enum FunctionData {
         name: String,
         args: Vec<Expression>,
     },
+    ExprFunc {
+        caller: Expression,
+        args: Vec<Expression>
+    }
 }
 
 impl FunctionData {
@@ -138,6 +142,7 @@ impl FunctionData {
             FunctionData::VimFunc(vimfunc) => vimfunc.name.as_str(),
             FunctionData::VimFuncRef { name, .. } => name,
             FunctionData::GeneratedFunc { name, .. } => name,
+            FunctionData::ExprFunc { .. } => todo!("ExprFunc.name()")
         }
     }
 }
@@ -180,7 +185,11 @@ impl From<&CallExpression> for FunctionData {
             Expression::Identifier(id) => {
                 ident_to_func_data(expr.clone(), id.clone())
             }
-            _ => todo!(),
+            Expression::DictAccess(dict) => FunctionData::ExprFunc {
+                caller: *expr.expr.clone(),
+                args: expr.args.clone(),
+            },
+            _ => todo!("{:#?}", expr),
         }
     }
 }
@@ -237,6 +246,10 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
             FunctionData::VimFunc(vimfunc) => {
                 return vimfunc.inplace(&mutability, state);
             }
+            // TODO: This probably should have some smarter ways of managing this
+            //          but at the same time, it's nice to just assume that functions
+            //          that are expressions are really just generated funcs
+            FunctionData::ExprFunc { .. } => {}
         },
         None => {}
     };
@@ -273,6 +286,9 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
         },
         FunctionData::GeneratedFunc { name, args } => {
             format!("{}({})", name, args.gen(state))
+        }
+        FunctionData::ExprFunc { caller, args } => {
+            format!("{}({})", caller.gen(state), args.gen(state))
         }
     }
 }

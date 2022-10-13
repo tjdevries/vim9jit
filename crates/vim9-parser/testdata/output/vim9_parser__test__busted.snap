@@ -1,6 +1,6 @@
 ---
-source: crates/vim9-parser/src/lib.rs
-assertion_line: 1565
+source: crates/vim9-parser/src/test.rs
+assertion_line: 38
 expression: snapshot_parsing(contents)
 ---
 [
@@ -46,7 +46,9 @@ expression: snapshot_parsing(contents)
                     Call(
                         CallCommand {
                             call: None,
-                            name: Raw(assert_equal),
+                            expr: Identifier(
+                                Raw(assert_equal),
+                            ),
                             open: Token(LeftParen, "(", (4,14)->(4,15)),
                             args: [
                                 Identifier(

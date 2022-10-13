@@ -1,6 +1,6 @@
 ---
-source: src/lib.rs
-assertion_line: 1368
+source: crates/vim9-parser/src/test.rs
+assertion_line: 26
 expression: snapshot_parsing(contents)
 ---
 [
@@ -175,5 +175,77 @@ expression: snapshot_parsing(contents)
             ),
             eol: Token(EndOfLine, "\n", (13,8)->(13,8)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (14,0)->(14,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (15,0)->(15,3)),
+            ty: None,
+            name: Raw(x),
+            equal: Token(Equal, "=", (15,6)->(15,7)),
+            expr: Identifier(
+                Scope(ScopedIdentifier { scope: VimVar, colon: Token(Colon, ":", (15,9)->(15,10)), accessor: Raw(false) }),
+            ),
+            eol: Token(EndOfLine, "\n", (15,15)->(15,15)),
+        },
+    ),
+    Echo(
+        EchoCommand {
+            echo: Token(Identifier, "echo", (16,0)->(16,4)),
+            expr: Identifier(
+                Raw(x),
+            ),
+            eol: Token(EndOfLine, "\n", (16,6)->(16,6)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (17,0)->(17,0)),
+    ),
+    UserCommand(
+        UserCommand {
+            tok: Token(Identifier, "command", (18,0)->(18,7)),
+            bang: true,
+            command_bang: false,
+            command_bar: true,
+            command_keepscript: false,
+            command_register: None,
+            command_nargs: Some(
+                "0",
+            ),
+            command_compl: None,
+            command_range: None,
+            command_addr: None,
+            command_complete: None,
+            name: "LspGotoDefinition",
+            command: Call(
+                CallCommand {
+                    call: None,
+                    expr: DictAccess(
+                        DictAccess {
+                            container: Identifier(
+                                Raw(lsp),
+                            ),
+                            dot: Token(Dot, ".", (18,44)->(18,45)),
+                            index: RawIdentifier {
+                                name: "GotoDefinition",
+                            },
+                        },
+                    ),
+                    open: Token(LeftParen, "(", (18,59)->(18,60)),
+                    args: [
+                        Identifier(
+                            Scope(ScopedIdentifier { scope: VimVar, colon: Token(Colon, ":", (18,61)->(18,62)), accessor: Raw(false) }),
+                        ),
+                    ],
+                    close: Token(RightParen, ")", (18,67)->(18,68)),
+                    eol: Token(EndOfLine, "\n", (18,68)->(18,68)),
+                },
+            ),
+        },
+    ),
+    Comment(
+        Token(Comment, "# command! -nargs=0 -bar LspGotoDefinition lsp.GotoDefinition(v:false", (19,0)->(19,69)),
     ),
 ]

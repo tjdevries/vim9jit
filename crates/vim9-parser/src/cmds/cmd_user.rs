@@ -32,6 +32,7 @@ impl UserCommand {
         let mut command_bar = false;
         let mut command_nargs = None;
         let mut command_complete = None;
+        let mut command_range = None;
         while parser.current_token.kind == TokenKind::Minus {
             parser.next_token();
             parser.ensure_token(TokenKind::Identifier)?;
@@ -51,6 +52,10 @@ impl UserCommand {
                     parser.expect_token(TokenKind::Equal)?;
                     command_complete = Some(parser.pop().text);
                 }
+                "range" => {
+                    parser.expect_token(TokenKind::Equal)?;
+                    command_range = Some(parser.pop().text);
+                }
                 _ => panic!("OH NO"),
             }
         }
@@ -67,7 +72,7 @@ impl UserCommand {
             command_keepscript: false,
             command_register: None,
             command_compl: None,
-            command_range: None,
+            command_range,
             command_addr: None,
         }))
     }

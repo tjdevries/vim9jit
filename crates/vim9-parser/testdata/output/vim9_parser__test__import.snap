@@ -1,0 +1,36 @@
+---
+source: crates/vim9-parser/src/test.rs
+assertion_line: 50
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    ImportCommand(
+        ImportImplicit {
+            import: Token(Identifier, "import", (2,0)->(2,6)),
+            autoload: false,
+            file: "./lspoptions.vim",
+            name: Some(
+                Identifier(
+                    Raw(opt),
+                ),
+            ),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (2,32)->(2,32)),
+    ),
+    ImportCommand(
+        ImportImplicit {
+            import: Token(Identifier, "import", (3,0)->(3,6)),
+            autoload: false,
+            file: "./util.vim",
+            name: None,
+        },
+    ),
+]

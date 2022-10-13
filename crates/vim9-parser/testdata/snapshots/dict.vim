@@ -24,3 +24,8 @@ var multiline_trail = {
 
 
 }
+
+var keyed = {
+    ["hello"]: "world",
+    [$'{bnr}']: diag_by_lnum,
+}

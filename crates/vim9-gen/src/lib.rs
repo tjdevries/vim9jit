@@ -1,3 +1,5 @@
+#![feature(iter_intersperse)]
+
 use std::path::Path;
 
 use lexer::new_lexer;
@@ -300,7 +302,13 @@ impl Generate for ImportCommand {
     fn gen(&self, state: &mut State) -> String {
         match self {
             ImportCommand::ImportImplicit { file, name, autoload, ..} => match name {
-                Some(_) => todo!(),
+                Some(name) =>  {
+                    let filepath = Path::new(file);
+                    let stem = name.gen(state);
+                    format!(
+                            "local {stem} = NVIM9.import({{ name = '{file}', autoload = {autoload} }})"
+                    )
+                },
                 None => {
                     let filepath = Path::new(file);
                     let stem = filepath.file_stem().unwrap().to_str().unwrap();
@@ -523,7 +531,11 @@ impl Generate for DefCommand {
             let (signature, default_statements) =
                 gen_signature(state, &self.args);
 
-            let local = if state.is_top_level() { "" } else { "local" };
+            let local = if state.is_top_level() || !self.name.is_valid_local() {
+                ""
+            } else {
+                "local"
+            };
 
             if scope.deferred > 0 {
                 // TODO: Should probably handle errors in default statements or body
@@ -751,20 +763,26 @@ impl Generate for Vim9ScriptCommand {
 
 impl Generate for VarCommand {
     fn gen(&self, state: &mut State) -> String {
-        match self.ty {
+        let expr = match self.ty {
             Some(Type {
                 inner: InnerType::Bool,
                 ..
-            }) => format!(
-                "local {} = NVIM9.convert.decl_bool({})",
-                self.name.gen(state),
-                self.expr.gen(state)
-            ),
-            _ => format!(
-                "local {} = {}",
-                self.name.gen(state),
-                self.expr.gen(state)
-            ),
+            }) => format!("NVIM9.convert.decl_bool({})", self.expr.gen(state)),
+            _ => self.expr.gen(state),
+        };
+
+        match &self.name {
+            Identifier::Unpacked(unpacked) => {
+                let identifiers: String = unpacked
+                    .identifiers
+                    .iter()
+                    .map(|i| i.gen(state))
+                    .intersperse(", ".to_string())
+                    .collect();
+
+                format!("local {identifiers} = unpack({expr})")
+            }
+            _ => format!("local {} = {}", self.name.gen(state), expr),
         }
     }
 }
@@ -774,7 +792,9 @@ impl Generate for Identifier {
         match self {
             Identifier::Raw(raw) => raw.gen(state),
             Identifier::Scope(scoped) => scoped.gen(state),
-            Identifier::Unpacked(_) => todo!(),
+            Identifier::Unpacked(unpacked) => {
+                unreachable!("must be handled higher {:#?}", self)
+            }
             Identifier::Ellipsis => "...".to_string(),
         }
     }
@@ -785,7 +805,11 @@ impl Generate for ScopedIdentifier {
         let scope = match self.scope {
             VimScope::Global => "vim.g",
             VimScope::VimVar => "vim.v",
-            _ => todo!(),
+            VimScope::Tab => "vim.t",
+            VimScope::Window => "vim.w",
+            VimScope::Buffer => "vim.b",
+            VimScope::Script => todo!("Not sure how to handle scriptvar"),
+            VimScope::Local => todo!("Not sure how to handle local"),
         };
 
         format!("{}['{}']", scope, self.accessor.gen(state))
@@ -1012,9 +1036,10 @@ impl Generate for Literal {
 }
 
 impl Generate for VimKey {
-    fn gen(&self, _: &mut State) -> String {
+    fn gen(&self, state: &mut State) -> String {
         match self {
             VimKey::Literal(literal) => literal.token.text.clone(),
+            VimKey::Expression(expr) => format!("[{}]", expr.gen(state)),
         }
     }
 }
@@ -1075,6 +1100,12 @@ impl Generate for VimString {
                 }
 
                 format!("\"{}\"", s)
+            }
+            VimString::Interpolated(interp) => {
+                format!("string.format('{}')", interp)
+            }
+            VimString::InterpolatedLit(interp) => {
+                format!("string.format('{}')", interp)
             }
         }
     }
@@ -1146,7 +1177,9 @@ impl Generate for InfixExpression {
 fn toplevel_id(s: &mut State, command: &ExCommand) -> Option<String> {
     match command {
         ExCommand::Decl(decl) => Some(decl.name.gen(s)),
-        ExCommand::Def(def) => Some(def.name.gen(s)),
+        ExCommand::Def(def) => {
+            def.name.is_valid_local().then_some(def.name.gen(s))
+        }
         ExCommand::ExportCommand(e) => toplevel_id(s, e.command.as_ref()),
         ExCommand::Heredoc(here) => Some(here.name.gen(s)),
         // This might make sense, but I don't think it allows you to do this?

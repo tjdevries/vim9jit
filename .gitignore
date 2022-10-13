@@ -50,5 +50,6 @@ doc/tags
 # Added by cargo
 
 target/
+.fleet/
 
 dump.lsif

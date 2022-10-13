@@ -47,3 +47,9 @@ def Test_assignment_bool()
 
   # v9.CheckDefAndScriptFailure(['var x: bool = "x"', '', 'eval 0'], 'E1012:', 1)
 enddef
+
+def Test_unpacked_identifiers()
+  var [x, y] = [1, 2]
+  assert_equal(1, x)
+  assert_equal(2, y)
+enddef
