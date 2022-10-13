@@ -458,6 +458,23 @@ impl EchoCommand {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct ExecuteCommand {
+    execute: Token,
+    pub expr: Expression,
+    eol: Token,
+}
+
+impl ExecuteCommand {
+    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+        Ok(ExCommand::Execute(ExecuteCommand {
+            execute: parser.expect_identifier_with_text("execute")?,
+            expr: Expression::parse(parser, Precedence::Lowest)?,
+            eol: parser.expect_eol()?,
+        }))
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct ReturnCommand {
     ret: Token,
     pub expr: Option<Expression>,

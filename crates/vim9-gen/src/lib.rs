@@ -7,7 +7,7 @@ use parser::{
     self, new_parser, ArrayLiteral, AssignStatement, AugroupCommand,
     AutocmdCommand, Body, BreakCommand, CallCommand, CallExpression,
     ContinueCommand, DeclCommand, DefCommand, DeferCommand, DictAccess,
-    DictLiteral, EchoCommand, ElseCommand, ElseIfCommand, ExCommand,
+    DictLiteral, EchoCommand, ExecuteCommand, ElseCommand, ElseIfCommand, ExCommand,
     Expandable, ExportCommand, Expression, ForCommand, GroupedExpression,
     Heredoc, Identifier, IfCommand, ImportCommand, IndexExpression, IndexType,
     InfixExpression, InnerType, Lambda, Literal, MethodCall, MutationStatement,
@@ -764,6 +764,12 @@ impl Generate for EchoCommand {
     }
 }
 
+impl Generate for ExecuteCommand {
+    fn gen(&self, state: &mut State) -> String {
+        format!("vim.api.nvim_command({})", self.expr.gen(state))
+    }
+}
+
 impl Generate for Vim9ScriptCommand {
     fn gen(&self, _: &mut State) -> String {
         // TODO: Actually connect this
@@ -1204,6 +1210,7 @@ fn toplevel_id(s: &mut State, command: &ExCommand) -> Option<String> {
         // These make sense
         ExCommand::Vim9Script(_) => None,
         ExCommand::Echo(_) => None,
+        ExCommand::Execute(_) => None,
         ExCommand::Return(_) => None,
         ExCommand::If(_) => None,
         ExCommand::For(_) => None,
