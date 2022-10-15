@@ -1171,7 +1171,6 @@ mod infix_expr {
         parser: &mut Parser,
         left: Box<Expression>,
     ) -> Result<Expression> {
-        println!("parse call expr");
         Ok(Expression::Call(CallExpression::parse(parser, left)?))
     }
 
@@ -1495,7 +1494,11 @@ impl Parser {
 
     pub fn expect_eol(&mut self) -> Result<Token> {
         let curkind = &self.current_token.kind;
-        if curkind == &TokenKind::EndOfLine || curkind == &TokenKind::EndOfFile
+        if curkind == &TokenKind::EndOfLine
+            || curkind == &TokenKind::EndOfFile
+                // We kind of cheat to say end of line comments are fine... even tho sometimes they
+                // are not
+            || curkind == &TokenKind::Comment
         {
             Ok(self.pop())
         } else {
@@ -1737,6 +1740,10 @@ impl Parser {
                         return Ok(ContinueCommand::parse(self)?);
                     } else if self.command_match("command") {
                         return Ok(UserCommand::parse(self)?);
+                    } else if self.command_match("set")
+                        || self.command_match("setlocal")
+                    {
+                        return Ok(SharedCommand::parse(self)?);
                     } else if self.command_match("nnoremap")
                         || self.command_match("inoremap")
                         || self.command_match("anoremenu")

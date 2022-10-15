@@ -191,7 +191,12 @@ impl Generate for ContinueCommand {
 impl Generate for BreakCommand {
     fn gen(&self, state: &mut State) -> String {
         let scope = find_scope!(state, Function | While { .. } | For { .. });
-        assert!(scope.kind != ScopeKind::Function, "continue: While/For");
+        assert!(
+            scope.kind != ScopeKind::Function,
+            "continue: While/For {:#?} // {:?}",
+            self,
+            scope
+        );
 
         if scope.has_continue() {
             format!("return NVIM9.ITER_BREAK")
@@ -231,11 +236,7 @@ impl Generate for WhileCommand {
             );
         }
 
-        format!(
-            "while {}\ndo\n{}\nend",
-            self.condition.gen(state),
-            self.body.gen(state)
-        )
+        format!("while {}\ndo\n{}\nend", self.condition.gen(state), body)
     }
 }
 

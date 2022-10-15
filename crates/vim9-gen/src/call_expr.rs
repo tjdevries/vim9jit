@@ -19,7 +19,7 @@ fn expr_is_func_mutable(arg: &Expression) -> bool {
             Identifier::Ellipsis => true,
         },
         Expression::Grouped(_) => todo!(),
-        Expression::VimOption(_) => todo!(),
+        Expression::VimOption(_) => false,
         Expression::Prefix(pre) => expr_is_func_mutable(&pre.right),
         Expression::Infix(infix) => expr_is_func_mutable(&infix.left),
         Expression::MethodCall(meth) => expr_is_func_mutable(&meth.left),
