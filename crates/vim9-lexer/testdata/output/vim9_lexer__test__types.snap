@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-lexer/src/lib.rs
-assertion_line: 749
+assertion_line: 935
 expression: snapshot_lexing(contents)
 ---
 vim9script
@@ -34,4 +34,11 @@ var y: list< number > = [10]
                          ^^ Token(Integer, "10", (3,25)->(3,27))
                            ^ Token(RightBracket, "]", (3,27)->(3,28))
                              Token(EndOfLine, "\n", (3,28)->(3,28))
+
+ Token(EndOfLine, "\n", (4,0)->(4,0))
+var z = $ENV_VAR
+^^^ Token(Identifier, "var", (5,0)->(5,3))
+    ^ Token(Identifier, "z", (5,4)->(5,5))
+      ^ Token(Equal, "=", (5,6)->(5,7))
+         ^^^^^^^ Token(EnvironmentVariable, "ENV_VAR", (5,9)->(5,16))
 

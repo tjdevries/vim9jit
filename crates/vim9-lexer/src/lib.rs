@@ -67,6 +67,7 @@ pub enum TokenKind {
     Identifier,
     Integer,
     Float,
+    EnvironmentVariable,
 
     // Reserved Tokens
     True,
@@ -799,6 +800,20 @@ impl Lexer {
                     *ch == '\n'
                 })
                 .expect(&format!("{:?}", self))
+            }
+            c if is_identifier(*c) => {
+                self.read_char();
+
+                let position = self.position;
+                while let Some(ch) = self.ch && is_identifier(ch) {
+                    self.read_char();
+                }
+
+                Token {
+                    kind: TokenKind::EnvironmentVariable,
+                    text: self.chars[position..self.position].iter().collect(),
+                    span: self.make_span(position, self.position),
+                }
             }
             _ => Token {
                 kind: TokenKind::Illegal,

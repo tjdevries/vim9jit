@@ -822,6 +822,7 @@ pub enum VimString {
     DoubleQuote(String),
     Interpolated(String),
     InterpolatedLit(String),
+    EnvironmentVariable(String),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -897,18 +898,20 @@ mod prefix_expr {
         )))
     }
 
-    pub fn parse_interpolated_string(
-        parser: &mut Parser,
-    ) -> Result<Expression> {
+    pub fn parse_interpolated(parser: &mut Parser) -> Result<Expression> {
         Ok(Expression::String(VimString::InterpolatedLit(
             parser.current_token.text.clone(),
         )))
     }
 
-    pub fn parse_interpolated_literal_string(
-        parser: &mut Parser,
-    ) -> Result<Expression> {
+    pub fn parse_interpolated_lit(parser: &mut Parser) -> Result<Expression> {
         Ok(Expression::String(VimString::Interpolated(
+            parser.current_token.text.clone(),
+        )))
+    }
+
+    pub fn parse_env_var(parser: &mut Parser) -> Result<Expression> {
+        Ok(Expression::String(VimString::EnvironmentVariable(
             parser.current_token.text.clone(),
         )))
     }
@@ -1311,7 +1314,7 @@ impl Parser {
         }
     }
 
-    fn peek_non_whitespace(&mut self) -> Token {
+    fn peek_non_whitespace(&mut self) -> (Token, bool) {
         let mut peek_index = 1;
         let mut peek_token = self.peek_token.clone();
         while peek_token.kind.is_whitespace() {
@@ -1323,11 +1326,11 @@ impl Parser {
             }
         }
 
-        peek_token
+        (peek_token, peek_index > 1)
     }
 
     fn peek_precedence(&mut self) -> Precedence {
-        let kind = self.peek_non_whitespace().kind;
+        let kind = self.peek_non_whitespace().0.kind;
         self.get_precedence(&kind).unwrap_or_default()
     }
 
@@ -1337,30 +1340,27 @@ impl Parser {
     }
 
     fn get_prefix_fn(&self) -> Option<PrefixFn> {
+        use prefix_expr::*;
+        use TokenKind::*;
+
         Some(Box::new(match self.current_token.kind {
-            TokenKind::Integer | TokenKind::Float => prefix_expr::parse_number,
-            TokenKind::Identifier => prefix_expr::parse_identifier,
-            TokenKind::Register => prefix_expr::parse_register,
-            TokenKind::DoubleQuoteString => prefix_expr::parse_double_string,
-            TokenKind::SingleQuoteString => prefix_expr::parse_single_string,
-            TokenKind::InterpolatedString => {
-                prefix_expr::parse_interpolated_string
-            }
-            TokenKind::InterpolatedLiteralString => {
-                prefix_expr::parse_interpolated_literal_string
-            }
-            TokenKind::LeftParen => prefix_expr::parse_grouped_expr,
-            TokenKind::LeftBracket => prefix_expr::parse_array_literal,
-            TokenKind::LeftBrace => prefix_expr::parse_dict_literal,
-            TokenKind::Ampersand => prefix_expr::parse_vim_option,
-            TokenKind::Colon => prefix_expr::parse_prefix_colon,
-            TokenKind::SpacedColon => prefix_expr::parse_prefix_spaced_colon,
-            TokenKind::AngleLeft => prefix_expr::parse_expandable_sequence,
-            TokenKind::True | TokenKind::False => prefix_expr::parse_bool,
-            TokenKind::Plus
-            | TokenKind::Minus
-            | TokenKind::Bang
-            | TokenKind::Percent => prefix_expr::parse_prefix_operator,
+            Integer | Float => parse_number,
+            Identifier => parse_identifier,
+            Register => parse_register,
+            DoubleQuoteString => parse_interpolated,
+            SingleQuoteString => parse_single_string,
+            InterpolatedString => parse_interpolated,
+            InterpolatedLiteralString => parse_interpolated_lit,
+            EnvironmentVariable => parse_env_var,
+            LeftParen => parse_grouped_expr,
+            LeftBracket => parse_array_literal,
+            LeftBrace => parse_dict_literal,
+            Ampersand => parse_vim_option,
+            Colon => parse_prefix_colon,
+            SpacedColon => parse_prefix_spaced_colon,
+            AngleLeft => parse_expandable_sequence,
+            True | False => parse_bool,
+            Plus | Minus | Bang | Percent => parse_prefix_operator,
             _ => return None,
         }))
     }
@@ -1411,7 +1411,7 @@ impl Parser {
     }
 
     fn get_infix_fn(&mut self) -> Option<InfixFn> {
-        let peek_token = self.peek_non_whitespace();
+        let (peek_token, skipped) = self.peek_non_whitespace();
 
         Some(Box::new(match peek_token.kind {
             TokenKind::Plus
@@ -1422,7 +1422,13 @@ impl Parser {
             TokenKind::Or | TokenKind::And => infix_expr::parse_infix_operator,
             TokenKind::LeftParen => infix_expr::parser_call_expr,
             TokenKind::LeftBracket => infix_expr::parser_index_expr,
-            TokenKind::Colon => infix_expr::parse_colon,
+            TokenKind::Colon => {
+                if skipped {
+                    return None;
+                } else {
+                    infix_expr::parse_colon
+                }
+            }
             TokenKind::MethodArrow => infix_expr::parse_method_call,
             TokenKind::EqualTo
             | TokenKind::EqualToIns
@@ -1752,15 +1758,15 @@ impl Parser {
         let mut program = Program { commands: vec![] };
 
         while self.current_token.kind != TokenKind::EndOfFile {
-            // let command = match self.parse_command() {
-            //     Ok(command) => command,
-            //     Err(err) => panic!(
-            //         "\nFailed to parse command.\nCurrent Commands: {:#?}. Error: {}",
-            //         program, err
-            //     ),
-            // };
+            let command = match self.parse_command() {
+                Ok(command) => command,
+                Err(err) => panic!(
+                    "\nFailed to parse command.\nCurrent Commands:{:#?}.\nError: {}",
+                    program, err
+                ),
+            };
 
-            let command = self.parse_command().unwrap();
+            // let command = self.parse_command().unwrap();
             if command != ExCommand::Skip {
                 program.commands.push(command);
             }
@@ -1833,7 +1839,7 @@ impl Parser {
         }
 
         self.skip_whitespace();
-        while self.peek_non_whitespace().kind != close_kind {
+        while self.peek_non_whitespace().0.kind != close_kind {
             self.next_real_token();
             elements.push(KeyValue::parse(self)?);
         }

@@ -131,8 +131,8 @@ pub enum FunctionData {
     },
     ExprFunc {
         caller: Expression,
-        args: Vec<Expression>
-    }
+        args: Vec<Expression>,
+    },
 }
 
 impl FunctionData {
@@ -142,7 +142,7 @@ impl FunctionData {
             FunctionData::VimFunc(vimfunc) => vimfunc.name.as_str(),
             FunctionData::VimFuncRef { name, .. } => name,
             FunctionData::GeneratedFunc { name, .. } => name,
-            FunctionData::ExprFunc { .. } => todo!("ExprFunc.name()")
+            FunctionData::ExprFunc { .. } => todo!("ExprFunc.name()"),
         }
     }
 }
@@ -222,7 +222,11 @@ fn ident_to_func_data(call: CallExpression, ident: Identifier) -> FunctionData {
                 }
             }
         }
-        _ => todo!(),
+        Identifier::Scope(_) => FunctionData::ExprFunc {
+            caller: *call.expr,
+            args: call.args,
+        },
+        _ => todo!("{:#?}", ident),
     }
 }
 

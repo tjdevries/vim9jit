@@ -314,10 +314,9 @@ impl Generate for ImportCommand {
         match self {
             ImportCommand::ImportImplicit { file, name, autoload, ..} => match name {
                 Some(name) =>  {
-                    let filepath = Path::new(file);
-                    let stem = name.gen(state);
+                    let var = name.gen(state);
                     format!(
-                            "local {stem} = NVIM9.import({{ name = '{file}', autoload = {autoload} }})"
+                            "local {var} = NVIM9.import({{ name = '{file}', autoload = {autoload} }})"
                     )
                 },
                 None => {
@@ -806,7 +805,7 @@ impl Generate for Identifier {
         match self {
             Identifier::Raw(raw) => raw.gen(state),
             Identifier::Scope(scoped) => scoped.gen(state),
-            Identifier::Unpacked(unpacked) => {
+            Identifier::Unpacked(_) => {
                 unreachable!("must be handled higher {:#?}", self)
             }
             Identifier::Ellipsis => "...".to_string(),
@@ -1120,6 +1119,9 @@ impl Generate for VimString {
             }
             VimString::InterpolatedLit(interp) => {
                 format!("string.format('{}')", interp)
+            }
+            VimString::EnvironmentVariable(env) => {
+                format!("vim.env['{}']", env)
             }
         }
     }

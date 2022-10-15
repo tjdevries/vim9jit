@@ -29,3 +29,7 @@ var keyed = {
     ["hello"]: "world",
     [$'{bnr}']: diag_by_lnum,
 }
+
+
+prop_add(line('.'), col, {type: 'LspOutlineHighlight',
+          length: w:lspSymbols.lnumTable[lnum].name->len()})
