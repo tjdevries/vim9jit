@@ -1,5 +1,4 @@
 use anyhow::Result;
-use tracing::info;
 use vim9_lexer::{Token, TokenKind};
 
 use crate::{
@@ -76,7 +75,9 @@ impl ImportCommand {
                 from: parser.expect_identifier_with_text("from")?,
                 file: parser.pop().text,
             },
-            TokenKind::Identifier | TokenKind::SingleQuoteString | TokenKind::DoubleQuoteString=> {
+            TokenKind::Identifier
+            | TokenKind::SingleQuoteString
+            | TokenKind::DoubleQuoteString => {
                 let autoload = if parser.current_token.text == "autoload" {
                     parser.next_token();
                     true
@@ -443,8 +444,13 @@ pub struct EchoCommand {
 
 impl EchoCommand {
     pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+        let echo = parser.expect_fn_token(
+            |t| matches!(t.text.as_str(), "echo" | "echon" | "echomsg"),
+            true,
+        )?;
+
         Ok(ExCommand::Echo(EchoCommand {
-            echo: parser.expect_identifier_with_text("echo")?,
+            echo,
             expr: Expression::parse(parser, Precedence::Lowest)?,
             eol: parser.expect_eol()?,
         }))

@@ -1,6 +1,6 @@
 ---
-source: src/lib.rs
-assertion_line: 1113
+source: crates/vim9-parser/src/test.rs
+assertion_line: 29
 expression: snapshot_parsing(contents)
 ---
 [
@@ -37,11 +37,11 @@ expression: snapshot_parsing(contents)
                                     token: Token(Identifier, "WinEnter", (4,36)->(4,44)),
                                 },
                             ],
-                            pattern: [
-                                Literal {
-                                    token: Token(Mul, "*", (4,45)->(4,46)),
-                                },
-                            ],
+                            pattern: Pattern(
+                                [
+                                    "*",
+                                ],
+                            ),
                             block: Block(
                                 Block {
                                     open: Token(LeftBrace, "{", (4,47)->(4,48)),
@@ -81,11 +81,11 @@ expression: snapshot_parsing(contents)
                                     token: Token(Identifier, "WinLeave", (8,10)->(8,18)),
                                 },
                             ],
-                            pattern: [
-                                Literal {
-                                    token: Token(Mul, "*", (8,19)->(8,20)),
-                                },
-                            ],
+                            pattern: Pattern(
+                                [
+                                    "*",
+                                ],
+                            ),
                             block: Command(
                                 Echo(
                                     EchoCommand {
@@ -101,11 +101,76 @@ expression: snapshot_parsing(contents)
                             ),
                         },
                     ),
+                    NoOp(
+                        Token(EndOfLine, "\n", (9,0)->(9,0)),
+                    ),
+                    Autocmd(
+                        AutocmdCommand {
+                            autocmd: Token(Identifier, "autocmd", (10,2)->(10,9)),
+                            bang: false,
+                            events: [
+                                Literal {
+                                    token: Token(Identifier, "WinLeave", (10,10)->(10,18)),
+                                },
+                            ],
+                            pattern: Pattern(
+                                [
+                                    "*.py",
+                                ],
+                            ),
+                            block: Command(
+                                Echo(
+                                    EchoCommand {
+                                        echo: Token(Identifier, "echo", (10,24)->(10,28)),
+                                        expr: String(
+                                            DoubleQuote(
+                                                "snek lang",
+                                            ),
+                                        ),
+                                        eol: Token(EndOfLine, "\n", (10,40)->(10,40)),
+                                    },
+                                ),
+                            ),
+                        },
+                    ),
+                    Autocmd(
+                        AutocmdCommand {
+                            autocmd: Token(Identifier, "autocmd", (11,2)->(11,9)),
+                            bang: false,
+                            events: [
+                                Literal {
+                                    token: Token(Identifier, "WinLeave", (11,10)->(11,18)),
+                                },
+                            ],
+                            pattern: Pattern(
+                                [
+                                    "*.py",
+                                    "*.rs",
+                                ],
+                            ),
+                            block: Command(
+                                Echo(
+                                    EchoCommand {
+                                        echo: Token(Identifier, "echo", (11,29)->(11,33)),
+                                        expr: String(
+                                            DoubleQuote(
+                                                "One of these is better",
+                                            ),
+                                        ),
+                                        eol: Token(EndOfLine, "\n", (11,58)->(11,58)),
+                                    },
+                                ),
+                            ),
+                        },
+                    ),
+                    NoOp(
+                        Token(EndOfLine, "\n", (12,0)->(12,0)),
+                    ),
                 ],
             },
-            augroup_end: Token(Identifier, "augroup", (9,0)->(9,7)),
-            augroup_end_name: Token(Identifier, "END", (9,8)->(9,11)),
-            augroup_end_eol: Token(EndOfLine, "\n", (9,11)->(9,11)),
+            augroup_end: Token(Identifier, "augroup", (13,0)->(13,7)),
+            augroup_end_name: Token(Identifier, "END", (13,8)->(13,11)),
+            augroup_end_eol: Token(EndOfLine, "\n", (13,11)->(13,11)),
         },
     ),
 ]

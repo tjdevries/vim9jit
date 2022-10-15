@@ -29,8 +29,6 @@ pub use expr_call::CallExpression;
 mod types;
 pub use types::{InnerType, Type};
 
-mod test;
-
 #[derive(Debug)]
 pub struct Program {
     pub commands: Vec<ExCommand>,
@@ -144,7 +142,7 @@ impl TryFrom<Token> for Literal {
         Ok(match token.kind {
             TokenKind::Identifier => Self { token },
             TokenKind::Mul => Self { token },
-            _ => unimplemented!("Not valid"),
+            _ => unimplemented!("Not valid: {:#?}", token),
         })
     }
 }
@@ -239,12 +237,6 @@ pub struct AssignStatement {
     pub right: Expression,
     eol: Token,
 }
-
-// impl AssignStatement {
-//     pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
-//         // Ok(ExCommand::Assign
-//     }
-// }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Body {
@@ -624,9 +616,9 @@ impl KeyValue {
                 TokenKind::Identifier => {
                     VimKey::Literal(parser.pop().try_into()?)
                 }
-                TokenKind::SingleQuoteString => {
-                    VimKey::Literal(Literal { token: parser.pop() })
-                }
+                TokenKind::SingleQuoteString => VimKey::Literal(Literal {
+                    token: parser.pop(),
+                }),
                 TokenKind::LeftBracket => {
                     // Consume left bracket, we do not want this to parser
                     // as an array literal.
@@ -1081,7 +1073,7 @@ mod infix_expr {
     pub fn parse_method_call(
         parser: &mut Parser,
         left: Box<Expression>,
-        ) -> Result<Expression> {
+    ) -> Result<Expression> {
         Ok(Expression::MethodCall(MethodCall {
             left,
             tok: {
@@ -1091,17 +1083,17 @@ mod infix_expr {
             right: {
                 // Parse up to the point it would be a call expr
                 let base = Expression::parse(parser, Precedence::Call)
-                .expect("base")
-                .into();
+                    .expect("base")
+                    .into();
 
                 // Create the call expr from the first base expression
                 let right =
-                CallExpression::parse(parser, base).expect("call").into();
+                    CallExpression::parse(parser, base).expect("call").into();
 
                 // Closing on right paren, DO NOT advance
                 parser
-                .ensure_token(TokenKind::RightParen)
-                .expect("rightparen");
+                    .ensure_token(TokenKind::RightParen)
+                    .expect("rightparen");
 
                 right
             },
@@ -1565,8 +1557,15 @@ impl Parser {
     where
         F: Fn(&TokenKind) -> bool,
     {
+        self.expect_fn_token(|t| f(&t.kind), consume)
+    }
+
+    pub fn expect_fn_token<F>(&mut self, f: F, consume: bool) -> Result<Token>
+    where
+        F: Fn(&Token) -> bool,
+    {
         let token = self.current_token.clone();
-        if !f(&token.kind) {
+        if !f(&token) {
             return Err(anyhow::anyhow!("[expect_fn] Got token: {:?}", token));
         }
 
@@ -1656,6 +1655,11 @@ impl Parser {
     }
 
     pub fn parse_command(&mut self) -> Result<ExCommand> {
+        // If the line starts with a colon, then just skip over it.
+        if self.current_token.kind == TokenKind::Colon {
+            self.next_token();
+        }
+
         // For the following branches, you need to return early if it completely consumes
         // the last character and advances past.
         //
@@ -1675,6 +1679,9 @@ impl Parser {
                     if self.command_match("var") || self.command_match("const")
                     {
                         return Ok(VarCommand::parse(self)?);
+                    } else if self.command_match("unlet") {
+                        println!("TODO: UNLET");
+                        return Ok(SharedCommand::parse(self)?);
                     } else if self.command_match("export") {
                         return Ok(ExportCommand::parse(self)?);
                     } else if self.command_match("for") {
@@ -1685,7 +1692,10 @@ impl Parser {
                         return Ok(TryCommand::parse(self)?);
                     } else if self.command_match("import") {
                         return Ok(ImportCommand::parse(self)?);
-                    } else if self.command_match("echo") {
+                    } else if self.command_match("echo")
+                        || self.command_match("echon")
+                        || self.command_match("echomsg")
+                    {
                         return Ok(EchoCommand::parse(self)?);
                     } else if self.command_match("call") {
                         return Ok(CallCommand::parse(self)?);
@@ -1710,6 +1720,7 @@ impl Parser {
                     } else if self.command_match("command") {
                         return Ok(UserCommand::parse(self)?);
                     } else if self.command_match("nnoremap")
+                        || self.command_match("inoremap")
                         || self.command_match("anoremenu")
                     {
                         // TODO: Make mapping command
@@ -1893,4 +1904,77 @@ pub fn setup_trace() {
             .finish()
             .init();
     });
+}
+
+#[cfg(test)]
+mod test {
+    use crate::*;
+
+    macro_rules! snap {
+        ($name:tt, $path:tt) => {
+            #[test]
+            fn $name() {
+                setup_trace();
+
+                let contents = include_str!($path);
+                let mut settings = insta::Settings::clone_current();
+                settings.set_snapshot_path("../testdata/output/");
+                settings.bind(|| {
+                    insta::assert_snapshot!(snapshot_parsing(contents));
+                });
+            }
+        };
+    }
+
+    snap!(test_var, "../testdata/snapshots/simple_var.vim");
+    snap!(test_ret, "../testdata/snapshots/simple_ret.vim");
+    snap!(test_shared, "../testdata/snapshots/shared.vim");
+    snap!(test_comment, "../testdata/snapshots/comment.vim");
+    snap!(test_header, "../testdata/snapshots/header.vim");
+    snap!(test_expr, "../testdata/snapshots/expr.vim");
+    snap!(test_echo, "../testdata/snapshots/echo.vim");
+    snap!(test_scopes, "../testdata/snapshots/scopes.vim");
+    snap!(test_autocmd, "../testdata/snapshots/autocmd.vim");
+    snap!(test_array, "../testdata/snapshots/array.vim");
+    snap!(test_dict, "../testdata/snapshots/dict.vim");
+    snap!(test_if, "../testdata/snapshots/if.vim");
+    snap!(test_call, "../testdata/snapshots/call.vim");
+    snap!(test_concat, "../testdata/snapshots/concat.vim");
+    snap!(test_unpack, "../testdata/snapshots/unpack.vim");
+    snap!(test_assign, "../testdata/snapshots/assign.vim");
+    snap!(test_vimvar, "../testdata/snapshots/vimvar.vim");
+    snap!(test_busted, "../testdata/snapshots/busted.vim");
+    snap!(test_heredoc, "../testdata/snapshots/heredoc.vim");
+    snap!(test_typed_params, "../testdata/snapshots/typed_params.vim");
+    snap!(test_index, "../testdata/snapshots/index.vim");
+    snap!(test_adv_index, "../testdata/snapshots/adv_index.vim");
+    snap!(test_multiline, "../testdata/snapshots/multiline.vim");
+    snap!(test_cfilter, "../testdata/snapshots/cfilter.vim");
+    snap!(test_lambda, "../testdata/snapshots/lambda.vim");
+    snap!(test_comparisons, "../testdata/snapshots/comparisons.vim");
+    snap!(test_methods, "../testdata/snapshots/methods.vim");
+    snap!(test_eval, "../testdata/snapshots/eval.vim");
+    snap!(test_export, "../testdata/snapshots/export.vim");
+    snap!(test_import, "../testdata/snapshots/import.vim");
+    snap!(
+        test_plugin_fileselect,
+        "../testdata/snapshots/plugin_fileselect.vim"
+    );
+
+    #[test]
+    fn test_peek_n() {
+        let input = "vim9script\nvar x = true\n";
+        let lexer = new_lexer(input);
+        let mut parser = Parser::new(lexer);
+        assert_eq!(parser.peek_token.kind, TokenKind::EndOfLine);
+        assert_eq!(parser.peek_n(0).kind, TokenKind::Identifier);
+        assert_eq!(parser.peek_n(1).kind, TokenKind::EndOfLine);
+        assert_eq!(parser.peek_n(2).kind, TokenKind::Identifier);
+        assert_eq!(parser.peek_n(3).kind, TokenKind::Identifier);
+        assert_eq!(parser.peek_n(4).kind, TokenKind::Equal);
+        assert_eq!(parser.peek_n(1).kind, TokenKind::EndOfLine);
+    }
+
+    // TODO: Slowly but surely, we can work towards this
+    // snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
 }

@@ -7,4 +7,8 @@ augroup matchparen
     }
 
   autocmd WinLeave * echo "Command"
+
+  autocmd WinLeave *.py echo "snek lang"
+  autocmd WinLeave *.py,*.rs echo "One of these is better"
+
 augroup END

@@ -11,4 +11,6 @@ augroup matchparen
   autocmd! TextChanged,TextChangedI * {
       Highlight_Matching_Pair()
     }
+
+  autocmd WinLeave *.py,*.rs echo "One of these is better"
 augroup END

@@ -13,8 +13,8 @@ use parser::{
     InfixExpression, InnerType, Lambda, Literal, MethodCall, MutationStatement,
     PrefixExpression, RawIdentifier, Register, ReturnCommand, ScopedIdentifier,
     SharedCommand, Signature, StatementCommand, Ternary, TryCommand, Type,
-    UserCommand, VarCommand, Vim9ScriptCommand, VimBoolean, VimKey, VimNumber,
-    VimOption, VimScope, VimString, WhileCommand,
+    UnpackIdentifier, UserCommand, VarCommand, Vim9ScriptCommand, VimBoolean,
+    VimKey, VimNumber, VimOption, VimScope, VimString, WhileCommand,
 };
 
 // this word is missspelled
@@ -265,18 +265,29 @@ impl Generate for ForCommand {
             .with_scope(ScopeKind::For { has_continue }, |s| self.body.gen(s));
 
         let expr = self.for_expr.gen(state);
-        let ident = self.for_identifier.gen(state);
+        let (ident, unpacked) = match &self.for_identifier {
+            Identifier::Unpacked(unpacked) => (
+                "__unpack_result".to_string(),
+                format!(
+                    "local {} = unpack(__unpack_result)",
+                    identifier_list(state, unpacked)
+                ),
+            ),
+            _ => (self.for_identifier.gen(state), "".to_string()),
+        };
 
         if has_continue {
             format!(
                 r#"
                     local body = function(_, {ident})
+                        {unpacked}
                         {body}
 
                         return NVIM9.ITER_DEFAULT
                     end
 
                     for _, {ident} in NVIM9.iter({expr}) do
+                        {unpacked}
                         local nvim9_status, nvim9_ret = body(_, {ident})
                         if nvim9_status == NVIM9.ITER_BREAK then
                             break
@@ -292,7 +303,7 @@ impl Generate for ForCommand {
                 for _, {ident} in NVIM9.iter({expr}) do
                     {body}
                 end
-            "#,
+                "#,
             )
         }
     }
@@ -761,6 +772,15 @@ impl Generate for Vim9ScriptCommand {
     }
 }
 
+fn identifier_list(state: &mut State, unpacked: &UnpackIdentifier) -> String {
+    unpacked
+        .identifiers
+        .iter()
+        .map(|i| i.gen(state))
+        .intersperse(", ".to_string())
+        .collect()
+}
+
 impl Generate for VarCommand {
     fn gen(&self, state: &mut State) -> String {
         let expr = match self.ty {
@@ -773,13 +793,7 @@ impl Generate for VarCommand {
 
         match &self.name {
             Identifier::Unpacked(unpacked) => {
-                let identifiers: String = unpacked
-                    .identifiers
-                    .iter()
-                    .map(|i| i.gen(state))
-                    .intersperse(", ".to_string())
-                    .collect();
-
+                let identifiers: String = identifier_list(state, &unpacked);
                 format!("local {identifiers} = unpack({expr})")
             }
             _ => format!("local {} = {}", self.name.gen(state), expr),

@@ -36,8 +36,19 @@ pub struct AutocmdCommand {
     autocmd: Token,
     pub bang: bool,
     pub events: Vec<Literal>,
-    pub pattern: Vec<Literal>,
+    pub pattern: AutocmdPattern,
     pub block: AutocmdBlock,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum AutocmdPattern {
+    Pattern(Vec<String>),
+    Buffer,
+}
+
+fn tokens_are_neighbors(left: &Token, right: &Token) -> bool {
+    left.span.end_row == right.span.start_row
+        && left.span.end_col == right.span.start_col
 }
 
 impl AutocmdCommand {
@@ -53,6 +64,7 @@ impl AutocmdCommand {
             },
             events: {
                 let mut events = vec![];
+
                 loop {
                     events.push(parser.pop().try_into()?);
                     if parser.current_token.kind != TokenKind::Comma {
@@ -64,19 +76,7 @@ impl AutocmdCommand {
 
                 events
             },
-            pattern: {
-                let mut pattern = vec![];
-                loop {
-                    pattern.push(parser.pop().try_into()?);
-                    if parser.current_token.kind != TokenKind::Comma {
-                        break;
-                    }
-
-                    parser.next_token();
-                }
-
-                pattern
-            },
+            pattern: AutocmdPattern::parse(parser)?,
             block: AutocmdBlock::parse(parser)?,
         }))
     }
@@ -93,6 +93,40 @@ impl AutocmdBlock {
         Ok(match parser.current_token.kind {
             TokenKind::LeftBrace => AutocmdBlock::Block(Block::parse(parser)?),
             _ => AutocmdBlock::Command(parser.parse_command()?.into()),
+        })
+    }
+}
+impl AutocmdPattern {
+    fn parse(parser: &mut Parser) -> Result<Self> {
+        Ok(if parser.current_token.kind == TokenKind::AngleLeft {
+            while parser.current_token.kind != TokenKind::AngleRight {
+                parser.pop();
+            }
+
+            AutocmdPattern::Buffer
+        } else {
+            AutocmdPattern::Pattern({
+                let mut pattern = vec![];
+                let mut text = String::new();
+
+                loop {
+                    let tok = parser.pop();
+
+                    // Commas split different patterns
+                    if tok.kind == TokenKind::Comma {
+                        pattern.push(std::mem::take(&mut text));
+                        continue;
+                    }
+
+                    // Append the text of the token.
+                    text += &tok.text;
+
+                    if !tokens_are_neighbors(&tok, &parser.current_token) {
+                        pattern.push(std::mem::take(&mut text));
+                        break pattern;
+                    }
+                }
+            })
         })
     }
 }

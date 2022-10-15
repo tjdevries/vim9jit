@@ -1,6 +1,6 @@
 ---
-source: src/lib.rs
-assertion_line: 453
+source: crates/vim9-lexer/src/lib.rs
+assertion_line: 916
 expression: snapshot_lexing(contents)
 ---
 vim9script
@@ -65,8 +65,23 @@ augroup matchparen
     }
     ^ Token(RightBrace, "}", (12,4)->(12,5))
       Token(EndOfLine, "\n", (12,5)->(12,5))
+
+ Token(EndOfLine, "\n", (13,0)->(13,0))
+  autocmd WinLeave *.py,*.rs echo "One of these is better"
+  ^^^^^^^ Token(Identifier, "autocmd", (14,2)->(14,9))
+          ^^^^^^^^ Token(Identifier, "WinLeave", (14,10)->(14,18))
+                   ^ Token(Mul, "*", (14,19)->(14,20))
+                    ^ Token(Dot, ".", (14,20)->(14,21))
+                     ^^ Token(Identifier, "py", (14,21)->(14,23))
+                       ^ Token(Comma, ",", (14,23)->(14,24))
+                        ^ Token(Mul, "*", (14,24)->(14,25))
+                         ^ Token(Dot, ".", (14,25)->(14,26))
+                          ^^ Token(Identifier, "rs", (14,26)->(14,28))
+                             ^^^^ Token(Identifier, "echo", (14,29)->(14,33))
+                                   ^^^^^^^^^^^^^^^^^^^^^ Token(DoubleQuoteString, "One of these is better", (14,35)->(14,56))
+                                                           Token(EndOfLine, "\n", (14,58)->(14,58))
 augroup END
-^^^^^^^ Token(Identifier, "augroup", (13,0)->(13,7))
-        ^^^ Token(Identifier, "END", (13,8)->(13,11))
-            Token(EndOfLine, "\n", (13,11)->(13,11))
+^^^^^^^ Token(Identifier, "augroup", (15,0)->(15,7))
+        ^^^ Token(Identifier, "END", (15,8)->(15,11))
+            Token(EndOfLine, "\n", (15,11)->(15,11))
 
