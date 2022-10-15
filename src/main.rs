@@ -3,11 +3,10 @@ use std::path::Path;
 use anyhow::Result;
 use clap::Parser;
 
-/// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Name of the person to greet
+    /// The directory for generating paths
     #[arg(short, long)]
     dir: String,
 }
