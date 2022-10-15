@@ -281,8 +281,10 @@ impl Signature {
                 let mut params = Vec::new();
                 while parser.current_token.kind != TokenKind::RightParen {
                     params.push(Parameter::parse(parser)?);
+                    parser.skip_whitespace();
                     if parser.current_token.kind == TokenKind::Comma {
                         parser.next_token();
+                        parser.skip_whitespace();
                     }
                 }
 
@@ -948,9 +950,8 @@ mod prefix_expr {
     pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression> {
         Ok(Expression::Array(ArrayLiteral {
             open: parser.ensure_token(TokenKind::LeftBracket)?,
-            elements: parser
-                .parse_expression_list(TokenKind::RightBracket, false)?,
-            close: parser.expect_peek(TokenKind::RightBracket)?,
+            elements: parser.parse_expression_list(TokenKind::RightBracket)?,
+            close: parser.ensure_token(TokenKind::RightBracket)?,
         }))
     }
 
@@ -1170,6 +1171,7 @@ mod infix_expr {
         parser: &mut Parser,
         left: Box<Expression>,
     ) -> Result<Expression> {
+        println!("parse call expr");
         Ok(Expression::Call(CallExpression::parse(parser, left)?))
     }
 
@@ -1205,7 +1207,6 @@ impl IndexType {
             TokenKind::Colon | TokenKind::SpacedColon => (parser.pop(), None),
             _ => {
                 let left = parser.parse_expression(Precedence::Lowest)?;
-                info!(left = ?left, "[IndexType]");
                 if let Expression::Slice(slice) = left {
                     return Ok(IndexType::Slice(slice));
                 }
@@ -1666,6 +1667,17 @@ impl Parser {
             self.next_token();
         }
 
+        // TODO: Handle modifiers.
+        // Perhaps return as separate item/note for ExCommand, or return as tuple.
+        //  Could additionally be added as ExCommand parent type or something.
+        //  Will just be an annoying amount of writing :)
+        if self.current_token.text == "silent" {
+            self.next_token();
+            if self.current_token.kind == TokenKind::Bang {
+                self.next_token();
+            }
+        }
+
         // For the following branches, you need to return early if it completely consumes
         // the last character and advances past.
         //
@@ -1802,29 +1814,36 @@ impl Parser {
     fn parse_expression_list(
         &mut self,
         close_kind: TokenKind,
-        consume_close: bool,
     ) -> Result<Vec<Expression>> {
-        let mut results = vec![];
-        if self.peek_token.kind != close_kind {
+        let mut elements = vec![];
+
+        if self.peek_token.kind == close_kind {
             self.next_token();
-            results.push(self.parse_expression(Precedence::Lowest)?);
+            return Ok(elements);
+        }
 
-            while self.peek_token.kind == TokenKind::Comma {
-                // Consume end of expression
-                self.next_token();
+        self.next_token();
 
-                // Consume comma
-                self.next_token();
-                results.push(self.parse_expression(Precedence::Lowest)?);
+        // Push first element
+        elements.push(self.parse_expression(Precedence::Lowest)?);
+
+        while self.peek_non_whitespace().0.kind != close_kind {
+            self.next_token();
+            self.expect_token(TokenKind::Comma)?;
+
+            elements.push(self.parse_expression(Precedence::Lowest)?);
+
+            if self.current_token.kind.is_eof() {
+                panic!("EOF");
             }
         }
 
-        self.ensure_peek(close_kind)?;
-        if consume_close {
-            self.next_token();
+        if self.peek_token.kind != close_kind {
+            self.skip_peeked_whitespace();
         }
 
-        Ok(results)
+        self.expect_peek(close_kind)?;
+        Ok(elements)
     }
 
     #[tracing::instrument]

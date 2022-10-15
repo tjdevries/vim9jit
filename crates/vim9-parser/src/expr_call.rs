@@ -26,8 +26,10 @@ impl CallExpression {
         Ok(CallExpression {
             expr: left,
             open: parser.ensure_token(TokenKind::LeftParen)?,
-            args: parser.parse_expression_list(TokenKind::RightParen, false)?,
-            close: parser.expect_peek(TokenKind::RightParen)?,
+            args: parser.parse_expression_list(TokenKind::RightParen)?,
+            close: parser
+                .ensure_token(TokenKind::RightParen)
+                .expect("closing for call expression"),
         })
     }
 }

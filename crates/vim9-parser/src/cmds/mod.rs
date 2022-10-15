@@ -420,7 +420,7 @@ impl CallCommand {
             call: parser.expect_identifier_with_text("call").ok(),
             expr: Expression::parse(parser, Precedence::Call)?,
             open: parser.ensure_token(TokenKind::LeftParen)?,
-            args: parser.parse_expression_list(TokenKind::RightParen, true)?,
+            args: parser.parse_expression_list(TokenKind::RightParen)?,
             close: parser.expect_token(TokenKind::RightParen)?,
             eol: parser.expect_eol()?,
         }))
@@ -428,7 +428,7 @@ impl CallCommand {
 
     pub fn matches(parser: &mut Parser) -> bool {
         parser.line_contains_kind(TokenKind::LeftParen)
-            && parser.line_contains_kind(TokenKind::RightParen)
+            // && parser.line_contains_kind(TokenKind::RightParen)
             && !parser.line_contains_any(|t| {
                 t.kind.is_assignment() || t.kind == TokenKind::MethodArrow
             })

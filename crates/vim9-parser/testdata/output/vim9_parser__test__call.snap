@@ -1,6 +1,6 @@
 ---
-source: src/lib.rs
-assertion_line: 1375
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 1967
 expression: snapshot_parsing(contents)
 ---
 [
@@ -94,6 +94,159 @@ expression: snapshot_parsing(contents)
                 ],
             ),
             eol: Token(EndOfLine, "\n", (9,53)->(9,53)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (10,0)->(10,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (11,0)->(11,3)),
+            ty: None,
+            name: Raw(zed),
+            equal: Token(Equal, "=", (11,8)->(11,9)),
+            expr: MethodCall(
+                MethodCall {
+                    left: DictAccess(
+                        DictAccess {
+                            container: Index(
+                                IndexExpression {
+                                    container: Identifier(
+                                        Raw(symbolTable),
+                                    ),
+                                    open: Token(LeftBracket, "[", (11,21)->(11,22)),
+                                    index: Item(
+                                        Identifier(
+                                            Raw(mid),
+                                        ),
+                                    ),
+                                    close: Token(RightBracket, "]", (11,25)->(11,26)),
+                                },
+                            ),
+                            dot: Token(Dot, ".", (11,26)->(11,27)),
+                            index: RawIdentifier {
+                                name: "name",
+                            },
+                        },
+                    ),
+                    tok: Token(MethodArrow, "->", (11,31)->(11,33)),
+                    right: f: Identifier(Raw(len)) arg: [],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (11,38)->(11,38)),
+        },
+    ),
+    Call(
+        CallCommand {
+            call: None,
+            expr: Identifier(
+                Raw(prop_add),
+            ),
+            open: Token(LeftParen, "(", (12,8)->(12,9)),
+            args: [
+                DictAccess(
+                    DictAccess {
+                        container: Index(
+                            IndexExpression {
+                                container: Identifier(
+                                    Raw(symbolTable),
+                                ),
+                                open: Token(LeftBracket, "[", (12,20)->(12,21)),
+                                index: Item(
+                                    Identifier(
+                                        Raw(mid),
+                                    ),
+                                ),
+                                close: Token(RightBracket, "]", (12,24)->(12,25)),
+                            },
+                        ),
+                        dot: Token(Dot, ".", (12,25)->(12,26)),
+                        index: RawIdentifier {
+                            name: "outlineLine",
+                        },
+                    },
+                ),
+                Identifier(
+                    Raw(col),
+                ),
+                Dict(
+                    DictLiteral {
+                        open: Token(LeftBrace, "{", (13,10)->(13,11)),
+                        elements: [
+                            KeyValue {
+                                key: Literal(
+                                    Literal {
+                                        token: Token(Identifier, "bufnr", (13,11)->(13,16)),
+                                    },
+                                ),
+                                colon: Token(SpacedColon, ": ", (13,16)->(13,18)),
+                                value: Identifier(
+                                    Raw(bnr),
+                                ),
+                                comma: Some(
+                                    Token(Comma, ",", (13,21)->(13,22)),
+                                ),
+                            },
+                            KeyValue {
+                                key: Literal(
+                                    Literal {
+                                        token: Token(Identifier, "type", (13,23)->(13,27)),
+                                    },
+                                ),
+                                colon: Token(SpacedColon, ": ", (13,27)->(13,29)),
+                                value: String(
+                                    SingleQuote(
+                                        "LspOutlineHighlight",
+                                    ),
+                                ),
+                                comma: Some(
+                                    Token(Comma, ",", (13,50)->(13,51)),
+                                ),
+                            },
+                            KeyValue {
+                                key: Literal(
+                                    Literal {
+                                        token: Token(Identifier, "length", (14,10)->(14,16)),
+                                    },
+                                ),
+                                colon: Token(SpacedColon, ": ", (14,16)->(14,18)),
+                                value: MethodCall(
+                                    MethodCall {
+                                        left: DictAccess(
+                                            DictAccess {
+                                                container: Index(
+                                                    IndexExpression {
+                                                        container: Identifier(
+                                                            Raw(symbolTable),
+                                                        ),
+                                                        open: Token(LeftBracket, "[", (14,29)->(14,30)),
+                                                        index: Item(
+                                                            Identifier(
+                                                                Raw(mid),
+                                                            ),
+                                                        ),
+                                                        close: Token(RightBracket, "]", (14,33)->(14,34)),
+                                                    },
+                                                ),
+                                                dot: Token(Dot, ".", (14,34)->(14,35)),
+                                                index: RawIdentifier {
+                                                    name: "name",
+                                                },
+                                            },
+                                        ),
+                                        tok: Token(MethodArrow, "->", (14,39)->(14,41)),
+                                        right: f: Identifier(Raw(len)) arg: [],
+                                    },
+                                ),
+                                comma: None,
+                            },
+                        ],
+                        close: Token(RightBrace, "}", (14,46)->(14,47)),
+                    },
+                ),
+            ],
+            close: Token(RightParen, ")", (14,47)->(14,48)),
+            eol: Token(EndOfLine, "\n", (14,48)->(14,48)),
         },
     ),
 ]
