@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2261
+assertion_line: 1962
 expression: snapshot_parsing(contents)
 ---
 [
@@ -431,5 +431,72 @@ expression: snapshot_parsing(contents)
             ),
             eol: Token(EndOfLine, "\n", (20,9)->(20,9)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (21,0)->(21,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (22,0)->(22,3)),
+            ty: None,
+            name: Raw(foo),
+            equal: Token(Equal, "=", (22,8)->(22,9)),
+            expr: MethodCall(
+                MethodCall {
+                    left: Array(
+                        ArrayLiteral {
+                            open: Token(LeftBracket, "[", (22,10)->(22,11)),
+                            elements: [
+                                Identifier(
+                                    Raw(slnum),
+                                ),
+                                Identifier(
+                                    Raw(scol),
+                                ),
+                            ],
+                            close: Token(RightBracket, "]", (22,22)->(22,23)),
+                        },
+                    ),
+                    tok: Token(MethodArrow, "->", (22,23)->(22,25)),
+                    right: f: Identifier(Raw(cursor)) arg: [],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (22,33)->(22,33)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (23,0)->(23,0)),
+    ),
+    Comment(
+        Token(Comment, "# Testing", (24,0)->(24,9)),
+    ),
+    Eval(
+        EvalCommand {
+            eval: None,
+            expr: MethodCall(
+                MethodCall {
+                    left: Array(
+                        ArrayLiteral {
+                            open: Token(LeftBracket, "[", (25,0)->(25,1)),
+                            elements: [
+                                Identifier(
+                                    Raw(slnum),
+                                ),
+                                Identifier(
+                                    Raw(scol),
+                                ),
+                            ],
+                            close: Token(RightBracket, "]", (25,12)->(25,13)),
+                        },
+                    ),
+                    tok: Token(MethodArrow, "->", (25,13)->(25,15)),
+                    right: f: Identifier(Raw(cursor)) arg: [],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (25,23)->(25,23)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (26,0)->(26,0)),
     ),
 ]

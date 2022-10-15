@@ -13,3 +13,8 @@ var foo = base->name(args)
 var foo = base->some.name(args)
 var foo = base->alist[idx](args)
 var foo = base->(getFuncRef())(args)
+
+var foo = [slnum, scol]->cursor()
+
+# Testing
+[slnum, scol]->cursor()

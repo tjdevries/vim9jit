@@ -1,6 +1,6 @@
 ---
-source: crates/vim9-parser/src/test.rs
-assertion_line: 29
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 1943
 expression: snapshot_parsing(contents)
 ---
 [

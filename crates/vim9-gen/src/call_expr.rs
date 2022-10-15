@@ -165,15 +165,15 @@ impl VimFunc {
             None => "nil".to_string(),
         };
 
-        let x = self
-            .args
-            .iter()
-            .enumerate()
-            .filter_map(|(idx, expr)| match expr {
-                Expression::Identifier(id) => Some((idx, id)),
-                _ => None,
-            })
-            .collect::<Vec<_>>();
+        // let x = self
+        //     .args
+        //     .iter()
+        //     .enumerate()
+        //     .filter_map(|(idx, expr)| match expr {
+        //         Expression::Identifier(id) => Some((idx, id)),
+        //         _ => None,
+        //     })
+        //     .collect::<Vec<_>>();
 
         generate_mutable_fn_call(&name, &args, &replaced)
     }
@@ -185,7 +185,7 @@ impl From<&CallExpression> for FunctionData {
             Expression::Identifier(id) => {
                 ident_to_func_data(expr.clone(), id.clone())
             }
-            Expression::DictAccess(dict) => FunctionData::ExprFunc {
+            Expression::DictAccess(_) => FunctionData::ExprFunc {
                 caller: *expr.expr.clone(),
                 args: expr.args.clone(),
             },

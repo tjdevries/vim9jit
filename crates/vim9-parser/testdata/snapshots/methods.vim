@@ -19,3 +19,9 @@ var foo = base->(getFuncRef())(args)
 
 var x = [1, 4, 2, 5]
 x->sort()
+
+var foo = [slnum, scol]->cursor()
+
+# Testing
+[slnum, scol]->cursor()
+

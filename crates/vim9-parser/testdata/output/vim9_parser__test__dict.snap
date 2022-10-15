@@ -28,7 +28,7 @@ expression: snapshot_parsing(contents)
                             ),
                             colon: Token(SpacedColon, ": ", (2,15)->(2,17)),
                             value: String(
-                                InterpolatedLit(
+                                DoubleQuote(
                                     "world",
                                 ),
                             ),
@@ -80,7 +80,7 @@ expression: snapshot_parsing(contents)
                                             ),
                                             colon: Token(SpacedColon, ": ", (3,36)->(3,38)),
                                             value: String(
-                                                InterpolatedLit(
+                                                DoubleQuote(
                                                     "matchparen",
                                                 ),
                                             ),
@@ -273,14 +273,14 @@ expression: snapshot_parsing(contents)
                         KeyValue {
                             key: Expression(
                                 String(
-                                    InterpolatedLit(
+                                    DoubleQuote(
                                         "hello",
                                     ),
                                 ),
                             ),
                             colon: Token(SpacedColon, ": ", (28,13)->(28,15)),
                             value: String(
-                                InterpolatedLit(
+                                DoubleQuote(
                                     "world",
                                 ),
                             ),

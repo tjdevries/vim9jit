@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-lexer/src/lib.rs
-assertion_line: 796
+assertion_line: 936
 expression: snapshot_lexing(contents)
 ---
 vim9script
@@ -146,4 +146,35 @@ var foo = base->(getFuncRef())(args)
                                ^^^^ Token(Identifier, "args", (14,31)->(14,35))
                                    ^ Token(RightParen, ")", (14,35)->(14,36))
                                      Token(EndOfLine, "\n", (14,36)->(14,36))
+
+ Token(EndOfLine, "\n", (15,0)->(15,0))
+var foo = [slnum, scol]->cursor()
+^^^ Token(Identifier, "var", (16,0)->(16,3))
+    ^^^ Token(Identifier, "foo", (16,4)->(16,7))
+        ^ Token(Equal, "=", (16,8)->(16,9))
+          ^ Token(LeftBracket, "[", (16,10)->(16,11))
+           ^^^^^ Token(Identifier, "slnum", (16,11)->(16,16))
+                ^ Token(Comma, ",", (16,16)->(16,17))
+                  ^^^^ Token(Identifier, "scol", (16,18)->(16,22))
+                      ^ Token(RightBracket, "]", (16,22)->(16,23))
+                       ^^ Token(MethodArrow, "->", (16,23)->(16,25))
+                         ^^^^^^ Token(Identifier, "cursor", (16,25)->(16,31))
+                               ^ Token(LeftParen, "(", (16,31)->(16,32))
+                                ^ Token(RightParen, ")", (16,32)->(16,33))
+                                  Token(EndOfLine, "\n", (16,33)->(16,33))
+
+ Token(EndOfLine, "\n", (17,0)->(17,0))
+# Testing
+^^^^^^^^^ Token(Comment, "# Testing", (18,0)->(18,9))
+[slnum, scol]->cursor()
+^ Token(LeftBracket, "[", (19,0)->(19,1))
+ ^^^^^ Token(Identifier, "slnum", (19,1)->(19,6))
+      ^ Token(Comma, ",", (19,6)->(19,7))
+        ^^^^ Token(Identifier, "scol", (19,8)->(19,12))
+            ^ Token(RightBracket, "]", (19,12)->(19,13))
+             ^^ Token(MethodArrow, "->", (19,13)->(19,15))
+               ^^^^^^ Token(Identifier, "cursor", (19,15)->(19,21))
+                     ^ Token(LeftParen, "(", (19,21)->(19,22))
+                      ^ Token(RightParen, ")", (19,22)->(19,23))
+                        Token(EndOfLine, "\n", (19,23)->(19,23))
 

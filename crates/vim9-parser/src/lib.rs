@@ -1347,7 +1347,7 @@ impl Parser {
             Integer | Float => parse_number,
             Identifier => parse_identifier,
             Register => parse_register,
-            DoubleQuoteString => parse_interpolated,
+            DoubleQuoteString => parse_double_string,
             SingleQuoteString => parse_single_string,
             InterpolatedString => parse_interpolated,
             InterpolatedLiteralString => parse_interpolated_lit,
@@ -1747,6 +1747,7 @@ impl Parser {
                     }
                 }
             }
+            TokenKind::LeftBracket => return Ok(EvalCommand::parse(self)?),
             _ => ExCommand::NoOp(self.current_token.clone()),
         };
 
