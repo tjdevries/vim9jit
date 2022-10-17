@@ -1764,6 +1764,7 @@ impl Parser {
                     } else if self.command_match("nnoremap")
                         || self.command_match("inoremap")
                         || self.command_match("anoremenu")
+                        || self.command_match("normal")
                     {
                         // TODO: Make mapping command
                         return Ok(SharedCommand::parse(self)?);
@@ -2041,11 +2042,10 @@ mod test {
     snap!(test_eval, "../testdata/snapshots/eval.vim");
     snap!(test_export, "../testdata/snapshots/export.vim");
     snap!(test_import, "../testdata/snapshots/import.vim");
-    snap!(test_handlers, "../../shared/snapshots/handlers.vim");
-    snap!(
-        test_plugin_fileselect,
-        "../testdata/snapshots/plugin_fileselect.vim"
-    );
+
+    // https://github.com/yegappan/lsp test suite
+    snap!(test_handlers, "../../shared/snapshots/lsp_handlers.vim");
+    snap!(test_fileselect, "../../shared/snapshots/lsp_fileselect.vim");
 
     #[test]
     fn test_peek_n() {

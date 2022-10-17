@@ -1,5 +1,7 @@
 vim9script
 
+# Thanks to: https://github.com/yegappan/lsp for some test cases
+
 # Handlers for messages from the LSP server
 # Refer to https://microsoft.github.io/language-server-protocol/specification
 # for the Language Server Protocol (LSP) specificaiton.

@@ -966,5 +966,5 @@ mod test {
 
     // TODO: Check more thoroughly
     snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
-    snapshot!(test_handlers, "../../shared/snapshots/handlers.vim");
+    snapshot!(test_handlers, "../../shared/snapshots/lsp_handlers.vim");
 }
