@@ -1,22 +1,20 @@
-use std::collections::HashMap;
-use std::process::Command;
-use std::process::Stdio;
+use std::{
+    collections::HashMap,
+    process::{Command, Stdio},
+};
 
-use anyhow::anyhow;
-use anyhow::Result;
-use log::trace;
-use log::warn;
+use anyhow::{anyhow, Result};
+use log::{trace, warn};
 // use pretty_assertions::assert_eq;
 use rmpv::decode::read_value;
-use rmpv::encode::write_value;
-use rmpv::Value;
+use rmpv::{encode::write_value, Value};
 
-use crate::ast;
-use crate::ast::Expression;
-use crate::ast::Identifier;
-use crate::ast::TypeDeclaration;
-use crate::lexer::tokenize_file;
-use crate::parser::parse;
+use crate::{
+    ast,
+    ast::{Expression, Identifier, TypeDeclaration},
+    lexer::tokenize_file,
+    parser::parse,
+};
 
 #[derive(Debug)]
 pub struct Variable {
@@ -30,7 +28,12 @@ pub struct Scope {
 }
 
 impl Scope {
-    fn add_var(&mut self, identifier: Identifier, decl: Option<TypeDeclaration>, expr: Expression) {
+    fn add_var(
+        &mut self,
+        identifier: Identifier,
+        decl: Option<TypeDeclaration>,
+        expr: Expression,
+    ) {
         self.lookup.insert(identifier, Variable { decl, expr });
     }
 
@@ -53,8 +56,16 @@ impl Default for GenDB {
 }
 
 impl GenDB {
-    pub fn add_var(&mut self, identifier: Identifier, decl: Option<TypeDeclaration>, expr: Expression) {
-        let scope = self.scopes.last_mut().expect("Should always have at least one scope");
+    pub fn add_var(
+        &mut self,
+        identifier: Identifier,
+        decl: Option<TypeDeclaration>,
+        expr: Expression,
+    ) {
+        let scope = self
+            .scopes
+            .last_mut()
+            .expect("Should always have at least one scope");
         scope.add_var(identifier, decl, expr);
     }
 
@@ -69,26 +80,35 @@ impl GenDB {
     }
 
     /// Checks whether certain items behave the same in vim9script and lua
-    pub fn has_shared_behavior(&self, _decl: &Option<TypeDeclaration>, expr: &Expression) -> bool {
+    pub fn has_shared_behavior(
+        &self,
+        _decl: &Option<TypeDeclaration>,
+        expr: &Expression,
+    ) -> bool {
         // TODO: Actually use decl
 
         match expr {
             Expression::Empty => true,
             Expression::Number(_) => true,
-            Expression::Identifier(identifier) => match self.get_var(identifier) {
-                Some(variable) => {
-                    if identifier.name == "i" {
-                        true
-                    } else {
-                        self.has_shared_behavior(&variable.decl, &variable.expr)
+            Expression::Identifier(identifier) => {
+                match self.get_var(identifier) {
+                    Some(variable) => {
+                        if identifier.name == "i" {
+                            true
+                        } else {
+                            self.has_shared_behavior(
+                                &variable.decl,
+                                &variable.expr,
+                            )
+                        }
+                    }
+                    None => {
+                        // If we don't know about this identifier, then we just default back to runtime checks.
+                        warn!("unknown identifier: {:?}", identifier);
+                        false
                     }
                 }
-                None => {
-                    // If we don't know about this identifier, then we just default back to runtime checks.
-                    warn!("unknown identifier: {:?}", identifier);
-                    false
-                }
-            },
+            }
             Expression::VimVariable(_) => false,
             Expression::Call(_) => false,
             Expression::Prefix { .. } => false,
@@ -124,7 +144,11 @@ pub fn all_of_it(preamble: &str, result: &str) -> Result<rmpv::Value> {
     eval(&lua, result)
 }
 
-pub fn eval_with_setup(setup: &str, s: &str, result: &str) -> Result<rmpv::Value> {
+pub fn eval_with_setup(
+    setup: &str,
+    s: &str,
+    result: &str,
+) -> Result<rmpv::Value> {
     let lua = to_lua(s);
     let lua = setup.to_string() + ";\n" + lua.as_str();
 
@@ -141,8 +165,6 @@ pub fn eval(preamble: &str, result: &str) -> Result<rmpv::Value> {
         "#,
         preamble, result
     );
-
-    // dbg!(&contents);
 
     // start a neovim job
     let mut child = Command::new("nvim")
@@ -187,7 +209,11 @@ pub fn eval(preamble: &str, result: &str) -> Result<rmpv::Value> {
     match err {
         Value::Nil => {}
         err => {
-            return Err(anyhow!("Error executing Lua:\n\n{}\n\n{}", contents, err));
+            return Err(anyhow!(
+                "Error executing Lua:\n\n{}\n\n{}",
+                contents,
+                err
+            ));
         }
     }
 
@@ -235,7 +261,10 @@ mod test {
         assert_eq!(all_of_it("var x = 1 + 2", "x")?, 3.into());
         assert_eq!(all_of_it("var x = 1 * 2", "x")?, 2.into());
 
-        assert_eq!(all_of_it("var x = 1\nvar y = 2\nvar z = x * y", "z")?, 2.into());
+        assert_eq!(
+            all_of_it("var x = 1\nvar y = 2\nvar z = x * y", "z")?,
+            2.into()
+        );
 
         Ok(())
     }

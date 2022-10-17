@@ -1,6 +1,6 @@
 ---
-source: crates/vim9-parser/src/test.rs
-assertion_line: 26
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2016
 expression: snapshot_parsing(contents)
 ---
 [
@@ -245,7 +245,374 @@ expression: snapshot_parsing(contents)
             ),
         },
     ),
+    UserCommand(
+        UserCommand {
+            tok: Token(Identifier, "command", (19,0)->(19,7)),
+            bang: true,
+            command_bang: false,
+            command_bar: true,
+            command_keepscript: false,
+            command_register: None,
+            command_nargs: Some(
+                "0",
+            ),
+            command_compl: None,
+            command_range: None,
+            command_addr: None,
+            command_complete: None,
+            name: "LspGotoDefinition",
+            command: Call(
+                CallCommand {
+                    call: None,
+                    expr: DictAccess(
+                        DictAccess {
+                            container: Identifier(
+                                Raw(lsp),
+                            ),
+                            dot: Token(Dot, ".", (19,44)->(19,45)),
+                            index: RawIdentifier {
+                                name: "GotoDefinition",
+                            },
+                        },
+                    ),
+                    open: Token(LeftParen, "(", (19,59)->(19,60)),
+                    args: [
+                        Identifier(
+                            Scope(ScopedIdentifier { scope: VimVar, colon: Token(Colon, ":", (19,61)->(19,62)), accessor: Raw(false) }),
+                        ),
+                    ],
+                    close: Token(RightParen, ")", (19,67)->(19,68)),
+                    eol: Token(EndOfLine, "\n", (19,68)->(19,68)),
+                },
+            ),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (20,0)->(20,0)),
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (21,0)->(21,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (22,0)->(22,3)),
+            ty: None,
+            name: Raw(x),
+            equal: Token(Equal, "=", (22,6)->(22,7)),
+            expr: Array(
+                ArrayLiteral {
+                    open: Token(LeftBracket, "[", (22,8)->(22,9)),
+                    elements: [
+                        Number(
+                            VimNumber {
+                                value: "1",
+                            },
+                        ),
+                        Number(
+                            VimNumber {
+                                value: "2",
+                            },
+                        ),
+                        Number(
+                            VimNumber {
+                                value: "3",
+                            },
+                        ),
+                    ],
+                    close: Token(RightBracket, "]", (22,17)->(22,18)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (22,18)->(22,18)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (23,0)->(23,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (24,0)->(24,3)),
+            ty: Some(
+                Type {
+                    colon: Token(SpacedColon, ": ", (24,11)->(24,13)),
+                    inner: List {
+                        open: Token(AngleLeft, "<", (24,17)->(24,18)),
+                        inner: String,
+                        close: Token(GreaterThan, ">", (24,24)->(24,25)),
+                    },
+                },
+            ),
+            name: Raw(kindMap),
+            equal: Token(Equal, "=", (24,26)->(24,27)),
+            expr: Array(
+                ArrayLiteral {
+                    open: Token(LeftBracket, "[", (24,28)->(24,29)),
+                    elements: [
+                        String(
+                            SingleQuote(
+                                "",
+                            ),
+                        ),
+                        String(
+                            SingleQuote(
+                                "t",
+                            ),
+                        ),
+                        String(
+                            SingleQuote(
+                                "m",
+                            ),
+                        ),
+                        String(
+                            SingleQuote(
+                                "f",
+                            ),
+                        ),
+                    ],
+                    close: Token(RightBracket, "]", (28,0)->(28,1)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (28,1)->(28,1)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (29,0)->(29,0)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (30,0)->(30,3)),
+            ty: Some(
+                Type {
+                    colon: Token(SpacedColon, ": ", (30,11)->(30,13)),
+                    inner: List {
+                        open: Token(AngleLeft, "<", (30,17)->(30,18)),
+                        inner: String,
+                        close: Token(GreaterThan, ">", (30,24)->(30,25)),
+                    },
+                },
+            ),
+            name: Raw(kindMap),
+            equal: Token(Equal, "=", (30,26)->(30,27)),
+            expr: Array(
+                ArrayLiteral {
+                    open: Token(LeftBracket, "[", (30,28)->(30,29)),
+                    elements: [
+                        String(
+                            SingleQuote(
+                                "",
+                            ),
+                        ),
+                        String(
+                            SingleQuote(
+                                "t2",
+                            ),
+                        ),
+                        String(
+                            SingleQuote(
+                                "m2",
+                            ),
+                        ),
+                        String(
+                            SingleQuote(
+                                "f2",
+                            ),
+                        ),
+                    ],
+                    close: Token(RightBracket, "]", (34,0)->(34,1)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (34,1)->(34,1)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (35,0)->(35,0)),
+    ),
+    Statement(
+        Assign(
+            AssignStatement {
+                left: Identifier(
+                    Raw(items),
+                ),
+                equals: Token(Equal, "=", (36,6)->(36,7)),
+                right: Call(
+                    f: Identifier(Raw(filter)) arg: [
+                        Call(
+                            f: Identifier(Raw(Xgetlist)) arg: [],
+                        ),
+                        Identifier(
+                            Raw(Cond),
+                        ),
+                    ],
+                ),
+                eol: Token(EndOfLine, "\n", (36,32)->(36,32)),
+            },
+        ),
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (37,0)->(37,0)),
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (38,0)->(38,0)),
+    ),
     Comment(
-        Token(Comment, "# command! -nargs=0 -bar LspGotoDefinition lsp.GotoDefinition(v:false", (19,0)->(19,69)),
+        Token(Comment, "# multiline dict, starts on next line", (39,0)->(39,37)),
+    ),
+    Var(
+        VarCommand {
+            var: Token(Identifier, "var", (40,0)->(40,3)),
+            ty: Some(
+                Type {
+                    colon: Token(SpacedColon, ": ", (40,22)->(40,24)),
+                    inner: Dict {
+                        open: Token(AngleLeft, "<", (40,28)->(40,29)),
+                        inner: Func(
+                            Naked,
+                        ),
+                        close: Token(GreaterThan, ">", (40,33)->(40,34)),
+                    },
+                },
+            ),
+            name: Raw(lsp_reply_handlers),
+            equal: Token(Equal, "=", (40,35)->(40,36)),
+            expr: Dict(
+                DictLiteral {
+                    open: Token(LeftBrace, "{", (41,2)->(41,3)),
+                    elements: [
+                        KeyValue {
+                            key: Literal(
+                                Literal {
+                                    token: Token(SingleQuoteString, "initialize", (42,5)->(42,14)),
+                                },
+                            ),
+                            colon: Token(SpacedColon, ": ", (42,16)->(42,18)),
+                            value: Identifier(
+                                Raw(ProcessInitializeReply),
+                            ),
+                            comma: Some(
+                                Token(Comma, ",", (42,40)->(42,41)),
+                            ),
+                        },
+                        KeyValue {
+                            key: Literal(
+                                Literal {
+                                    token: Token(SingleQuoteString, "shutdown", (43,5)->(43,12)),
+                                },
+                            ),
+                            colon: Token(SpacedColon, ": ", (43,14)->(43,16)),
+                            value: Identifier(
+                                Raw(ProcessShutdownReply),
+                            ),
+                            comma: Some(
+                                Token(Comma, ",", (43,36)->(43,37)),
+                            ),
+                        },
+                    ],
+                    close: Token(RightBrace, "}", (44,2)->(44,3)),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (44,3)->(44,3)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (45,0)->(45,0)),
+    ),
+    Comment(
+        Token(Comment, "# dict literal with options, no colon value", (46,0)->(46,43)),
+    ),
+    Eval(
+        EvalCommand {
+            eval: None,
+            expr: MethodCall(
+                MethodCall {
+                    left: Identifier(
+                        Raw(ftypeNtfOnceMap),
+                    ),
+                    tok: Token(MethodArrow, "->", (47,15)->(47,17)),
+                    right: f: Identifier(Raw(extend)) arg: [
+                        Dict(
+                            DictLiteral {
+                                open: Token(LeftBrace, "{", (47,24)->(47,25)),
+                                elements: [
+                                    KeyValue {
+                                        key: Expression(
+                                            VimOption(
+                                                VimOption {
+                                                    ampersand: Token(Ampersand, "&", (47,26)->(47,27)),
+                                                    option: Literal {
+                                                        token: Token(Identifier, "ft", (47,27)->(47,29)),
+                                                    },
+                                                },
+                                            ),
+                                        ),
+                                        colon: Token(SpacedColon, ": ", (47,30)->(47,32)),
+                                        value: Boolean(
+                                            VimBoolean {
+                                                token: Token(True, "true", (47,32)->(47,36)),
+                                                value: true,
+                                            },
+                                        ),
+                                        comma: None,
+                                    },
+                                ],
+                                close: Token(RightBrace, "}", (47,36)->(47,37)),
+                            },
+                        ),
+                    ],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (47,38)->(47,38)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (48,0)->(48,0)),
+    ),
+    Comment(
+        Token(Comment, "# dict literal with options, no colon value", (49,0)->(49,43)),
+    ),
+    Eval(
+        EvalCommand {
+            eval: None,
+            expr: MethodCall(
+                MethodCall {
+                    left: Identifier(
+                        Raw(ftypeNtfOnceMap),
+                    ),
+                    tok: Token(MethodArrow, "->", (50,15)->(50,17)),
+                    right: f: Identifier(Raw(extend)) arg: [
+                        Dict(
+                            DictLiteral {
+                                open: Token(LeftBrace, "{", (50,24)->(50,25)),
+                                elements: [
+                                    KeyValue {
+                                        key: Expression(
+                                            VimOption(
+                                                VimOption {
+                                                    ampersand: Token(Ampersand, "&", (50,26)->(50,27)),
+                                                    option: Literal {
+                                                        token: Token(Identifier, "ft", (50,27)->(50,29)),
+                                                    },
+                                                },
+                                            ),
+                                        ),
+                                        colon: Token(SpacedColon, ": ", (50,30)->(50,32)),
+                                        value: Identifier(
+                                            Scope(ScopedIdentifier { scope: VimVar, colon: Token(Colon, ":", (50,33)->(50,34)), accessor: Raw(true) }),
+                                        ),
+                                        comma: None,
+                                    },
+                                ],
+                                close: Token(RightBrace, "}", (50,38)->(50,39)),
+                            },
+                        ),
+                    ],
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (50,40)->(50,40)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (51,0)->(51,0)),
+    ),
+    Comment(
+        Token(Comment, "# end of file", (52,0)->(52,13)),
     ),
 ]

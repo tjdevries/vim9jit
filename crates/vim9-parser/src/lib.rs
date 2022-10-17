@@ -175,18 +175,18 @@ pub enum StatementCommand {
 
 impl StatementCommand {
     pub fn matches(parser: &mut Parser) -> bool {
-        parser.line_matches(|t| {
-            matches!(
-                t.kind,
-                TokenKind::Equal
-                    | TokenKind::Colon
-                    | TokenKind::PlusEquals
-                    | TokenKind::MinusEquals
-                    | TokenKind::MulEquals
-                    | TokenKind::DivEquals
-                    | TokenKind::StringConcatEquals
-            )
-        })
+        parser.current_token.kind == TokenKind::Colon
+            || parser.line_matches(|t| {
+                matches!(
+                    t.kind,
+                    TokenKind::Equal
+                        | TokenKind::PlusEquals
+                        | TokenKind::MinusEquals
+                        | TokenKind::MulEquals
+                        | TokenKind::DivEquals
+                        | TokenKind::StringConcatEquals
+                )
+            })
     }
 
     pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
@@ -613,6 +613,7 @@ pub struct KeyValue {
 impl KeyValue {
     pub fn parse(parser: &mut Parser) -> Result<KeyValue> {
         parser.skip_whitespace();
+        println!("parsing keyvalue: {:#?}", parser.current_token);
 
         Ok(Self {
             key: match parser.current_token.kind {
@@ -620,6 +621,9 @@ impl KeyValue {
                     VimKey::Literal(parser.pop().try_into()?)
                 }
                 TokenKind::SingleQuoteString => VimKey::Literal(Literal {
+                    token: parser.pop(),
+                }),
+                TokenKind::DoubleQuoteString => VimKey::Literal(Literal {
                     token: parser.pop(),
                 }),
                 TokenKind::LeftBracket => {
@@ -640,9 +644,15 @@ impl KeyValue {
                 _ => unimplemented!("{:?}", parser),
             },
             colon: parser.expect_token(TokenKind::SpacedColon)?,
-            value: parser.parse_expression(Precedence::Lowest)?,
+            value: {
+                let expr = parser.parse_expression(Precedence::Lowest)?;
+                println!("value: {:#?}", expr);
+                expr
+            },
             comma: {
+                println!("before comma: {:#?}", parser);
                 parser.skip_whitespace();
+                println!("after comma: {:#?}", parser);
                 parser.expect_peek(TokenKind::Comma).ok()
             },
         })
@@ -1461,6 +1471,8 @@ impl Parser {
 
     #[tracing::instrument(skip_all, fields(tok=?self.current_token))]
     fn parse_expression(&mut self, prec: Precedence) -> Result<Expression> {
+        // info!("parseing expr: {:#?}", prec);
+
         self.skip_whitespace();
 
         let prefix = self.get_prefix_fn();
@@ -1471,7 +1483,7 @@ impl Parser {
                 return Err(anyhow::anyhow!(
                     "Failed to find prefix function for {:#?}",
                     self
-                ))
+                ));
             }
         };
 
@@ -1641,7 +1653,6 @@ impl Parser {
     pub fn next_real_token(&mut self) -> Token {
         self.skip_whitespace();
         let tok = self.next_token();
-        self.skip_whitespace();
         tok
     }
 
@@ -1688,7 +1699,10 @@ impl Parser {
         // This is the desired behavior for `parse` which will consume until the end of line
         // generally speaking.
         let ex = match &self.current_token.kind {
-            TokenKind::EndOfFile => panic!("EndOfFile!"),
+            TokenKind::EndOfFile => {
+                // return Err(anyhow::anyhow!("OH NO WHY IS THIS HAPPENING"))
+                panic!("{:#?}", self)
+            }
             TokenKind::Comment => {
                 ExCommand::Comment(self.current_token.clone())
             }
@@ -1781,15 +1795,15 @@ impl Parser {
         let mut program = Program { commands: vec![] };
 
         while self.current_token.kind != TokenKind::EndOfFile {
-            let command = match self.parse_command() {
-                Ok(command) => command,
-                Err(err) => panic!(
-                    "\nFailed to parse command.\nCurrent Commands:{:#?}.\nError: {}",
-                    program, err
-                ),
-            };
+            // let command = match self.parse_command() {
+            //     Ok(command) => command,
+            //     Err(err) => panic!(
+            //         "\nFailed to parse command.\nCurrent Commands:{:#?}.\nError: {}",
+            //         program, err
+            //     ),
+            // };
 
-            // let command = self.parse_command().unwrap();
+            let command = self.parse_command().unwrap();
             if command != ExCommand::Skip {
                 program.commands.push(command);
             }
@@ -1827,6 +1841,23 @@ impl Parser {
     ) -> Result<Vec<Expression>> {
         let mut elements = vec![];
 
+        macro_rules! exit_current {
+            () => {
+                self.skip_whitespace();
+                if self.current_token.kind == close_kind {
+                    return Ok(elements);
+                }
+            };
+        }
+
+        macro_rules! break_peek {
+            () => {
+                if self.peek_token.kind == close_kind {
+                    break;
+                }
+            };
+        }
+
         if self.peek_token.kind == close_kind {
             self.next_token();
             return Ok(elements);
@@ -1838,11 +1869,17 @@ impl Parser {
         elements.push(self.parse_expression(Precedence::Lowest)?);
 
         while self.peek_non_whitespace().0.kind != close_kind {
-            self.next_token();
+            self.next_real_token();
+
+            exit_current!();
+            break_peek!();
+
             self.expect_token(TokenKind::Comma)?;
+            exit_current!();
 
             elements.push(self.parse_expression(Precedence::Lowest)?);
 
+            self.skip_whitespace();
             if self.current_token.kind.is_eof() {
                 panic!("EOF");
             }
@@ -1900,7 +1937,9 @@ impl Parser {
     }
 
     fn skip_whitespace(&mut self) {
-        while self.current_token.kind.is_whitespace() {
+        while self.current_token.kind.is_whitespace()
+            || self.current_token.kind == TokenKind::Comment
+        {
             if self.peek_token.kind == TokenKind::EndOfFile {
                 break;
             }
@@ -1914,6 +1953,15 @@ impl Parser {
             Some(self.pop())
         } else {
             None
+        }
+    }
+
+    pub fn read_until<F>(&mut self, f: F)
+    where
+        F: Fn(&Token) -> bool,
+    {
+        while !f(&self.current_token) && !self.current_token.kind.is_eof() {
+            self.pop();
         }
     }
 }
@@ -1993,6 +2041,7 @@ mod test {
     snap!(test_eval, "../testdata/snapshots/eval.vim");
     snap!(test_export, "../testdata/snapshots/export.vim");
     snap!(test_import, "../testdata/snapshots/import.vim");
+    snap!(test_handlers, "../../shared/snapshots/handlers.vim");
     snap!(
         test_plugin_fileselect,
         "../testdata/snapshots/plugin_fileselect.vim"

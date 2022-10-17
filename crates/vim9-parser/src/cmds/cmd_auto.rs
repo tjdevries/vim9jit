@@ -99,9 +99,9 @@ impl AutocmdBlock {
 impl AutocmdPattern {
     fn parse(parser: &mut Parser) -> Result<Self> {
         Ok(if parser.current_token.kind == TokenKind::AngleLeft {
-            while parser.current_token.kind != TokenKind::AngleRight {
-                parser.pop();
-            }
+            parser.read_until(|t| {
+                matches!(t.kind, TokenKind::AngleRight | TokenKind::GreaterThan)
+            });
 
             AutocmdPattern::Buffer
         } else {

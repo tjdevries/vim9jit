@@ -78,6 +78,8 @@ impl InnerType {
                         close: parser.expect_fn(Self::match_close, true)?,
                     },
                     "func" => InnerType::Func(InnerFuncType::Naked),
+                    "job" => InnerType::Job,
+                    "channel" => InnerType::Channel,
                     _ => todo!("{:?}", literal.token),
                 })
             }

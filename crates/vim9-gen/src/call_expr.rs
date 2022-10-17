@@ -328,8 +328,5 @@ pub fn generate_method(
     let mut expr = method.right.clone();
     expr.args.insert(0, *method.left.clone());
 
-    let left = method.left.gen(state);
-    dbg!(left);
-
     expr.gen(state)
 }

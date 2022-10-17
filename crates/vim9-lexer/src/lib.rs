@@ -143,6 +143,7 @@ pub enum TokenKind {
     AngleLeft,
     AngleRight,
 
+    SingleQuote,
     SingleQuoteString,
     DoubleQuoteString,
     InterpolatedString,
@@ -632,10 +633,7 @@ impl Lexer {
                     '#' => self.read_comment(),
 
                     // TODO: Handle escaped strings.
-                    '\'' => self
-                        .read_until('\'', SingleQuoteString, |ch| *ch == '\n')
-                        .expect(&format!("{:#?}", self)),
-
+                    '\'' => self.handle_single_quote(),
                     '"' => self.read_until_or(
                         '"',
                         |ch| *ch == '\n',
@@ -844,6 +842,34 @@ impl Lexer {
             _ => self.read_one(TokenKind::Colon),
         }
     }
+
+    fn peek_in_line<F>(&mut self, f: F) -> bool
+    where
+        F: Fn(char) -> bool,
+    {
+        let mut n = 1;
+        while let Some(peeked) = self.peek_n(n) && *peeked != '\n' {
+            if f(*peeked) {
+                return true
+            }
+
+            n += 1;
+        }
+
+        false
+    }
+
+    fn handle_single_quote(&mut self) -> Token {
+        if self.peek_in_line(|ch| ch == '\'') {
+            return self
+                .read_until('\'', TokenKind::SingleQuoteString, |ch| {
+                    *ch == '\n'
+                })
+                .expect(&format!("{:#?}", self));
+        }
+
+        self.read_one(TokenKind::SingleQuote)
+    }
 }
 
 fn is_identifier(ch: char) -> bool {
@@ -940,4 +966,5 @@ mod test {
 
     // TODO: Check more thoroughly
     snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
+    snapshot!(test_handlers, "../../shared/snapshots/handlers.vim");
 }
