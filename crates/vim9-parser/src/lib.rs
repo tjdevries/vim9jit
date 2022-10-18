@@ -8,7 +8,6 @@ use std::{
 
 use anyhow::Result;
 use once_cell::sync::OnceCell;
-use tracing::info;
 use tracing_subscriber::util::SubscriberInitExt;
 use vim9_lexer::{new_lexer, Lexer, Token, TokenKind};
 
@@ -2045,6 +2044,7 @@ mod test {
 
     // https://github.com/yegappan/lsp test suite
     snap!(test_handlers, "../../shared/snapshots/lsp_handlers.vim");
+    snap!(test_selection, "../../shared/snapshots/lsp_selection.vim");
     snap!(test_fileselect, "../../shared/snapshots/lsp_fileselect.vim");
 
     #[test]

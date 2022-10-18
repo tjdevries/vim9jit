@@ -1,7 +1,9 @@
 #![feature(let_chains)]
-#![allow(dead_code)]
+#![allow(unreachable_code)]
 
-use std::{collections::VecDeque, fmt::Debug};
+use std::{cell::RefCell, collections::VecDeque, fmt::Debug};
+
+use anyhow::{Context, Result};
 
 #[derive(Clone, PartialEq)]
 pub struct Span {
@@ -9,6 +11,17 @@ pub struct Span {
     pub start_col: usize,
     pub end_row: usize,
     pub end_col: usize,
+}
+
+impl Span {
+    fn empty() -> Self {
+        Self {
+            start_row: 0,
+            start_col: 0,
+            end_row: 0,
+            end_col: 0,
+        }
+    }
 }
 
 impl Debug for Span {
@@ -22,28 +35,61 @@ impl Debug for Span {
 }
 
 #[derive(Clone, PartialEq)]
-pub struct Token {
-    pub kind: TokenKind,
-    pub text: String,
-    pub span: Span,
+pub enum TokenText<'a> {
+    Slice(&'a [char]),
+    Owned(String),
 }
 
-impl Token {
-    pub fn fake() -> Token {
-        Token {
-            kind: TokenKind::Virtual,
-            text: "".to_string(),
-            span: Span {
-                start_row: 0,
-                start_col: 0,
-                end_row: 0,
-                end_col: 0,
-            },
+impl<'a> Debug for TokenText<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // write!(f,
+        match self {
+            TokenText::Slice(s) => {
+                write!(f, "{:?}", s.iter().cloned().collect::<String>())
+            }
+            TokenText::Owned(o) => write!(f, "{:?}", o),
         }
     }
 }
 
-impl Debug for Token {
+// impl TokenText {
+//     pub fn as_str(&self) -> {
+//         match self {
+//             TokenText::Slice(s) => String::from_iter(s.iter()).as_str(),
+//             TokenText::Ref(_) => todo!(),
+//             TokenText::Owned(_) => todo!(),
+//             TokenText::Ch(_) => todo!(),
+//         }
+//     }
+// }
+//     pub fn from(inner: &[char]) -> Self {
+//         Self::Slice(inner)
+//     }
+//
+//     pub fn literal(str: &'static str) -> Self {
+//         Self::Str(str)
+//     }
+// }
+
+#[derive(Clone, PartialEq)]
+pub struct Token<'a> {
+    pub kind: TokenKind,
+    pub text: TokenText<'a>,
+    pub span: Span,
+}
+
+impl Token<'_> {
+    pub fn fake() -> Token<'static> {
+        Token {
+            kind: TokenKind::Virtual,
+            // text: TokenText::Ref(""),
+            text: todo!(),
+            span: Span::empty(),
+        }
+    }
+}
+
+impl<'a> Debug for Token<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -214,13 +260,20 @@ impl TokenKind {
     }
 }
 
-pub struct Lexer {
-    pub input: String,
-    pub position: usize,
-    pub read_position: usize,
-    pub ch: Option<char>,
+pub struct LexerState {
+    position: usize,
+    read_position: usize,
+}
 
+pub struct Lexer {
+    state: RefCell<LexerState>,
+
+    /// Vec containing all the chars,
+    /// this allows easy accessing (and accounts for unicode chars and what not)
     chars: Vec<char>,
+
+    /// Helper vec for quick line lookup
+    lines: Vec<usize>,
 }
 
 impl Debug for Lexer {
@@ -228,214 +281,243 @@ impl Debug for Lexer {
         write!(
             f,
             "Lexer {{ position: {}, read_position: {}, ch: {:?} }}",
-            self.position, self.read_position, self.ch
+            self.state.borrow().position,
+            self.state.borrow().read_position,
+            self.ch()
         )
     }
 }
 
+// impl Iterator for Lexer {
+//     type Item = Token;
+//
+//     fn next(&self) -> Option<Self::Item> {
+//         Some(self.next_token().expect("todo: should this just expect?"))
+//     }
+// }
+
 impl Lexer {
-    fn new(input: &str) -> Self {
-        let input = input.to_string();
-        let chars = input.clone().chars().collect();
-        Self {
-            input,
-            position: 0,
-            read_position: 0,
-            ch: None,
-            chars,
-        }
+    fn ch(&self) -> Option<&char> {
+        self.chars.get(self.state.borrow().position)
     }
 
-    fn make_span(&self, start: usize, end: usize) -> Span {
-        // TODO: This is broken for doing stuff with empty strings... :'(
-        assert!(
-            start <= end,
-            "start must be less than end. {} {}\n{:#?}",
-            start,
-            end,
-            self
+    pub fn new(input: &str) -> Self {
+        let chars = input.chars().collect();
+
+        let mut lines = vec![0];
+        lines.extend(
+            input
+                .chars()
+                .enumerate()
+                .filter_map(|(idx, ch)| (ch == '\n').then_some(idx + 1)),
         );
 
-        let mut span = Span {
-            start_row: 0,
-            start_col: 0,
-            end_row: 0,
-            end_col: 0,
-        };
-
-        let mut row = 0;
-        let mut row_start = 0;
-        for (idx, ch) in self.input.chars().enumerate() {
-            if idx == start {
-                span.start_row = row;
-                span.start_col = idx - row_start;
-            }
-
-            if idx == end {
-                span.end_row = row;
-                span.end_col = idx - row_start;
-                return span;
-            }
-
-            if ch == '\n' {
-                row += 1;
-                row_start = idx + 1;
-            }
-        }
-
-        unreachable!(
-            "Should always fine the start and end for a span:\n{} {} {}",
-            start,
-            end,
-            self.input.chars().count()
-        )
-    }
-
-    pub fn read_char(&mut self) {
-        match self.chars.get(self.read_position) {
-            Some(&c) => {
-                self.ch = Some(c);
-                self.position = self.read_position;
-                self.read_position += 1;
-            }
-            None => {
-                self.ch = None;
-            }
+        Self {
+            state: RefCell::new(LexerState {
+                position: 0,
+                read_position: 1,
+            }),
+            chars,
+            lines,
         }
     }
 
-    fn read_number(&mut self) -> Token {
-        let position = self.position;
-        while let Some(ch) = self.ch && (ch.is_numeric() || ch == '\'') {
+    fn make_span(&self, start: usize, end: usize) -> Result<Span> {
+        anyhow::ensure!(start <= end, "start must be less than end");
+
+        let start_row = self
+            .lines
+            .iter()
+            .enumerate()
+            .find_map(|(line, &ch)| (ch > start).then_some(line))
+            .ok_or_else(|| anyhow::anyhow!("input: {} {}", start, end))
+            .context("start_row")?
+            - 1;
+
+        let end_row = self
+            .lines
+            .iter()
+            .enumerate()
+            .skip(start_row)
+            .find_map(|(line, &ch)| (ch > end).then_some(line))
+            .context("end_row")?
+            - 1;
+
+        Ok(Span {
+            start_row,
+            start_col: start - self.lines[start_row],
+            end_row,
+            end_col: end - self.lines[end_row],
+        })
+    }
+
+    pub fn read_char(&self) {
+        // println!("read_char: {:?}", self);
+
+        let pos = self.state.borrow().position;
+        match self.chars.get(pos) {
+            Some(_) => {
+                self.state.borrow_mut().position = pos + 1;
+                self.state.borrow_mut().read_position += 1;
+            }
+            None => {}
+        }
+    }
+
+    fn read_while<F>(&self, cond: F) -> Result<(usize, usize)>
+    where
+        F: Fn(char) -> bool,
+    {
+        let position = self.state.borrow().position;
+        loop {
+            if !cond(*self.ch().unwrap()) {
+                break;
+            }
+
             self.read_char();
         }
 
-        if self.ch == Some('.') {
+        Ok((position, self.state.borrow().position))
+    }
+
+    fn position(&self) -> usize {
+        self.state.borrow().position
+    }
+
+    fn read_number(&self) -> Result<Token> {
+        let (pos, _) = self.read_while(|ch| ch.is_numeric() || ch == '\'')?;
+
+        if self.ch() == Some(&'.') {
             // consume the .
             self.read_char();
 
             // read the rest of the number
-            while let Some(ch) = self.ch && ch.is_numeric() {
+            while let Some(ch) = self.ch() && ch.is_numeric() {
                 self.read_char();
             }
 
-            Token {
+            Ok(Token {
                 kind: TokenKind::Float,
-                text: self.chars[position..self.position].iter().collect(),
-                span: self.make_span(position, self.position),
-            }
+                text: TokenText::Slice(&self.chars[pos..self.position()]),
+                span: self.make_span(pos, self.position())?,
+            })
         } else {
-            Token {
+            Ok(Token {
                 kind: TokenKind::Integer,
-                text: self.chars[position..self.position]
-                    .iter()
-                    .filter(|c| **c != '\'')
-                    .collect(),
-                span: self.make_span(position, self.position),
-            }
+                text: TokenText::Owned(
+                    self.chars[pos..self.position()]
+                        .iter()
+                        .filter(|c| **c != '\'')
+                        .collect(),
+                ),
+                span: self.make_span(pos, self.position())?,
+            })
         }
     }
 
     fn read_until_or<F>(
-        &mut self,
+        &self,
         until: char,
         fail: F,
         passed: TokenKind,
         failed: TokenKind,
-    ) -> Token
+    ) -> Result<Token>
     where
         F: Fn(&char) -> bool,
     {
         self.read_char();
-        if let Some(ch) = self.ch && ch == until {
-            return Token {
+        if let Some(ch) = self.ch() && ch == &until {
+            return Ok(Token {
                 kind: passed,
-                text: self.chars[self.position..self.position].iter().collect(),
-                span: self.make_span(self.position, self.position),
-            };
-        }
-
-        let position = self.position;
-
-        while let Some(ch) = self.ch && ch != until {
-            if fail(&ch) {
-                return Token {
-                    kind: failed,
-                    text: self.chars[self.position..self.position].iter().collect(),
-                    span: self.make_span(self.position, self.position),
-                };
-            }
-
-            self.read_char();
-        }
-
-        Token {
-            kind: passed,
-            text: self.chars[position..self.position].iter().collect(),
-            span: self.make_span(position, self.position - 1),
-        }
-    }
-
-    fn read_until<F>(
-        &mut self,
-        until: char,
-        kind: TokenKind,
-        fail: F,
-    ) -> Option<Token>
-    where
-        F: Fn(&char) -> bool,
-    {
-        self.read_char();
-        if let Some(ch) = self.ch && ch == until {
-            return Some(Token {
-                kind,
-                text: self.chars[self.position..self.position].iter().collect(),
-                span: self.make_span(self.position, self.position ),
+                text: TokenText::Slice(&self.chars[self.position()..self.position()]),
+                span: self.make_span(self.position(), self.position())?,
             });
         }
 
-        let position = self.position;
+        let position = self.position();
 
-        while let Some(ch) = self.ch && ch != until {
+        while let Some(ch) = self.ch() && ch != &until {
             if fail(&ch) {
-                return None;
+                return Ok(Token {
+                    kind: failed,
+                    text: TokenText::Slice(&self.chars[self.position()..self.position()]),
+                    span: self.make_span(self.position(), self.position())?,
+                });
             }
 
             self.read_char();
         }
 
-        Some(Token {
-            kind,
-            text: self.chars[position..self.position].iter().collect(),
-            span: self.make_span(position, self.position - 1),
+        Ok(Token {
+            kind: passed,
+            text: TokenText::Slice(&self.chars[position..self.position()]),
+            span: self.make_span(position, self.position() - 1)?,
         })
     }
 
-    fn read_comment(&mut self) -> Token {
-        let position = self.position;
-        while let Some(ch) = self.ch && ch != '\n' {
+    fn read_until<F>(
+        &self,
+        until: char,
+        kind: TokenKind,
+        fail: F,
+    ) -> Result<Option<Token>>
+    where
+        F: Fn(&char) -> bool,
+    {
+        self.read_char();
+        if let Some(ch) = self.ch() && ch == &until {
+            return Ok(Some(Token {
+                kind,
+                text: TokenText::Slice(&self.chars[self.position()..self.position()]),
+                span: self.make_span(self.position(), self.position())?,
+            }));
+        }
+
+        let position = self.position();
+
+        while let Some(ch) = self.ch() && ch != &until {
+            if fail(&ch) {
+                return Ok(None);
+            }
+
             self.read_char();
         }
 
-        Token {
-            kind: TokenKind::Comment,
-            text: self.chars[position..self.position].iter().collect(),
-            span: self.make_span(position, self.position),
-        }
+        Ok(Some(Token {
+            kind,
+            text: TokenText::Slice(&self.chars[position..self.position()]),
+            span: self.make_span(position, self.position() - 1)?,
+        }))
     }
 
-    fn read_identifier(&mut self) -> Token {
-        let position = self.position;
-        while let Some(ch) = self.ch && is_identifier(ch) {
+    fn read_comment(&self) -> Result<Token> {
+        let (pos, _) = self.read_while(|ch| ch != '\n')?;
+
+        Ok(Token {
+            kind: TokenKind::Comment,
+            text: TokenText::Slice(&self.chars[pos..self.position()]),
+            span: self.make_span(pos, self.position())?,
+        })
+    }
+
+    fn read_identifier(&self) -> Result<Token> {
+        let position = self.position();
+        while let Some(ch) = self.ch() && is_identifier(*ch) {
             self.read_char();
         }
 
-        let text: String = self.chars[position..self.position].iter().collect();
-        let kind = match text.as_str() {
+        // TODO(clone)
+        let text_str = self.chars[position..self.position()]
+            .iter()
+            .collect::<String>();
+
+        let text = TokenText::Slice(&self.chars[position..self.position()]);
+
+        let kind = match text_str.as_str() {
             "true" => TokenKind::True,
             "false" => TokenKind::False,
             "null" => TokenKind::Null,
-            "is" => match self.ch {
+            "is" => match self.ch() {
                 Some('#') => {
                     self.read_char();
                     TokenKind::Is
@@ -446,7 +528,7 @@ impl Lexer {
                 }
                 _ => TokenKind::Is,
             },
-            "isnot" => match self.ch {
+            "isnot" => match self.ch() {
                 Some('#') => {
                     self.read_char();
                     TokenKind::IsNot
@@ -460,19 +542,19 @@ impl Lexer {
             _ => TokenKind::Identifier,
         };
 
-        Token {
+        Ok(Token {
             kind,
             text,
-            span: self.make_span(position, self.position),
-        }
+            span: self.make_span(position, self.position())?,
+        })
     }
 
-    fn skip_whitespace(&mut self) {
-        if self.ch == Some('\n') {
+    fn skip_whitespace(&self) {
+        if self.ch() == Some(&'\n') {
             return;
         }
 
-        while let Some(ch) = self.ch && ch.is_ascii_whitespace() {
+        while let Some(&ch) = self.ch() && ch.is_ascii_whitespace() {
             if ch == '\n' {
                 return
             }
@@ -481,110 +563,75 @@ impl Lexer {
         }
     }
 
-    fn peek_char(&mut self) -> Option<&char> {
-        self.chars.get(self.position + 1)
+    fn peek_char(&self) -> Option<&char> {
+        self.chars.get(self.position() + 1)
     }
 
     fn peek_n(&self, n: usize) -> Option<&char> {
-        self.chars.get(self.position + n)
+        self.chars.get(self.position() + n)
     }
 
     fn if_peek(
-        &mut self,
+        &self,
         peeked: char,
         no: TokenKind,
         yes: TokenKind,
-    ) -> Token {
+    ) -> Result<Token> {
         if let Some(ch) = self.peek_char() {
             if *ch == peeked {
-                let position = self.position;
+                let position = self.position();
                 self.read_char();
 
-                Token {
+                Ok(Token {
                     kind: yes,
-                    text: self.chars[position..=self.position].iter().collect(),
-                    span: self.make_span(position, self.position + 1),
-                }
+                    text: TokenText::Slice(
+                        &self.chars[position..=self.position()],
+                    ),
+                    span: self.make_span(position, self.position() + 1)?,
+                })
             } else {
-                Token {
+                Ok(Token {
                     kind: no,
-                    text: self.ch.unwrap().to_string(),
-                    span: self.make_span(self.position, self.position + 1),
-                }
+                    // text: self.ch.unwrap().to_string(),
+                    text: TokenText::Slice(
+                        &self.chars[self.position()..=self.position()],
+                    ),
+                    span: self
+                        .make_span(self.position(), self.position() + 1)?,
+                })
             }
         } else {
-            Token {
+            Ok(Token {
                 kind: TokenKind::EndOfFile,
-                text: "".to_string(),
-                span: self.make_span(self.position, self.position),
-            }
+                text: TokenText::Owned("".to_string()),
+                span: Span::empty(),
+            })
         }
     }
 
-    // pub fn next_token(&mut self) -> Token {
-    //     match &self.mode {
-    //         LexerMode::Standard => self.next_standard_token(),
-    //         LexerMode::HeredocStart => {
-    //             // Looking for trim or eval or MARKER
-    //             self.skip_whitespace();
-    //
-    //             let ch = self.ch.unwrap();
-    //             if !ch.is_alphabetic() {
-    //                 return Token {
-    //                     kind: TokenKind::Illegal,
-    //                     text: ch.to_string(),
-    //                     span: self.make_span(self.position, self.position + 1),
-    //                 };
-    //             }
-    //
-    //             let identifier = self.read_identifier();
-    //             match identifier.text.as_str() {
-    //                 "trim" => identifier,
-    //                 "eval" => identifier,
-    //                 _ => {
-    //                     // TODO: Should make sure that it's uppercase and
-    //                     // all this other garbage, but for now, just assume it's fine
-    //                     self.mode = LexerMode::Heredoc {
-    //                         marker: identifier.text.clone(),
-    //                     };
-    //                     Token {
-    //                         kind: TokenKind::HeredocMarker,
-    //                         text: identifier.text,
-    //                         span: identifier.span,
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //         LexerMode::Heredoc { marker } => {
-    //             // Keep consuming ALL the text, until we see ^MARKER$
-    //             todo!()
-    //         }
-    //     }
-    // }
-
-    fn literal(&mut self, ch: char, kind: TokenKind) -> Token {
-        Token {
+    fn literal(&self, ch: char, kind: TokenKind) -> Result<Token> {
+        Ok(Token {
             kind,
-            text: ch.to_string(),
-            span: self.make_span(self.position, self.position + 1),
-        }
+            text: TokenText::Owned(ch.to_string()),
+            span: self.make_span(self.position(), self.position() + 1)?,
+        })
     }
 
-    fn empty_literal(&mut self, ch: char, kind: TokenKind) -> Token {
-        Token {
+    fn empty_literal(&self, ch: char, kind: TokenKind) -> Result<Token> {
+        Ok(Token {
             kind,
-            text: ch.to_string(),
-            span: self.make_span(self.position, self.position),
-        }
+            text: TokenText::Owned(ch.to_string()),
+            span: self.make_span(self.position(), self.position())?,
+        })
     }
 
-    pub fn next_token(&mut self) -> Token {
+    pub fn next_token(&self) -> Result<Token> {
         use TokenKind::*;
 
         self.skip_whitespace();
 
-        let tok = match self.ch {
-            Some(ch) => {
+        let tok = match self.ch() {
+            Some(&ch) => {
                 match ch {
                     // Operators that can optionally have an additional equals
                     '=' => self.handle_equal(),
@@ -602,21 +649,29 @@ impl Lexer {
                     '%' => self.if_peek('=', Percent, PercentEquals),
                     '\\' => {
                         self.read_char();
-                        Token {
+                        Ok(Token {
                             kind: Escaped,
-                            text: self.ch.unwrap().to_string(),
-                            span: self
-                                .make_span(self.position - 1, self.position),
-                        }
+                            text: TokenText::Owned(
+                                self.ch().unwrap().to_string(),
+                            ),
+                            span: self.make_span(
+                                self.position() - 1,
+                                self.position(),
+                            )?,
+                        })
                     }
                     '@' => {
                         self.read_char();
-                        Token {
+                        Ok(Token {
                             kind: Register,
-                            text: self.ch.unwrap().to_string(),
-                            span: self
-                                .make_span(self.position - 1, self.position),
-                        }
+                            text: TokenText::Owned(
+                                self.ch().unwrap().to_string(),
+                            ),
+                            span: self.make_span(
+                                self.position() - 1,
+                                self.position(),
+                            )?,
+                        })
                     }
 
                     ':' => self.handle_colon(),
@@ -634,73 +689,71 @@ impl Lexer {
 
                     // TODO: Handle escaped strings.
                     '\'' => self.handle_single_quote(),
-                    '"' => self.read_until_or(
-                        '"',
-                        |ch| *ch == '\n',
-                        DoubleQuoteString,
-                        Comment,
-                    ),
+                    '"' => self.handle_double_quote(),
 
                     _ => {
                         // Token
-                        if is_letter(ch) || ch == '_' {
+                        if ch.is_alphabetic() || ch == '_' {
                             return self.read_identifier();
                         } else if ch.is_ascii_digit() {
                             return self.read_number();
                         } else {
-                            Token {
+                            Ok(Token {
                                 kind: Illegal,
-                                text: ch.to_string(),
-                                span: self
-                                    .make_span(self.position, self.position),
-                            }
+                                // text: TokenText::Ch(ch),
+                                text: todo!(),
+                                span: self.make_span(
+                                    self.position(),
+                                    self.position(),
+                                )?,
+                            })
                         }
                     }
                 }
             }
-            None => Token {
+            None => Ok(Token {
                 kind: EndOfFile,
-                text: "".to_string(),
-                span: self.make_span(self.position, self.position),
-            },
-        };
+                text: TokenText::Owned("".to_string()),
+                span: Span::empty(),
+            }),
+        }?;
 
         self.read_char();
-        tok
+        Ok(tok)
     }
 
-    fn read_one(&mut self, kind: TokenKind) -> Token {
-        Token {
+    fn read_one(&self, kind: TokenKind) -> Result<Token> {
+        Ok(Token {
             kind,
-            text: self.ch.unwrap().to_string(),
-            span: self.make_span(self.position, self.position + 1),
-        }
+            text: TokenText::Owned(self.ch().unwrap().to_string()),
+            span: self.make_span(self.position(), self.position() + 1)?,
+        })
     }
 
-    fn read_two(&mut self, kind: TokenKind) -> Token {
-        let position = self.position;
+    fn read_two(&self, kind: TokenKind) -> Result<Token> {
+        let position = self.position();
         self.read_char();
 
-        Token {
+        Ok(Token {
             kind,
-            text: self.chars[position..=self.position].iter().collect(),
-            span: self.make_span(position, self.position + 1),
-        }
+            text: TokenText::Slice(&self.chars[position..=self.position()]),
+            span: self.make_span(position, self.position() + 1)?,
+        })
     }
 
-    fn read_three(&mut self, kind: TokenKind) -> Token {
-        let position = self.position;
+    fn read_three(&self, kind: TokenKind) -> Result<Token> {
+        let position = self.position();
         self.read_char();
         self.read_char();
 
-        Token {
+        Ok(Token {
             kind,
-            text: self.chars[position..=self.position].iter().collect(),
-            span: self.make_span(position, self.position + 1),
-        }
+            text: TokenText::Slice(&self.chars[position..=self.position()]),
+            span: self.make_span(position, self.position() + 1)?,
+        })
     }
 
-    fn handle_equal(&mut self) -> Token {
+    fn handle_equal(&self) -> Result<Token> {
         let peeked = (
             self.peek_n(1).unwrap().to_owned(),
             self.peek_n(2).unwrap().to_owned(),
@@ -720,7 +773,7 @@ impl Lexer {
         }
     }
 
-    fn handle_bang(&mut self) -> Token {
+    fn handle_bang(&self) -> Result<Token> {
         let peeked = (
             self.peek_n(1).unwrap().to_owned(),
             self.peek_n(2).unwrap().to_owned(),
@@ -737,7 +790,7 @@ impl Lexer {
         }
     }
 
-    fn handle_gt(&mut self) -> Token {
+    fn handle_gt(&self) -> Result<Token> {
         let peeked = (
             self.peek_n(1).unwrap().to_owned(),
             self.peek_n(2).unwrap().to_owned(),
@@ -756,7 +809,7 @@ impl Lexer {
         }
     }
 
-    fn handle_lt(&mut self) -> Token {
+    fn handle_lt(&self) -> Result<Token> {
         let peeked = (
             self.peek_n(1).unwrap().to_owned(),
             self.peek_n(2).unwrap().to_owned(),
@@ -773,7 +826,7 @@ impl Lexer {
         }
     }
 
-    fn handle_dash(&mut self) -> Token {
+    fn handle_dash(&self) -> Result<Token> {
         match self.peek_char().unwrap() {
             '=' => self.read_two(TokenKind::MinusEquals),
             '>' => self.read_two(TokenKind::MethodArrow),
@@ -781,47 +834,50 @@ impl Lexer {
         }
     }
 
-    pub fn handle_dollar(&mut self) -> Token {
-        match self.peek_char().unwrap() {
+    pub fn handle_dollar(&self) -> Result<Token> {
+        Ok(match self.peek_char().unwrap() {
             '\'' => {
                 self.read_char();
                 self.read_until(
                     '\'',
                     TokenKind::InterpolatedLiteralString,
                     |ch| *ch == '\n',
-                )
+                )?
                 .unwrap()
             }
             '"' => {
                 self.read_char();
                 self.read_until('\"', TokenKind::InterpolatedString, |ch| {
                     *ch == '\n'
-                })
-                .expect(&format!("{:?}", self))
+                })?
+                .unwrap()
             }
             c if is_identifier(*c) => {
                 self.read_char();
 
-                let position = self.position;
-                while let Some(ch) = self.ch && is_identifier(ch) {
+                let position = self.position();
+                while let Some(&ch) = self.ch() && is_identifier(ch) {
                     self.read_char();
                 }
 
                 Token {
                     kind: TokenKind::EnvironmentVariable,
-                    text: self.chars[position..self.position].iter().collect(),
-                    span: self.make_span(position, self.position),
+                    text: TokenText::Slice(
+                        &self.chars[position..self.position()],
+                    ),
+                    span: self.make_span(position, self.position())?,
                 }
             }
             _ => Token {
                 kind: TokenKind::Illegal,
-                text: self.ch.unwrap().to_string(),
-                span: self.make_span(self.position, self.position),
+                // text: TokenText::Ch(self.ch.unwrap()),
+                text: todo!(),
+                span: self.make_span(self.position(), self.position())?,
             },
-        }
+        })
     }
 
-    fn handle_dot(&mut self) -> Token {
+    fn handle_dot(&self) -> Result<Token> {
         let peeked = (
             self.peek_n(1).unwrap().to_owned(),
             self.peek_n(2).unwrap().to_owned(),
@@ -835,7 +891,7 @@ impl Lexer {
         }
     }
 
-    fn handle_colon(&mut self) -> Token {
+    fn handle_colon(&self) -> Result<Token> {
         match self.peek_char().unwrap() {
             ' ' => self.read_two(TokenKind::SpacedColon),
             ']' => self.read_one(TokenKind::SpacedColon),
@@ -843,7 +899,7 @@ impl Lexer {
         }
     }
 
-    fn peek_in_line<F>(&mut self, f: F) -> bool
+    fn peek_in_line<F>(&self, f: F) -> bool
     where
         F: Fn(char) -> bool,
     {
@@ -859,49 +915,59 @@ impl Lexer {
         false
     }
 
-    fn handle_single_quote(&mut self) -> Token {
+    fn handle_single_quote(&self) -> Result<Token> {
         if self.peek_in_line(|ch| ch == '\'') {
-            return self
-                .read_until('\'', TokenKind::SingleQuoteString, |ch| {
-                    *ch == '\n'
-                })
-                .expect(&format!("{:#?}", self));
+            return Ok(self
+                .read_until('\'', TokenKind::SingleQuoteString, is_newline)?
+                .expect("single quote"));
         }
 
         self.read_one(TokenKind::SingleQuote)
     }
+
+    fn handle_double_quote(&self) -> Result<Token> {
+        if self.peek_in_line(|ch| ch == '"') {
+            return Ok(self
+                .read_until('"', TokenKind::DoubleQuoteString, is_newline)?
+                .unwrap());
+        }
+
+        self.read_until_or(
+            '"',
+            |ch| *ch == '\n',
+            TokenKind::DoubleQuoteString,
+            TokenKind::Comment,
+        )
+    }
+}
+
+fn is_newline(ch: &char) -> bool {
+    *ch == '\n' || *ch == '\0'
 }
 
 fn is_identifier(ch: char) -> bool {
     ch.is_alphanumeric() || ch == '_'
 }
 
-fn is_letter(ch: char) -> bool {
-    'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z'
-}
-
-fn is_digit(ch: char) -> bool {
-    '0' <= ch && ch <= '9'
-}
-
-pub fn new_lexer(input: &str) -> Lexer {
-    let mut l = Lexer::new(input);
-    l.read_char();
-    l
-}
+// pub fn new_lexer(input: &str) -> Lexer {
+//     let mut l = Lexer::new(input);
+//     l.read_char();
+//     l
+// }
 
 pub fn snapshot_lexing(input: &str) -> String {
-    let mut lexer = new_lexer(input);
+    // let mut lexer = new_lexer(input);
+    let lexer = Lexer::new(input);
+    // lexer.read_char();
 
     let mut tokens = VecDeque::new();
-    loop {
-        let tok = lexer.next_token();
+    while let Ok(tok) = lexer.next_token() {
         if tok.kind == TokenKind::EndOfFile {
             break;
         }
 
         if tok.kind == TokenKind::Illegal {
-            panic!("failure: {:#?}", lexer);
+            panic!("failure: {:#?}", input);
         }
 
         tokens.push_back(tok);
@@ -950,6 +1016,7 @@ mod test {
         };
     }
 
+    snapshot!(test_lexer, "../testdata/snapshots/lexer.vim");
     snapshot!(test_lexer_1, "../testdata/snapshots/lexer_1.vim");
     snapshot!(test_comparisons, "../testdata/snapshots/comparisons.vim");
     snapshot!(test_string, "../testdata/snapshots/string.vim");

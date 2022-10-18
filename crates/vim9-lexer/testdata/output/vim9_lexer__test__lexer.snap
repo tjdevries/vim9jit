@@ -1,0 +1,49 @@
+---
+source: crates/vim9-lexer/src/lib.rs
+assertion_line: 990
+expression: snapshot_lexing(contents)
+---
+vim9script
+^^^^^^^^^^ Token(Identifier, "vim9script", (0,0)->(0,10))
+           Token(EndOfLine, "\n", (0,10)->(0,10))
+
+ Token(EndOfLine, "\n", (1,0)->(1,0))
+var a = 5
+^^^ Token(Identifier, "var", (2,0)->(2,3))
+    ^ Token(Identifier, "a", (2,4)->(2,5))
+      ^ Token(Equal, "=", (2,6)->(2,7))
+        ^ Token(Integer, "5", (2,8)->(2,9))
+          Token(EndOfLine, "\n", (2,9)->(2,9))
+var b = a < 5
+^^^ Token(Identifier, "var", (3,0)->(3,3))
+    ^ Token(Identifier, "b", (3,4)->(3,5))
+      ^ Token(Equal, "=", (3,6)->(3,7))
+        ^ Token(Identifier, "a", (3,8)->(3,9))
+          ^ Token(LessThan, "<", (3,10)->(3,11))
+            ^ Token(Integer, "5", (3,12)->(3,13))
+              Token(EndOfLine, "\n", (3,13)->(3,13))
+var c = a > 5
+^^^ Token(Identifier, "var", (4,0)->(4,3))
+    ^ Token(Identifier, "c", (4,4)->(4,5))
+      ^ Token(Equal, "=", (4,6)->(4,7))
+        ^ Token(Identifier, "a", (4,8)->(4,9))
+          ^ Token(GreaterThan, ">", (4,10)->(4,11))
+            ^ Token(Integer, "5", (4,12)->(4,13))
+              Token(EndOfLine, "\n", (4,13)->(4,13))
+var d = <args>
+^^^ Token(Identifier, "var", (5,0)->(5,3))
+    ^ Token(Identifier, "d", (5,4)->(5,5))
+      ^ Token(Equal, "=", (5,6)->(5,7))
+        ^ Token(AngleLeft, "<", (5,8)->(5,9))
+         ^^^^ Token(Identifier, "args", (5,9)->(5,13))
+             ^ Token(GreaterThan, ">", (5,13)->(5,14))
+               Token(EndOfLine, "\n", (5,14)->(5,14))
+
+ Token(EndOfLine, "\n", (6,0)->(6,0))
+var num = 1'000
+^^^ Token(Identifier, "var", (7,0)->(7,3))
+    ^^^ Token(Identifier, "num", (7,4)->(7,7))
+        ^ Token(Equal, "=", (7,8)->(7,9))
+          ^^^^^ Token(Integer, "1000", (7,10)->(7,15))
+                Token(EndOfLine, "\n", (7,15)->(7,15))
+

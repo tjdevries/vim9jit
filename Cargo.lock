@@ -897,6 +897,7 @@ dependencies = [
 name = "vim9-lexer"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "insta",
 ]
 
