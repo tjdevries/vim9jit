@@ -35,12 +35,12 @@ impl Debug for Span {
 }
 
 #[derive(Clone, PartialEq)]
-pub enum TokenText<'a> {
-    Slice(&'a [char]),
+pub enum TokenText {
+    Slice(Vec<char>),
     Owned(String),
 }
 
-impl<'a> Debug for TokenText<'a> {
+impl Debug for TokenText {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // write!(f,
         match self {
@@ -52,34 +52,32 @@ impl<'a> Debug for TokenText<'a> {
     }
 }
 
-// impl TokenText {
-//     pub fn as_str(&self) -> {
-//         match self {
-//             TokenText::Slice(s) => String::from_iter(s.iter()).as_str(),
-//             TokenText::Ref(_) => todo!(),
-//             TokenText::Owned(_) => todo!(),
-//             TokenText::Ch(_) => todo!(),
-//         }
-//     }
-// }
-//     pub fn from(inner: &[char]) -> Self {
-//         Self::Slice(inner)
-//     }
-//
-//     pub fn literal(str: &'static str) -> Self {
-//         Self::Str(str)
-//     }
-// }
+impl TokenText {
+    // TODO: It'd be cool if we didn't clone here
+    pub fn to_string(&self) -> String {
+        match self {
+            TokenText::Slice(s) => s.iter().collect::<String>(),
+            TokenText::Owned(s) => s.clone(),
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            TokenText::Slice(_) => todo!(),
+            TokenText::Owned(s) => s,
+        }
+    }
+}
 
 #[derive(Clone, PartialEq)]
-pub struct Token<'a> {
+pub struct Token {
     pub kind: TokenKind,
-    pub text: TokenText<'a>,
+    pub text: TokenText,
     pub span: Span,
 }
 
-impl Token<'_> {
-    pub fn fake() -> Token<'static> {
+impl Token {
+    pub fn fake() -> Token {
         Token {
             kind: TokenKind::Virtual,
             // text: TokenText::Ref(""),
@@ -89,7 +87,7 @@ impl Token<'_> {
     }
 }
 
-impl<'a> Debug for Token<'a> {
+impl Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -398,7 +396,9 @@ impl Lexer {
 
             Ok(Token {
                 kind: TokenKind::Float,
-                text: TokenText::Slice(&self.chars[pos..self.position()]),
+                text: TokenText::Slice(
+                    self.chars[pos..self.position()].to_vec(),
+                ),
                 span: self.make_span(pos, self.position())?,
             })
         } else {
@@ -429,7 +429,7 @@ impl Lexer {
         if let Some(ch) = self.ch() && ch == &until {
             return Ok(Token {
                 kind: passed,
-                text: TokenText::Slice(&self.chars[self.position()..self.position()]),
+                text: TokenText::Slice(self.chars[self.position()..self.position()].to_vec()),
                 span: self.make_span(self.position(), self.position())?,
             });
         }
@@ -440,7 +440,7 @@ impl Lexer {
             if fail(&ch) {
                 return Ok(Token {
                     kind: failed,
-                    text: TokenText::Slice(&self.chars[self.position()..self.position()]),
+                    text: TokenText::Slice(self.chars[self.position()..self.position()].to_vec()),
                     span: self.make_span(self.position(), self.position())?,
                 });
             }
@@ -450,7 +450,9 @@ impl Lexer {
 
         Ok(Token {
             kind: passed,
-            text: TokenText::Slice(&self.chars[position..self.position()]),
+            text: TokenText::Slice(
+                self.chars[position..self.position()].to_vec(),
+            ),
             span: self.make_span(position, self.position() - 1)?,
         })
     }
@@ -468,7 +470,7 @@ impl Lexer {
         if let Some(ch) = self.ch() && ch == &until {
             return Ok(Some(Token {
                 kind,
-                text: TokenText::Slice(&self.chars[self.position()..self.position()]),
+                text: TokenText::Slice(self.chars[self.position()..self.position()].to_vec()),
                 span: self.make_span(self.position(), self.position())?,
             }));
         }
@@ -485,7 +487,9 @@ impl Lexer {
 
         Ok(Some(Token {
             kind,
-            text: TokenText::Slice(&self.chars[position..self.position()]),
+            text: TokenText::Slice(
+                self.chars[position..self.position()].to_vec(),
+            ),
             span: self.make_span(position, self.position() - 1)?,
         }))
     }
@@ -495,7 +499,7 @@ impl Lexer {
 
         Ok(Token {
             kind: TokenKind::Comment,
-            text: TokenText::Slice(&self.chars[pos..self.position()]),
+            text: TokenText::Slice(self.chars[pos..self.position()].to_vec()),
             span: self.make_span(pos, self.position())?,
         })
     }
@@ -511,7 +515,8 @@ impl Lexer {
             .iter()
             .collect::<String>();
 
-        let text = TokenText::Slice(&self.chars[position..self.position()]);
+        let text =
+            TokenText::Slice(self.chars[position..self.position()].to_vec());
 
         let kind = match text_str.as_str() {
             "true" => TokenKind::True,
@@ -585,7 +590,7 @@ impl Lexer {
                 Ok(Token {
                     kind: yes,
                     text: TokenText::Slice(
-                        &self.chars[position..=self.position()],
+                        self.chars[position..=self.position()].to_vec(),
                     ),
                     span: self.make_span(position, self.position() + 1)?,
                 })
@@ -594,7 +599,7 @@ impl Lexer {
                     kind: no,
                     // text: self.ch.unwrap().to_string(),
                     text: TokenText::Slice(
-                        &self.chars[self.position()..=self.position()],
+                        self.chars[self.position()..=self.position()].to_vec(),
                     ),
                     span: self
                         .make_span(self.position(), self.position() + 1)?,
@@ -736,7 +741,9 @@ impl Lexer {
 
         Ok(Token {
             kind,
-            text: TokenText::Slice(&self.chars[position..=self.position()]),
+            text: TokenText::Slice(
+                self.chars[position..=self.position()].to_vec(),
+            ),
             span: self.make_span(position, self.position() + 1)?,
         })
     }
@@ -748,7 +755,9 @@ impl Lexer {
 
         Ok(Token {
             kind,
-            text: TokenText::Slice(&self.chars[position..=self.position()]),
+            text: TokenText::Slice(
+                self.chars[position..=self.position()].to_vec(),
+            ),
             span: self.make_span(position, self.position() + 1)?,
         })
     }
@@ -863,7 +872,7 @@ impl Lexer {
                 Token {
                     kind: TokenKind::EnvironmentVariable,
                     text: TokenText::Slice(
-                        &self.chars[position..self.position()],
+                        self.chars[position..self.position()].to_vec(),
                     ),
                     span: self.make_span(position, self.position())?,
                 }
@@ -949,16 +958,8 @@ fn is_identifier(ch: char) -> bool {
     ch.is_alphanumeric() || ch == '_'
 }
 
-// pub fn new_lexer(input: &str) -> Lexer {
-//     let mut l = Lexer::new(input);
-//     l.read_char();
-//     l
-// }
-
 pub fn snapshot_lexing(input: &str) -> String {
-    // let mut lexer = new_lexer(input);
     let lexer = Lexer::new(input);
-    // lexer.read_char();
 
     let mut tokens = VecDeque::new();
     while let Ok(tok) = lexer.next_token() {
