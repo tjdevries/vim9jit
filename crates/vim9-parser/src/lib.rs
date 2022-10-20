@@ -19,7 +19,7 @@ pub use cmds::{
     cmd_try::TryCommand,
     cmd_user::UserCommand,
     BreakCommand, CallCommand, ContinueCommand, DeclCommand, DefCommand,
-    DeferCommand, EchoCommand, EvalCommand, ExportCommand, FinishCommand,
+    DeferCommand, EchoCommand, ExecuteCommand, EvalCommand, ExportCommand, FinishCommand,
     ImportCommand, ReturnCommand, SharedCommand, VarCommand, Vim9ScriptCommand,
 };
 
@@ -41,6 +41,7 @@ pub enum ExCommand {
     Heredoc(Heredoc),
     Decl(DeclCommand),
     Echo(EchoCommand),
+    Execute(ExecuteCommand),
     Return(ReturnCommand),
     Def(DefCommand),
     If(IfCommand),
@@ -1718,6 +1719,8 @@ impl Parser {
                         || self.command_match("echomsg")
                     {
                         return Ok(EchoCommand::parse(self)?);
+                    } else if self.command_match("execute") {
+                        return Ok(ExecuteCommand::parse(self)?);
                     } else if self.command_match("call") {
                         return Ok(CallCommand::parse(self)?);
                     } else if self.command_match("defer") {
@@ -1966,6 +1969,7 @@ mod test {
     snap!(test_header, "../testdata/snapshots/header.vim");
     snap!(test_expr, "../testdata/snapshots/expr.vim");
     snap!(test_echo, "../testdata/snapshots/echo.vim");
+    snap!(test_execute, "../testdata/snapshots/execute.vim");
     snap!(test_scopes, "../testdata/snapshots/scopes.vim");
     snap!(test_autocmd, "../testdata/snapshots/autocmd.vim");
     snap!(test_array, "../testdata/snapshots/array.vim");

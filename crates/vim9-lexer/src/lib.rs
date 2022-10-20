@@ -934,6 +934,7 @@ mod test {
     snapshot!(test_lambda, "../testdata/snapshots/lambda.vim");
     snapshot!(test_types, "../testdata/snapshots/types.vim");
     snapshot!(test_methods, "../testdata/snapshots/methods.vim");
+    snapshot!(test_execute, "../testdata/snapshots/execute.vim");
 
     // snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
 

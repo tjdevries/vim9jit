@@ -1,0 +1,127 @@
+---
+source: crates/vim9-parser/src/lib.rs
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+        },
+    ),
+    Execute(
+        ExecuteCommand {
+            execute: Token(Identifier, "execute", (2,0)->(2,7)),
+            expr: String(
+                DoubleQuote(
+                    "normal ixxx\\<Esc>",
+                ),
+            ),
+            eol: Token(EndOfLine, "\n", (2,27)->(2,27)),
+        },
+    ),
+    Execute(
+        ExecuteCommand {
+            execute: Token(Identifier, "execute", (3,0)->(3,7)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(StringConcat, "..", (3,15)->(3,17)),
+                    operator: StringConcat,
+                    left: String(
+                        DoubleQuote(
+                            "!ls ",
+                        ),
+                    ),
+                    right: Call(
+                        f: Identifier(Raw(shellescape)) arg: [
+                            String(
+                                SingleQuote(
+                                    "./rustfmt.toml",
+                                ),
+                            ),
+                            Number(
+                                VimNumber {
+                                    value: "1",
+                                },
+                            ),
+                        ],
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (3,50)->(3,50)),
+        },
+    ),
+    Execute(
+        ExecuteCommand {
+            execute: Token(Identifier, "execute", (4,0)->(4,7)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(StringConcat, "..", (4,51)->(4,53)),
+                    operator: StringConcat,
+                    left: Infix(
+                        InfixExpression {
+                            token: Token(StringConcat, "..", (4,15)->(4,17)),
+                            operator: StringConcat,
+                            left: String(
+                                DoubleQuote(
+                                    "!ls ",
+                                ),
+                            ),
+                            right: Call(
+                                f: Identifier(Raw(shellescape)) arg: [
+                                    String(
+                                        SingleQuote(
+                                            "./rustfmt.toml",
+                                        ),
+                                    ),
+                                    Number(
+                                        VimNumber {
+                                            value: "1",
+                                        },
+                                    ),
+                                ],
+                            ),
+                        },
+                    ),
+                    right: Call(
+                        f: Identifier(Raw(shellescape)) arg: [
+                            String(
+                                SingleQuote(
+                                    "./Cargo.toml",
+                                ),
+                            ),
+                            Number(
+                                VimNumber {
+                                    value: "1",
+                                },
+                            ),
+                        ],
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (4,84)->(4,84)),
+        },
+    ),
+    Execute(
+        ExecuteCommand {
+            execute: Token(Identifier, "execute", (5,0)->(5,7)),
+            expr: Infix(
+                InfixExpression {
+                    token: Token(StringConcat, "..", (5,14)->(5,16)),
+                    operator: StringConcat,
+                    left: String(
+                        DoubleQuote(
+                            "!ls",
+                        ),
+                    ),
+                    right: String(
+                        DoubleQuote(
+                            " -la",
+                        ),
+                    ),
+                },
+            ),
+            eol: Token(EndOfLine, "\n", (5,23)->(5,23)),
+        },
+    ),
+]
