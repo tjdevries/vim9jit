@@ -1,32 +1,33 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2316
+assertion_line: 2562
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (2,0)->(2,3)),
+            var: Token(Identifier, (2,0)->(2,3)),
             ty: None,
             name: Raw(x),
-            equal: Token(Equal, "=", (2,6)->(2,7)),
+            equal: Token(Equal, (2,6)->(2,7)),
             expr: Number(
-                VimNumber {
-                    value: "10",
-                },
+                Number(10),
             ),
-            eol: Token(EndOfLine, "\n", (2,10)->(2,10)),
+            eol: Token(EndOfLine, (2,10)->(2,10)),
         },
     ),
     If(
         IfCommand {
-            if_tok: Token(Identifier, "if", (3,0)->(3,2)),
+            if_tok: Token(Identifier, (3,0)->(3,2)),
             condition: Infix(
                 InfixExpression {
                     token: Token(Or, "||", (3,43)->(3,45)),
@@ -51,9 +52,7 @@ expression: snapshot_parsing(contents)
                                                         Raw(x),
                                                     ),
                                                     right: Number(
-                                                        VimNumber {
-                                                            value: "10",
-                                                        },
+                                                        Number(10),
                                                     ),
                                                 },
                                             ),
@@ -65,9 +64,7 @@ expression: snapshot_parsing(contents)
                                                         Raw(x),
                                                     ),
                                                     right: Number(
-                                                        VimNumber {
-                                                            value: "10",
-                                                        },
+                                                        Number(10),
                                                     ),
                                                 },
                                             ),
@@ -81,9 +78,7 @@ expression: snapshot_parsing(contents)
                                                 Raw(x),
                                             ),
                                             right: Number(
-                                                VimNumber {
-                                                    value: "10",
-                                                },
+                                                Number(10),
                                             ),
                                         },
                                     ),
@@ -97,9 +92,7 @@ expression: snapshot_parsing(contents)
                                         Raw(x),
                                     ),
                                     right: Number(
-                                        VimNumber {
-                                            value: "10",
-                                        },
+                                        Number(10),
                                     ),
                                 },
                             ),
@@ -113,15 +106,13 @@ expression: snapshot_parsing(contents)
                                 Raw(x),
                             ),
                             right: Number(
-                                VimNumber {
-                                    value: "10",
-                                },
+                                Number(10),
                             ),
                         },
                     ),
                 },
             ),
-            if_eol: Token(EndOfLine, "\n", (3,52)->(3,52)),
+            if_eol: Token(EndOfLine, (3,52)->(3,52)),
             body: Body {
                 commands: [
                     Comment(
@@ -138,19 +129,19 @@ expression: snapshot_parsing(contents)
                     ),
                     Echo(
                         EchoCommand {
-                            echo: Token(Identifier, "echo", (8,2)->(8,6)),
+                            echo: Token(Identifier, (8,2)->(8,6)),
                             expr: Identifier(
                                 Raw(x),
                             ),
-                            eol: Token(EndOfLine, "\n", (8,8)->(8,8)),
+                            eol: Token(EndOfLine, (8,8)->(8,8)),
                         },
                     ),
                 ],
             },
             elseifs: [],
             else_command: None,
-            endif_tok: Token(Identifier, "endif", (9,0)->(9,5)),
-            endif_eol: Token(EndOfLine, "\n", (9,5)->(9,5)),
+            endif_tok: Token(Identifier, (9,0)->(9,5)),
+            endif_eol: Token(EndOfLine, (9,5)->(9,5)),
         },
     ),
     NoOp(
@@ -158,30 +149,30 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (11,0)->(11,3)),
+            var: Token(Identifier, (11,0)->(11,3)),
             ty: None,
             name: Raw(a),
-            equal: Token(Equal, "=", (11,6)->(11,7)),
+            equal: Token(Equal, (11,6)->(11,7)),
             expr: String(
                 DoubleQuote(
                     "hello",
                 ),
             ),
-            eol: Token(EndOfLine, "\n", (11,15)->(11,15)),
+            eol: Token(EndOfLine, (11,15)->(11,15)),
         },
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (12,0)->(12,3)),
+            var: Token(Identifier, (12,0)->(12,3)),
             ty: None,
             name: Raw(b),
-            equal: Token(Equal, "=", (12,6)->(12,7)),
+            equal: Token(Equal, (12,6)->(12,7)),
             expr: String(
                 DoubleQuote(
                     "world",
                 ),
             ),
-            eol: Token(EndOfLine, "\n", (12,15)->(12,15)),
+            eol: Token(EndOfLine, (12,15)->(12,15)),
         },
     ),
     NoOp(
@@ -189,10 +180,10 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (14,0)->(14,3)),
+            var: Token(Identifier, (14,0)->(14,3)),
             ty: None,
             name: Raw(equal),
-            equal: Token(Equal, "=", (14,10)->(14,11)),
+            equal: Token(Equal, (14,10)->(14,11)),
             expr: Infix(
                 InfixExpression {
                     token: Token(Or, "||", (14,19)->(14,21)),
@@ -223,15 +214,15 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (14,29)->(14,29)),
+            eol: Token(EndOfLine, (14,29)->(14,29)),
         },
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (15,0)->(15,3)),
+            var: Token(Identifier, (15,0)->(15,3)),
             ty: None,
             name: Raw(equal_ins),
-            equal: Token(Equal, "=", (15,14)->(15,15)),
+            equal: Token(Equal, (15,14)->(15,15)),
             expr: Infix(
                 InfixExpression {
                     token: Token(EqualToIns, "==?", (15,18)->(15,21)),
@@ -244,7 +235,7 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (15,23)->(15,23)),
+            eol: Token(EndOfLine, (15,23)->(15,23)),
         },
     ),
     NoOp(
@@ -252,10 +243,10 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (17,0)->(17,3)),
+            var: Token(Identifier, (17,0)->(17,3)),
             ty: None,
             name: Raw(neq),
-            equal: Token(Equal, "=", (17,8)->(17,9)),
+            equal: Token(Equal, (17,8)->(17,9)),
             expr: Infix(
                 InfixExpression {
                     token: Token(Or, "||", (17,17)->(17,19)),
@@ -286,15 +277,15 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (17,27)->(17,27)),
+            eol: Token(EndOfLine, (17,27)->(17,27)),
         },
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (18,0)->(18,3)),
+            var: Token(Identifier, (18,0)->(18,3)),
             ty: None,
             name: Raw(neq_ins),
-            equal: Token(Equal, "=", (18,12)->(18,13)),
+            equal: Token(Equal, (18,12)->(18,13)),
             expr: Infix(
                 InfixExpression {
                     token: Token(NotEqualToIns, "!=?", (18,16)->(18,19)),
@@ -307,7 +298,7 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (18,21)->(18,21)),
+            eol: Token(EndOfLine, (18,21)->(18,21)),
         },
     ),
     NoOp(
@@ -315,10 +306,10 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (20,0)->(20,3)),
+            var: Token(Identifier, (20,0)->(20,3)),
             ty: None,
             name: Raw(gt),
-            equal: Token(Equal, "=", (20,7)->(20,8)),
+            equal: Token(Equal, (20,7)->(20,8)),
             expr: Infix(
                 InfixExpression {
                     token: Token(Or, "||", (20,15)->(20,17)),
@@ -349,15 +340,15 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (20,24)->(20,24)),
+            eol: Token(EndOfLine, (20,24)->(20,24)),
         },
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (21,0)->(21,3)),
+            var: Token(Identifier, (21,0)->(21,3)),
             ty: None,
             name: Raw(gt_ins),
-            equal: Token(Equal, "=", (21,11)->(21,12)),
+            equal: Token(Equal, (21,11)->(21,12)),
             expr: Infix(
                 InfixExpression {
                     token: Token(GreaterThanIns, ">?", (21,15)->(21,17)),
@@ -370,7 +361,7 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (21,19)->(21,19)),
+            eol: Token(EndOfLine, (21,19)->(21,19)),
         },
     ),
     NoOp(
@@ -378,10 +369,10 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (23,0)->(23,3)),
+            var: Token(Identifier, (23,0)->(23,3)),
             ty: None,
             name: Raw(gte),
-            equal: Token(Equal, "=", (23,8)->(23,9)),
+            equal: Token(Equal, (23,8)->(23,9)),
             expr: Infix(
                 InfixExpression {
                     token: Token(Or, "||", (23,17)->(23,19)),
@@ -412,15 +403,15 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (23,27)->(23,27)),
+            eol: Token(EndOfLine, (23,27)->(23,27)),
         },
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (24,0)->(24,3)),
+            var: Token(Identifier, (24,0)->(24,3)),
             ty: None,
             name: Raw(gte_ins),
-            equal: Token(Equal, "=", (24,12)->(24,13)),
+            equal: Token(Equal, (24,12)->(24,13)),
             expr: Infix(
                 InfixExpression {
                     token: Token(GreaterThanOrEqualIns, ">=?", (24,16)->(24,19)),
@@ -433,7 +424,7 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (24,21)->(24,21)),
+            eol: Token(EndOfLine, (24,21)->(24,21)),
         },
     ),
     NoOp(
@@ -441,10 +432,10 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (26,0)->(26,3)),
+            var: Token(Identifier, (26,0)->(26,3)),
             ty: None,
             name: Raw(lt),
-            equal: Token(Equal, "=", (26,7)->(26,8)),
+            equal: Token(Equal, (26,7)->(26,8)),
             expr: Infix(
                 InfixExpression {
                     token: Token(Or, "||", (26,15)->(26,17)),
@@ -475,15 +466,15 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (26,24)->(26,24)),
+            eol: Token(EndOfLine, (26,24)->(26,24)),
         },
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (27,0)->(27,3)),
+            var: Token(Identifier, (27,0)->(27,3)),
             ty: None,
             name: Raw(lt_ins),
-            equal: Token(Equal, "=", (27,11)->(27,12)),
+            equal: Token(Equal, (27,11)->(27,12)),
             expr: Infix(
                 InfixExpression {
                     token: Token(LessThanIns, "<?", (27,15)->(27,17)),
@@ -496,7 +487,7 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (27,19)->(27,19)),
+            eol: Token(EndOfLine, (27,19)->(27,19)),
         },
     ),
     NoOp(
@@ -504,10 +495,10 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (29,0)->(29,3)),
+            var: Token(Identifier, (29,0)->(29,3)),
             ty: None,
             name: Raw(lte),
-            equal: Token(Equal, "=", (29,8)->(29,9)),
+            equal: Token(Equal, (29,8)->(29,9)),
             expr: Infix(
                 InfixExpression {
                     token: Token(Or, "||", (29,17)->(29,19)),
@@ -538,15 +529,15 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (29,27)->(29,27)),
+            eol: Token(EndOfLine, (29,27)->(29,27)),
         },
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (30,0)->(30,3)),
+            var: Token(Identifier, (30,0)->(30,3)),
             ty: None,
             name: Raw(lte_ins),
-            equal: Token(Equal, "=", (30,12)->(30,13)),
+            equal: Token(Equal, (30,12)->(30,13)),
             expr: Infix(
                 InfixExpression {
                     token: Token(LessThanOrEqualIns, "<=?", (30,16)->(30,19)),
@@ -559,7 +550,7 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (30,21)->(30,21)),
+            eol: Token(EndOfLine, (30,21)->(30,21)),
         },
     ),
     NoOp(
@@ -567,10 +558,10 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (32,0)->(32,3)),
+            var: Token(Identifier, (32,0)->(32,3)),
             ty: None,
             name: Raw(reg),
-            equal: Token(Equal, "=", (32,8)->(32,9)),
+            equal: Token(Equal, (32,8)->(32,9)),
             expr: Infix(
                 InfixExpression {
                     token: Token(Or, "||", (32,17)->(32,19)),
@@ -601,15 +592,15 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (32,27)->(32,27)),
+            eol: Token(EndOfLine, (32,27)->(32,27)),
         },
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (33,0)->(33,3)),
+            var: Token(Identifier, (33,0)->(33,3)),
             ty: None,
             name: Raw(reg_ins),
-            equal: Token(Equal, "=", (33,12)->(33,13)),
+            equal: Token(Equal, (33,12)->(33,13)),
             expr: Infix(
                 InfixExpression {
                     token: Token(RegexpMatchesIns, "=~?", (33,16)->(33,19)),
@@ -622,7 +613,7 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (33,21)->(33,21)),
+            eol: Token(EndOfLine, (33,21)->(33,21)),
         },
     ),
     NoOp(
@@ -630,10 +621,10 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (35,0)->(35,3)),
+            var: Token(Identifier, (35,0)->(35,3)),
             ty: None,
             name: Raw(no_reg),
-            equal: Token(Equal, "=", (35,11)->(35,12)),
+            equal: Token(Equal, (35,11)->(35,12)),
             expr: Infix(
                 InfixExpression {
                     token: Token(Or, "||", (35,20)->(35,22)),
@@ -664,15 +655,15 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (35,30)->(35,30)),
+            eol: Token(EndOfLine, (35,30)->(35,30)),
         },
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (36,0)->(36,3)),
+            var: Token(Identifier, (36,0)->(36,3)),
             ty: None,
             name: Raw(no_reg_ins),
-            equal: Token(Equal, "=", (36,15)->(36,16)),
+            equal: Token(Equal, (36,15)->(36,16)),
             expr: Infix(
                 InfixExpression {
                     token: Token(NotRegexpMatchesIns, "!~?", (36,19)->(36,22)),
@@ -685,7 +676,7 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (36,24)->(36,24)),
+            eol: Token(EndOfLine, (36,24)->(36,24)),
         },
     ),
     NoOp(
@@ -693,10 +684,10 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (38,0)->(38,3)),
+            var: Token(Identifier, (38,0)->(38,3)),
             ty: None,
             name: Raw(is_),
-            equal: Token(Equal, "=", (38,8)->(38,9)),
+            equal: Token(Equal, (38,8)->(38,9)),
             expr: Infix(
                 InfixExpression {
                     token: Token(Or, "||", (38,17)->(38,19)),
@@ -727,15 +718,15 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (38,27)->(38,27)),
+            eol: Token(EndOfLine, (38,27)->(38,27)),
         },
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (39,0)->(39,3)),
+            var: Token(Identifier, (39,0)->(39,3)),
             ty: None,
             name: Raw(is__ins),
-            equal: Token(Equal, "=", (39,12)->(39,13)),
+            equal: Token(Equal, (39,12)->(39,13)),
             expr: Infix(
                 InfixExpression {
                     token: Token(IsInsensitive, "is", (39,16)->(39,19)),
@@ -748,7 +739,7 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (39,21)->(39,21)),
+            eol: Token(EndOfLine, (39,21)->(39,21)),
         },
     ),
     NoOp(
@@ -756,10 +747,10 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (41,0)->(41,3)),
+            var: Token(Identifier, (41,0)->(41,3)),
             ty: None,
             name: Raw(is_not),
-            equal: Token(Equal, "=", (41,11)->(41,12)),
+            equal: Token(Equal, (41,11)->(41,12)),
             expr: Infix(
                 InfixExpression {
                     token: Token(Or, "||", (41,23)->(41,25)),
@@ -790,15 +781,15 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (41,36)->(41,36)),
+            eol: Token(EndOfLine, (41,36)->(41,36)),
         },
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (42,0)->(42,3)),
+            var: Token(Identifier, (42,0)->(42,3)),
             ty: None,
             name: Raw(is_not_ins),
-            equal: Token(Equal, "=", (42,15)->(42,16)),
+            equal: Token(Equal, (42,15)->(42,16)),
             expr: Infix(
                 InfixExpression {
                     token: Token(IsNotInsensitive, "isnot", (42,19)->(42,25)),
@@ -811,7 +802,7 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (42,27)->(42,27)),
+            eol: Token(EndOfLine, (42,27)->(42,27)),
         },
     ),
 ]

@@ -1,25 +1,28 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 1928
+assertion_line: 2561
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (2,0)->(2,3)),
+            var: Token(Identifier, (2,0)->(2,3)),
             ty: None,
             name: Raw(X),
-            equal: Token(Equal, "=", (2,6)->(2,7)),
+            equal: Token(Equal, (2,6)->(2,7)),
             expr: Lambda(
                 Lambda {
                     args: Signature {
-                        open: Token(LeftParen, "(", (2,8)->(2,9)),
+                        open: Token(LeftParen, (2,8)->(2,9)),
                         params: [
                             Parameter {
                                 name: Raw(a),
@@ -34,15 +37,15 @@ expression: snapshot_parsing(contents)
                                 default_val: None,
                             },
                         ],
-                        close: Token(RightParen, ")", (2,13)->(2,14)),
+                        close: Token(RightParen, (2,13)->(2,14)),
                     },
                     ret: None,
-                    arrow: Token(Arrow, "=>", (2,15)->(2,17)),
+                    arrow: Token(Arrow, (2,15)->(2,17)),
                     body: Body {
                         commands: [
                             Return(
                                 ReturnCommand {
-                                    ret: Token(Virtual, "", (0,0)->(0,0)),
+                                    ret: Token(Virtual, (0,0)->(0,0)),
                                     expr: Some(
                                         Infix(
                                             InfixExpression {
@@ -57,34 +60,30 @@ expression: snapshot_parsing(contents)
                                             },
                                         ),
                                     ),
-                                    eol: Token(Virtual, "", (0,0)->(0,0)),
+                                    eol: Token(Virtual, (0,0)->(0,0)),
                                 },
                             ),
                         ],
                     },
                 },
             ),
-            eol: Token(EndOfLine, "\n", (2,23)->(2,23)),
+            eol: Token(EndOfLine, (2,23)->(2,23)),
         },
     ),
     Echo(
         EchoCommand {
-            echo: Token(Identifier, "echo", (3,0)->(3,4)),
+            echo: Token(Identifier, (3,0)->(3,4)),
             expr: Call(
                 f: Identifier(Raw(X)) arg: [
                     Number(
-                        VimNumber {
-                            value: "1",
-                        },
+                        Number(1),
                     ),
                     Number(
-                        VimNumber {
-                            value: "2",
-                        },
+                        Number(2),
                     ),
                 ],
             ),
-            eol: Token(EndOfLine, "\n", (3,12)->(3,12)),
+            eol: Token(EndOfLine, (3,12)->(3,12)),
         },
     ),
     NoOp(
@@ -92,14 +91,14 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (5,0)->(5,3)),
+            var: Token(Identifier, (5,0)->(5,3)),
             ty: None,
             name: Raw(Y),
-            equal: Token(Equal, "=", (5,6)->(5,7)),
+            equal: Token(Equal, (5,6)->(5,7)),
             expr: Lambda(
                 Lambda {
                     args: Signature {
-                        open: Token(LeftParen, "(", (5,8)->(5,9)),
+                        open: Token(LeftParen, (5,8)->(5,9)),
                         params: [
                             Parameter {
                                 name: Raw(a),
@@ -114,15 +113,15 @@ expression: snapshot_parsing(contents)
                                 default_val: None,
                             },
                         ],
-                        close: Token(RightParen, ")", (5,13)->(5,14)),
+                        close: Token(RightParen, (5,13)->(5,14)),
                     },
                     ret: None,
-                    arrow: Token(Arrow, "=>", (5,15)->(5,17)),
+                    arrow: Token(Arrow, (5,15)->(5,17)),
                     body: Body {
                         commands: [
                             Return(
                                 ReturnCommand {
-                                    ret: Token(Virtual, "", (0,0)->(0,0)),
+                                    ret: Token(Virtual, (0,0)->(0,0)),
                                     expr: Some(
                                         Infix(
                                             InfixExpression {
@@ -137,34 +136,30 @@ expression: snapshot_parsing(contents)
                                             },
                                         ),
                                     ),
-                                    eol: Token(Virtual, "", (0,0)->(0,0)),
+                                    eol: Token(Virtual, (0,0)->(0,0)),
                                 },
                             ),
                         ],
                     },
                 },
             ),
-            eol: Token(EndOfLine, "\n", (6,7)->(6,7)),
+            eol: Token(EndOfLine, (6,7)->(6,7)),
         },
     ),
     Echo(
         EchoCommand {
-            echo: Token(Identifier, "echo", (7,0)->(7,4)),
+            echo: Token(Identifier, (7,0)->(7,4)),
             expr: Call(
                 f: Identifier(Raw(Y)) arg: [
                     Number(
-                        VimNumber {
-                            value: "3",
-                        },
+                        Number(3),
                     ),
                     Number(
-                        VimNumber {
-                            value: "4",
-                        },
+                        Number(4),
                     ),
                 ],
             ),
-            eol: Token(EndOfLine, "\n", (7,12)->(7,12)),
+            eol: Token(EndOfLine, (7,12)->(7,12)),
         },
     ),
     NoOp(
@@ -172,20 +167,20 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (9,0)->(9,3)),
+            var: Token(Identifier, (9,0)->(9,3)),
             ty: None,
             name: Raw(Typed),
-            equal: Token(Equal, "=", (9,10)->(9,11)),
+            equal: Token(Equal, (9,10)->(9,11)),
             expr: Lambda(
                 Lambda {
                     args: Signature {
-                        open: Token(LeftParen, "(", (9,12)->(9,13)),
+                        open: Token(LeftParen, (9,12)->(9,13)),
                         params: [
                             Parameter {
                                 name: Raw(a),
                                 ty: Some(
                                     Type {
-                                        colon: Token(SpacedColon, ": ", (9,14)->(9,16)),
+                                        colon: Token(SpacedColon, (9,14)->(9,16)),
                                         inner: Number,
                                     },
                                 ),
@@ -196,7 +191,7 @@ expression: snapshot_parsing(contents)
                                 name: Raw(b),
                                 ty: Some(
                                     Type {
-                                        colon: Token(SpacedColon, ": ", (9,25)->(9,27)),
+                                        colon: Token(SpacedColon, (9,25)->(9,27)),
                                         inner: Number,
                                     },
                                 ),
@@ -204,20 +199,20 @@ expression: snapshot_parsing(contents)
                                 default_val: None,
                             },
                         ],
-                        close: Token(RightParen, ")", (9,33)->(9,34)),
+                        close: Token(RightParen, (9,33)->(9,34)),
                     },
                     ret: Some(
                         Type {
-                            colon: Token(SpacedColon, ": ", (9,34)->(9,36)),
+                            colon: Token(SpacedColon, (9,34)->(9,36)),
                             inner: Number,
                         },
                     ),
-                    arrow: Token(Arrow, "=>", (9,43)->(9,45)),
+                    arrow: Token(Arrow, (9,43)->(9,45)),
                     body: Body {
                         commands: [
                             Return(
                                 ReturnCommand {
-                                    ret: Token(Virtual, "", (0,0)->(0,0)),
+                                    ret: Token(Virtual, (0,0)->(0,0)),
                                     expr: Some(
                                         Infix(
                                             InfixExpression {
@@ -232,34 +227,30 @@ expression: snapshot_parsing(contents)
                                             },
                                         ),
                                     ),
-                                    eol: Token(Virtual, "", (0,0)->(0,0)),
+                                    eol: Token(Virtual, (0,0)->(0,0)),
                                 },
                             ),
                         ],
                     },
                 },
             ),
-            eol: Token(EndOfLine, "\n", (9,51)->(9,51)),
+            eol: Token(EndOfLine, (9,51)->(9,51)),
         },
     ),
     Echo(
         EchoCommand {
-            echo: Token(Identifier, "echo", (10,0)->(10,4)),
+            echo: Token(Identifier, (10,0)->(10,4)),
             expr: Call(
                 f: Identifier(Raw(Typed)) arg: [
                     Number(
-                        VimNumber {
-                            value: "5",
-                        },
+                        Number(5),
                     ),
                     Number(
-                        VimNumber {
-                            value: "6",
-                        },
+                        Number(6),
                     ),
                 ],
             ),
-            eol: Token(EndOfLine, "\n", (10,16)->(10,16)),
+            eol: Token(EndOfLine, (10,16)->(10,16)),
         },
     ),
 ]

@@ -13,12 +13,17 @@ use tracing_subscriber::util::SubscriberInitExt;
 use vim9_lexer::{Lexer, Span, Token, TokenKind};
 
 mod cmds;
-pub use cmds::cmd_if::IfCommand;
+pub use cmds::{
+    cmd_auto::{AugroupCommand, AutocmdBlock, AutocmdCommand},
+    cmd_if::IfCommand,
+    cmd_try::TryCommand,
+    cmd_user::UserCommand,
+    BreakCommand, ContinueCommand, DeferCommand,
+};
 // pub use cmds::{
 //     cmd_auto::{AugroupCommand, AutocmdBlock, AutocmdCommand},
 //     cmd_if::{ElseCommand, ElseIfCommand, IfCommand},
 //     cmd_try::TryCommand,
-//     cmd_user::UserCommand,
 //     BreakCommand, CallCommand, ContinueCommand, DeclCommand, DefCommand,
 //     DeferCommand, EchoCommand, EvalCommand, ExportCommand, FinishCommand,
 //     ImportCommand, ReturnCommand, SharedCommand, VarCommand, Vim9ScriptCommand,
@@ -138,22 +143,22 @@ pub enum ExCommand {
     Return(ReturnCommand),
     Def(DefCommand),
     If(IfCommand),
-    // For(ForCommand),
-    // While(WhileCommand),
-    // Try(TryCommand),
+    For(ForCommand),
+    While(WhileCommand),
+    Try(TryCommand),
     Call(CallCommand),
-    // Defer(DeferCommand),
-    // Eval(EvalCommand),
+    Defer(DeferCommand),
+    Eval(EvalCommand),
     Finish(FinishCommand),
-    // Break(BreakCommand),
-    // Continue(ContinueCommand),
-    // Augroup(AugroupCommand),
-    // Autocmd(AutocmdCommand),
+    Break(BreakCommand),
+    Continue(ContinueCommand),
+    Augroup(AugroupCommand),
+    Autocmd(AutocmdCommand),
     Statement(StatementCommand),
-    // UserCommand(UserCommand),
+    UserCommand(UserCommand),
     SharedCommand(SharedCommand),
-    // ExportCommand(ExportCommand),
-    // ImportCommand(ImportCommand),
+    ExportCommand(ExportCommand),
+    ImportCommand(ImportCommand),
     Skip,
     EndOfFile,
 
@@ -169,8 +174,10 @@ pub struct Vim9ScriptCommand {
 
 impl Vim9ScriptCommand {
     pub fn parse(parser: &Parser) -> Result<Self> {
+        parser.next_token();
+
         Ok(Self {
-            noclear: if parser.cur_kind() == TokenKind::EndOfLine {
+            noclear: if parser.front_kind() == TokenKind::EndOfLine {
                 false
             } else {
                 parser.expect_identifier_with_text("noclear")?;
@@ -200,7 +207,7 @@ impl DefCommand {
             name: Identifier::parse(parser)?,
             args: Signature::parse(parser)?,
             ret: {
-                if parser.cur_kind() == TokenKind::SpacedColon {
+                if parser.front_kind() == TokenKind::SpacedColon {
                     Some(Type::parse(parser)?)
                 } else {
                     None
@@ -227,7 +234,7 @@ impl ReturnCommand {
             ret: parser
                 .expect_token_with_text(TokenKind::Identifier, "return")?
                 .into(),
-            expr: match parser.cur_kind() {
+            expr: match parser.front_kind() {
                 TokenKind::EndOfLine => None,
                 _ => Some(Expression::parse(parser, Precedence::Lowest)?),
             },
@@ -325,6 +332,91 @@ impl Into<CallExpression> for &CallCommand {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct ExportCommand {
+    export: TokenMeta,
+    pub command: Box<ExCommand>,
+}
+
+impl ExportCommand {
+    pub fn parse(parser: &Parser) -> Result<ExCommand> {
+        Ok(ExCommand::ExportCommand(Self {
+            export: parser.expect_identifier_with_text("export")?.into(),
+            command: parser.parse_command()?.into(),
+        }))
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum ImportCommand {
+    ImportImplicit {
+        import: TokenMeta,
+        autoload: bool,
+        file: String,
+        // Optional `as` qualifier to rename the import locally
+        name: Option<Expression>,
+        eol: TokenMeta,
+    },
+    ImportUnpacked {
+        import: TokenMeta,
+        names: Vec<Identifier>,
+        from: TokenMeta,
+        file: String,
+        eol: TokenMeta,
+    },
+}
+
+impl ImportCommand {
+    pub fn parse(parser: &Parser) -> Result<ExCommand> {
+        let import = parser.expect_identifier_with_text("import")?.into();
+        let command = match parser.front_kind() {
+            TokenKind::LeftBrace => ImportCommand::ImportUnpacked {
+                import,
+                names: {
+                    let names =
+                        parser.parse_identifier_list(TokenKind::RightBrace)?;
+                    parser.ensure_token(TokenKind::RightBrace)?;
+                    parser.next_token();
+                    names
+                },
+                from: parser.expect_identifier_with_text("from")?.into(),
+                file: parser.pop().text.to_string(),
+                eol: parser.expect_eol()?,
+            },
+            TokenKind::Identifier
+            | TokenKind::SingleQuoteString
+            | TokenKind::DoubleQuoteString => {
+                let autoload = if parser.front_ref().text.eq("autoload") {
+                    parser.next_token();
+                    true
+                } else {
+                    false
+                };
+
+                ImportCommand::ImportImplicit {
+                    import,
+                    autoload,
+                    file: parser.pop().text.to_string(),
+                    name: {
+                        if parser.front_ref().text.eq("as") {
+                            // pop as
+                            parser.pop();
+
+                            Some(Expression::parse(parser, Precedence::Lowest)?)
+                        } else {
+                            None
+                        }
+                    },
+                    eol: parser.expect_eol()?,
+                }
+            }
+            _ => unreachable!("{:?}", parser),
+        };
+
+        Ok(ExCommand::ImportCommand(command))
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct SharedCommand {
     pub contents: String,
     eol: TokenMeta,
@@ -334,10 +426,12 @@ impl SharedCommand {
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
         let mut contents = String::new();
         let mut prev_end = 0;
-        while parser.cur_kind() != TokenKind::EndOfLine
-            && parser.cur_kind() != TokenKind::EndOfFile
-        {
+        while !parser.front_kind().is_whitespace() {
             let tok = parser.pop();
+
+            if prev_end > tok.span.start_col {
+                panic!("failed to make shared command: {:#?}", parser);
+            }
 
             contents += " ".repeat(tok.span.start_col - prev_end).as_str();
             contents += tok.text.as_str();
@@ -381,56 +475,56 @@ impl EchoCommand {
     }
 }
 
-// #[derive(Debug, PartialEq, Clone)]
-// pub struct ForCommand {
-//     for_: Token,
-//     pub for_identifier: Identifier,
-//     in_: Token,
-//     pub for_expr: Expression,
-//     eol: Token,
-//     pub body: Body,
-//     endfor_: Token,
-//     endfor_eol: Token,
-// }
-//
-// impl ForCommand {
-//     pub fn parse(parser: &Parser) -> Result<ExCommand> {
-//         Ok(ExCommand::For(ForCommand {
-//             for_: parser.expect_identifier_with_text("for")?,
-//             for_identifier: Identifier::parse(parser)?,
-//             in_: parser.expect_identifier_with_text("in")?,
-//             for_expr: Expression::parse(parser, Precedence::Lowest)?,
-//             eol: parser.expect_eol()?,
-//             body: Body::parse_until(parser, "endfor")?,
-//             endfor_: parser.expect_identifier_with_text("endfor")?,
-//             endfor_eol: parser.expect_eol()?,
-//         }))
-//     }
-// }
-//
-// #[derive(Debug, PartialEq, Clone)]
-// pub struct WhileCommand {
-//     while_: Token,
-//     pub condition: Expression,
-//     while_eol: Token,
-//     pub body: Body,
-//     endwhile_: Token,
-//     endwhile_eol: Token,
-// }
-//
-// impl WhileCommand {
-//     pub fn parse(parser: &Parser) -> Result<ExCommand> {
-//         Ok(ExCommand::While(WhileCommand {
-//             while_: parser.expect_identifier_with_text("while")?,
-//             condition: Expression::parse(parser, Precedence::Lowest)?,
-//             while_eol: parser.expect_eol()?,
-//             body: Body::parse_until(parser, "endwhile")?,
-//             endwhile_: parser.expect_identifier_with_text("endwhile")?,
-//             endwhile_eol: parser.expect_eol()?,
-//         }))
-//     }
-// }
-//
+#[derive(Debug, PartialEq, Clone)]
+pub struct ForCommand {
+    for_: TokenMeta,
+    pub for_identifier: Identifier,
+    in_: TokenMeta,
+    pub for_expr: Expression,
+    eol: TokenMeta,
+    pub body: Body,
+    endfor_: TokenMeta,
+    endfor_eol: TokenMeta,
+}
+
+impl ForCommand {
+    pub fn parse(parser: &Parser) -> Result<ExCommand> {
+        Ok(ExCommand::For(ForCommand {
+            for_: parser.expect_identifier_with_text("for")?.into(),
+            for_identifier: Identifier::parse(parser)?,
+            in_: parser.expect_identifier_with_text("in")?.into(),
+            for_expr: Expression::parse(parser, Precedence::Lowest)?,
+            eol: parser.expect_eol()?,
+            body: Body::parse_until(parser, "endfor")?,
+            endfor_: parser.expect_identifier_with_text("endfor")?.into(),
+            endfor_eol: parser.expect_eol()?,
+        }))
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct WhileCommand {
+    while_: TokenMeta,
+    pub condition: Expression,
+    while_eol: TokenMeta,
+    pub body: Body,
+    endwhile_: TokenMeta,
+    endwhile_eol: TokenMeta,
+}
+
+impl WhileCommand {
+    pub fn parse(parser: &Parser) -> Result<ExCommand> {
+        Ok(ExCommand::While(WhileCommand {
+            while_: parser.expect_identifier_with_text("while")?.into(),
+            condition: Expression::parse(parser, Precedence::Lowest)?,
+            while_eol: parser.expect_eol()?,
+            body: Body::parse_until(parser, "endwhile")?,
+            endwhile_: parser.expect_identifier_with_text("endwhile")?.into(),
+            endwhile_eol: parser.expect_eol()?,
+        }))
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct Heredoc {
     var: TokenMeta,
@@ -483,25 +577,25 @@ impl<'a> TryFrom<TokenOwned> for Literal {
     }
 }
 
-// #[derive(Debug, PartialEq, Clone)]
-// pub struct Block {
-//     open: Token,
-//     pub body: Body,
-//     close: Token,
-//     eol: Token,
-// }
-//
-// impl Block {
-//     pub fn parse(parser: &Parser) -> Result<Block> {
-//         Ok(Self {
-//             open: parser.expect_token(TokenKind::LeftBrace)?,
-//             body: Body::parse_until(parser, "}")?,
-//             close: parser.expect_token(TokenKind::RightBrace)?,
-//             eol: parser.expect_eol()?,
-//         })
-//     }
-// }
-//
+#[derive(Debug, PartialEq, Clone)]
+pub struct Block {
+    open: TokenMeta,
+    pub body: Body,
+    close: TokenMeta,
+    eol: TokenMeta,
+}
+
+impl Block {
+    pub fn parse(parser: &Parser) -> Result<Block> {
+        Ok(Self {
+            open: parser.expect_token(TokenKind::LeftBrace)?.into(),
+            body: Body::parse_until(parser, "}")?,
+            close: parser.expect_token(TokenKind::RightBrace)?.into(),
+            eol: parser.expect_eol()?,
+        })
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum StatementCommand {
     Assign(AssignStatement),
@@ -510,7 +604,7 @@ pub enum StatementCommand {
 
 impl StatementCommand {
     pub fn matches(parser: &Parser) -> bool {
-        parser.cur_kind() == TokenKind::Colon
+        parser.front_kind() == TokenKind::Colon
             || parser.line_matches(|t| {
                 matches!(
                     t.kind,
@@ -526,7 +620,7 @@ impl StatementCommand {
 
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
         let expr = Expression::parse(parser, Precedence::Lowest)?;
-        if parser.cur_kind() == TokenKind::Equal {
+        if parser.front_kind() == TokenKind::Equal {
             return Ok(ExCommand::Statement(StatementCommand::Assign(
                 AssignStatement {
                     left: expr,
@@ -615,10 +709,10 @@ impl Signature {
             open: parser.expect_token(TokenKind::LeftParen)?.into(),
             params: {
                 let mut params = Vec::new();
-                while parser.cur_kind() != TokenKind::RightParen {
+                while parser.front_kind() != TokenKind::RightParen {
                     params.push(Parameter::parse(parser)?);
                     parser.skip_whitespace();
-                    if parser.cur_kind() == TokenKind::Comma {
+                    if parser.front_kind() == TokenKind::Comma {
                         parser.next_token();
                         parser.skip_whitespace();
                     }
@@ -649,13 +743,13 @@ impl Parameter {
     fn parse(parser: &Parser) -> Result<Parameter> {
         let name = Identifier::parse(parser)?;
 
-        let ty = if parser.cur_kind() == TokenKind::SpacedColon {
+        let ty = if parser.front_kind() == TokenKind::SpacedColon {
             Some(Type::parse(parser)?)
         } else {
             None
         };
 
-        let (equal, default_val) = if parser.cur_kind() == TokenKind::Equal {
+        let (equal, default_val) = if parser.front_kind() == TokenKind::Equal {
             (
                 Some(parser.expect_token(TokenKind::Equal)?.into()),
                 Some(Expression::parse(parser, Precedence::Lowest)?),
@@ -723,12 +817,12 @@ impl Identifier {
     }
 
     fn parse_in_expression(parser: &Parser) -> Result<Identifier> {
-        if parser.cur_kind() == TokenKind::LeftBracket {
+        if parser.front_kind() == TokenKind::LeftBracket {
             return Ok(Identifier::Unpacked(UnpackIdentifier {
                 open: parser.ensure_token(TokenKind::LeftBracket)?,
                 identifiers: parser
                     .parse_identifier_list(TokenKind::RightBracket)?,
-                close: parser.expect_peek(TokenKind::RightBracket)?.into(),
+                close: parser.ensure_token(TokenKind::RightBracket)?,
             }));
         }
 
@@ -833,11 +927,12 @@ pub enum Expression {
     DictAccess(DictAccess),
     VimOption(VimOption),
     Register(Register),
-    // Lambda(Lambda),
-    // Expandable(Expandable),
+    Lambda(Lambda),
+    Expandable(Expandable),
     MethodCall(MethodCall),
-    // Ternary(Ternary),
-    //
+    Ternary(Ternary),
+
+    // Composite types
     Prefix(PrefixExpression),
     Infix(InfixExpression),
 }
@@ -862,14 +957,14 @@ pub enum VimString {
     EnvironmentVariable(String),
 }
 
-// #[derive(Debug, PartialEq, Clone)]
-// pub struct Ternary {
-//     pub cond: Box<Expression>,
-//     question: Token,
-//     pub if_true: Box<Expression>,
-//     colon: Token,
-//     pub if_false: Box<Expression>,
-// }
+#[derive(Debug, PartialEq, Clone)]
+pub struct Ternary {
+    pub cond: Box<Expression>,
+    question: TokenMeta,
+    pub if_true: Box<Expression>,
+    colon: TokenMeta,
+    pub if_false: Box<Expression>,
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct MethodCall {
@@ -878,12 +973,12 @@ pub struct MethodCall {
     pub right: Box<CallExpression>,
 }
 
-// #[derive(Debug, PartialEq, Clone)]
-// pub struct Expandable {
-//     left: Token,
-//     pub ident: Identifier,
-//     right: Token,
-// }
+#[derive(Debug, PartialEq, Clone)]
+pub struct Expandable {
+    left: TokenMeta,
+    pub ident: Identifier,
+    right: TokenMeta,
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct DictAccess {
@@ -892,48 +987,48 @@ pub struct DictAccess {
     pub index: RawIdentifier,
 }
 
-// #[derive(Debug, PartialEq, Clone)]
-// pub struct Lambda {
-//     pub args: Signature,
-//     pub ret: Option<Type>,
-//     arrow: Token,
-//     pub body: Body,
-// }
-//
-// impl Lambda {
-//     pub fn parse(parser: &Parser) -> Result<Lambda> {
-//         Ok(Lambda {
-//             args: Signature::parse(parser)?,
-//             ret: {
-//                 if parser.cur_kind() == TokenKind::SpacedColon {
-//                     Some(Type::parse(parser)?)
-//                 } else {
-//                     None
-//                 }
-//             },
-//             arrow: parser.expect_token(TokenKind::Arrow)?,
-//             body: {
-//                 if parser.cur_kind() == TokenKind::LeftBrace {
-//                     todo!("parse blocks correctly");
-//                 } else {
-//                     Body {
-//                         commands: {
-//                             let mut v = Vec::new();
-//                             v.push(ExCommand::Return(ReturnCommand::fake(
-//                                 Some(
-//                                     parser
-//                                         .parse_expression(Precedence::Lowest)?,
-//                                 ),
-//                             )));
-//                             v
-//                         },
-//                     }
-//                 }
-//             },
-//         })
-//     }
-// }
-//
+#[derive(Debug, PartialEq, Clone)]
+pub struct Lambda {
+    pub args: Signature,
+    pub ret: Option<Type>,
+    arrow: TokenMeta,
+    pub body: Body,
+}
+
+impl Lambda {
+    pub fn parse(parser: &Parser) -> Result<Lambda> {
+        Ok(Lambda {
+            args: Signature::parse(parser)?,
+            ret: {
+                if parser.front_kind() == TokenKind::SpacedColon {
+                    Some(Type::parse(parser)?)
+                } else {
+                    None
+                }
+            },
+            arrow: parser.expect_token(TokenKind::Arrow)?.into(),
+            body: {
+                if parser.front_kind() == TokenKind::LeftBrace {
+                    todo!("parse blocks correctly");
+                } else {
+                    Body {
+                        commands: {
+                            let mut v = Vec::new();
+                            v.push(ExCommand::Return(ReturnCommand::fake(
+                                Some(
+                                    parser
+                                        .parse_expression(Precedence::Lowest)?,
+                                ),
+                            )));
+                            v
+                        },
+                    }
+                }
+            },
+        })
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct Register {
     pub register: String,
@@ -955,8 +1050,10 @@ pub enum IndexType {
 
 impl IndexType {
     fn parse(parser: &Parser) -> Result<IndexType> {
-        let (colon, left) = match parser.cur_kind() {
-            TokenKind::Colon | TokenKind::SpacedColon => (parser.pop(), None),
+        let (colon, left) = match parser.front_kind() {
+            TokenKind::Colon | TokenKind::SpacedColon => {
+                (parser.pop().into(), None)
+            }
             _ => {
                 let left = parser.parse_expression(Precedence::Lowest)?;
                 if let Expression::Slice(slice) = left {
@@ -970,7 +1067,8 @@ impl IndexType {
 
                 // Slice { -1, ... }
                 // Negative { Slice ... }
-                let colon = parser.pop();
+                parser.pop();
+                let colon = parser.front_owned();
                 anyhow::ensure!(
                     colon.kind.is_colon(),
                     "[IndexType] token: {:#?}, parser: {:#?}, slice: {:#?}",
@@ -982,14 +1080,14 @@ impl IndexType {
                 // Move past the colon, so that we're on the expression to the right
                 parser.next_token();
 
-                (colon, Some(left.into()))
+                (colon.into(), Some(left.into()))
             }
         };
 
-        if parser.cur_kind() == TokenKind::RightBracket {
+        if parser.front_kind() == TokenKind::RightBracket {
             return Ok(IndexType::Slice(VimSlice {
                 start: left,
-                colon: colon.into(),
+                colon,
                 finish: None,
             }));
         }
@@ -997,7 +1095,7 @@ impl IndexType {
         let right = Expression::parse(parser, Precedence::Lowest)?;
         return Ok(IndexType::Slice(VimSlice {
             start: left,
-            colon: colon.into(),
+            colon,
             finish: Some(right.into()),
         }));
     }
@@ -1028,7 +1126,7 @@ impl KeyValue {
         parser.skip_whitespace();
 
         Ok(Self {
-            key: match parser.cur_kind() {
+            key: match parser.front_kind() {
                 TokenKind::Identifier => {
                     VimKey::Literal(parser.pop().try_into()?)
                 }
@@ -1240,7 +1338,7 @@ impl VarCommand {
         let var: TokenMeta = var.into();
 
         let name = Identifier::parse(parser)?;
-        let ty = match parser.cur_kind() {
+        let ty = match parser.front_kind() {
             TokenKind::Equal => None,
             TokenKind::HeredocOperator => None,
             TokenKind::EndOfLine => None,
@@ -1254,7 +1352,7 @@ impl VarCommand {
             }
         };
 
-        match parser.cur_kind() {
+        match parser.front_kind() {
             TokenKind::HeredocOperator => {
                 let op =
                     parser.expect_token(TokenKind::HeredocOperator)?.into();
@@ -1293,14 +1391,14 @@ impl VarCommand {
                 let close = loop {
                     let mut line: Vec<TokenOwned> = vec![];
                     while !matches!(
-                        parser.cur_kind(),
+                        parser.front_kind(),
                         TokenKind::EndOfLine | TokenKind::EndOfFile
                     ) {
                         line.push(parser.front_owned());
                         parser.next_token();
                     }
 
-                    if parser.cur_kind() == TokenKind::EndOfFile {
+                    if parser.front_kind() == TokenKind::EndOfFile {
                         panic!("Failed to do the stuffs... {:?}", contents);
                     }
 
@@ -1358,6 +1456,23 @@ impl VarCommand {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct EvalCommand {
+    eval: Option<TokenMeta>,
+    pub expr: Expression,
+    eol: TokenMeta,
+}
+
+impl EvalCommand {
+    pub fn parse(parser: &Parser) -> Result<ExCommand> {
+        Ok(ExCommand::Eval(EvalCommand {
+            eval: None,
+            expr: Expression::parse(parser, Precedence::Lowest)?,
+            eol: parser.expect_eol()?,
+        }))
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct CallCommand {
     call: Option<TokenMeta>,
     pub expr: Expression,
@@ -1396,7 +1511,7 @@ mod prefix_expr {
 
     pub fn parse_number(parser: &Parser) -> Result<Expression> {
         anyhow::ensure!(matches!(
-            parser.cur_kind(),
+            parser.front_kind(),
             TokenKind::Integer | TokenKind::Float
         ));
 
@@ -1406,7 +1521,7 @@ mod prefix_expr {
     }
 
     pub fn parse_identifier(parser: &Parser) -> Result<Expression> {
-        anyhow::ensure!(parser.cur_kind() == TokenKind::Identifier);
+        anyhow::ensure!(parser.front_kind() == TokenKind::Identifier);
 
         Ok(RawIdentifier {
             name: parser.front_text(),
@@ -1415,7 +1530,7 @@ mod prefix_expr {
     }
 
     pub fn parse_register(parser: &Parser) -> Result<Expression> {
-        anyhow::ensure!(parser.cur_kind() == TokenKind::Register);
+        anyhow::ensure!(parser.front_kind() == TokenKind::Register);
 
         Ok(Expression::Register(Register {
             register: parser.front_text(),
@@ -1424,7 +1539,7 @@ mod prefix_expr {
 
     pub fn parse_bool(parser: &Parser) -> Result<Expression> {
         Ok(Expression::Boolean(VimBoolean {
-            value: match &parser.cur_kind() {
+            value: match &parser.front_kind() {
                 TokenKind::True => true,
                 TokenKind::False => false,
                 _ => unreachable!("parse_bool"),
@@ -1481,8 +1596,7 @@ mod prefix_expr {
 
     pub fn parse_grouped_expr(parser: &Parser) -> Result<Expression> {
         if parser.line_contains_kind(TokenKind::Arrow) {
-            todo!()
-            // Ok(Expression::Lambda(Lambda::parse(parser)?))
+            Ok(Expression::Lambda(Lambda::parse(parser)?))
         } else {
             Ok(Expression::Grouped(GroupedExpression {
                 open: parser.expect_token(TokenKind::LeftParen)?.into(),
@@ -1517,43 +1631,46 @@ mod prefix_expr {
         }))
     }
 
-    //     pub fn parse_prefix_colon(parser: &Parser) -> Result<Expression> {
-    //         todo!(
-    //             "[Colon] I don't think we ever get this in reality? {:#?}",
-    //             parser
-    //         );
-    //     }
-    //
-    //     pub fn parse_prefix_spaced_colon(
-    //         parser: &Parser,
-    //     ) -> Result<Expression> {
-    //         todo!("[SpacedColon] I don't think we ever get this in reality? ");
-    //     }
-    //
-    //     pub fn parse_expandable_sequence(
-    //         parser: &Parser,
-    //     ) -> Result<Expression> {
-    //         Ok(Expression::Expandable(Expandable {
-    //             left: parser.expect_token(TokenKind::AngleLeft)?,
-    //             ident: {
-    //                 // read until greater than or angle,
-    //                 // smoosh into raw identifier
-    //                 let mut name = String::new();
-    //                 while !matches!(
-    //                     parser.cur_kind(),
-    //                     TokenKind::GreaterThan | TokenKind::AngleRight
-    //                 ) {
-    //                     name += parser.pop().text.as_str();
-    //                 }
-    //
-    //                 Identifier::Raw(RawIdentifier { name })
-    //             },
-    //             right: parser.expect_fn(
-    //                 |k| matches!(k, TokenKind::GreaterThan | TokenKind::AngleRight),
-    //                 false,
-    //             )?,
-    //         }))
-    //     }
+    pub fn parse_prefix_colon(parser: &Parser) -> Result<Expression> {
+        todo!(
+            "[Colon] I don't think we ever get this in reality? {:#?}",
+            parser
+        );
+    }
+
+    pub fn parse_prefix_spaced_colon(parser: &Parser) -> Result<Expression> {
+        unreachable!("[SpacedColon] should not happen {:#?}", parser);
+    }
+
+    pub fn parse_expandable_sequence(parser: &Parser) -> Result<Expression> {
+        Ok(Expression::Expandable(Expandable {
+            left: parser.expect_token(TokenKind::AngleLeft)?.into(),
+            ident: {
+                // read until greater than or angle,
+                // smoosh into raw identifier
+                let mut name = String::new();
+                while !matches!(
+                    parser.front_kind(),
+                    TokenKind::GreaterThan | TokenKind::AngleRight
+                ) {
+                    name += parser.pop().text.as_str();
+                }
+
+                Identifier::Raw(RawIdentifier { name })
+            },
+            right: parser
+                .expect_fn(
+                    |k| {
+                        matches!(
+                            k,
+                            TokenKind::GreaterThan | TokenKind::AngleRight
+                        )
+                    },
+                    false,
+                )?
+                .into(),
+        }))
+    }
 }
 
 mod infix_expr {
@@ -1676,7 +1793,7 @@ mod infix_expr {
         if let Expression::Identifier(ident) = (*left).clone() {
             let valid_scope: Result<VimScope> = ident.try_into();
             if let Ok(scope) = valid_scope {
-                if parser.cur_kind() == TokenKind::Colon {
+                if parser.front_kind() == TokenKind::Colon {
                     return Ok(Expression::Identifier(Identifier::Scope(
                         ScopedIdentifier {
                             scope,
@@ -1699,7 +1816,7 @@ mod infix_expr {
             parser
         );
 
-        if parser.cur_kind() == TokenKind::RightBracket {
+        if parser.front_kind() == TokenKind::RightBracket {
             return Ok(Expression::Slice(
                 VimSlice {
                     start: Some(left),
@@ -1735,18 +1852,18 @@ mod infix_expr {
         }))
     }
 
-    //     pub fn parse_ternary_expr(
-    //         parser: &Parser,
-    //         left: Box<Expression>,
-    //     ) -> Result<Expression> {
-    //         Ok(Expression::Ternary(Ternary {
-    //             cond: left,
-    //             question: parser.expect_token(TokenKind::QuestionMark)?,
-    //             if_true: Expression::parse(parser, Precedence::Lowest)?.into(),
-    //             colon: parser.expect_token(TokenKind::SpacedColon)?,
-    //             if_false: parser.parse_expression(Precedence::Lowest)?.into(),
-    //         }))
-    //     }
+    pub fn parse_ternary_expr(
+        parser: &Parser,
+        left: Box<Expression>,
+    ) -> Result<Expression> {
+        Ok(Expression::Ternary(Ternary {
+            cond: left,
+            question: parser.expect_token(TokenKind::QuestionMark)?.into(),
+            if_true: Expression::parse(parser, Precedence::Lowest)?.into(),
+            colon: parser.expect_token(TokenKind::SpacedColon)?.into(),
+            if_false: parser.parse_expression(Precedence::Lowest)?.into(),
+        }))
+    }
 }
 
 #[derive(Debug)]
@@ -1768,12 +1885,11 @@ impl<'a> Parser<'a> {
     }
 
     pub fn pop(&self) -> TokenOwned {
-        let mut tokens = self.token_buffer.borrow_mut();
-        if tokens.len() <= 2 {
-            tokens.push_back(self.lexer.next_token().unwrap());
+        if self.token_buffer.borrow().len() <= 2 {
+            self.fill_buffer(2);
         }
 
-        tokens.pop_front().unwrap().into()
+        self.token_buffer.borrow_mut().pop_front().unwrap().into()
     }
 
     fn front_ref(&self) -> Ref<'_, Token> {
@@ -1788,7 +1904,7 @@ impl<'a> Parser<'a> {
         self.token_buffer.borrow()[0].text.to_string()
     }
 
-    fn cur_kind(&self) -> TokenKind {
+    fn front_kind(&self) -> TokenKind {
         self.token_buffer.borrow()[0].kind.clone()
     }
 
@@ -1813,7 +1929,7 @@ impl<'a> Parser<'a> {
     }
 
     fn current_precedence(&self) -> Precedence {
-        self.get_precedence(&self.cur_kind()).unwrap_or_default()
+        self.get_precedence(&self.front_kind()).unwrap_or_default()
     }
 
     fn line_matches<F>(&self, f: F) -> bool
@@ -1899,7 +2015,7 @@ impl<'a> Parser<'a> {
         use prefix_expr::*;
         use TokenKind::*;
 
-        Some(Box::new(match self.cur_kind() {
+        Some(Box::new(match self.front_kind() {
             Integer | Float => parse_number,
             Identifier => parse_identifier,
             Register => parse_register,
@@ -1908,13 +2024,13 @@ impl<'a> Parser<'a> {
             SingleQuoteString => parse_single_string,
             InterpolatedString => parse_interpolated,
             InterpolatedLiteralString => parse_interpolated_lit,
-            // EnvironmentVariable => parse_env_var,
+            EnvironmentVariable => parse_env_var,
             LeftParen => parse_grouped_expr,
             LeftBracket => parse_array_literal,
             LeftBrace => parse_dict_literal,
-            // Colon => parse_prefix_colon,
-            // SpacedColon => parse_prefix_spaced_colon,
-            // AngleLeft => parse_expandable_sequence,
+            Colon => parse_prefix_colon,
+            SpacedColon => parse_prefix_spaced_colon,
+            AngleLeft => parse_expandable_sequence,
             True | False => parse_bool,
             Plus | Minus | Bang | Percent => parse_prefix_operator,
             _ => return None,
@@ -2009,7 +2125,7 @@ impl<'a> Parser<'a> {
             | TokenKind::IsNot
             | TokenKind::IsNotInsensitive => infix_expr::parse_infix_operator,
             TokenKind::Dot => infix_expr::parse_dot_operator,
-            // TokenKind::QuestionMark => infix_expr::parse_ternary_expr,
+            TokenKind::QuestionMark => infix_expr::parse_ternary_expr,
             // TokenKind::SpacedColon => infix_expr::parser_index_type,
             TokenKind::Identifier => return None,
             _ => unimplemented!("get_infix_fn: {:#?}", self),
@@ -2034,11 +2150,6 @@ impl<'a> Parser<'a> {
             }
         };
 
-        // TODO: Some things may not allow newlines, but for now, let's just skip them
-        // while self.cur_kind() == TokenKind::EndOfLine {
-        //     self.next_token();
-        // }
-
         while prec < self.peek_precedence() {
             let infix = match self.get_infix_fn() {
                 Some(infix) => infix,
@@ -2053,7 +2164,7 @@ impl<'a> Parser<'a> {
     }
 
     pub fn expect_eol(&self) -> Result<TokenMeta> {
-        let curkind = self.cur_kind();
+        let curkind = self.front_kind();
         if curkind == TokenKind::EndOfLine
             || curkind == TokenKind::EndOfFile
                 // We kind of cheat to say end of line comments are fine...
@@ -2092,6 +2203,8 @@ impl<'a> Parser<'a> {
         Ok(self.peek_n(1).into())
     }
 
+    // TODO: Could possibly (if we care about the perf) write a copy of this function
+    // that, instead of returning an owned, directly returns the metadata only
     pub fn expect_token(&self, kind: TokenKind) -> Result<TokenOwned> {
         let token = self.front_owned();
         if token.kind != kind {
@@ -2197,18 +2310,35 @@ impl<'a> Parser<'a> {
     }
 
     pub fn peek_n(&self, n: usize) -> TokenOwned {
-        let mut tokens = self.token_buffer.borrow_mut();
+        let tokens = self.token_buffer.borrow();
         match tokens.len() {
             0 | 1 => panic!("Should always have a least 2 entries"),
             len if len - 1 >= n => (&tokens[n]).into(),
             len => {
-                for _ in 0..(n + 1 - len) {
-                    tokens.push_back(self.lexer.next_token().unwrap())
-                }
+                drop(tokens);
+                self.fill_buffer(n);
 
-                let res = (&tokens[n]).into();
-                res
+                let tokens = self.token_buffer.borrow();
+                (&tokens[n]).into()
             }
+        }
+    }
+
+    fn fill_buffer(&self, n: usize) {
+        let mut tokens = self.token_buffer.borrow_mut();
+
+        let len = tokens.len();
+        for _ in 0..(n + 1 - len) {
+            let tok = match self.lexer.next_token() {
+                Ok(tok) => tok,
+                Err(err) => Token {
+                    kind: TokenKind::EndOfFile,
+                    text: vim9_lexer::TokenText::Empty,
+                    span: Span::empty(),
+                },
+            };
+
+            tokens.push_back(tok)
         }
     }
 
@@ -2218,7 +2348,7 @@ impl<'a> Parser<'a> {
 
     pub fn parse_command(&self) -> Result<ExCommand> {
         // If the line starts with a colon, then just skip over it.
-        if self.cur_kind() == TokenKind::Colon {
+        if self.front_kind() == TokenKind::Colon {
             self.next_token();
         }
 
@@ -2228,7 +2358,7 @@ impl<'a> Parser<'a> {
         //  Will just be an annoying amount of writing :)
         if self.front_ref().text.eq("silent") {
             self.next_token();
-            if self.cur_kind() == TokenKind::Bang {
+            if self.front_kind() == TokenKind::Bang {
                 self.next_token();
             }
         }
@@ -2238,13 +2368,12 @@ impl<'a> Parser<'a> {
         //
         // This is the desired behavior for `parse` which will consume until the end of line
         // generally speaking.
-        Ok(match &self.cur_kind() {
+        Ok(match &self.front_kind() {
             TokenKind::EndOfFile => ExCommand::NoOp(self.pop().into()),
             TokenKind::Comment => ExCommand::Comment(self.pop().into()),
             TokenKind::EndOfLine => ExCommand::NoOp(self.pop().into()),
             TokenKind::Identifier => {
                 if self.command_match("vim9script") {
-                    self.next_token();
                     ExCommand::Vim9Script(Vim9ScriptCommand::parse(self)?)
                 } else if self.command_match("execute") {
                     ExecuteCommand::parse(self)?
@@ -2267,74 +2396,66 @@ impl<'a> Parser<'a> {
                     ReturnCommand::parse(self)?
                 } else if self.command_match("finish") {
                     FinishCommand::parse(self)?
-                } else if CallCommand::matches(self) {
+                } else if self.command_match("export") {
+                    ExportCommand::parse(self)?
+                } else if self.command_match("import") {
+                    ImportCommand::parse(self)?
+                } else if self.command_match("augroup") {
+                    AugroupCommand::parse(self)?
+                } else if self.command_match("autocmd") {
+                    AutocmdCommand::parse(self)?
+                } else if self.command_match("command") {
+                    UserCommand::parse(self)?
+                } else if self.command_match("set")
+                    || self.command_match("setlocal")
+                {
+                    SharedCommand::parse(self)?
+                } else if self.command_match("nnoremap")
+                    || self.command_match("inoremap")
+                    || self.command_match("anoremenu")
+                    || self.command_match("normal")
+                {
+                    SharedCommand::parse(self)?
+                } else if self.command_match("unlet") {
+                    println!("TODO: UNLET");
+                    return Ok(SharedCommand::parse(self)?);
+                } else if self.command_match("for") {
+                    ForCommand::parse(self)?
+                } else if self.command_match("while") {
+                    return Ok(WhileCommand::parse(self)?);
+                } else if self.command_match("try") {
+                    TryCommand::parse(self)?
+                } else if self.command_match("defer") {
+                    DeferCommand::parse(self)?
+                } else if self.command_match("break") {
+                    BreakCommand::parse(self)?
+                } else if self.command_match("continue") {
+                    ContinueCommand::parse(self)?
+                }
+                // CallCommand should be lower, because it has less strict requirements,
+                //
+                // This is true of a few of the other kind of "dynamic" style commands
+                // that are detected/guessed by what the rest of the line looks like.
+                else if CallCommand::matches(self) {
                     CallCommand::parse(self)?
                 } else if StatementCommand::matches(self) {
+                    // TODO: There are some kind of assignments that aren't legal if there is a
+                    // colon. I'm not sure what to do about that... it seems a bit weird.
+                    //
+                    // But I can't find the exact reasoning behind this.
+                    //
+                    // It's illegal to do:
+                    //
+                    // var sum = 1
+                    // :sum = sum + 1
                     StatementCommand::parse(self)?
+                } else if self.line_contains_kind(TokenKind::MethodArrow) {
+                    EvalCommand::parse(self)?
                 } else {
                     SharedCommand::parse(self)?
                 }
-
-                // if self.command_match("vim9script") {
-                //     self.next_token();
-                //     ExCommand::Vim9Script(Vim9ScriptCommand::parse(self)?)
-                // } else {
-                //     } else if self.command_match("unlet") {
-                //         println!("TODO: UNLET");
-                //         return Ok(SharedCommand::parse(self)?);
-                //     } else if self.command_match("export") {
-                //         return Ok(ExportCommand::parse(self)?);
-                //     } else if self.command_match("for") {
-                //         return Ok(ForCommand::parse(self)?);
-                //     } else if self.command_match("while") {
-                //         return Ok(WhileCommand::parse(self)?);
-                //     } else if self.command_match("try") {
-                //         return Ok(TryCommand::parse(self)?);
-                //     } else if self.command_match("import") {
-                //         return Ok(ImportCommand::parse(self)?);
-                //     } else if self.command_match("echo")
-                //         || self.command_match("echon")
-                //         || self.command_match("echomsg")
-                //     {
-                //         return Ok(EchoCommand::parse(self)?);
-                //     } else if self.command_match("defer") {
-                //         return Ok(DeferCommand::parse(self)?);
-                //     } else if self.command_match("augroup") {
-                //         return Ok(AugroupCommand::parse(self)?);
-                //     } else if self.command_match("autocmd") {
-                //         return Ok(AutocmdCommand::parse(self)?);
-                //     } else if self.command_match("break") {
-                //         return Ok(BreakCommand::parse(self)?);
-                //     } else if self.command_match("continue") {
-                //         return Ok(ContinueCommand::parse(self)?);
-                //     } else if self.command_match("command") {
-                //         return Ok(UserCommand::parse(self)?);
-                //     } else if self.command_match("set")
-                //         || self.command_match("setlocal")
-                //     {
-                //         return Ok(SharedCommand::parse(self)?);
-                //     } else if self.command_match("nnoremap")
-                //         || self.command_match("inoremap")
-                //         || self.command_match("anoremenu")
-                //         || self.command_match("normal")
-                //     {
-                //         // TODO: Make mapping command
-                //         return Ok(SharedCommand::parse(self)?);
-                //     } else {
-                //         if CallCommand::matches(self) {
-                //             return Ok(CallCommand::parse(self)?);
-                //         } else if self
-                //             .line_contains_kind(TokenKind::MethodArrow)
-                //         {
-                //             return Ok(EvalCommand::parse(self)?);
-                //         } else {
-                //             // ExCommand::NoOp(self.front().clone())
-                //             return Ok(SharedCommand::parse(self)?);
-                //         }
-                //     }
-                // }
             }
-            // TokenKind::LeftBracket => return Ok(EvalCommand::parse(self)?),
+            TokenKind::LeftBracket => EvalCommand::parse(self)?,
             _ => ExCommand::NoOp(self.pop().into()),
         })
     }
@@ -2342,7 +2463,7 @@ impl<'a> Parser<'a> {
     pub fn parse_program(&self) -> Program {
         let mut program = Program { commands: vec![] };
 
-        while self.cur_kind() != TokenKind::EndOfFile {
+        while self.front_kind() != TokenKind::EndOfFile {
             // let command = match self.parse_command() {
             //     Ok(command) => command,
             //     Err(err) => panic!(
@@ -2382,7 +2503,7 @@ impl<'a> Parser<'a> {
             // Consume last token of T
             self.next_real_token();
 
-            if self.cur_kind() == close {
+            if self.front_kind() == close {
                 return Ok(results);
             } else if self.peek_kind() == close {
                 break;
@@ -2396,7 +2517,7 @@ impl<'a> Parser<'a> {
             //  I don't actually care that sometimes they aren't.
             //  I'll let bramvim handle that
             self.skip_whitespace();
-            if self.cur_kind() == close {
+            if self.front_kind() == close {
                 return Ok(results);
             }
 
@@ -2404,13 +2525,13 @@ impl<'a> Parser<'a> {
             results.push(parse(self)?);
 
             self.skip_whitespace();
-            if self.cur_kind() == close {
+            if self.front_kind() == close {
                 return Ok(results);
             } else if self.peek_kind() == close {
                 break;
             }
 
-            if self.cur_kind().is_eof() {
+            if self.front_kind().is_eof() {
                 panic!("EOF");
             }
         }
@@ -2451,10 +2572,10 @@ impl<'a> Parser<'a> {
     }
 
     fn skip_whitespace(&self) {
-        while self.cur_kind().is_whitespace()
-            || self.cur_kind() == TokenKind::Comment
+        while self.front_kind().is_whitespace()
+            || self.front_kind() == TokenKind::Comment
         {
-            if self.cur_kind() == TokenKind::EndOfFile {
+            if self.front_kind() == TokenKind::EndOfFile {
                 break;
             }
 
@@ -2463,18 +2584,18 @@ impl<'a> Parser<'a> {
     }
 
     fn consume_if_kind(&self, kind: TokenKind) -> Option<TokenOwned> {
-        if self.cur_kind() == kind {
+        if self.front_kind() == kind {
             Some(self.pop())
         } else {
             None
         }
     }
 
-    pub fn read_until<F, T>(&self, f: F)
+    pub fn read_until<F>(&self, f: F)
     where
         F: Fn(&Token) -> bool,
     {
-        while !f(&self.front_ref()) && !self.cur_kind().is_eof() {
+        while !f(&self.front_ref()) && !self.front_kind().is_eof() {
             self.pop();
         }
     }
@@ -2543,23 +2664,23 @@ mod test {
     snap!(test_busted, "../testdata/snapshots/busted.vim");
     snap!(test_heredoc, "../testdata/snapshots/heredoc.vim");
     snap!(test_typed_params, "../testdata/snapshots/typed_params.vim");
-    // snap!(test_index, "../testdata/snapshots/index.vim");
-    // snap!(test_adv_index, "../testdata/snapshots/adv_index.vim");
-    // snap!(test_multiline, "../testdata/snapshots/multiline.vim");
-    // snap!(test_cfilter, "../testdata/snapshots/cfilter.vim");
-    // snap!(test_lambda, "../testdata/snapshots/lambda.vim");
-    // snap!(test_comparisons, "../testdata/snapshots/comparisons.vim");
-    // snap!(test_methods, "../testdata/snapshots/methods.vim");
-    // snap!(test_eval, "../testdata/snapshots/eval.vim");
-    // snap!(test_export, "../testdata/snapshots/export.vim");
-    // snap!(test_import, "../testdata/snapshots/import.vim");
-    // snap!(test_autocmd, "../testdata/snapshots/autocmd.vim");
-    // snap!(test_unpack, "../testdata/snapshots/unpack.vim");
+    snap!(test_index, "../testdata/snapshots/index.vim");
+    snap!(test_adv_index, "../testdata/snapshots/adv_index.vim");
+    snap!(test_multiline, "../testdata/snapshots/multiline.vim");
+    snap!(test_cfilter, "../testdata/snapshots/cfilter.vim");
+    snap!(test_lambda, "../testdata/snapshots/lambda.vim");
+    snap!(test_comparisons, "../testdata/snapshots/comparisons.vim");
+    snap!(test_methods, "../testdata/snapshots/methods.vim");
+    snap!(test_eval, "../testdata/snapshots/eval.vim");
+    snap!(test_export, "../testdata/snapshots/export.vim");
+    snap!(test_import, "../testdata/snapshots/import.vim");
+    snap!(test_autocmd, "../testdata/snapshots/autocmd.vim");
+    snap!(test_unpack, "../testdata/snapshots/unpack.vim");
 
     // https://github.com/yegappan/lsp test suite
-    // snap!(test_handlers, "../../shared/snapshots/lsp_handlers.vim");
-    // snap!(test_selection, "../../shared/snapshots/lsp_selection.vim");
-    // snap!(test_fileselect, "../../shared/snapshots/lsp_fileselect.vim");
+    snap!(test_handlers, "../../shared/snapshots/lsp_handlers.vim");
+    snap!(test_selection, "../../shared/snapshots/lsp_selection.vim");
+    snap!(test_fileselect, "../../shared/snapshots/lsp_fileselect.vim");
 
     #[test]
     fn test_peek_n() {

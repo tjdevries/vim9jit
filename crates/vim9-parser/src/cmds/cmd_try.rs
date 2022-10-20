@@ -1,23 +1,22 @@
 use std::collections::HashSet;
 
 use anyhow::Result;
-use vim9_lexer::Token;
 
-use crate::{Body, ExCommand, Expression, Parser};
+use crate::{Body, ExCommand, Expression, Parser, TokenMeta};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct TryCommand {
-    try_: Token,
-    try_eol: Token,
+    try_: TokenMeta,
+    try_eol: TokenMeta,
     pub body: Body,
     pub catch: Option<CatchCommand>,
     pub finally: Option<FinallyCommand>,
-    endtry_: Token,
-    endtry_eol: Token,
+    endtry_: TokenMeta,
+    endtry_eol: TokenMeta,
 }
 
 impl TryCommand {
-    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+    pub fn parse(parser: &Parser) -> Result<ExCommand> {
         let try_endings: HashSet<String> = HashSet::from_iter(
             vec![
                 "catch".to_string(),
@@ -28,13 +27,13 @@ impl TryCommand {
         );
 
         Ok(ExCommand::Try(TryCommand {
-            try_: parser.expect_identifier_with_text("try")?,
+            try_: parser.expect_identifier_with_text("try")?.into(),
             try_eol: parser.expect_eol()?,
             body: Body::parse_until_any(parser, &try_endings)?,
             catch: {
-                if parser.current_token.text.as_str() == "catch" {
+                if parser.front_text().eq("catch") {
                     Some(CatchCommand {
-                        catch_: parser.pop(),
+                        catch_: parser.pop().into(),
                         expr: None,
                         catch_eol: parser.expect_eol()?,
                         body: Body::parse_until_any(parser, &try_endings)?,
@@ -44,7 +43,7 @@ impl TryCommand {
                 }
             },
             finally: None,
-            endtry_: parser.expect_identifier_with_text("endtry")?,
+            endtry_: parser.expect_identifier_with_text("endtry")?.into(),
             endtry_eol: parser.expect_eol()?,
         }))
     }
@@ -52,9 +51,9 @@ impl TryCommand {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CatchCommand {
-    catch_: Token,
+    catch_: TokenMeta,
     pub expr: Option<Expression>,
-    catch_eol: Token,
+    catch_eol: TokenMeta,
     pub body: Body,
 }
 

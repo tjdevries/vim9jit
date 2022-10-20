@@ -1,24 +1,27 @@
 ---
-source: src/lib.rs
-assertion_line: 1377
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2675
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (2,0)->(2,3)),
+            var: Token(Identifier, (2,0)->(2,3)),
             ty: None,
             name: Unpack([[Raw(c_before), Raw(c)]]),
-            equal: Token(Equal, "=", (2,18)->(2,19)),
+            equal: Token(Equal, (2,18)->(2,19)),
             expr: Array(
                 ArrayLiteral {
-                    open: Token(LeftBracket, "[", (2,20)->(2,21)),
+                    open: Token(LeftBracket, (2,20)->(2,21)),
                     elements: [
                         String(
                             SingleQuote(
@@ -31,10 +34,10 @@ expression: snapshot_parsing(contents)
                             ),
                         ),
                     ],
-                    close: Token(RightBracket, "]", (2,27)->(2,28)),
+                    close: Token(RightBracket, (2,27)->(2,28)),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (2,28)->(2,28)),
+            eol: Token(EndOfLine, (2,28)->(2,28)),
         },
     ),
 ]

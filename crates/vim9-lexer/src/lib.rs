@@ -18,7 +18,7 @@ pub struct Span {
 }
 
 impl Span {
-    fn empty() -> Self {
+    pub fn empty() -> Self {
         Self {
             start_row: 0,
             start_col: 0,
@@ -130,8 +130,7 @@ impl Token<'_> {
     pub fn fake() -> Token<'static> {
         Token {
             kind: TokenKind::Virtual,
-            // text: TokenText::Ref(""),
-            text: todo!(),
+            text: TokenText::Empty,
             span: Span::empty(),
         }
     }
@@ -311,6 +310,8 @@ impl TokenKind {
 pub struct LexerState {
     position: usize,
     read_position: usize,
+
+    sublexer: Option<Box<dyn Fn(&Lexer) -> Result<Token>>>,
 }
 
 pub struct Lexer {
@@ -336,14 +337,6 @@ impl Debug for Lexer {
     }
 }
 
-// impl Iterator for Lexer {
-//     type Item = Token;
-//
-//     fn next(&self) -> Option<Self::Item> {
-//         Some(self.next_token().expect("todo: should this just expect?"))
-//     }
-// }
-
 impl Lexer {
     fn ch(&self) -> Option<&char> {
         self.chars.get(self.state.borrow().position)
@@ -364,6 +357,7 @@ impl Lexer {
             state: RefCell::new(LexerState {
                 position: 0,
                 read_position: 1,
+                sublexer: None,
             }),
             chars,
             lines,
@@ -679,6 +673,10 @@ impl Lexer {
     }
 
     pub fn next_token(&self) -> Result<Token> {
+        if let Some(sublexer) = &self.state.borrow().sublexer {
+            return sublexer(&self);
+        }
+
         use TokenKind::*;
 
         self.skip_whitespace();
@@ -1076,11 +1074,11 @@ mod test {
     snapshot!(test_lambda, "../testdata/snapshots/lambda.vim");
     snapshot!(test_types, "../testdata/snapshots/types.vim");
     snapshot!(test_methods, "../testdata/snapshots/methods.vim");
-    snapshot!(test_execute, "../testdata/snapshots/execute.vim");
 
     // snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
 
     // TODO: Check more thoroughly
     snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
     snapshot!(test_handlers, "../../shared/snapshots/lsp_handlers.vim");
+    snapshot!(test_selection, "../../shared/snapshots/lsp_selection.vim");
 }

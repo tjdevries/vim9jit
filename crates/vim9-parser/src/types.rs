@@ -57,7 +57,7 @@ impl InnerType {
     }
 
     pub fn parse(parser: &Parser) -> Result<InnerType> {
-        match parser.cur_kind() {
+        match parser.front_kind() {
             TokenKind::Identifier => {
                 let literal: Literal = parser.pop().try_into()?;
                 Ok(match literal.token.text.as_str() {

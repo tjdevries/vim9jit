@@ -1,31 +1,31 @@
 use anyhow::Result;
-use vim9_lexer::{Token, TokenKind};
+use vim9_lexer::{Span, Token, TokenKind};
 
-use crate::{Block, Body, ExCommand, Literal, Parser};
+use crate::{Block, Body, ExCommand, Literal, Parser, TokenMeta};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct AugroupCommand {
-    augroup: Token,
+    augroup: TokenMeta,
     pub augroup_name: Literal,
-    augroup_eol: Token,
+    augroup_eol: TokenMeta,
     pub body: Body,
-    augroup_end: Token,
-    augroup_end_name: Token,
-    augroup_end_eol: Token,
+    augroup_end: TokenMeta,
+    augroup_end_name: TokenMeta,
+    augroup_end_eol: TokenMeta,
 }
 
 impl AugroupCommand {
-    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+    pub fn parse(parser: &Parser) -> Result<ExCommand> {
         Ok(ExCommand::Augroup(AugroupCommand {
-            augroup: parser.expect_identifier_with_text("augroup")?,
+            augroup: parser.expect_identifier_with_text("augroup")?.into(),
             augroup_name: parser
                 .expect_token(TokenKind::Identifier)?
                 .try_into()?,
             augroup_eol: parser.expect_eol()?,
             // TODO: This should be until augroup END, unless you can't have nested ones legally
             body: Body::parse_until(parser, "augroup")?,
-            augroup_end: parser.expect_identifier_with_text("augroup")?,
-            augroup_end_name: parser.expect_identifier_with_text("END")?,
+            augroup_end: parser.expect_identifier_with_text("augroup")?.into(),
+            augroup_end_name: parser.expect_identifier_with_text("END")?.into(),
             augroup_end_eol: parser.expect_eol()?,
         }))
     }
@@ -33,7 +33,7 @@ impl AugroupCommand {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct AutocmdCommand {
-    autocmd: Token,
+    autocmd: TokenMeta,
     pub bang: bool,
     pub events: Vec<Literal>,
     pub pattern: AutocmdPattern,
@@ -46,17 +46,16 @@ pub enum AutocmdPattern {
     Buffer,
 }
 
-fn tokens_are_neighbors(left: &Token, right: &Token) -> bool {
-    left.span.end_row == right.span.start_row
-        && left.span.end_col == right.span.start_col
+fn tokens_are_neighbors(left: &Span, right: &Span) -> bool {
+    left.end_row == right.start_row && left.end_col == right.start_col
 }
 
 impl AutocmdCommand {
-    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+    pub fn parse(parser: &Parser) -> Result<ExCommand> {
         Ok(ExCommand::Autocmd(AutocmdCommand {
             // TODO: Accept au! for example
-            autocmd: parser.expect_identifier_with_text("autocmd")?,
-            bang: if parser.current_token.kind == TokenKind::Bang {
+            autocmd: parser.expect_identifier_with_text("autocmd")?.into(),
+            bang: if parser.front_kind() == TokenKind::Bang {
                 parser.next_token();
                 true
             } else {
@@ -67,7 +66,7 @@ impl AutocmdCommand {
 
                 loop {
                     events.push(parser.pop().try_into()?);
-                    if parser.current_token.kind != TokenKind::Comma {
+                    if parser.front_kind() != TokenKind::Comma {
                         break;
                     }
 
@@ -89,16 +88,16 @@ pub enum AutocmdBlock {
 }
 
 impl AutocmdBlock {
-    pub fn parse(parser: &mut Parser) -> Result<AutocmdBlock> {
-        Ok(match parser.current_token.kind {
+    pub fn parse(parser: &Parser) -> Result<AutocmdBlock> {
+        Ok(match parser.front_kind() {
             TokenKind::LeftBrace => AutocmdBlock::Block(Block::parse(parser)?),
             _ => AutocmdBlock::Command(parser.parse_command()?.into()),
         })
     }
 }
 impl AutocmdPattern {
-    fn parse(parser: &mut Parser) -> Result<Self> {
-        Ok(if parser.current_token.kind == TokenKind::AngleLeft {
+    fn parse(parser: &Parser) -> Result<Self> {
+        Ok(if parser.front_kind() == TokenKind::AngleLeft {
             parser.read_until(|t| {
                 matches!(t.kind, TokenKind::AngleRight | TokenKind::GreaterThan)
             });
@@ -121,7 +120,10 @@ impl AutocmdPattern {
                     // Append the text of the token.
                     text += tok.text.as_str();
 
-                    if !tokens_are_neighbors(&tok, &parser.current_token) {
+                    if !tokens_are_neighbors(
+                        &tok.span,
+                        &parser.front_ref().span,
+                    ) {
                         pattern.push(std::mem::take(&mut text));
                         break pattern;
                     }

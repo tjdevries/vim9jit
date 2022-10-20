@@ -1,14 +1,17 @@
 ---
-source: crates/vim9-parser/src/test.rs
-assertion_line: 44
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2667
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Comment(
         Token(Comment, "# cfilter.vim: Plugin to filter entries from a quickfix/location list", (2,0)->(2,69)),
@@ -63,16 +66,16 @@ expression: snapshot_parsing(contents)
     ),
     Def(
         DefCommand {
-            def: Token(Identifier, "def", (19,0)->(19,3)),
+            def: Token(Identifier, (19,0)->(19,3)),
             name: Raw(Qf_filter),
             args: Signature {
-                open: Token(LeftParen, "(", (19,13)->(19,14)),
+                open: Token(LeftParen, (19,13)->(19,14)),
                 params: [
                     Parameter {
                         name: Raw(qf),
                         ty: Some(
                             Type {
-                                colon: Token(SpacedColon, ": ", (19,16)->(19,18)),
+                                colon: Token(SpacedColon, (19,16)->(19,18)),
                                 inner: Bool,
                             },
                         ),
@@ -83,7 +86,7 @@ expression: snapshot_parsing(contents)
                         name: Raw(searchpat),
                         ty: Some(
                             Type {
-                                colon: Token(SpacedColon, ": ", (19,33)->(19,35)),
+                                colon: Token(SpacedColon, (19,33)->(19,35)),
                                 inner: String,
                             },
                         ),
@@ -94,7 +97,7 @@ expression: snapshot_parsing(contents)
                         name: Raw(bang),
                         ty: Some(
                             Type {
-                                colon: Token(SpacedColon, ": ", (19,47)->(19,49)),
+                                colon: Token(SpacedColon, (19,47)->(19,49)),
                                 inner: String,
                             },
                         ),
@@ -102,137 +105,137 @@ expression: snapshot_parsing(contents)
                         default_val: None,
                     },
                 ],
-                close: Token(RightParen, ")", (19,55)->(19,56)),
+                close: Token(RightParen, (19,55)->(19,56)),
             },
             ret: None,
-            def_eol: Token(EndOfLine, "\n", (19,56)->(19,56)),
+            def_eol: Token(EndOfLine, (19,56)->(19,56)),
             body: Body {
                 commands: [
                     Decl(
                         DeclCommand {
-                            var: Token(Identifier, "var", (20,2)->(20,5)),
+                            var: Token(Identifier, (20,2)->(20,5)),
                             name: Raw(Xgetlist),
                             ty: Some(
                                 Type {
-                                    colon: Token(SpacedColon, ": ", (20,14)->(20,16)),
+                                    colon: Token(SpacedColon, (20,14)->(20,16)),
                                     inner: Func(
                                         Naked,
                                     ),
                                 },
                             ),
-                            eol: Token(EndOfLine, "\n", (20,20)->(20,20)),
+                            eol: Token(EndOfLine, (20,20)->(20,20)),
                         },
                     ),
                     Decl(
                         DeclCommand {
-                            var: Token(Identifier, "var", (21,2)->(21,5)),
+                            var: Token(Identifier, (21,2)->(21,5)),
                             name: Raw(Xsetlist),
                             ty: Some(
                                 Type {
-                                    colon: Token(SpacedColon, ": ", (21,14)->(21,16)),
+                                    colon: Token(SpacedColon, (21,14)->(21,16)),
                                     inner: Func(
                                         Naked,
                                     ),
                                 },
                             ),
-                            eol: Token(EndOfLine, "\n", (21,20)->(21,20)),
+                            eol: Token(EndOfLine, (21,20)->(21,20)),
                         },
                     ),
                     Decl(
                         DeclCommand {
-                            var: Token(Identifier, "var", (22,2)->(22,5)),
+                            var: Token(Identifier, (22,2)->(22,5)),
                             name: Raw(cmd),
                             ty: Some(
                                 Type {
-                                    colon: Token(SpacedColon, ": ", (22,9)->(22,11)),
+                                    colon: Token(SpacedColon, (22,9)->(22,11)),
                                     inner: String,
                                 },
                             ),
-                            eol: Token(EndOfLine, "\n", (22,17)->(22,17)),
+                            eol: Token(EndOfLine, (22,17)->(22,17)),
                         },
                     ),
                     Decl(
                         DeclCommand {
-                            var: Token(Identifier, "var", (23,2)->(23,5)),
+                            var: Token(Identifier, (23,2)->(23,5)),
                             name: Raw(firstchar),
                             ty: Some(
                                 Type {
-                                    colon: Token(SpacedColon, ": ", (23,15)->(23,17)),
+                                    colon: Token(SpacedColon, (23,15)->(23,17)),
                                     inner: String,
                                 },
                             ),
-                            eol: Token(EndOfLine, "\n", (23,23)->(23,23)),
+                            eol: Token(EndOfLine, (23,23)->(23,23)),
                         },
                     ),
                     Decl(
                         DeclCommand {
-                            var: Token(Identifier, "var", (24,2)->(24,5)),
+                            var: Token(Identifier, (24,2)->(24,5)),
                             name: Raw(lastchar),
                             ty: Some(
                                 Type {
-                                    colon: Token(SpacedColon, ": ", (24,14)->(24,16)),
+                                    colon: Token(SpacedColon, (24,14)->(24,16)),
                                     inner: String,
                                 },
                             ),
-                            eol: Token(EndOfLine, "\n", (24,22)->(24,22)),
+                            eol: Token(EndOfLine, (24,22)->(24,22)),
                         },
                     ),
                     Decl(
                         DeclCommand {
-                            var: Token(Identifier, "var", (25,2)->(25,5)),
+                            var: Token(Identifier, (25,2)->(25,5)),
                             name: Raw(pat),
                             ty: Some(
                                 Type {
-                                    colon: Token(SpacedColon, ": ", (25,9)->(25,11)),
+                                    colon: Token(SpacedColon, (25,9)->(25,11)),
                                     inner: String,
                                 },
                             ),
-                            eol: Token(EndOfLine, "\n", (25,17)->(25,17)),
+                            eol: Token(EndOfLine, (25,17)->(25,17)),
                         },
                     ),
                     Decl(
                         DeclCommand {
-                            var: Token(Identifier, "var", (26,2)->(26,5)),
+                            var: Token(Identifier, (26,2)->(26,5)),
                             name: Raw(title),
                             ty: Some(
                                 Type {
-                                    colon: Token(SpacedColon, ": ", (26,11)->(26,13)),
+                                    colon: Token(SpacedColon, (26,11)->(26,13)),
                                     inner: String,
                                 },
                             ),
-                            eol: Token(EndOfLine, "\n", (26,19)->(26,19)),
+                            eol: Token(EndOfLine, (26,19)->(26,19)),
                         },
                     ),
                     Decl(
                         DeclCommand {
-                            var: Token(Identifier, "var", (27,2)->(27,5)),
+                            var: Token(Identifier, (27,2)->(27,5)),
                             name: Raw(Cond),
                             ty: Some(
                                 Type {
-                                    colon: Token(SpacedColon, ": ", (27,10)->(27,12)),
+                                    colon: Token(SpacedColon, (27,10)->(27,12)),
                                     inner: Func(
                                         Naked,
                                     ),
                                 },
                             ),
-                            eol: Token(EndOfLine, "\n", (27,16)->(27,16)),
+                            eol: Token(EndOfLine, (27,16)->(27,16)),
                         },
                     ),
                     Decl(
                         DeclCommand {
-                            var: Token(Identifier, "var", (28,2)->(28,5)),
+                            var: Token(Identifier, (28,2)->(28,5)),
                             name: Raw(items),
                             ty: Some(
                                 Type {
-                                    colon: Token(SpacedColon, ": ", (28,11)->(28,13)),
+                                    colon: Token(SpacedColon, (28,11)->(28,13)),
                                     inner: List {
-                                        open: Token(AngleLeft, "<", (28,17)->(28,18)),
+                                        open: Token(AngleLeft, (28,17)->(28,18)),
                                         inner: Any,
-                                        close: Token(GreaterThan, ">", (28,21)->(28,22)),
+                                        close: Token(GreaterThan, (28,21)->(28,22)),
                                     },
                                 },
                             ),
-                            eol: Token(EndOfLine, "\n", (28,22)->(28,22)),
+                            eol: Token(EndOfLine, (28,22)->(28,22)),
                         },
                     ),
                     NoOp(
@@ -240,11 +243,11 @@ expression: snapshot_parsing(contents)
                     ),
                     If(
                         IfCommand {
-                            if_tok: Token(Identifier, "if", (30,2)->(30,4)),
+                            if_tok: Token(Identifier, (30,2)->(30,4)),
                             condition: Identifier(
                                 Raw(qf),
                             ),
-                            if_eol: Token(EndOfLine, "\n", (30,7)->(30,7)),
+                            if_eol: Token(EndOfLine, (30,7)->(30,7)),
                             body: Body {
                                 commands: [
                                     Statement(
@@ -253,7 +256,7 @@ expression: snapshot_parsing(contents)
                                                 left: Identifier(
                                                     Raw(Xgetlist),
                                                 ),
-                                                equals: Token(Equal, "=", (31,13)->(31,14)),
+                                                equals: Token(Equal, (31,13)->(31,14)),
                                                 right: Call(
                                                     f: Identifier(Raw(function)) arg: [
                                                         String(
@@ -263,7 +266,7 @@ expression: snapshot_parsing(contents)
                                                         ),
                                                     ],
                                                 ),
-                                                eol: Token(EndOfLine, "\n", (31,36)->(31,36)),
+                                                eol: Token(EndOfLine, (31,36)->(31,36)),
                                             },
                                         ),
                                     ),
@@ -273,7 +276,7 @@ expression: snapshot_parsing(contents)
                                                 left: Identifier(
                                                     Raw(Xsetlist),
                                                 ),
-                                                equals: Token(Equal, "=", (32,13)->(32,14)),
+                                                equals: Token(Equal, (32,13)->(32,14)),
                                                 right: Call(
                                                     f: Identifier(Raw(function)) arg: [
                                                         String(
@@ -283,7 +286,7 @@ expression: snapshot_parsing(contents)
                                                         ),
                                                     ],
                                                 ),
-                                                eol: Token(EndOfLine, "\n", (32,36)->(32,36)),
+                                                eol: Token(EndOfLine, (32,36)->(32,36)),
                                             },
                                         ),
                                     ),
@@ -293,7 +296,7 @@ expression: snapshot_parsing(contents)
                                                 left: Identifier(
                                                     Raw(cmd),
                                                 ),
-                                                equals: Token(Equal, "=", (33,8)->(33,9)),
+                                                equals: Token(Equal, (33,8)->(33,9)),
                                                 right: Infix(
                                                     InfixExpression {
                                                         token: Token(StringConcat, "..", (33,21)->(33,23)),
@@ -308,7 +311,7 @@ expression: snapshot_parsing(contents)
                                                         ),
                                                     },
                                                 ),
-                                                eol: Token(EndOfLine, "\n", (33,28)->(33,28)),
+                                                eol: Token(EndOfLine, (33,28)->(33,28)),
                                             },
                                         ),
                                     ),
@@ -317,8 +320,8 @@ expression: snapshot_parsing(contents)
                             elseifs: [],
                             else_command: Some(
                                 ElseCommand {
-                                    else_tok: Token(Identifier, "else", (34,2)->(34,6)),
-                                    else_eol: Token(EndOfLine, "\n", (34,6)->(34,6)),
+                                    else_tok: Token(Identifier, (34,2)->(34,6)),
+                                    else_eol: Token(EndOfLine, (34,6)->(34,6)),
                                     body: Body {
                                         commands: [
                                             Statement(
@@ -327,7 +330,7 @@ expression: snapshot_parsing(contents)
                                                         left: Identifier(
                                                             Raw(Xgetlist),
                                                         ),
-                                                        equals: Token(Equal, "=", (35,13)->(35,14)),
+                                                        equals: Token(Equal, (35,13)->(35,14)),
                                                         right: Call(
                                                             f: Identifier(Raw(function)) arg: [
                                                                 String(
@@ -337,20 +340,18 @@ expression: snapshot_parsing(contents)
                                                                 ),
                                                                 Array(
                                                                     ArrayLiteral {
-                                                                        open: Token(LeftBracket, "[", (35,38)->(35,39)),
+                                                                        open: Token(LeftBracket, (35,38)->(35,39)),
                                                                         elements: [
                                                                             Number(
-                                                                                VimNumber {
-                                                                                    value: "0",
-                                                                                },
+                                                                                Number(0),
                                                                             ),
                                                                         ],
-                                                                        close: Token(RightBracket, "]", (35,40)->(35,41)),
+                                                                        close: Token(RightBracket, (35,40)->(35,41)),
                                                                     },
                                                                 ),
                                                             ],
                                                         ),
-                                                        eol: Token(EndOfLine, "\n", (35,42)->(35,42)),
+                                                        eol: Token(EndOfLine, (35,42)->(35,42)),
                                                     },
                                                 ),
                                             ),
@@ -360,7 +361,7 @@ expression: snapshot_parsing(contents)
                                                         left: Identifier(
                                                             Raw(Xsetlist),
                                                         ),
-                                                        equals: Token(Equal, "=", (36,13)->(36,14)),
+                                                        equals: Token(Equal, (36,13)->(36,14)),
                                                         right: Call(
                                                             f: Identifier(Raw(function)) arg: [
                                                                 String(
@@ -370,20 +371,18 @@ expression: snapshot_parsing(contents)
                                                                 ),
                                                                 Array(
                                                                     ArrayLiteral {
-                                                                        open: Token(LeftBracket, "[", (36,38)->(36,39)),
+                                                                        open: Token(LeftBracket, (36,38)->(36,39)),
                                                                         elements: [
                                                                             Number(
-                                                                                VimNumber {
-                                                                                    value: "0",
-                                                                                },
+                                                                                Number(0),
                                                                             ),
                                                                         ],
-                                                                        close: Token(RightBracket, "]", (36,40)->(36,41)),
+                                                                        close: Token(RightBracket, (36,40)->(36,41)),
                                                                     },
                                                                 ),
                                                             ],
                                                         ),
-                                                        eol: Token(EndOfLine, "\n", (36,42)->(36,42)),
+                                                        eol: Token(EndOfLine, (36,42)->(36,42)),
                                                     },
                                                 ),
                                             ),
@@ -393,7 +392,7 @@ expression: snapshot_parsing(contents)
                                                         left: Identifier(
                                                             Raw(cmd),
                                                         ),
-                                                        equals: Token(Equal, "=", (37,8)->(37,9)),
+                                                        equals: Token(Equal, (37,8)->(37,9)),
                                                         right: Infix(
                                                             InfixExpression {
                                                                 token: Token(StringConcat, "..", (37,21)->(37,23)),
@@ -408,7 +407,7 @@ expression: snapshot_parsing(contents)
                                                                 ),
                                                             },
                                                         ),
-                                                        eol: Token(EndOfLine, "\n", (37,28)->(37,28)),
+                                                        eol: Token(EndOfLine, (37,28)->(37,28)),
                                                     },
                                                 ),
                                             ),
@@ -416,8 +415,8 @@ expression: snapshot_parsing(contents)
                                     },
                                 },
                             ),
-                            endif_tok: Token(Identifier, "endif", (38,2)->(38,7)),
-                            endif_eol: Token(EndOfLine, "\n", (38,7)->(38,7)),
+                            endif_tok: Token(Identifier, (38,2)->(38,7)),
+                            endif_eol: Token(EndOfLine, (38,7)->(38,7)),
                         },
                     ),
                     NoOp(
@@ -429,24 +428,22 @@ expression: snapshot_parsing(contents)
                                 left: Identifier(
                                     Raw(firstchar),
                                 ),
-                                equals: Token(Equal, "=", (40,12)->(40,13)),
+                                equals: Token(Equal, (40,12)->(40,13)),
                                 right: Index(
                                     IndexExpression {
                                         container: Identifier(
                                             Raw(searchpat),
                                         ),
-                                        open: Token(LeftBracket, "[", (40,23)->(40,24)),
+                                        open: Token(LeftBracket, (40,23)->(40,24)),
                                         index: Item(
                                             Number(
-                                                VimNumber {
-                                                    value: "0",
-                                                },
+                                                Number(0),
                                             ),
                                         ),
-                                        close: Token(RightBracket, "]", (40,25)->(40,26)),
+                                        close: Token(RightBracket, (40,25)->(40,26)),
                                     },
                                 ),
-                                eol: Token(EndOfLine, "\n", (40,26)->(40,26)),
+                                eol: Token(EndOfLine, (40,26)->(40,26)),
                             },
                         ),
                     ),
@@ -456,42 +453,40 @@ expression: snapshot_parsing(contents)
                                 left: Identifier(
                                     Raw(lastchar),
                                 ),
-                                equals: Token(Equal, "=", (41,11)->(41,12)),
+                                equals: Token(Equal, (41,11)->(41,12)),
                                 right: Index(
                                     IndexExpression {
                                         container: Identifier(
                                             Raw(searchpat),
                                         ),
-                                        open: Token(LeftBracket, "[", (41,22)->(41,23)),
+                                        open: Token(LeftBracket, (41,22)->(41,23)),
                                         index: Slice(
                                             VimSlice {
                                                 start: Some(
                                                     Prefix(
                                                         PrefixExpression {
-                                                            token: Token(Minus, "-", (41,23)->(41,24)),
+                                                            token: Token(Minus, (41,23)->(41,24)),
                                                             operator: Minus,
                                                             right: Number(
-                                                                VimNumber {
-                                                                    value: "1",
-                                                                },
+                                                                Number(1),
                                                             ),
                                                         },
                                                     ),
                                                 ),
-                                                colon: Token(SpacedColon, ":", (41,26)->(41,27)),
+                                                colon: Token(SpacedColon, (41,26)->(41,27)),
                                                 finish: None,
                                             },
                                         ),
-                                        close: Token(RightBracket, "]", (41,27)->(41,28)),
+                                        close: Token(RightBracket, (41,27)->(41,28)),
                                     },
                                 ),
-                                eol: Token(EndOfLine, "\n", (41,28)->(41,28)),
+                                eol: Token(EndOfLine, (41,28)->(41,28)),
                             },
                         ),
                     ),
                     If(
                         IfCommand {
-                            if_tok: Token(Identifier, "if", (42,2)->(42,4)),
+                            if_tok: Token(Identifier, (42,2)->(42,4)),
                             condition: Infix(
                                 InfixExpression {
                                     token: Token(And, "&&", (42,27)->(42,29)),
@@ -510,7 +505,7 @@ expression: snapshot_parsing(contents)
                                     ),
                                     right: Grouped(
                                         GroupedExpression {
-                                            open: Token(LeftParen, "(", (43,14)->(43,15)),
+                                            open: Token(LeftParen, (43,14)->(43,15)),
                                             expr: Infix(
                                                 InfixExpression {
                                                     token: Token(Or, "||", (43,52)->(43,54)),
@@ -565,12 +560,12 @@ expression: snapshot_parsing(contents)
                                                     ),
                                                 },
                                             ),
-                                            close: Token(RightParen, ")", (43,71)->(43,72)),
+                                            close: Token(RightParen, (43,71)->(43,72)),
                                         },
                                     ),
                                 },
                             ),
-                            if_eol: Token(EndOfLine, "\n", (43,72)->(43,72)),
+                            if_eol: Token(EndOfLine, (43,72)->(43,72)),
                             body: Body {
                                 commands: [
                                     Statement(
@@ -579,48 +574,44 @@ expression: snapshot_parsing(contents)
                                                 left: Identifier(
                                                     Raw(pat),
                                                 ),
-                                                equals: Token(Equal, "=", (44,8)->(44,9)),
+                                                equals: Token(Equal, (44,8)->(44,9)),
                                                 right: Index(
                                                     IndexExpression {
                                                         container: Identifier(
                                                             Raw(searchpat),
                                                         ),
-                                                        open: Token(LeftBracket, "[", (44,19)->(44,20)),
+                                                        open: Token(LeftBracket, (44,19)->(44,20)),
                                                         index: Slice(
                                                             VimSlice {
                                                                 start: Some(
                                                                     Number(
-                                                                        VimNumber {
-                                                                            value: "1",
-                                                                        },
+                                                                        Number(1),
                                                                     ),
                                                                 ),
-                                                                colon: Token(SpacedColon, ": ", (44,22)->(44,24)),
+                                                                colon: Token(SpacedColon, (44,22)->(44,24)),
                                                                 finish: Some(
                                                                     Prefix(
                                                                         PrefixExpression {
-                                                                            token: Token(Minus, "-", (44,24)->(44,25)),
+                                                                            token: Token(Minus, (44,24)->(44,25)),
                                                                             operator: Minus,
                                                                             right: Number(
-                                                                                VimNumber {
-                                                                                    value: "2",
-                                                                                },
+                                                                                Number(2),
                                                                             ),
                                                                         },
                                                                     ),
                                                                 ),
                                                             },
                                                         ),
-                                                        close: Token(RightBracket, "]", (44,26)->(44,27)),
+                                                        close: Token(RightBracket, (44,26)->(44,27)),
                                                     },
                                                 ),
-                                                eol: Token(EndOfLine, "\n", (44,27)->(44,27)),
+                                                eol: Token(EndOfLine, (44,27)->(44,27)),
                                             },
                                         ),
                                     ),
                                     If(
                                         IfCommand {
-                                            if_tok: Token(Identifier, "if", (45,4)->(45,6)),
+                                            if_tok: Token(Identifier, (45,4)->(45,6)),
                                             condition: Infix(
                                                 InfixExpression {
                                                     token: Token(EqualTo, "==", (45,11)->(45,13)),
@@ -635,7 +626,7 @@ expression: snapshot_parsing(contents)
                                                     ),
                                                 },
                                             ),
-                                            if_eol: Token(EndOfLine, "\n", (45,16)->(45,16)),
+                                            if_eol: Token(EndOfLine, (45,16)->(45,16)),
                                             body: Body {
                                                 commands: [
                                                     Comment(
@@ -647,13 +638,13 @@ expression: snapshot_parsing(contents)
                                                                 left: Identifier(
                                                                     Raw(pat),
                                                                 ),
-                                                                equals: Token(Equal, "=", (47,10)->(47,11)),
+                                                                equals: Token(Equal, (47,10)->(47,11)),
                                                                 right: Register(
                                                                     Register {
                                                                         register: "/",
                                                                     },
                                                                 ),
-                                                                eol: Token(EndOfLine, "\n", (47,14)->(47,14)),
+                                                                eol: Token(EndOfLine, (47,14)->(47,14)),
                                                             },
                                                         ),
                                                     ),
@@ -661,8 +652,8 @@ expression: snapshot_parsing(contents)
                                             },
                                             elseifs: [],
                                             else_command: None,
-                                            endif_tok: Token(Identifier, "endif", (48,4)->(48,9)),
-                                            endif_eol: Token(EndOfLine, "\n", (48,9)->(48,9)),
+                                            endif_tok: Token(Identifier, (48,4)->(48,9)),
+                                            endif_eol: Token(EndOfLine, (48,9)->(48,9)),
                                         },
                                     ),
                                 ],
@@ -670,8 +661,8 @@ expression: snapshot_parsing(contents)
                             elseifs: [],
                             else_command: Some(
                                 ElseCommand {
-                                    else_tok: Token(Identifier, "else", (49,2)->(49,6)),
-                                    else_eol: Token(EndOfLine, "\n", (49,6)->(49,6)),
+                                    else_tok: Token(Identifier, (49,2)->(49,6)),
+                                    else_eol: Token(EndOfLine, (49,6)->(49,6)),
                                     body: Body {
                                         commands: [
                                             Statement(
@@ -680,11 +671,11 @@ expression: snapshot_parsing(contents)
                                                         left: Identifier(
                                                             Raw(pat),
                                                         ),
-                                                        equals: Token(Equal, "=", (50,8)->(50,9)),
+                                                        equals: Token(Equal, (50,8)->(50,9)),
                                                         right: Identifier(
                                                             Raw(searchpat),
                                                         ),
-                                                        eol: Token(EndOfLine, "\n", (50,19)->(50,19)),
+                                                        eol: Token(EndOfLine, (50,19)->(50,19)),
                                                     },
                                                 ),
                                             ),
@@ -692,8 +683,8 @@ expression: snapshot_parsing(contents)
                                     },
                                 },
                             ),
-                            endif_tok: Token(Identifier, "endif", (51,2)->(51,7)),
-                            endif_eol: Token(EndOfLine, "\n", (51,7)->(51,7)),
+                            endif_tok: Token(Identifier, (51,2)->(51,7)),
+                            endif_eol: Token(EndOfLine, (51,7)->(51,7)),
                         },
                     ),
                     NoOp(
@@ -701,7 +692,7 @@ expression: snapshot_parsing(contents)
                     ),
                     If(
                         IfCommand {
-                            if_tok: Token(Identifier, "if", (53,2)->(53,4)),
+                            if_tok: Token(Identifier, (53,2)->(53,4)),
                             condition: Infix(
                                 InfixExpression {
                                     token: Token(EqualTo, "==", (53,9)->(53,11)),
@@ -716,22 +707,22 @@ expression: snapshot_parsing(contents)
                                     ),
                                 },
                             ),
-                            if_eol: Token(EndOfLine, "\n", (53,14)->(53,14)),
+                            if_eol: Token(EndOfLine, (53,14)->(53,14)),
                             body: Body {
                                 commands: [
                                     Return(
                                         ReturnCommand {
-                                            ret: Token(Identifier, "return", (54,4)->(54,10)),
+                                            ret: Token(Identifier, (54,4)->(54,10)),
                                             expr: None,
-                                            eol: Token(EndOfLine, "\n", (54,10)->(54,10)),
+                                            eol: Token(EndOfLine, (54,10)->(54,10)),
                                         },
                                     ),
                                 ],
                             },
                             elseifs: [],
                             else_command: None,
-                            endif_tok: Token(Identifier, "endif", (55,2)->(55,7)),
-                            endif_eol: Token(EndOfLine, "\n", (55,7)->(55,7)),
+                            endif_tok: Token(Identifier, (55,2)->(55,7)),
+                            endif_eol: Token(EndOfLine, (55,7)->(55,7)),
                         },
                     ),
                     NoOp(
@@ -739,7 +730,7 @@ expression: snapshot_parsing(contents)
                     ),
                     If(
                         IfCommand {
-                            if_tok: Token(Identifier, "if", (57,2)->(57,4)),
+                            if_tok: Token(Identifier, (57,2)->(57,4)),
                             condition: Infix(
                                 InfixExpression {
                                     token: Token(EqualTo, "==", (57,10)->(57,12)),
@@ -754,7 +745,7 @@ expression: snapshot_parsing(contents)
                                     ),
                                 },
                             ),
-                            if_eol: Token(EndOfLine, "\n", (57,16)->(57,16)),
+                            if_eol: Token(EndOfLine, (57,16)->(57,16)),
                             body: Body {
                                 commands: [
                                     Statement(
@@ -763,11 +754,11 @@ expression: snapshot_parsing(contents)
                                                 left: Identifier(
                                                     Raw(Cond),
                                                 ),
-                                                equals: Token(Equal, "=", (58,9)->(58,10)),
+                                                equals: Token(Equal, (58,9)->(58,10)),
                                                 right: Lambda(
                                                     Lambda {
                                                         args: Signature {
-                                                            open: Token(LeftParen, "(", (58,11)->(58,12)),
+                                                            open: Token(LeftParen, (58,11)->(58,12)),
                                                             params: [
                                                                 Parameter {
                                                                     name: Raw(_),
@@ -782,15 +773,15 @@ expression: snapshot_parsing(contents)
                                                                     default_val: None,
                                                                 },
                                                             ],
-                                                            close: Token(RightParen, ")", (58,18)->(58,19)),
+                                                            close: Token(RightParen, (58,18)->(58,19)),
                                                         },
                                                         ret: None,
-                                                        arrow: Token(Arrow, "=>", (58,20)->(58,22)),
+                                                        arrow: Token(Arrow, (58,20)->(58,22)),
                                                         body: Body {
                                                             commands: [
                                                                 Return(
                                                                     ReturnCommand {
-                                                                        ret: Token(Virtual, "", (0,0)->(0,0)),
+                                                                        ret: Token(Virtual, (0,0)->(0,0)),
                                                                         expr: Some(
                                                                             Infix(
                                                                                 InfixExpression {
@@ -805,7 +796,7 @@ expression: snapshot_parsing(contents)
                                                                                                     container: Identifier(
                                                                                                         Raw(val),
                                                                                                     ),
-                                                                                                    dot: Token(Dot, ".", (58,26)->(58,27)),
+                                                                                                    dot: Token(Dot, (58,26)->(58,27)),
                                                                                                     index: RawIdentifier {
                                                                                                         name: "text",
                                                                                                     },
@@ -827,7 +818,7 @@ expression: snapshot_parsing(contents)
                                                                                                             container: Identifier(
                                                                                                                 Raw(val),
                                                                                                             ),
-                                                                                                            dot: Token(Dot, ".", (58,54)->(58,55)),
+                                                                                                            dot: Token(Dot, (58,54)->(58,55)),
                                                                                                             index: RawIdentifier {
                                                                                                                 name: "bufnr",
                                                                                                             },
@@ -843,14 +834,14 @@ expression: snapshot_parsing(contents)
                                                                                 },
                                                                             ),
                                                                         ),
-                                                                        eol: Token(Virtual, "", (0,0)->(0,0)),
+                                                                        eol: Token(Virtual, (0,0)->(0,0)),
                                                                     },
                                                                 ),
                                                             ],
                                                         },
                                                     },
                                                 ),
-                                                eol: Token(EndOfLine, "\n", (58,69)->(58,69)),
+                                                eol: Token(EndOfLine, (58,69)->(58,69)),
                                             },
                                         ),
                                     ),
@@ -859,8 +850,8 @@ expression: snapshot_parsing(contents)
                             elseifs: [],
                             else_command: Some(
                                 ElseCommand {
-                                    else_tok: Token(Identifier, "else", (59,2)->(59,6)),
-                                    else_eol: Token(EndOfLine, "\n", (59,6)->(59,6)),
+                                    else_tok: Token(Identifier, (59,2)->(59,6)),
+                                    else_eol: Token(EndOfLine, (59,6)->(59,6)),
                                     body: Body {
                                         commands: [
                                             Statement(
@@ -869,11 +860,11 @@ expression: snapshot_parsing(contents)
                                                         left: Identifier(
                                                             Raw(Cond),
                                                         ),
-                                                        equals: Token(Equal, "=", (60,9)->(60,10)),
+                                                        equals: Token(Equal, (60,9)->(60,10)),
                                                         right: Lambda(
                                                             Lambda {
                                                                 args: Signature {
-                                                                    open: Token(LeftParen, "(", (60,11)->(60,12)),
+                                                                    open: Token(LeftParen, (60,11)->(60,12)),
                                                                     params: [
                                                                         Parameter {
                                                                             name: Raw(_),
@@ -888,15 +879,15 @@ expression: snapshot_parsing(contents)
                                                                             default_val: None,
                                                                         },
                                                                     ],
-                                                                    close: Token(RightParen, ")", (60,18)->(60,19)),
+                                                                    close: Token(RightParen, (60,18)->(60,19)),
                                                                 },
                                                                 ret: None,
-                                                                arrow: Token(Arrow, "=>", (60,20)->(60,22)),
+                                                                arrow: Token(Arrow, (60,20)->(60,22)),
                                                                 body: Body {
                                                                     commands: [
                                                                         Return(
                                                                             ReturnCommand {
-                                                                                ret: Token(Virtual, "", (0,0)->(0,0)),
+                                                                                ret: Token(Virtual, (0,0)->(0,0)),
                                                                                 expr: Some(
                                                                                     Infix(
                                                                                         InfixExpression {
@@ -911,7 +902,7 @@ expression: snapshot_parsing(contents)
                                                                                                             container: Identifier(
                                                                                                                 Raw(val),
                                                                                                             ),
-                                                                                                            dot: Token(Dot, ".", (60,26)->(60,27)),
+                                                                                                            dot: Token(Dot, (60,26)->(60,27)),
                                                                                                             index: RawIdentifier {
                                                                                                                 name: "text",
                                                                                                             },
@@ -933,7 +924,7 @@ expression: snapshot_parsing(contents)
                                                                                                                     container: Identifier(
                                                                                                                         Raw(val),
                                                                                                                     ),
-                                                                                                                    dot: Token(Dot, ".", (60,54)->(60,55)),
+                                                                                                                    dot: Token(Dot, (60,54)->(60,55)),
                                                                                                                     index: RawIdentifier {
                                                                                                                         name: "bufnr",
                                                                                                                     },
@@ -949,14 +940,14 @@ expression: snapshot_parsing(contents)
                                                                                         },
                                                                                     ),
                                                                                 ),
-                                                                                eol: Token(Virtual, "", (0,0)->(0,0)),
+                                                                                eol: Token(Virtual, (0,0)->(0,0)),
                                                                             },
                                                                         ),
                                                                     ],
                                                                 },
                                                             },
                                                         ),
-                                                        eol: Token(EndOfLine, "\n", (60,69)->(60,69)),
+                                                        eol: Token(EndOfLine, (60,69)->(60,69)),
                                                     },
                                                 ),
                                             ),
@@ -964,8 +955,8 @@ expression: snapshot_parsing(contents)
                                     },
                                 },
                             ),
-                            endif_tok: Token(Identifier, "endif", (61,2)->(61,7)),
-                            endif_eol: Token(EndOfLine, "\n", (61,7)->(61,7)),
+                            endif_tok: Token(Identifier, (61,2)->(61,7)),
+                            endif_eol: Token(EndOfLine, (61,7)->(61,7)),
                         },
                     ),
                     NoOp(
@@ -977,7 +968,7 @@ expression: snapshot_parsing(contents)
                                 left: Identifier(
                                     Raw(items),
                                 ),
-                                equals: Token(Equal, "=", (63,8)->(63,9)),
+                                equals: Token(Equal, (63,8)->(63,9)),
                                 right: Call(
                                     f: Identifier(Raw(filter)) arg: [
                                         Call(
@@ -988,7 +979,7 @@ expression: snapshot_parsing(contents)
                                         ),
                                     ],
                                 ),
-                                eol: Token(EndOfLine, "\n", (63,34)->(63,34)),
+                                eol: Token(EndOfLine, (63,34)->(63,34)),
                             },
                         ),
                     ),
@@ -998,7 +989,7 @@ expression: snapshot_parsing(contents)
                                 left: Identifier(
                                     Raw(title),
                                 ),
-                                equals: Token(Equal, "=", (64,8)->(64,9)),
+                                equals: Token(Equal, (64,8)->(64,9)),
                                 right: Infix(
                                     InfixExpression {
                                         token: Token(StringConcat, "..", (64,29)->(64,31)),
@@ -1033,7 +1024,7 @@ expression: snapshot_parsing(contents)
                                         ),
                                     },
                                 ),
-                                eol: Token(EndOfLine, "\n", (64,35)->(64,35)),
+                                eol: Token(EndOfLine, (64,35)->(64,35)),
                             },
                         ),
                     ),
@@ -1043,13 +1034,13 @@ expression: snapshot_parsing(contents)
                             expr: Identifier(
                                 Raw(Xsetlist),
                             ),
-                            open: Token(LeftParen, "(", (65,10)->(65,11)),
+                            open: Token(LeftParen, (65,10)->(65,11)),
                             args: [
                                 Array(
                                     ArrayLiteral {
-                                        open: Token(LeftBracket, "[", (65,11)->(65,12)),
+                                        open: Token(LeftBracket, (65,11)->(65,12)),
                                         elements: [],
-                                        close: Token(RightBracket, "]", (65,12)->(65,13)),
+                                        close: Token(RightBracket, (65,12)->(65,13)),
                                     },
                                 ),
                                 String(
@@ -1059,7 +1050,7 @@ expression: snapshot_parsing(contents)
                                 ),
                                 Dict(
                                     DictLiteral {
-                                        open: Token(LeftBrace, "{", (65,20)->(65,21)),
+                                        open: Token(LeftBrace, (65,20)->(65,21)),
                                         elements: [
                                             KeyValue {
                                                 key: Literal(
@@ -1067,12 +1058,9 @@ expression: snapshot_parsing(contents)
                                                         token: Token(Identifier, "title", (65,21)->(65,26)),
                                                     },
                                                 ),
-                                                colon: Token(SpacedColon, ": ", (65,26)->(65,28)),
+                                                colon: Token(SpacedColon, (65,26)->(65,28)),
                                                 value: Identifier(
                                                     Raw(title),
-                                                ),
-                                                comma: Some(
-                                                    Token(Comma, ",", (65,33)->(65,34)),
                                                 ),
                                             },
                                             KeyValue {
@@ -1081,25 +1069,24 @@ expression: snapshot_parsing(contents)
                                                         token: Token(Identifier, "items", (65,35)->(65,40)),
                                                     },
                                                 ),
-                                                colon: Token(SpacedColon, ": ", (65,40)->(65,42)),
+                                                colon: Token(SpacedColon, (65,40)->(65,42)),
                                                 value: Identifier(
                                                     Raw(items),
                                                 ),
-                                                comma: None,
                                             },
                                         ],
-                                        close: Token(RightBrace, "}", (65,47)->(65,48)),
+                                        close: Token(RightBrace, (65,47)->(65,48)),
                                     },
                                 ),
                             ],
-                            close: Token(RightParen, ")", (65,48)->(65,49)),
-                            eol: Token(EndOfLine, "\n", (65,49)->(65,49)),
+                            close: Token(RightParen, (65,48)->(65,49)),
+                            eol: Token(EndOfLine, (65,49)->(65,49)),
                         },
                     ),
                 ],
             },
-            enddef: Token(Identifier, "enddef", (66,0)->(66,6)),
-            end_eol: Token(EndOfLine, "\n", (66,6)->(66,6)),
+            enddef: Token(Identifier, (66,0)->(66,6)),
+            end_eol: Token(EndOfLine, (66,6)->(66,6)),
         },
     ),
     NoOp(
@@ -1107,7 +1094,7 @@ expression: snapshot_parsing(contents)
     ),
     UserCommand(
         UserCommand {
-            tok: Token(Identifier, "command", (68,0)->(68,7)),
+            tok: Token(Identifier, (68,0)->(68,7)),
             bang: true,
             command_bang: true,
             command_bar: false,
@@ -1127,38 +1114,37 @@ expression: snapshot_parsing(contents)
                     expr: Identifier(
                         Raw(Qf_filter),
                     ),
-                    open: Token(LeftParen, "(", (68,41)->(68,42)),
+                    open: Token(LeftParen, (68,41)->(68,42)),
                     args: [
                         Boolean(
                             VimBoolean {
-                                token: Token(True, "true", (68,42)->(68,46)),
                                 value: true,
                             },
                         ),
                         Expandable(
                             Expandable {
-                                left: Token(AngleLeft, "<", (68,48)->(68,49)),
+                                left: Token(AngleLeft, (68,48)->(68,49)),
                                 ident: Raw(q-args),
-                                right: Token(AngleRight, ">", (68,55)->(68,56)),
+                                right: Token(AngleRight, (68,55)->(68,56)),
                             },
                         ),
                         Expandable(
                             Expandable {
-                                left: Token(AngleLeft, "<", (68,58)->(68,59)),
+                                left: Token(AngleLeft, (68,58)->(68,59)),
                                 ident: Raw(q-bang),
-                                right: Token(AngleRight, ">", (68,65)->(68,66)),
+                                right: Token(AngleRight, (68,65)->(68,66)),
                             },
                         ),
                     ],
-                    close: Token(RightParen, ")", (68,66)->(68,67)),
-                    eol: Token(EndOfLine, "\n", (68,67)->(68,67)),
+                    close: Token(RightParen, (68,66)->(68,67)),
+                    eol: Token(EndOfLine, (68,67)->(68,67)),
                 },
             ),
         },
     ),
     UserCommand(
         UserCommand {
-            tok: Token(Identifier, "command", (69,0)->(69,7)),
+            tok: Token(Identifier, (69,0)->(69,7)),
             bang: true,
             command_bang: true,
             command_bar: false,
@@ -1178,31 +1164,30 @@ expression: snapshot_parsing(contents)
                     expr: Identifier(
                         Raw(Qf_filter),
                     ),
-                    open: Token(LeftParen, "(", (69,41)->(69,42)),
+                    open: Token(LeftParen, (69,41)->(69,42)),
                     args: [
                         Boolean(
                             VimBoolean {
-                                token: Token(False, "false", (69,42)->(69,47)),
                                 value: false,
                             },
                         ),
                         Expandable(
                             Expandable {
-                                left: Token(AngleLeft, "<", (69,49)->(69,50)),
+                                left: Token(AngleLeft, (69,49)->(69,50)),
                                 ident: Raw(q-args),
-                                right: Token(AngleRight, ">", (69,56)->(69,57)),
+                                right: Token(AngleRight, (69,56)->(69,57)),
                             },
                         ),
                         Expandable(
                             Expandable {
-                                left: Token(AngleLeft, "<", (69,59)->(69,60)),
+                                left: Token(AngleLeft, (69,59)->(69,60)),
                                 ident: Raw(q-bang),
-                                right: Token(AngleRight, ">", (69,66)->(69,67)),
+                                right: Token(AngleRight, (69,66)->(69,67)),
                             },
                         ),
                     ],
-                    close: Token(RightParen, ")", (69,67)->(69,68)),
-                    eol: Token(EndOfLine, "\n", (69,68)->(69,68)),
+                    close: Token(RightParen, (69,67)->(69,68)),
+                    eol: Token(EndOfLine, (69,68)->(69,68)),
                 },
             ),
         },

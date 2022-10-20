@@ -1,15 +1,15 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2044
+assertion_line: 2674
 expression: snapshot_parsing(contents)
 ---
 [
     If(
         IfCommand {
-            if_tok: Token(Identifier, "if", (0,0)->(0,2)),
+            if_tok: Token(Identifier, (0,0)->(0,2)),
             condition: Prefix(
                 PrefixExpression {
-                    token: Token(Bang, "!", (0,3)->(0,4)),
+                    token: Token(Bang, (0,3)->(0,4)),
                     operator: Bang,
                     right: Call(
                         f: Identifier(Raw(has)) arg: [
@@ -22,21 +22,21 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            if_eol: Token(EndOfLine, "\n", (0,25)->(0,25)),
+            if_eol: Token(EndOfLine, (0,25)->(0,25)),
             body: Body {
                 commands: [
                     Finish(
                         FinishCommand {
-                            finish: Token(Identifier, "finish", (1,2)->(1,8)),
-                            eol: Token(EndOfLine, "\n", (1,8)->(1,8)),
+                            finish: Token(Identifier, (1,2)->(1,8)),
+                            eol: Token(EndOfLine, (1,8)->(1,8)),
                         },
                     ),
                 ],
             },
             elseifs: [],
             else_command: None,
-            endif_tok: Token(Identifier, "endif", (2,0)->(2,5)),
-            endif_eol: Token(EndOfLine, "\n", (2,5)->(2,5)),
+            endif_tok: Token(Identifier, (2,0)->(2,5)),
+            endif_eol: Token(EndOfLine, (2,5)->(2,5)),
         },
     ),
     Comment(
@@ -48,8 +48,11 @@ expression: snapshot_parsing(contents)
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (5,10)->(5,10)),
+            eol: Token(EndOfLine, (5,10)->(5,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (6,0)->(6,0)),
     ),
     Comment(
         Token(Comment, "# File: fileselect.vim", (7,0)->(7,22)),
@@ -104,23 +107,23 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (24,0)->(24,3)),
+            var: Token(Identifier, (24,0)->(24,3)),
             ty: None,
             name: Raw(fs),
-            equal: Token(Equal, "=", (24,7)->(24,8)),
+            equal: Token(Equal, (24,7)->(24,8)),
             expr: Dict(
                 DictLiteral {
-                    open: Token(LeftBrace, "{", (24,9)->(24,10)),
+                    open: Token(LeftBrace, (24,9)->(24,10)),
                     elements: [],
-                    close: Token(RightBrace, "}", (24,10)->(24,11)),
+                    close: Token(RightBrace, (24,10)->(24,11)),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (24,11)->(24,11)),
+            eol: Token(EndOfLine, (24,11)->(24,11)),
         },
     ),
     If(
         IfCommand {
-            if_tok: Token(Identifier, "if", (25,0)->(25,2)),
+            if_tok: Token(Identifier, (25,0)->(25,2)),
             condition: Call(
                 f: Identifier(Raw(has)) arg: [
                     String(
@@ -130,19 +133,17 @@ expression: snapshot_parsing(contents)
                     ),
                 ],
             ),
-            if_eol: Token(EndOfLine, "\n", (25,24)->(25,24)),
+            if_eol: Token(EndOfLine, (25,24)->(25,24)),
             body: Body {
                 commands: [
                     ImportCommand(
                         ImportImplicit {
-                            import: Token(Identifier, "import", (26,2)->(26,8)),
+                            import: Token(Identifier, (26,2)->(26,8)),
                             autoload: true,
                             file: "fileselect.vim",
                             name: None,
+                            eol: Token(EndOfLine, (26,34)->(26,34)),
                         },
-                    ),
-                    NoOp(
-                        Token(EndOfLine, "\n", (26,34)->(26,34)),
                     ),
                     Statement(
                         Assign(
@@ -152,25 +153,25 @@ expression: snapshot_parsing(contents)
                                         container: Identifier(
                                             Raw(fs),
                                         ),
-                                        dot: Token(Dot, ".", (27,4)->(27,5)),
+                                        dot: Token(Dot, (27,4)->(27,5)),
                                         index: RawIdentifier {
                                             name: "FileSelectShowMenu",
                                         },
                                     },
                                 ),
-                                equals: Token(Equal, "=", (27,24)->(27,25)),
+                                equals: Token(Equal, (27,24)->(27,25)),
                                 right: DictAccess(
                                     DictAccess {
                                         container: Identifier(
                                             Raw(fileselect),
                                         ),
-                                        dot: Token(Dot, ".", (27,36)->(27,37)),
+                                        dot: Token(Dot, (27,36)->(27,37)),
                                         index: RawIdentifier {
                                             name: "FileSelectShowMenu",
                                         },
                                     },
                                 ),
-                                eol: Token(EndOfLine, "\n", (27,55)->(27,55)),
+                                eol: Token(EndOfLine, (27,55)->(27,55)),
                             },
                         ),
                     ),
@@ -182,25 +183,25 @@ expression: snapshot_parsing(contents)
                                         container: Identifier(
                                             Raw(fs),
                                         ),
-                                        dot: Token(Dot, ".", (28,4)->(28,5)),
+                                        dot: Token(Dot, (28,4)->(28,5)),
                                         index: RawIdentifier {
                                             name: "FileSelectToggle",
                                         },
                                     },
                                 ),
-                                equals: Token(Equal, "=", (28,22)->(28,23)),
+                                equals: Token(Equal, (28,22)->(28,23)),
                                 right: DictAccess(
                                     DictAccess {
                                         container: Identifier(
                                             Raw(fileselect),
                                         ),
-                                        dot: Token(Dot, ".", (28,34)->(28,35)),
+                                        dot: Token(Dot, (28,34)->(28,35)),
                                         index: RawIdentifier {
                                             name: "FileSelectToggle",
                                         },
                                     },
                                 ),
-                                eol: Token(EndOfLine, "\n", (28,51)->(28,51)),
+                                eol: Token(EndOfLine, (28,51)->(28,51)),
                             },
                         ),
                     ),
@@ -209,23 +210,21 @@ expression: snapshot_parsing(contents)
             elseifs: [],
             else_command: Some(
                 ElseCommand {
-                    else_tok: Token(Identifier, "else", (29,0)->(29,4)),
-                    else_eol: Token(EndOfLine, "\n", (29,4)->(29,4)),
+                    else_tok: Token(Identifier, (29,0)->(29,4)),
+                    else_eol: Token(EndOfLine, (29,4)->(29,4)),
                     body: Body {
                         commands: [
                             ImportCommand(
                                 ImportUnpacked {
-                                    import: Token(Identifier, "import", (30,2)->(30,8)),
+                                    import: Token(Identifier, (30,2)->(30,8)),
                                     names: [
                                         Raw(FileSelectShowMenu),
                                         Raw(FileSelectToggle),
                                     ],
-                                    from: Token(Identifier, "from", (30,48)->(30,52)),
+                                    from: Token(Identifier, (30,48)->(30,52)),
                                     file: "../autoload/fileselect.vim",
+                                    eol: Token(EndOfLine, (30,81)->(30,81)),
                                 },
-                            ),
-                            NoOp(
-                                Token(EndOfLine, "\n", (30,81)->(30,81)),
                             ),
                             Statement(
                                 Assign(
@@ -235,17 +234,17 @@ expression: snapshot_parsing(contents)
                                                 container: Identifier(
                                                     Raw(fs),
                                                 ),
-                                                dot: Token(Dot, ".", (31,4)->(31,5)),
+                                                dot: Token(Dot, (31,4)->(31,5)),
                                                 index: RawIdentifier {
                                                     name: "FileSelectShowMenu",
                                                 },
                                             },
                                         ),
-                                        equals: Token(Equal, "=", (31,24)->(31,25)),
+                                        equals: Token(Equal, (31,24)->(31,25)),
                                         right: Identifier(
                                             Raw(FileSelectShowMenu),
                                         ),
-                                        eol: Token(EndOfLine, "\n", (31,44)->(31,44)),
+                                        eol: Token(EndOfLine, (31,44)->(31,44)),
                                     },
                                 ),
                             ),
@@ -257,17 +256,17 @@ expression: snapshot_parsing(contents)
                                                 container: Identifier(
                                                     Raw(fs),
                                                 ),
-                                                dot: Token(Dot, ".", (32,4)->(32,5)),
+                                                dot: Token(Dot, (32,4)->(32,5)),
                                                 index: RawIdentifier {
                                                     name: "FileSelectToggle",
                                                 },
                                             },
                                         ),
-                                        equals: Token(Equal, "=", (32,22)->(32,23)),
+                                        equals: Token(Equal, (32,22)->(32,23)),
                                         right: Identifier(
                                             Raw(FileSelectToggle),
                                         ),
-                                        eol: Token(EndOfLine, "\n", (32,40)->(32,40)),
+                                        eol: Token(EndOfLine, (32,40)->(32,40)),
                                     },
                                 ),
                             ),
@@ -275,8 +274,8 @@ expression: snapshot_parsing(contents)
                     },
                 },
             ),
-            endif_tok: Token(Identifier, "endif", (33,0)->(33,5)),
-            endif_eol: Token(EndOfLine, "\n", (33,5)->(33,5)),
+            endif_tok: Token(Identifier, (33,0)->(33,5)),
+            endif_eol: Token(EndOfLine, (33,5)->(33,5)),
         },
     ),
     NoOp(
@@ -284,43 +283,43 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (35,0)->(35,3)),
+            var: Token(Identifier, (35,0)->(35,3)),
             ty: None,
             name: Raw(TshowMenu),
-            equal: Token(Equal, "=", (35,14)->(35,15)),
+            equal: Token(Equal, (35,14)->(35,15)),
             expr: DictAccess(
                 DictAccess {
                     container: Identifier(
                         Raw(fs),
                     ),
-                    dot: Token(Dot, ".", (35,18)->(35,19)),
+                    dot: Token(Dot, (35,18)->(35,19)),
                     index: RawIdentifier {
                         name: "FileSelectShowMenu",
                     },
                 },
             ),
-            eol: Token(EndOfLine, "\n", (35,37)->(35,37)),
+            eol: Token(EndOfLine, (35,37)->(35,37)),
         },
     ),
     Statement(
         Assign(
             AssignStatement {
                 left: Identifier(
-                    Scope(ScopedIdentifier { scope: Global, colon: Token(Colon, ":", (36,1)->(36,2)), accessor: Raw(FSToggle) }),
+                    Scope(ScopedIdentifier { scope: Global, colon: Token(Colon, (36,1)->(36,2)), accessor: Raw(FSToggle) }),
                 ),
-                equals: Token(Equal, "=", (36,11)->(36,12)),
+                equals: Token(Equal, (36,11)->(36,12)),
                 right: DictAccess(
                     DictAccess {
                         container: Identifier(
                             Raw(fs),
                         ),
-                        dot: Token(Dot, ".", (36,15)->(36,16)),
+                        dot: Token(Dot, (36,15)->(36,16)),
                         index: RawIdentifier {
                             name: "FileSelectToggle",
                         },
                     },
                 ),
-                eol: Token(EndOfLine, "\n", (36,32)->(36,32)),
+                eol: Token(EndOfLine, (36,32)->(36,32)),
             },
         ),
     ),
@@ -332,7 +331,7 @@ expression: snapshot_parsing(contents)
     ),
     UserCommand(
         UserCommand {
-            tok: Token(Identifier, "command", (39,0)->(39,7)),
+            tok: Token(Identifier, (39,0)->(39,7)),
             bang: true,
             command_bang: false,
             command_bar: false,
@@ -351,30 +350,30 @@ expression: snapshot_parsing(contents)
             command: Call(
                 CallCommand {
                     call: Some(
-                        Token(Identifier, "call", (39,43)->(39,47)),
+                        Token(Identifier, (39,43)->(39,47)),
                     ),
                     expr: Identifier(
                         Raw(TshowMenu),
                     ),
-                    open: Token(LeftParen, "(", (39,57)->(39,58)),
+                    open: Token(LeftParen, (39,57)->(39,58)),
                     args: [
                         Expandable(
                             Expandable {
-                                left: Token(AngleLeft, "<", (39,58)->(39,59)),
+                                left: Token(AngleLeft, (39,58)->(39,59)),
                                 ident: Raw(q-args),
-                                right: Token(AngleRight, ">", (39,65)->(39,66)),
+                                right: Token(AngleRight, (39,65)->(39,66)),
                             },
                         ),
                         Expandable(
                             Expandable {
-                                left: Token(AngleLeft, "<", (39,68)->(39,69)),
+                                left: Token(AngleLeft, (39,68)->(39,69)),
                                 ident: Raw(q-mods),
-                                right: Token(AngleRight, ">", (39,75)->(39,76)),
+                                right: Token(AngleRight, (39,75)->(39,76)),
                             },
                         ),
                     ],
-                    close: Token(RightParen, ")", (39,76)->(39,77)),
-                    eol: Token(EndOfLine, "\n", (39,77)->(39,77)),
+                    close: Token(RightParen, (39,76)->(39,77)),
+                    eol: Token(EndOfLine, (39,77)->(39,77)),
                 },
             ),
         },
@@ -388,7 +387,7 @@ expression: snapshot_parsing(contents)
     SharedCommand(
         SharedCommand {
             contents: "nnoremap <expr> <silent> <Plug>(FileselectToggle) g:FSToggle()",
-            eol: Token(EndOfLine, "\n", (42,62)->(42,62)),
+            eol: Token(EndOfLine, (42,62)->(42,62)),
         },
     ),
     NoOp(

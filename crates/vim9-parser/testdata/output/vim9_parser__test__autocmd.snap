@@ -1,22 +1,25 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 1943
+assertion_line: 2674
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Augroup(
         AugroupCommand {
-            augroup: Token(Identifier, "augroup", (2,0)->(2,7)),
+            augroup: Token(Identifier, (2,0)->(2,7)),
             augroup_name: Literal {
                 token: Token(Identifier, "matchparen", (2,8)->(2,18)),
             },
-            augroup_eol: Token(EndOfLine, "\n", (2,18)->(2,18)),
+            augroup_eol: Token(EndOfLine, (2,18)->(2,18)),
             body: Body {
                 commands: [
                     Comment(
@@ -24,7 +27,7 @@ expression: snapshot_parsing(contents)
                     ),
                     Autocmd(
                         AutocmdCommand {
-                            autocmd: Token(Identifier, "autocmd", (4,2)->(4,9)),
+                            autocmd: Token(Identifier, (4,2)->(4,9)),
                             bang: true,
                             events: [
                                 Literal {
@@ -44,7 +47,7 @@ expression: snapshot_parsing(contents)
                             ),
                             block: Block(
                                 Block {
-                                    open: Token(LeftBrace, "{", (4,47)->(4,48)),
+                                    open: Token(LeftBrace, (4,47)->(4,48)),
                                     body: Body {
                                         commands: [
                                             NoOp(
@@ -52,19 +55,19 @@ expression: snapshot_parsing(contents)
                                             ),
                                             Echo(
                                                 EchoCommand {
-                                                    echo: Token(Identifier, "echo", (5,6)->(5,10)),
+                                                    echo: Token(Identifier, (5,6)->(5,10)),
                                                     expr: String(
                                                         DoubleQuote(
                                                             "Block",
                                                         ),
                                                     ),
-                                                    eol: Token(EndOfLine, "\n", (5,18)->(5,18)),
+                                                    eol: Token(EndOfLine, (5,18)->(5,18)),
                                                 },
                                             ),
                                         ],
                                     },
-                                    close: Token(RightBrace, "}", (6,4)->(6,5)),
-                                    eol: Token(EndOfLine, "\n", (6,5)->(6,5)),
+                                    close: Token(RightBrace, (6,4)->(6,5)),
+                                    eol: Token(EndOfLine, (6,5)->(6,5)),
                                 },
                             ),
                         },
@@ -74,7 +77,7 @@ expression: snapshot_parsing(contents)
                     ),
                     Autocmd(
                         AutocmdCommand {
-                            autocmd: Token(Identifier, "autocmd", (8,2)->(8,9)),
+                            autocmd: Token(Identifier, (8,2)->(8,9)),
                             bang: false,
                             events: [
                                 Literal {
@@ -89,13 +92,13 @@ expression: snapshot_parsing(contents)
                             block: Command(
                                 Echo(
                                     EchoCommand {
-                                        echo: Token(Identifier, "echo", (8,21)->(8,25)),
+                                        echo: Token(Identifier, (8,21)->(8,25)),
                                         expr: String(
                                             DoubleQuote(
                                                 "Command",
                                             ),
                                         ),
-                                        eol: Token(EndOfLine, "\n", (8,35)->(8,35)),
+                                        eol: Token(EndOfLine, (8,35)->(8,35)),
                                     },
                                 ),
                             ),
@@ -106,7 +109,7 @@ expression: snapshot_parsing(contents)
                     ),
                     Autocmd(
                         AutocmdCommand {
-                            autocmd: Token(Identifier, "autocmd", (10,2)->(10,9)),
+                            autocmd: Token(Identifier, (10,2)->(10,9)),
                             bang: false,
                             events: [
                                 Literal {
@@ -121,13 +124,13 @@ expression: snapshot_parsing(contents)
                             block: Command(
                                 Echo(
                                     EchoCommand {
-                                        echo: Token(Identifier, "echo", (10,24)->(10,28)),
+                                        echo: Token(Identifier, (10,24)->(10,28)),
                                         expr: String(
                                             DoubleQuote(
                                                 "snek lang",
                                             ),
                                         ),
-                                        eol: Token(EndOfLine, "\n", (10,40)->(10,40)),
+                                        eol: Token(EndOfLine, (10,40)->(10,40)),
                                     },
                                 ),
                             ),
@@ -135,7 +138,7 @@ expression: snapshot_parsing(contents)
                     ),
                     Autocmd(
                         AutocmdCommand {
-                            autocmd: Token(Identifier, "autocmd", (11,2)->(11,9)),
+                            autocmd: Token(Identifier, (11,2)->(11,9)),
                             bang: false,
                             events: [
                                 Literal {
@@ -151,13 +154,13 @@ expression: snapshot_parsing(contents)
                             block: Command(
                                 Echo(
                                     EchoCommand {
-                                        echo: Token(Identifier, "echo", (11,29)->(11,33)),
+                                        echo: Token(Identifier, (11,29)->(11,33)),
                                         expr: String(
                                             DoubleQuote(
                                                 "One of these is better",
                                             ),
                                         ),
-                                        eol: Token(EndOfLine, "\n", (11,58)->(11,58)),
+                                        eol: Token(EndOfLine, (11,58)->(11,58)),
                                     },
                                 ),
                             ),
@@ -168,9 +171,9 @@ expression: snapshot_parsing(contents)
                     ),
                 ],
             },
-            augroup_end: Token(Identifier, "augroup", (13,0)->(13,7)),
-            augroup_end_name: Token(Identifier, "END", (13,8)->(13,11)),
-            augroup_end_eol: Token(EndOfLine, "\n", (13,11)->(13,11)),
+            augroup_end: Token(Identifier, (13,0)->(13,7)),
+            augroup_end_name: Token(Identifier, (13,8)->(13,11)),
+            augroup_end_eol: Token(EndOfLine, (13,11)->(13,11)),
         },
     ),
 ]

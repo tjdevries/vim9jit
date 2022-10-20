@@ -1,14 +1,14 @@
 use anyhow::Result;
-use vim9_lexer::{Token, TokenKind};
+use vim9_lexer::TokenKind;
 
-use crate::{ExCommand, Parser};
+use crate::{ExCommand, Parser, TokenMeta};
 
 // TODO:
 // - consider how script vars are supposed to work in this context
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct UserCommand {
-    tok: Token,
+    tok: TokenMeta,
     pub bang: bool,
     pub command_bang: bool,
     pub command_bar: bool,
@@ -24,8 +24,8 @@ pub struct UserCommand {
 }
 
 impl UserCommand {
-    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
-        let tok = parser.expect_identifier_with_text("command")?;
+    pub fn parse(parser: &Parser) -> Result<ExCommand> {
+        let tok = parser.expect_identifier_with_text("command")?.into();
         let bang = parser.consume_if_kind(TokenKind::Bang).is_some();
 
         let mut command_bang = false;
@@ -33,7 +33,7 @@ impl UserCommand {
         let mut command_nargs = None;
         let mut command_complete = None;
         let mut command_range = None;
-        while parser.current_token.kind == TokenKind::Minus {
+        while parser.front_kind() == TokenKind::Minus {
             parser.next_token();
             parser.ensure_token(TokenKind::Identifier)?;
 

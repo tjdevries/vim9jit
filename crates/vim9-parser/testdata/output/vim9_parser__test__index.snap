@@ -1,45 +1,42 @@
 ---
-source: crates/vim9-parser/src/test.rs
-assertion_line: 41
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2563
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (2,0)->(2,3)),
+            var: Token(Identifier, (2,0)->(2,3)),
             ty: None,
             name: Raw(l),
-            equal: Token(Equal, "=", (2,6)->(2,7)),
+            equal: Token(Equal, (2,6)->(2,7)),
             expr: Array(
                 ArrayLiteral {
-                    open: Token(LeftBracket, "[", (2,8)->(2,9)),
+                    open: Token(LeftBracket, (2,8)->(2,9)),
                     elements: [
                         Number(
-                            VimNumber {
-                                value: "1",
-                            },
+                            Number(1),
                         ),
                         Number(
-                            VimNumber {
-                                value: "2",
-                            },
+                            Number(2),
                         ),
                         Number(
-                            VimNumber {
-                                value: "3",
-                            },
+                            Number(3),
                         ),
                     ],
-                    close: Token(RightBracket, "]", (2,16)->(2,17)),
+                    close: Token(RightBracket, (2,16)->(2,17)),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (2,17)->(2,17)),
+            eol: Token(EndOfLine, (2,17)->(2,17)),
         },
     ),
     NoOp(
@@ -47,15 +44,15 @@ expression: snapshot_parsing(contents)
     ),
     Def(
         DefCommand {
-            def: Token(Identifier, "def", (4,0)->(4,3)),
+            def: Token(Identifier, (4,0)->(4,3)),
             name: Raw(Test_can_index),
             args: Signature {
-                open: Token(LeftParen, "(", (4,18)->(4,19)),
+                open: Token(LeftParen, (4,18)->(4,19)),
                 params: [],
-                close: Token(RightParen, ")", (4,19)->(4,20)),
+                close: Token(RightParen, (4,19)->(4,20)),
             },
             ret: None,
-            def_eol: Token(EndOfLine, "\n", (4,20)->(4,20)),
+            def_eol: Token(EndOfLine, (4,20)->(4,20)),
             body: Body {
                 commands: [
                     Call(
@@ -64,38 +61,34 @@ expression: snapshot_parsing(contents)
                             expr: Identifier(
                                 Raw(assert_equal),
                             ),
-                            open: Token(LeftParen, "(", (5,14)->(5,15)),
+                            open: Token(LeftParen, (5,14)->(5,15)),
                             args: [
                                 Number(
-                                    VimNumber {
-                                        value: "1",
-                                    },
+                                    Number(1),
                                 ),
                                 Index(
                                     IndexExpression {
                                         container: Identifier(
                                             Raw(l),
                                         ),
-                                        open: Token(LeftBracket, "[", (5,19)->(5,20)),
+                                        open: Token(LeftBracket, (5,19)->(5,20)),
                                         index: Item(
                                             Number(
-                                                VimNumber {
-                                                    value: "0",
-                                                },
+                                                Number(0),
                                             ),
                                         ),
-                                        close: Token(RightBracket, "]", (5,21)->(5,22)),
+                                        close: Token(RightBracket, (5,21)->(5,22)),
                                     },
                                 ),
                             ],
-                            close: Token(RightParen, ")", (5,22)->(5,23)),
-                            eol: Token(EndOfLine, "\n", (5,23)->(5,23)),
+                            close: Token(RightParen, (5,22)->(5,23)),
+                            eol: Token(EndOfLine, (5,23)->(5,23)),
                         },
                     ),
                 ],
             },
-            enddef: Token(Identifier, "enddef", (6,0)->(6,6)),
-            end_eol: Token(EndOfLine, "\n", (6,6)->(6,6)),
+            enddef: Token(Identifier, (6,0)->(6,6)),
+            end_eol: Token(EndOfLine, (6,6)->(6,6)),
         },
     ),
     NoOp(
@@ -103,29 +96,27 @@ expression: snapshot_parsing(contents)
     ),
     Def(
         DefCommand {
-            def: Token(Identifier, "def", (8,0)->(8,3)),
+            def: Token(Identifier, (8,0)->(8,3)),
             name: Raw(Test_minus),
             args: Signature {
-                open: Token(LeftParen, "(", (8,14)->(8,15)),
+                open: Token(LeftParen, (8,14)->(8,15)),
                 params: [],
-                close: Token(RightParen, ")", (8,15)->(8,16)),
+                close: Token(RightParen, (8,15)->(8,16)),
             },
             ret: None,
-            def_eol: Token(EndOfLine, "\n", (8,16)->(8,16)),
+            def_eol: Token(EndOfLine, (8,16)->(8,16)),
             body: Body {
                 commands: [
                     Var(
                         VarCommand {
-                            var: Token(Identifier, "var", (9,2)->(9,5)),
+                            var: Token(Identifier, (9,2)->(9,5)),
                             ty: None,
                             name: Raw(index),
-                            equal: Token(Equal, "=", (9,12)->(9,13)),
+                            equal: Token(Equal, (9,12)->(9,13)),
                             expr: Number(
-                                VimNumber {
-                                    value: "1",
-                                },
+                                Number(1),
                             ),
-                            eol: Token(EndOfLine, "\n", (9,15)->(9,15)),
+                            eol: Token(EndOfLine, (9,15)->(9,15)),
                         },
                     ),
                     Call(
@@ -134,19 +125,17 @@ expression: snapshot_parsing(contents)
                             expr: Identifier(
                                 Raw(assert_equal),
                             ),
-                            open: Token(LeftParen, "(", (10,14)->(10,15)),
+                            open: Token(LeftParen, (10,14)->(10,15)),
                             args: [
                                 Number(
-                                    VimNumber {
-                                        value: "1",
-                                    },
+                                    Number(1),
                                 ),
                                 Index(
                                     IndexExpression {
                                         container: Identifier(
                                             Raw(l),
                                         ),
-                                        open: Token(LeftBracket, "[", (10,19)->(10,20)),
+                                        open: Token(LeftBracket, (10,19)->(10,20)),
                                         index: Item(
                                             Infix(
                                                 InfixExpression {
@@ -156,25 +145,23 @@ expression: snapshot_parsing(contents)
                                                         Raw(index),
                                                     ),
                                                     right: Number(
-                                                        VimNumber {
-                                                            value: "1",
-                                                        },
+                                                        Number(1),
                                                     ),
                                                 },
                                             ),
                                         ),
-                                        close: Token(RightBracket, "]", (10,29)->(10,30)),
+                                        close: Token(RightBracket, (10,29)->(10,30)),
                                     },
                                 ),
                             ],
-                            close: Token(RightParen, ")", (10,30)->(10,31)),
-                            eol: Token(EndOfLine, "\n", (10,31)->(10,31)),
+                            close: Token(RightParen, (10,30)->(10,31)),
+                            eol: Token(EndOfLine, (10,31)->(10,31)),
                         },
                     ),
                 ],
             },
-            enddef: Token(Identifier, "enddef", (11,0)->(11,6)),
-            end_eol: Token(EndOfLine, "\n", (11,6)->(11,6)),
+            enddef: Token(Identifier, (11,0)->(11,6)),
+            end_eol: Token(EndOfLine, (11,6)->(11,6)),
         },
     ),
     NoOp(
@@ -182,15 +169,15 @@ expression: snapshot_parsing(contents)
     ),
     Def(
         DefCommand {
-            def: Token(Identifier, "def", (13,0)->(13,3)),
+            def: Token(Identifier, (13,0)->(13,3)),
             name: Raw(Test_both),
             args: Signature {
-                open: Token(LeftParen, "(", (13,13)->(13,14)),
+                open: Token(LeftParen, (13,13)->(13,14)),
                 params: [],
-                close: Token(RightParen, ")", (13,14)->(13,15)),
+                close: Token(RightParen, (13,14)->(13,15)),
             },
             ret: None,
-            def_eol: Token(EndOfLine, "\n", (13,15)->(13,15)),
+            def_eol: Token(EndOfLine, (13,15)->(13,15)),
             body: Body {
                 commands: [
                     Call(
@@ -199,24 +186,20 @@ expression: snapshot_parsing(contents)
                             expr: Identifier(
                                 Raw(assert_equal),
                             ),
-                            open: Token(LeftParen, "(", (14,14)->(14,15)),
+                            open: Token(LeftParen, (14,14)->(14,15)),
                             args: [
                                 Array(
                                     ArrayLiteral {
-                                        open: Token(LeftBracket, "[", (14,15)->(14,16)),
+                                        open: Token(LeftBracket, (14,15)->(14,16)),
                                         elements: [
                                             Number(
-                                                VimNumber {
-                                                    value: "1",
-                                                },
+                                                Number(1),
                                             ),
                                             Number(
-                                                VimNumber {
-                                                    value: "2",
-                                                },
+                                                Number(2),
                                             ),
                                         ],
-                                        close: Token(RightBracket, "]", (14,20)->(14,21)),
+                                        close: Token(RightBracket, (14,20)->(14,21)),
                                     },
                                 ),
                                 Index(
@@ -224,38 +207,34 @@ expression: snapshot_parsing(contents)
                                         container: Identifier(
                                             Raw(l),
                                         ),
-                                        open: Token(LeftBracket, "[", (14,24)->(14,25)),
+                                        open: Token(LeftBracket, (14,24)->(14,25)),
                                         index: Slice(
                                             VimSlice {
                                                 start: Some(
                                                     Number(
-                                                        VimNumber {
-                                                            value: "0",
-                                                        },
+                                                        Number(0),
                                                     ),
                                                 ),
-                                                colon: Token(SpacedColon, ": ", (14,27)->(14,29)),
+                                                colon: Token(SpacedColon, (14,27)->(14,29)),
                                                 finish: Some(
                                                     Number(
-                                                        VimNumber {
-                                                            value: "1",
-                                                        },
+                                                        Number(1),
                                                     ),
                                                 ),
                                             },
                                         ),
-                                        close: Token(RightBracket, "]", (14,30)->(14,31)),
+                                        close: Token(RightBracket, (14,30)->(14,31)),
                                     },
                                 ),
                             ],
-                            close: Token(RightParen, ")", (14,31)->(14,32)),
-                            eol: Token(EndOfLine, "\n", (14,32)->(14,32)),
+                            close: Token(RightParen, (14,31)->(14,32)),
+                            eol: Token(EndOfLine, (14,32)->(14,32)),
                         },
                     ),
                 ],
             },
-            enddef: Token(Identifier, "enddef", (15,0)->(15,6)),
-            end_eol: Token(EndOfLine, "\n", (15,6)->(15,6)),
+            enddef: Token(Identifier, (15,0)->(15,6)),
+            end_eol: Token(EndOfLine, (15,6)->(15,6)),
         },
     ),
     NoOp(
@@ -263,15 +242,15 @@ expression: snapshot_parsing(contents)
     ),
     Def(
         DefCommand {
-            def: Token(Identifier, "def", (17,0)->(17,3)),
+            def: Token(Identifier, (17,0)->(17,3)),
             name: Raw(Test_left),
             args: Signature {
-                open: Token(LeftParen, "(", (17,13)->(17,14)),
+                open: Token(LeftParen, (17,13)->(17,14)),
                 params: [],
-                close: Token(RightParen, ")", (17,14)->(17,15)),
+                close: Token(RightParen, (17,14)->(17,15)),
             },
             ret: None,
-            def_eol: Token(EndOfLine, "\n", (17,15)->(17,15)),
+            def_eol: Token(EndOfLine, (17,15)->(17,15)),
             body: Body {
                 commands: [
                     Call(
@@ -280,24 +259,20 @@ expression: snapshot_parsing(contents)
                             expr: Identifier(
                                 Raw(assert_equal),
                             ),
-                            open: Token(LeftParen, "(", (18,14)->(18,15)),
+                            open: Token(LeftParen, (18,14)->(18,15)),
                             args: [
                                 Array(
                                     ArrayLiteral {
-                                        open: Token(LeftBracket, "[", (18,15)->(18,16)),
+                                        open: Token(LeftBracket, (18,15)->(18,16)),
                                         elements: [
                                             Number(
-                                                VimNumber {
-                                                    value: "2",
-                                                },
+                                                Number(2),
                                             ),
                                             Number(
-                                                VimNumber {
-                                                    value: "3",
-                                                },
+                                                Number(3),
                                             ),
                                         ],
-                                        close: Token(RightBracket, "]", (18,20)->(18,21)),
+                                        close: Token(RightBracket, (18,20)->(18,21)),
                                     },
                                 ),
                                 Index(
@@ -305,32 +280,30 @@ expression: snapshot_parsing(contents)
                                         container: Identifier(
                                             Raw(l),
                                         ),
-                                        open: Token(LeftBracket, "[", (18,24)->(18,25)),
+                                        open: Token(LeftBracket, (18,24)->(18,25)),
                                         index: Slice(
                                             VimSlice {
                                                 start: Some(
                                                     Number(
-                                                        VimNumber {
-                                                            value: "1",
-                                                        },
+                                                        Number(1),
                                                     ),
                                                 ),
-                                                colon: Token(SpacedColon, ": ", (18,27)->(18,29)),
+                                                colon: Token(SpacedColon, (18,27)->(18,29)),
                                                 finish: None,
                                             },
                                         ),
-                                        close: Token(RightBracket, "]", (18,29)->(18,30)),
+                                        close: Token(RightBracket, (18,29)->(18,30)),
                                     },
                                 ),
                             ],
-                            close: Token(RightParen, ")", (18,30)->(18,31)),
-                            eol: Token(EndOfLine, "\n", (18,31)->(18,31)),
+                            close: Token(RightParen, (18,30)->(18,31)),
+                            eol: Token(EndOfLine, (18,31)->(18,31)),
                         },
                     ),
                 ],
             },
-            enddef: Token(Identifier, "enddef", (19,0)->(19,6)),
-            end_eol: Token(EndOfLine, "\n", (19,6)->(19,6)),
+            enddef: Token(Identifier, (19,0)->(19,6)),
+            end_eol: Token(EndOfLine, (19,6)->(19,6)),
         },
     ),
     NoOp(
@@ -338,15 +311,15 @@ expression: snapshot_parsing(contents)
     ),
     Def(
         DefCommand {
-            def: Token(Identifier, "def", (21,0)->(21,3)),
+            def: Token(Identifier, (21,0)->(21,3)),
             name: Raw(Test_right),
             args: Signature {
-                open: Token(LeftParen, "(", (21,14)->(21,15)),
+                open: Token(LeftParen, (21,14)->(21,15)),
                 params: [],
-                close: Token(RightParen, ")", (21,15)->(21,16)),
+                close: Token(RightParen, (21,15)->(21,16)),
             },
             ret: None,
-            def_eol: Token(EndOfLine, "\n", (21,16)->(21,16)),
+            def_eol: Token(EndOfLine, (21,16)->(21,16)),
             body: Body {
                 commands: [
                     Call(
@@ -355,24 +328,20 @@ expression: snapshot_parsing(contents)
                             expr: Identifier(
                                 Raw(assert_equal),
                             ),
-                            open: Token(LeftParen, "(", (22,14)->(22,15)),
+                            open: Token(LeftParen, (22,14)->(22,15)),
                             args: [
                                 Array(
                                     ArrayLiteral {
-                                        open: Token(LeftBracket, "[", (22,15)->(22,16)),
+                                        open: Token(LeftBracket, (22,15)->(22,16)),
                                         elements: [
                                             Number(
-                                                VimNumber {
-                                                    value: "1",
-                                                },
+                                                Number(1),
                                             ),
                                             Number(
-                                                VimNumber {
-                                                    value: "2",
-                                                },
+                                                Number(2),
                                             ),
                                         ],
-                                        close: Token(RightBracket, "]", (22,20)->(22,21)),
+                                        close: Token(RightBracket, (22,20)->(22,21)),
                                     },
                                 ),
                                 Index(
@@ -380,32 +349,30 @@ expression: snapshot_parsing(contents)
                                         container: Identifier(
                                             Raw(l),
                                         ),
-                                        open: Token(LeftBracket, "[", (22,24)->(22,25)),
+                                        open: Token(LeftBracket, (22,24)->(22,25)),
                                         index: Slice(
                                             VimSlice {
                                                 start: None,
-                                                colon: Token(SpacedColon, ": ", (22,25)->(22,27)),
+                                                colon: Token(SpacedColon, (22,25)->(22,27)),
                                                 finish: Some(
                                                     Number(
-                                                        VimNumber {
-                                                            value: "1",
-                                                        },
+                                                        Number(1),
                                                     ),
                                                 ),
                                             },
                                         ),
-                                        close: Token(RightBracket, "]", (22,28)->(22,29)),
+                                        close: Token(RightBracket, (22,28)->(22,29)),
                                     },
                                 ),
                             ],
-                            close: Token(RightParen, ")", (22,29)->(22,30)),
-                            eol: Token(EndOfLine, "\n", (22,30)->(22,30)),
+                            close: Token(RightParen, (22,29)->(22,30)),
+                            eol: Token(EndOfLine, (22,30)->(22,30)),
                         },
                     ),
                 ],
             },
-            enddef: Token(Identifier, "enddef", (23,0)->(23,6)),
-            end_eol: Token(EndOfLine, "\n", (23,6)->(23,6)),
+            enddef: Token(Identifier, (23,0)->(23,6)),
+            end_eol: Token(EndOfLine, (23,6)->(23,6)),
         },
     ),
     NoOp(
