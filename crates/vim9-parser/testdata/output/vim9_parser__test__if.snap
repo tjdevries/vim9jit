@@ -1,21 +1,24 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2171
+assertion_line: 2545
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Comment(
         Token(Comment, "# multiple expressions", (2,0)->(2,22)),
     ),
     If(
         IfCommand {
-            if_tok: Token(Identifier, "if", (3,0)->(3,2)),
+            if_tok: Token(Identifier, (3,0)->(3,2)),
             condition: Infix(
                 InfixExpression {
                     token: Token(Or, "||", (3,16)->(3,18)),
@@ -25,7 +28,7 @@ expression: snapshot_parsing(contents)
                     ),
                     right: Grouped(
                         GroupedExpression {
-                            open: Token(LeftParen, "(", (3,19)->(3,20)),
+                            open: Token(LeftParen, (3,19)->(3,20)),
                             expr: Infix(
                                 InfixExpression {
                                     token: Token(And, "&&", (3,38)->(3,40)),
@@ -38,7 +41,7 @@ expression: snapshot_parsing(contents)
                                                 f: Identifier(Raw(str2nr)) arg: [
                                                     VimOption(
                                                         VimOption {
-                                                            ampersand: Token(Ampersand, "&", (3,27)->(3,28)),
+                                                            ampersand: Token(Ampersand, (3,27)->(3,28)),
                                                             option: Literal {
                                                                 token: Token(Identifier, "t_Co", (3,28)->(3,32)),
                                                             },
@@ -47,15 +50,13 @@ expression: snapshot_parsing(contents)
                                                 ],
                                             ),
                                             right: Number(
-                                                VimNumber {
-                                                    value: "8",
-                                                },
+                                                Number(8),
                                             ),
                                         },
                                     ),
                                     right: Prefix(
                                         PrefixExpression {
-                                            token: Token(Bang, "!", (3,41)->(3,42)),
+                                            token: Token(Bang, (3,41)->(3,42)),
                                             operator: Bang,
                                             right: Call(
                                                 f: Identifier(Raw(has)) arg: [
@@ -70,26 +71,26 @@ expression: snapshot_parsing(contents)
                                     ),
                                 },
                             ),
-                            close: Token(RightParen, ")", (3,60)->(3,61)),
+                            close: Token(RightParen, (3,60)->(3,61)),
                         },
                     ),
                 },
             ),
-            if_eol: Token(EndOfLine, "\n", (3,61)->(3,61)),
+            if_eol: Token(EndOfLine, (3,61)->(3,61)),
             body: Body {
                 commands: [
                     Finish(
                         FinishCommand {
-                            finish: Token(Identifier, "finish", (4,2)->(4,8)),
-                            eol: Token(EndOfLine, "\n", (4,8)->(4,8)),
+                            finish: Token(Identifier, (4,2)->(4,8)),
+                            eol: Token(EndOfLine, (4,8)->(4,8)),
                         },
                     ),
                 ],
             },
             elseifs: [],
             else_command: None,
-            endif_tok: Token(Identifier, "endif", (5,0)->(5,5)),
-            endif_eol: Token(EndOfLine, "\n", (5,5)->(5,5)),
+            endif_tok: Token(Identifier, (5,0)->(5,5)),
+            endif_eol: Token(EndOfLine, (5,5)->(5,5)),
         },
     ),
     NoOp(
@@ -97,21 +98,19 @@ expression: snapshot_parsing(contents)
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (7,0)->(7,3)),
+            var: Token(Identifier, (7,0)->(7,3)),
             ty: None,
             name: Raw(x),
-            equal: Token(Equal, "=", (7,6)->(7,7)),
+            equal: Token(Equal, (7,6)->(7,7)),
             expr: Number(
-                VimNumber {
-                    value: "20",
-                },
+                Number(20),
             ),
-            eol: Token(EndOfLine, "\n", (7,10)->(7,10)),
+            eol: Token(EndOfLine, (7,10)->(7,10)),
         },
     ),
     If(
         IfCommand {
-            if_tok: Token(Identifier, "if", (8,0)->(8,2)),
+            if_tok: Token(Identifier, (8,0)->(8,2)),
             condition: Infix(
                 InfixExpression {
                     token: Token(LessThan, "<", (8,5)->(8,6)),
@@ -120,31 +119,29 @@ expression: snapshot_parsing(contents)
                         Raw(x),
                     ),
                     right: Number(
-                        VimNumber {
-                            value: "10",
-                        },
+                        Number(10),
                     ),
                 },
             ),
-            if_eol: Token(EndOfLine, "\n", (8,9)->(8,9)),
+            if_eol: Token(EndOfLine, (8,9)->(8,9)),
             body: Body {
                 commands: [
                     Echo(
                         EchoCommand {
-                            echo: Token(Identifier, "echo", (9,2)->(9,6)),
+                            echo: Token(Identifier, (9,2)->(9,6)),
                             expr: String(
                                 DoubleQuote(
                                     "10",
                                 ),
                             ),
-                            eol: Token(EndOfLine, "\n", (9,11)->(9,11)),
+                            eol: Token(EndOfLine, (9,11)->(9,11)),
                         },
                     ),
                 ],
             },
             elseifs: [
                 ElseIfCommand {
-                    elseif_tok: Token(Identifier, "elseif", (10,0)->(10,6)),
+                    elseif_tok: Token(Identifier, (10,0)->(10,6)),
                     condition: Infix(
                         InfixExpression {
                             token: Token(LessThan, "<", (10,9)->(10,10)),
@@ -153,31 +150,29 @@ expression: snapshot_parsing(contents)
                                 Raw(x),
                             ),
                             right: Number(
-                                VimNumber {
-                                    value: "15",
-                                },
+                                Number(15),
                             ),
                         },
                     ),
-                    elseif_eol: Token(EndOfLine, "\n", (10,13)->(10,13)),
+                    elseif_eol: Token(EndOfLine, (10,13)->(10,13)),
                     body: Body {
                         commands: [
                             Echo(
                                 EchoCommand {
-                                    echo: Token(Identifier, "echo", (11,2)->(11,6)),
+                                    echo: Token(Identifier, (11,2)->(11,6)),
                                     expr: String(
                                         DoubleQuote(
                                             "15",
                                         ),
                                     ),
-                                    eol: Token(EndOfLine, "\n", (11,11)->(11,11)),
+                                    eol: Token(EndOfLine, (11,11)->(11,11)),
                                 },
                             ),
                         ],
                     },
                 },
                 ElseIfCommand {
-                    elseif_tok: Token(Identifier, "elseif", (12,0)->(12,6)),
+                    elseif_tok: Token(Identifier, (12,0)->(12,6)),
                     condition: Infix(
                         InfixExpression {
                             token: Token(LessThan, "<", (12,9)->(12,10)),
@@ -186,24 +181,22 @@ expression: snapshot_parsing(contents)
                                 Raw(x),
                             ),
                             right: Number(
-                                VimNumber {
-                                    value: "30",
-                                },
+                                Number(30),
                             ),
                         },
                     ),
-                    elseif_eol: Token(EndOfLine, "\n", (12,13)->(12,13)),
+                    elseif_eol: Token(EndOfLine, (12,13)->(12,13)),
                     body: Body {
                         commands: [
                             Echo(
                                 EchoCommand {
-                                    echo: Token(Identifier, "echo", (13,2)->(13,6)),
+                                    echo: Token(Identifier, (13,2)->(13,6)),
                                     expr: String(
                                         DoubleQuote(
                                             "30",
                                         ),
                                     ),
-                                    eol: Token(EndOfLine, "\n", (13,11)->(13,11)),
+                                    eol: Token(EndOfLine, (13,11)->(13,11)),
                                 },
                             ),
                         ],
@@ -212,27 +205,27 @@ expression: snapshot_parsing(contents)
             ],
             else_command: Some(
                 ElseCommand {
-                    else_tok: Token(Identifier, "else", (14,0)->(14,4)),
-                    else_eol: Token(EndOfLine, "\n", (14,4)->(14,4)),
+                    else_tok: Token(Identifier, (14,0)->(14,4)),
+                    else_eol: Token(EndOfLine, (14,4)->(14,4)),
                     body: Body {
                         commands: [
                             Echo(
                                 EchoCommand {
-                                    echo: Token(Identifier, "echo", (15,2)->(15,6)),
+                                    echo: Token(Identifier, (15,2)->(15,6)),
                                     expr: String(
                                         DoubleQuote(
                                             "else",
                                         ),
                                     ),
-                                    eol: Token(EndOfLine, "\n", (15,13)->(15,13)),
+                                    eol: Token(EndOfLine, (15,13)->(15,13)),
                                 },
                             ),
                         ],
                     },
                 },
             ),
-            endif_tok: Token(Identifier, "endif", (16,0)->(16,5)),
-            endif_eol: Token(EndOfLine, "\n", (16,5)->(16,5)),
+            endif_tok: Token(Identifier, (16,0)->(16,5)),
+            endif_eol: Token(EndOfLine, (16,5)->(16,5)),
         },
     ),
 ]

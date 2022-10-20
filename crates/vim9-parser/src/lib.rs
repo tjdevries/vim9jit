@@ -1342,17 +1342,14 @@ impl VarCommand {
                     close,
                 }))
             }
-            TokenKind::Equal => {
-                Ok(ExCommand::Var(VarCommand {
-                    var,
-                    name,
-                    ty,
-                    // TODO: Type Hints
-                    equal: parser.expect_token(TokenKind::Equal)?.into(),
-                    expr: Expression::parse(parser, Precedence::Lowest)?,
-                    eol: parser.expect_eol()?,
-                }))
-            }
+            TokenKind::Equal => Ok(ExCommand::Var(VarCommand {
+                var,
+                name,
+                ty,
+                equal: parser.expect_token(TokenKind::Equal)?.into(),
+                expr: Expression::parse(parser, Precedence::Lowest)?,
+                eol: parser.expect_eol()?,
+            })),
             TokenKind::EndOfLine | TokenKind::EndOfFile => {
                 Ok(ExCommand::Decl(DeclCommand {
                     var,
@@ -2545,10 +2542,10 @@ mod test {
     // snap!(test_autocmd, "../testdata/snapshots/autocmd.vim");
     snap!(test_array, "../testdata/snapshots/array.vim");
     snap!(test_dict, "../testdata/snapshots/dict.vim");
-    // snap!(test_if, "../testdata/snapshots/if.vim");
-    // snap!(test_call, "../testdata/snapshots/call.vim");
-    // snap!(test_concat, "../testdata/snapshots/concat.vim");
-    // snap!(test_unpack, "../testdata/snapshots/unpack.vim");
+    snap!(test_if, "../testdata/snapshots/if.vim");
+    snap!(test_call, "../testdata/snapshots/call.vim");
+    snap!(test_concat, "../testdata/snapshots/concat.vim");
+    snap!(test_unpack, "../testdata/snapshots/unpack.vim");
     // snap!(test_assign, "../testdata/snapshots/assign.vim");
     // snap!(test_vimvar, "../testdata/snapshots/vimvar.vim");
     // snap!(test_busted, "../testdata/snapshots/busted.vim");
