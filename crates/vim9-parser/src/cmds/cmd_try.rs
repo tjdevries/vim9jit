@@ -32,7 +32,7 @@ impl TryCommand {
             try_eol: parser.expect_eol()?,
             body: Body::parse_until_any(parser, &try_endings)?,
             catch: {
-                if parser.current_token.text == "catch" {
+                if parser.current_token.text.as_str() == "catch" {
                     Some(CatchCommand {
                         catch_: parser.pop(),
                         expr: None,

@@ -1,39 +1,38 @@
 use std::collections::HashSet;
 
 use anyhow::Result;
-use vim9_lexer::Token;
 
-use crate::{Body, ExCommand, Expression, Parser, Precedence};
+use crate::{Body, ExCommand, Expression, Parser, Precedence, TokenMeta};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct IfCommand {
-    if_tok: Token,
+    if_tok: TokenMeta,
     pub condition: Expression,
-    if_eol: Token,
+    if_eol: TokenMeta,
     pub body: Body,
     pub elseifs: Vec<ElseIfCommand>,
     pub else_command: Option<ElseCommand>,
-    endif_tok: Token,
-    endif_eol: Token,
+    endif_tok: TokenMeta,
+    endif_eol: TokenMeta,
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ElseIfCommand {
-    elseif_tok: Token,
+    elseif_tok: TokenMeta,
     pub condition: Expression,
-    elseif_eol: Token,
+    elseif_eol: TokenMeta,
     pub body: Body,
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ElseCommand {
-    else_tok: Token,
-    else_eol: Token,
+    else_tok: TokenMeta,
+    else_eol: TokenMeta,
     pub body: Body,
 }
 
 impl IfCommand {
-    pub fn parse(parser: &mut Parser) -> Result<ExCommand> {
+    pub fn parse(parser: &Parser) -> Result<ExCommand> {
         let if_endings: HashSet<String> = HashSet::from_iter(
             vec![
                 "elseif".to_string(),
@@ -44,15 +43,15 @@ impl IfCommand {
         );
 
         Ok(ExCommand::If(IfCommand {
-            if_tok: parser.expect_identifier_with_text("if")?,
+            if_tok: parser.expect_identifier_with_text("if")?.into(),
             condition: Expression::parse(parser, Precedence::Lowest)?,
             if_eol: parser.expect_eol()?,
             body: Body::parse_until_any(parser, &if_endings)?,
             elseifs: {
                 let mut elseifs = Vec::new();
-                while parser.current_token.text == "elseif" {
+                while parser.front_ref().text.eq("elseif") {
                     elseifs.push(ElseIfCommand {
-                        elseif_tok: parser.pop(),
+                        elseif_tok: parser.pop().into(),
                         condition: Expression::parse(
                             parser,
                             Precedence::Lowest,
@@ -65,17 +64,17 @@ impl IfCommand {
                 elseifs
             },
             else_command: {
-                if parser.current_token.text == "else" {
+                if parser.front_ref().text.eq("else") {
                     Some(ElseCommand {
-                        else_tok: parser.pop(),
-                        else_eol: parser.expect_eol()?,
-                        body: Body::parse_until(parser, "endif")?,
+                        else_tok: parser.pop().into(),
+                        else_eol: parser.expect_eol()?.into(),
+                        body: Body::parse_until(parser, "endif")?.into(),
                     })
                 } else {
                     None
                 }
             },
-            endif_tok: parser.expect_identifier_with_text("endif")?,
+            endif_tok: parser.expect_identifier_with_text("endif")?.into(),
             endif_eol: parser.expect_eol()?,
         }))
     }

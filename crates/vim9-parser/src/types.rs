@@ -1,11 +1,11 @@
 use anyhow::Result;
-use vim9_lexer::{Token, TokenKind};
+use vim9_lexer::TokenKind;
 
-use crate::{Literal, Parser};
+use crate::{Literal, Parser, TokenMeta};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Type {
-    colon: Token,
+    colon: TokenMeta,
     pub inner: InnerType,
 }
 
@@ -18,14 +18,14 @@ pub enum InnerType {
     String,
     Blob,
     List {
-        open: Token,
+        open: TokenMeta,
         inner: Box<InnerType>,
-        close: Token,
+        close: TokenMeta,
     },
     Dict {
-        open: Token,
+        open: TokenMeta,
         inner: Box<InnerType>,
-        close: Token,
+        close: TokenMeta,
     },
     Job,
     Channel,
@@ -39,25 +39,25 @@ pub enum InnerFuncType {
 }
 
 impl Type {
-    pub fn parse(parser: &mut Parser) -> Result<Type> {
+    pub fn parse(parser: &Parser) -> Result<Type> {
         Ok(Type {
-            colon: parser.expect_token(TokenKind::SpacedColon)?,
+            colon: parser.expect_token(TokenKind::SpacedColon)?.into(),
             inner: InnerType::parse(parser)?,
         })
     }
 }
 
 impl InnerType {
-    fn match_open(k: &TokenKind) -> bool {
+    fn open(k: &TokenKind) -> bool {
         matches!(k, TokenKind::LessThan | TokenKind::AngleLeft)
     }
 
-    fn match_close(k: &TokenKind) -> bool {
+    fn close(k: &TokenKind) -> bool {
         matches!(k, TokenKind::GreaterThan | TokenKind::AngleRight)
     }
 
-    pub fn parse(parser: &mut Parser) -> Result<InnerType> {
-        match parser.current_token.kind {
+    pub fn parse(parser: &Parser) -> Result<InnerType> {
+        match parser.cur_kind() {
             TokenKind::Identifier => {
                 let literal: Literal = parser.pop().try_into()?;
                 Ok(match literal.token.text.as_str() {
@@ -68,14 +68,14 @@ impl InnerType {
                     "string" => InnerType::String,
                     "float" => InnerType::Float,
                     "list" => InnerType::List {
-                        open: parser.expect_fn(Self::match_open, true)?,
+                        open: parser.expect_fn(Self::open, true)?.into(),
                         inner: InnerType::parse(parser)?.into(),
-                        close: parser.expect_fn(Self::match_close, true)?,
+                        close: parser.expect_fn(Self::close, true)?.into(),
                     },
                     "dict" => InnerType::Dict {
-                        open: parser.expect_fn(Self::match_open, true)?,
+                        open: parser.expect_fn(Self::open, true)?.into(),
                         inner: InnerType::parse(parser)?.into(),
-                        close: parser.expect_fn(Self::match_close, true)?,
+                        close: parser.expect_fn(Self::close, true)?.into(),
                     },
                     "func" => InnerType::Func(InnerFuncType::Naked),
                     "job" => InnerType::Job,

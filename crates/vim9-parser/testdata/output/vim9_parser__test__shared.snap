@@ -1,25 +1,28 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2294
+assertion_line: 2494
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     SharedCommand(
         SharedCommand {
             contents: "syn keyword contextConstants zerocount minusone minustwo plusone plustwo contained",
-            eol: Token(EndOfLine, "\n", (2,82)->(2,82)),
+            eol: Token(EndOfLine, (2,82)->(2,82)),
         },
     ),
     SharedCommand(
         SharedCommand {
             contents: "syn keyword contextConstants plusthree plusfour plusfive plussix plusseven contained",
-            eol: Token(EndOfLine, "\n", (3,84)->(3,84)),
+            eol: Token(EndOfLine, (3,84)->(3,84)),
         },
     ),
 ]

@@ -1,14 +1,17 @@
 ---
-source: crates/vim9-parser/src/test.rs
-assertion_line: 24
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2299
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Comment(
         Token(Comment, "# Hello()", (2,0)->(2,9)),

@@ -42,6 +42,33 @@ impl Debug for Span {
 pub enum TokenText<'a> {
     Slice(&'a [char]),
     Owned(String),
+    Empty,
+}
+
+impl Default for TokenText<'_> {
+    fn default() -> Self {
+        TokenText::Empty
+    }
+}
+
+impl<'a> Into<String> for TokenText<'a> {
+    fn into(self) -> String {
+        match self {
+            TokenText::Slice(s) => s.into_iter().collect(),
+            TokenText::Owned(s) => s,
+            TokenText::Empty => "".to_string(),
+        }
+    }
+}
+
+impl<'a> Into<String> for &TokenText<'a> {
+    fn into(self) -> String {
+        match self {
+            TokenText::Slice(s) => s.into_iter().collect(),
+            TokenText::Owned(s) => s.clone(),
+            TokenText::Empty => "".to_string(),
+        }
+    }
 }
 
 impl<'a> Debug for TokenText<'a> {
@@ -51,6 +78,7 @@ impl<'a> Debug for TokenText<'a> {
                 write!(f, "{:?}", s.iter().cloned().collect::<String>())
             }
             TokenText::Owned(o) => write!(f, "{:?}", o),
+            TokenText::Empty => write!(f, "<Empty>"),
         }
     }
 }
@@ -67,13 +95,26 @@ impl<'a> TokenText<'a> {
         match self {
             TokenText::Slice(s) => s.iter().collect::<String>(),
             TokenText::Owned(s) => s.clone(),
+            TokenText::Empty => "".to_string(),
         }
     }
 
-    pub fn as_str(&'a mut self) -> &'a str {
+    pub fn as_str(&'a self) -> &'a str {
         match self {
-            TokenText::Slice(s) => todo!(),
+            TokenText::Slice(_) => todo!(),
             TokenText::Owned(s) => s,
+            TokenText::Empty => "",
+        }
+    }
+
+    pub fn eq(&self, val: &str) -> bool {
+        match self {
+            TokenText::Slice(s) => {
+                // This seems like I shouldn't have to do this... oh well
+                val.chars().collect::<Vec<char>>() == *s
+            }
+            TokenText::Owned(s) => s.as_str() == val,
+            TokenText::Empty => false,
         }
     }
 }

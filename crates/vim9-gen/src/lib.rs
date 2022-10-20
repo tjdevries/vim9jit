@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use lexer::new_lexer;
+use lexer::Lexer;
 use parser::{
     self, new_parser, ArrayLiteral, AssignStatement, AugroupCommand,
     AutocmdCommand, Body, BreakCommand, CallCommand, CallExpression,
@@ -1051,14 +1051,14 @@ impl Generate for VimOption {
 
 impl Generate for Literal {
     fn gen(&self, _: &mut State) -> String {
-        self.token.text.clone()
+        self.token.text.to_string()
     }
 }
 
 impl Generate for VimKey {
     fn gen(&self, state: &mut State) -> String {
         match self {
-            VimKey::Literal(literal) => literal.token.text.clone(),
+            VimKey::Literal(literal) => literal.token.text.to_string(),
             VimKey::Expression(expr) => format!("[{}]", expr.gen(state)),
         }
     }
@@ -1274,7 +1274,7 @@ pub fn eval(program: parser::Program, is_test: bool) -> String {
 }
 
 pub fn generate(contents: &str, is_test: bool) -> String {
-    let lexer = new_lexer(contents);
+    let lexer = Lexer::new(contents);
     let mut parser = new_parser(lexer);
     let program = parser.parse_program();
 

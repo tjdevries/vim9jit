@@ -37,7 +37,7 @@ impl UserCommand {
             parser.next_token();
             parser.ensure_token(TokenKind::Identifier)?;
 
-            match parser.pop().text.as_ref() {
+            match parser.pop().text.as_str() {
                 "bar" => {
                     command_bar = true;
                 }
@@ -46,15 +46,15 @@ impl UserCommand {
                 }
                 "nargs" => {
                     parser.expect_token(TokenKind::Equal)?;
-                    command_nargs = Some(parser.pop().text);
+                    command_nargs = Some(parser.pop().text.to_string());
                 }
                 "complete" => {
                     parser.expect_token(TokenKind::Equal)?;
-                    command_complete = Some(parser.pop().text);
+                    command_complete = Some(parser.pop().text.to_string());
                 }
                 "range" => {
                     parser.expect_token(TokenKind::Equal)?;
-                    command_range = Some(parser.pop().text);
+                    command_range = Some(parser.pop().text.to_string());
                 }
                 _ => panic!("OH NO"),
             }
@@ -67,7 +67,7 @@ impl UserCommand {
             command_bar,
             command_nargs,
             command_complete,
-            name: parser.expect_token(TokenKind::Identifier)?.text,
+            name: parser.expect_token(TokenKind::Identifier)?.text.to_string(),
             command: parser.parse_command()?.into(),
             command_keepscript: false,
             command_register: None,

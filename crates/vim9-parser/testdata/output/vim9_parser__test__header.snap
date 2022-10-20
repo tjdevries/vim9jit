@@ -1,21 +1,24 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2115
+assertion_line: 2556
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: true,
-            eol: Token(EndOfLine, "\n", (0,18)->(0,18)),
+            eol: Token(EndOfLine, (0,18)->(0,18)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Comment(
         Token(Comment, "# Exit quickly when loading", (2,0)->(2,27)),
     ),
     If(
         IfCommand {
-            if_tok: Token(Identifier, "if", (3,0)->(3,2)),
+            if_tok: Token(Identifier, (3,0)->(3,2)),
             condition: Infix(
                 InfixExpression {
                     token: Token(Or, "||", (3,33)->(3,35)),
@@ -31,7 +34,7 @@ expression: snapshot_parsing(contents)
                     ),
                     right: VimOption(
                         VimOption {
-                            ampersand: Token(Ampersand, "&", (3,36)->(3,37)),
+                            ampersand: Token(Ampersand, (3,36)->(3,37)),
                             option: Literal {
                                 token: Token(Identifier, "cp", (3,37)->(3,39)),
                             },
@@ -39,21 +42,21 @@ expression: snapshot_parsing(contents)
                     ),
                 },
             ),
-            if_eol: Token(EndOfLine, "\n", (3,39)->(3,39)),
+            if_eol: Token(EndOfLine, (3,39)->(3,39)),
             body: Body {
                 commands: [
                     Finish(
                         FinishCommand {
-                            finish: Token(Identifier, "finish", (4,2)->(4,8)),
-                            eol: Token(EndOfLine, "\n", (4,8)->(4,8)),
+                            finish: Token(Identifier, (4,2)->(4,8)),
+                            eol: Token(EndOfLine, (4,8)->(4,8)),
                         },
                     ),
                 ],
             },
             elseifs: [],
             else_command: None,
-            endif_tok: Token(Identifier, "endif", (5,0)->(5,5)),
-            endif_eol: Token(EndOfLine, "\n", (5,5)->(5,5)),
+            endif_tok: Token(Identifier, (5,0)->(5,5)),
+            endif_eol: Token(EndOfLine, (5,5)->(5,5)),
         },
     ),
 ]

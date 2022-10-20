@@ -1,27 +1,39 @@
 ---
-source: src/lib.rs
-assertion_line: 661
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2302
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Echo(
         EchoCommand {
-            echo: Token(Identifier, "echo", (2,0)->(2,4)),
+            echo: Token(Identifier, (2,0)->(2,4)),
             expr: String(
                 DoubleQuote(
                     "hello",
                 ),
             ),
-            eol: Token(EndOfLine, "\n", (2,12)->(2,12)),
+            eol: Token(EndOfLine, (2,12)->(2,12)),
+        },
+    ),
+    Echo(
+        EchoCommand {
+            echo: Token(Identifier, (3,0)->(3,4)),
+            expr: Number(
+                Number(5),
+            ),
+            eol: Token(EndOfLine, (3,6)->(3,6)),
         },
     ),
     NoOp(
-        Token(EndOfLine, "\n", (3,0)->(3,0)),
+        Token(EndOfLine, "\n", (4,0)->(4,0)),
     ),
 ]

@@ -1,27 +1,28 @@
 ---
-source: src/lib.rs
-assertion_line: 1364
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2296
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (2,0)->(2,3)),
+            var: Token(Identifier, (2,0)->(2,3)),
             ty: None,
             name: Raw(x),
-            equal: Token(Equal, "=", (2,6)->(2,7)),
+            equal: Token(Equal, (2,6)->(2,7)),
             expr: Number(
-                VimNumber {
-                    value: "5",
-                },
+                Number(5),
             ),
-            eol: Token(EndOfLine, "\n", (2,9)->(2,9)),
+            eol: Token(EndOfLine, (2,9)->(2,9)),
         },
     ),
 ]

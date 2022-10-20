@@ -119,7 +119,7 @@ impl AutocmdPattern {
                     }
 
                     // Append the text of the token.
-                    text += &tok.text;
+                    text += tok.text.as_str();
 
                     if !tokens_are_neighbors(&tok, &parser.current_token) {
                         pattern.push(std::mem::take(&mut text));
