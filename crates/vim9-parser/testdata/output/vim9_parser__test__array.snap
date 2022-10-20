@@ -1,29 +1,30 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 1944
+assertion_line: 2648
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (2,0)->(2,3)),
+            var: Token(Identifier, (2,0)->(2,3)),
             ty: None,
             name: Raw(x),
-            equal: Token(Equal, "=", (2,6)->(2,7)),
+            equal: Token(Equal, (2,6)->(2,7)),
             expr: Array(
                 ArrayLiteral {
-                    open: Token(LeftBracket, "[", (2,8)->(2,9)),
+                    open: Token(LeftBracket, (2,8)->(2,9)),
                     elements: [
                         Number(
-                            VimNumber {
-                                value: "1",
-                            },
+                            Number(1),
                         ),
                         String(
                             DoubleQuote(
@@ -40,10 +41,13 @@ expression: snapshot_parsing(contents)
                             ],
                         ),
                     ],
-                    close: Token(RightBracket, "]", (2,29)->(2,30)),
+                    close: Token(RightBracket, (2,29)->(2,30)),
                 },
             ),
-            eol: Token(EndOfLine, "\n", (2,30)->(2,30)),
+            eol: Token(EndOfLine, (2,30)->(2,30)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (3,0)->(3,0)),
     ),
 ]

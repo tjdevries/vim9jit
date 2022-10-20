@@ -147,14 +147,6 @@ pub mod cmd_if;
 // }
 //
 // #[derive(Debug, PartialEq, Clone)]
-// pub struct DeclCommand {
-//     var: Token,
-//     pub name: Identifier,
-//     pub ty: Option<Type>,
-//     eol: Token,
-// }
-//
-// #[derive(Debug, PartialEq, Clone)]
 // pub struct EvalCommand {
 //     eval: Option<Token>,
 //     pub expr: Expression,

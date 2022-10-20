@@ -1,28 +1,29 @@
 ---
-source: crates/vim9-parser/src/test.rs
-assertion_line: 28
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2565
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Statement(
         Assign(
             AssignStatement {
                 left: Identifier(
-                    Scope(ScopedIdentifier { scope: Global, colon: Token(Colon, ":", (2,1)->(2,2)), accessor: Raw(global_variable) }),
+                    Scope(ScopedIdentifier { scope: Global, colon: Token(Colon, (2,1)->(2,2)), accessor: Raw(global_variable) }),
                 ),
-                equals: Token(Equal, "=", (2,18)->(2,19)),
+                equals: Token(Equal, (2,18)->(2,19)),
                 right: Number(
-                    VimNumber {
-                        value: "1",
-                    },
+                    Number(1),
                 ),
-                eol: Token(EndOfLine, "\n", (2,21)->(2,21)),
+                eol: Token(EndOfLine, (2,21)->(2,21)),
             },
         ),
     ),
