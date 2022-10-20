@@ -1,30 +1,33 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 1919
+assertion_line: 2544
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Heredoc(
         Heredoc {
-            var: Token(Identifier, "var", (2,0)->(2,3)),
+            var: Token(Identifier, (2,0)->(2,3)),
             ty: None,
             name: Raw(x),
-            op: Token(HeredocOperator, "=<<", (2,6)->(2,9)),
+            op: Token(HeredocOperator, (2,6)->(2,9)),
             trim: false,
             eval: false,
-            open: Token(Identifier, "END", (2,10)->(2,13)),
+            open: Token(Identifier, (2,10)->(2,13)),
             contents: [
                 "  hello     this",
                 "    world   that",
                 "  this      other",
             ],
-            close: Token(Identifier, "END", (6,0)->(6,3)),
+            close: Token(Identifier, (6,0)->(6,3)),
         },
     ),
     NoOp(
@@ -32,18 +35,18 @@ expression: snapshot_parsing(contents)
     ),
     Heredoc(
         Heredoc {
-            var: Token(Identifier, "var", (8,0)->(8,3)),
+            var: Token(Identifier, (8,0)->(8,3)),
             ty: None,
             name: Raw(y),
-            op: Token(HeredocOperator, "=<<", (8,6)->(8,9)),
+            op: Token(HeredocOperator, (8,6)->(8,9)),
             trim: true,
             eval: false,
-            open: Token(Identifier, "END", (8,15)->(8,18)),
+            open: Token(Identifier, (8,15)->(8,18)),
             contents: [
                 "  hello",
                 "  world",
             ],
-            close: Token(Identifier, "END", (11,0)->(11,3)),
+            close: Token(Identifier, (11,0)->(11,3)),
         },
     ),
 ]

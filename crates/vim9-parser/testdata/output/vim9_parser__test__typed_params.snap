@@ -1,27 +1,30 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 1954
+assertion_line: 2545
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Def(
         DefCommand {
-            def: Token(Identifier, "def", (2,0)->(2,3)),
+            def: Token(Identifier, (2,0)->(2,3)),
             name: Raw(ParamTest),
             args: Signature {
-                open: Token(LeftParen, "(", (2,13)->(2,14)),
+                open: Token(LeftParen, (2,13)->(2,14)),
                 params: [
                     Parameter {
                         name: Raw(qf),
                         ty: Some(
                             Type {
-                                colon: Token(SpacedColon, ": ", (2,16)->(2,18)),
+                                colon: Token(SpacedColon, (2,16)->(2,18)),
                                 inner: Bool,
                             },
                         ),
@@ -32,7 +35,7 @@ expression: snapshot_parsing(contents)
                         name: Raw(searchpat),
                         ty: None,
                         equal: Some(
-                            Token(Equal, "=", (2,34)->(2,35)),
+                            Token(Equal, (2,34)->(2,35)),
                         ),
                         default_val: Some(
                             String(
@@ -46,12 +49,12 @@ expression: snapshot_parsing(contents)
                         name: Raw(bang),
                         ty: Some(
                             Type {
-                                colon: Token(SpacedColon, ": ", (2,49)->(2,51)),
+                                colon: Token(SpacedColon, (2,49)->(2,51)),
                                 inner: String,
                             },
                         ),
                         equal: Some(
-                            Token(Equal, "=", (2,58)->(2,59)),
+                            Token(Equal, (2,58)->(2,59)),
                         ),
                         default_val: Some(
                             String(
@@ -62,15 +65,15 @@ expression: snapshot_parsing(contents)
                         ),
                     },
                 ],
-                close: Token(RightParen, ")", (2,67)->(2,68)),
+                close: Token(RightParen, (2,67)->(2,68)),
             },
             ret: None,
-            def_eol: Token(EndOfLine, "\n", (2,68)->(2,68)),
+            def_eol: Token(EndOfLine, (2,68)->(2,68)),
             body: Body {
                 commands: [],
             },
-            enddef: Token(Identifier, "enddef", (3,0)->(3,6)),
-            end_eol: Token(EndOfLine, "\n", (3,6)->(3,6)),
+            enddef: Token(Identifier, (3,0)->(3,6)),
+            end_eol: Token(EndOfLine, (3,6)->(3,6)),
         },
     ),
 ]

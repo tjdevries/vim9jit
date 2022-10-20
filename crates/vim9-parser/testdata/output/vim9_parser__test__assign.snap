@@ -1,21 +1,24 @@
 ---
-source: crates/vim9-parser/src/test.rs
-assertion_line: 36
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2549
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Var(
         VarCommand {
-            var: Token(Identifier, "var", (2,0)->(2,3)),
+            var: Token(Identifier, (2,0)->(2,3)),
             ty: None,
             name: Raw(i),
-            equal: Token(Equal, "=", (2,6)->(2,7)),
+            equal: Token(Equal, (2,6)->(2,7)),
             expr: Call(
                 f: Identifier(Raw(index)) arg: [
                     Identifier(
@@ -26,7 +29,7 @@ expression: snapshot_parsing(contents)
                     ),
                 ],
             ),
-            eol: Token(EndOfLine, "\n", (2,23)->(2,23)),
+            eol: Token(EndOfLine, (2,23)->(2,23)),
         },
     ),
     Statement(
@@ -35,7 +38,7 @@ expression: snapshot_parsing(contents)
                 left: Identifier(
                     Raw(i),
                 ),
-                equals: Token(Equal, "=", (3,2)->(3,3)),
+                equals: Token(Equal, (3,2)->(3,3)),
                 right: Call(
                     f: Identifier(Raw(index)) arg: [
                         Identifier(
@@ -46,7 +49,7 @@ expression: snapshot_parsing(contents)
                         ),
                     ],
                 ),
-                eol: Token(EndOfLine, "\n", (3,19)->(3,19)),
+                eol: Token(EndOfLine, (3,19)->(3,19)),
             },
         ),
     ),

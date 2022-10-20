@@ -1262,7 +1262,7 @@ impl VarCommand {
                 let mut trim = false;
                 let mut eval = false;
 
-                let open: TokenMeta = {
+                let open: TokenOwned = {
                     let mut token: TokenOwned =
                         parser.expect_token(TokenKind::Identifier)?.into();
 
@@ -1284,10 +1284,7 @@ impl VarCommand {
                         }
                     }
 
-                    TokenMeta {
-                        kind: token.kind,
-                        span: token.span,
-                    }
+                    token
                 };
 
                 parser.expect_eol()?;
@@ -1308,9 +1305,7 @@ impl VarCommand {
                     }
 
                     parser.next_token();
-                    if line.len() == 1
-                    /* && line[0].text.eq(open.text) */
-                    {
+                    if line.len() == 1 && line[0].text == open.text {
                         break line[0].clone();
                     }
 
@@ -1327,8 +1322,7 @@ impl VarCommand {
                     }
 
                     contents.push(line_contents);
-                }
-                .into();
+                };
 
                 Ok(ExCommand::Heredoc(Heredoc {
                     var,
@@ -1337,9 +1331,9 @@ impl VarCommand {
                     op,
                     trim,
                     eval,
-                    open,
+                    open: open.into(),
                     contents,
-                    close,
+                    close: close.into(),
                 }))
             }
             TokenKind::Equal => Ok(ExCommand::Var(VarCommand {
@@ -2539,18 +2533,16 @@ mod test {
     snap!(test_echo, "../testdata/snapshots/echo.vim");
     snap!(test_execute, "../testdata/snapshots/execute.vim");
     snap!(test_scopes, "../testdata/snapshots/scopes.vim");
-    // snap!(test_autocmd, "../testdata/snapshots/autocmd.vim");
     snap!(test_array, "../testdata/snapshots/array.vim");
     snap!(test_dict, "../testdata/snapshots/dict.vim");
     snap!(test_if, "../testdata/snapshots/if.vim");
     snap!(test_call, "../testdata/snapshots/call.vim");
     snap!(test_concat, "../testdata/snapshots/concat.vim");
-    snap!(test_unpack, "../testdata/snapshots/unpack.vim");
-    // snap!(test_assign, "../testdata/snapshots/assign.vim");
-    // snap!(test_vimvar, "../testdata/snapshots/vimvar.vim");
-    // snap!(test_busted, "../testdata/snapshots/busted.vim");
-    // snap!(test_heredoc, "../testdata/snapshots/heredoc.vim");
-    // snap!(test_typed_params, "../testdata/snapshots/typed_params.vim");
+    snap!(test_assign, "../testdata/snapshots/assign.vim");
+    snap!(test_vimvar, "../testdata/snapshots/vimvar.vim");
+    snap!(test_busted, "../testdata/snapshots/busted.vim");
+    snap!(test_heredoc, "../testdata/snapshots/heredoc.vim");
+    snap!(test_typed_params, "../testdata/snapshots/typed_params.vim");
     // snap!(test_index, "../testdata/snapshots/index.vim");
     // snap!(test_adv_index, "../testdata/snapshots/adv_index.vim");
     // snap!(test_multiline, "../testdata/snapshots/multiline.vim");
@@ -2561,6 +2553,8 @@ mod test {
     // snap!(test_eval, "../testdata/snapshots/eval.vim");
     // snap!(test_export, "../testdata/snapshots/export.vim");
     // snap!(test_import, "../testdata/snapshots/import.vim");
+    // snap!(test_autocmd, "../testdata/snapshots/autocmd.vim");
+    // snap!(test_unpack, "../testdata/snapshots/unpack.vim");
 
     // https://github.com/yegappan/lsp test suite
     // snap!(test_handlers, "../../shared/snapshots/lsp_handlers.vim");

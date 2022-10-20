@@ -1,46 +1,48 @@
 ---
-source: crates/vim9-parser/src/test.rs
-assertion_line: 38
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2549
 expression: snapshot_parsing(contents)
 ---
 [
     Vim9Script(
         Vim9ScriptCommand {
             noclear: false,
-            eol: Token(EndOfLine, "\n", (0,10)->(0,10)),
+            eol: Token(EndOfLine, (0,10)->(0,10)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
     ),
     Def(
         DefCommand {
-            def: Token(Identifier, "def", (2,0)->(2,3)),
+            def: Token(Identifier, (2,0)->(2,3)),
             name: Raw(Test_assignment_one),
             args: Signature {
-                open: Token(LeftParen, "(", (2,23)->(2,24)),
+                open: Token(LeftParen, (2,23)->(2,24)),
                 params: [],
-                close: Token(RightParen, ")", (2,24)->(2,25)),
+                close: Token(RightParen, (2,24)->(2,25)),
             },
             ret: None,
-            def_eol: Token(EndOfLine, "\n", (2,25)->(2,25)),
+            def_eol: Token(EndOfLine, (2,25)->(2,25)),
             body: Body {
                 commands: [
                     Var(
                         VarCommand {
-                            var: Token(Identifier, "var", (3,2)->(3,5)),
+                            var: Token(Identifier, (3,2)->(3,5)),
                             ty: Some(
                                 Type {
-                                    colon: Token(SpacedColon, ": ", (3,11)->(3,13)),
+                                    colon: Token(SpacedColon, (3,11)->(3,13)),
                                     inner: Bool,
                                 },
                             ),
                             name: Raw(bool1),
-                            equal: Token(Equal, "=", (3,18)->(3,19)),
+                            equal: Token(Equal, (3,18)->(3,19)),
                             expr: Boolean(
                                 VimBoolean {
-                                    token: Token(True, "true", (3,20)->(3,24)),
                                     value: true,
                                 },
                             ),
-                            eol: Token(EndOfLine, "\n", (3,24)->(3,24)),
+                            eol: Token(EndOfLine, (3,24)->(3,24)),
                         },
                     ),
                     Call(
@@ -49,23 +51,23 @@ expression: snapshot_parsing(contents)
                             expr: Identifier(
                                 Raw(assert_equal),
                             ),
-                            open: Token(LeftParen, "(", (4,14)->(4,15)),
+                            open: Token(LeftParen, (4,14)->(4,15)),
                             args: [
                                 Identifier(
-                                    Scope(ScopedIdentifier { scope: VimVar, colon: Token(Colon, ":", (4,16)->(4,17)), accessor: Raw(true) }),
+                                    Scope(ScopedIdentifier { scope: VimVar, colon: Token(Colon, (4,16)->(4,17)), accessor: Raw(true) }),
                                 ),
                                 Identifier(
                                     Raw(bool1),
                                 ),
                             ],
-                            close: Token(RightParen, ")", (4,28)->(4,29)),
-                            eol: Token(EndOfLine, "\n", (4,29)->(4,29)),
+                            close: Token(RightParen, (4,28)->(4,29)),
+                            eol: Token(EndOfLine, (4,29)->(4,29)),
                         },
                     ),
                 ],
             },
-            enddef: Token(Identifier, "enddef", (5,0)->(5,6)),
-            end_eol: Token(EndOfLine, "\n", (5,6)->(5,6)),
+            enddef: Token(Identifier, (5,0)->(5,6)),
+            end_eol: Token(EndOfLine, (5,6)->(5,6)),
         },
     ),
 ]
