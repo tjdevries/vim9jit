@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-lexer/src/lib.rs
-assertion_line: 1122
+assertion_line: 1163
 expression: snapshot_lexing(contents)
 ---
 vim9script
@@ -85,8 +85,7 @@ def SelectText(bnr: number, range: dict<dict<number>>)
   ^ Token(Colon, ":", (13,2)->(13,3))
    ^^^^^^ Token(Identifier, "normal", (13,3)->(13,9))
          ^ Token(Bang, "!", (13,9)->(13,10))
-           ^ Token(Identifier, "v", (13,11)->(13,12))
-                Token(Comment, "", (13,15)->(13,15))
+           ^^^^ Token(Literal, "v\"_y", (13,11)->(13,15))
 enddef
 ^^^^^^ Token(Identifier, "enddef", (14,0)->(14,6))
        Token(EndOfLine, "\n", (14,6)->(14,6))

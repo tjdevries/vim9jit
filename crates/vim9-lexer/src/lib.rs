@@ -534,11 +534,11 @@ impl Lexer {
             }
         }
 
-        Ok(dbg!(Token {
+        Ok(Token {
             kind: TokenKind::Literal,
             text: TokenText::Owned(line),
             span: self.make_span(position, self.position())?,
-        }))
+        })
     }
 
     fn read_until<F>(
