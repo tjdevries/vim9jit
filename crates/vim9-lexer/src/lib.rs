@@ -2,7 +2,7 @@
 #![allow(unreachable_code)]
 
 use std::{
-    cell::RefCell,
+    cell::{Cell, RefCell},
     collections::VecDeque,
     fmt::{Debug, Display},
 };
@@ -127,6 +127,13 @@ pub struct Token<'a> {
 }
 
 impl Token<'_> {
+    pub fn owned(from: Token<'_>) -> Token<'static> {
+        Token {
+            text: TokenText::Owned(from.text.to_string()),
+            ..from
+        }
+    }
+
     pub fn fake() -> Token<'static> {
         Token {
             kind: TokenKind::Virtual,
@@ -155,6 +162,7 @@ pub enum TokenKind {
     // TODO: Is this crazy for this lang??
     EndOfLine,
     Comment,
+    Literal,
 
     // Identifiers and literals
     Identifier,
@@ -307,15 +315,24 @@ impl TokenKind {
     }
 }
 
+trait SubLexer {
+    fn next_token(
+        &self,
+        lexer: &Lexer,
+    ) -> Result<(Token<'static>, Option<Box<dyn SubLexer>>)>;
+}
+
+type TokenAndLexer = (Token<'static>, Option<Box<dyn SubLexer>>);
+
 pub struct LexerState {
     position: usize,
     read_position: usize,
-
-    sublexer: Option<Box<dyn Fn(&Lexer) -> Result<Token>>>,
 }
 
 pub struct Lexer {
     state: RefCell<LexerState>,
+
+    sublexer: Cell<Option<Box<dyn SubLexer>>>,
 
     /// Vec containing all the chars,
     /// this allows easy accessing (and accounts for unicode chars and what not)
@@ -357,8 +374,8 @@ impl Lexer {
             state: RefCell::new(LexerState {
                 position: 0,
                 read_position: 1,
-                sublexer: None,
             }),
+            sublexer: Cell::new(None),
             chars,
             lines,
         }
@@ -499,6 +516,31 @@ impl Lexer {
         })
     }
 
+    fn read_line(&self) -> Result<Token<'static>> {
+        let position = self.position();
+
+        let mut line = String::new();
+        loop {
+            match self.ch() {
+                Some(&ch) => {
+                    if ch == '\n' {
+                        break;
+                    }
+
+                    line += &ch.to_string();
+                    self.read_char();
+                }
+                None => panic!("OH NO"),
+            }
+        }
+
+        Ok(dbg!(Token {
+            kind: TokenKind::Literal,
+            text: TokenText::Owned(line),
+            span: self.make_span(position, self.position())?,
+        }))
+    }
+
     fn read_until<F>(
         &self,
         until: char,
@@ -586,6 +628,11 @@ impl Lexer {
                 }
                 _ => TokenKind::IsNot,
             },
+            "normal" => {
+                self.sublexer.set(Some(Box::new(NormalModeParser {})));
+
+                TokenKind::Identifier
+            }
             _ => TokenKind::Identifier,
         };
 
@@ -673,8 +720,13 @@ impl Lexer {
     }
 
     pub fn next_token(&self) -> Result<Token> {
-        if let Some(sublexer) = &self.state.borrow().sublexer {
-            return sublexer(&self);
+        // Handle sublexers...
+        //  there is some goofiness with all this stuff
+        if let Some(sublexer) = self.sublexer.take() {
+            let (tok, next_lexer) = sublexer.next_token(&self)?;
+            self.sublexer.set(next_lexer);
+            self.read_char();
+            return Ok(tok);
         }
 
         use TokenKind::*;
@@ -996,6 +1048,33 @@ impl Lexer {
     }
 }
 
+/// NormalModeParser is used to parse normal mode commands.
+///
+/// It will just read the rest of the line after normal mode,
+/// consume all the text as one literal, and then continue on afterwards
+struct NormalModeParser {}
+
+impl SubLexer for NormalModeParser {
+    fn next_token(&self, lexer: &Lexer) -> Result<TokenAndLexer> {
+        if let Some(&ch) = lexer.ch() {
+            if ch == ' ' {
+                lexer.read_char();
+            }
+        }
+
+        match lexer.ch() {
+            Some(&ch) => match ch {
+                '!' => Ok((
+                    Token::owned(lexer.handle_bang()?.to_owned()),
+                    Some(Box::new(NormalModeParser {})),
+                )),
+                _ => Ok((Token::owned(lexer.read_line()?), None)),
+            },
+            None => unreachable!("don't think this should happen..."),
+        }
+    }
+}
+
 fn is_newline(ch: &char) -> bool {
     *ch == '\n' || *ch == '\0'
 }
@@ -1074,6 +1153,7 @@ mod test {
     snapshot!(test_lambda, "../testdata/snapshots/lambda.vim");
     snapshot!(test_types, "../testdata/snapshots/types.vim");
     snapshot!(test_methods, "../testdata/snapshots/methods.vim");
+    snapshot!(test_normal, "../testdata/snapshots/normal.vim");
 
     // snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
 

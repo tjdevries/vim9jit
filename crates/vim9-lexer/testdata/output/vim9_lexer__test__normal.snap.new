@@ -1,0 +1,23 @@
+---
+source: crates/vim9-lexer/src/lib.rs
+assertion_line: 1156
+expression: snapshot_lexing(contents)
+---
+vim9script
+^^^^^^^^^^ Token(Identifier, "vim9script", (0,0)->(0,10))
+           Token(EndOfLine, "\n", (0,10)->(0,10))
+
+ Token(EndOfLine, "\n", (1,0)->(1,0))
+normal! dd
+^^^^^^ Token(Identifier, "normal", (2,0)->(2,6))
+      ^ Token(Bang, "!", (2,6)->(2,7))
+        ^^ Token(Literal, "dd", (2,8)->(2,10))
+normal dd
+^^^^^^ Token(Identifier, "normal", (3,0)->(3,6))
+       ^^ Token(Literal, "dd", (3,7)->(3,9))
+:normal! v"_y
+^ Token(Colon, ":", (4,0)->(4,1))
+ ^^^^^^ Token(Identifier, "normal", (4,1)->(4,7))
+       ^ Token(Bang, "!", (4,7)->(4,8))
+         ^^^^ Token(Literal, "v\"_y", (4,9)->(4,13))
+

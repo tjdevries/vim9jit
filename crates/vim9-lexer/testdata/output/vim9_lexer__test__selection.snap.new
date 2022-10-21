@@ -1,0 +1,93 @@
+---
+source: crates/vim9-lexer/src/lib.rs
+assertion_line: 1122
+expression: snapshot_lexing(contents)
+---
+vim9script
+^^^^^^^^^^ Token(Identifier, "vim9script", (0,0)->(0,10))
+           Token(EndOfLine, "\n", (0,10)->(0,10))
+
+ Token(EndOfLine, "\n", (1,0)->(1,0))
+# Thanks to: https://github.com/yegappan/lsp for some test cases
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Token(Comment, "# Thanks to: https://github.com/yegappan/lsp for some test cases", (2,0)->(2,64))
+
+ Token(EndOfLine, "\n", (3,0)->(3,0))
+# Functions related to handling LSP range selection.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Token(Comment, "# Functions related to handling LSP range selection.", (4,0)->(4,52))
+
+ Token(EndOfLine, "\n", (5,0)->(5,0))
+import './util.vim'
+^^^^^^ Token(Identifier, "import", (6,0)->(6,6))
+        ^^^^^^^^^ Token(SingleQuoteString, "./util.vim", (6,8)->(6,17))
+                    Token(EndOfLine, "\n", (6,19)->(6,19))
+
+ Token(EndOfLine, "\n", (7,0)->(7,0))
+# Visually (character-wise) select the text in a range
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Token(Comment, "# Visually (character-wise) select the text in a range", (8,0)->(8,54))
+def SelectText(bnr: number, range: dict<dict<number>>)
+^^^ Token(Identifier, "def", (9,0)->(9,3))
+    ^^^^^^^^^^ Token(Identifier, "SelectText", (9,4)->(9,14))
+              ^ Token(LeftParen, "(", (9,14)->(9,15))
+               ^^^ Token(Identifier, "bnr", (9,15)->(9,18))
+                  ^^ Token(SpacedColon, ": ", (9,18)->(9,20))
+                    ^^^^^^ Token(Identifier, "number", (9,20)->(9,26))
+                          ^ Token(Comma, ",", (9,26)->(9,27))
+                            ^^^^^ Token(Identifier, "range", (9,28)->(9,33))
+                                 ^^ Token(SpacedColon, ": ", (9,33)->(9,35))
+                                   ^^^^ Token(Identifier, "dict", (9,35)->(9,39))
+                                       ^ Token(AngleLeft, "<", (9,39)->(9,40))
+                                        ^^^^ Token(Identifier, "dict", (9,40)->(9,44))
+                                            ^ Token(AngleLeft, "<", (9,44)->(9,45))
+                                             ^^^^^^ Token(Identifier, "number", (9,45)->(9,51))
+                                                   ^ Token(AngleRight, ">", (9,51)->(9,52))
+                                                    ^ Token(AngleRight, ">", (9,52)->(9,53))
+                                                     ^ Token(RightParen, ")", (9,53)->(9,54))
+                                                       Token(EndOfLine, "\n", (9,54)->(9,54))
+  var start_col: number = util.GetLineByteFromPos(bnr, range.start) + 1
+  ^^^ Token(Identifier, "var", (10,2)->(10,5))
+      ^^^^^^^^^ Token(Identifier, "start_col", (10,6)->(10,15))
+               ^^ Token(SpacedColon, ": ", (10,15)->(10,17))
+                 ^^^^^^ Token(Identifier, "number", (10,17)->(10,23))
+                        ^ Token(Equal, "=", (10,24)->(10,25))
+                          ^^^^ Token(Identifier, "util", (10,26)->(10,30))
+                              ^ Token(Dot, ".", (10,30)->(10,31))
+                               ^^^^^^^^^^^^^^^^^^ Token(Identifier, "GetLineByteFromPos", (10,31)->(10,49))
+                                                 ^ Token(LeftParen, "(", (10,49)->(10,50))
+                                                  ^^^ Token(Identifier, "bnr", (10,50)->(10,53))
+                                                     ^ Token(Comma, ",", (10,53)->(10,54))
+                                                       ^^^^^ Token(Identifier, "range", (10,55)->(10,60))
+                                                            ^ Token(Dot, ".", (10,60)->(10,61))
+                                                             ^^^^^ Token(Identifier, "start", (10,61)->(10,66))
+                                                                  ^ Token(RightParen, ")", (10,66)->(10,67))
+                                                                    ^ Token(Plus, "+", (10,68)->(10,69))
+                                                                      ^ Token(Integer, "1", (10,70)->(10,71))
+                                                                        Token(EndOfLine, "\n", (10,71)->(10,71))
+  var end_col: number = util.GetLineByteFromPos(bnr, range.end)
+  ^^^ Token(Identifier, "var", (11,2)->(11,5))
+      ^^^^^^^ Token(Identifier, "end_col", (11,6)->(11,13))
+             ^^ Token(SpacedColon, ": ", (11,13)->(11,15))
+               ^^^^^^ Token(Identifier, "number", (11,15)->(11,21))
+                      ^ Token(Equal, "=", (11,22)->(11,23))
+                        ^^^^ Token(Identifier, "util", (11,24)->(11,28))
+                            ^ Token(Dot, ".", (11,28)->(11,29))
+                             ^^^^^^^^^^^^^^^^^^ Token(Identifier, "GetLineByteFromPos", (11,29)->(11,47))
+                                               ^ Token(LeftParen, "(", (11,47)->(11,48))
+                                                ^^^ Token(Identifier, "bnr", (11,48)->(11,51))
+                                                   ^ Token(Comma, ",", (11,51)->(11,52))
+                                                     ^^^^^ Token(Identifier, "range", (11,53)->(11,58))
+                                                          ^ Token(Dot, ".", (11,58)->(11,59))
+                                                           ^^^ Token(Identifier, "end", (11,59)->(11,62))
+                                                              ^ Token(RightParen, ")", (11,62)->(11,63))
+                                                                Token(EndOfLine, "\n", (11,63)->(11,63))
+
+ Token(EndOfLine, "\n", (12,0)->(12,0))
+  :normal! v"_y
+  ^ Token(Colon, ":", (13,2)->(13,3))
+   ^^^^^^ Token(Identifier, "normal", (13,3)->(13,9))
+         ^ Token(Bang, "!", (13,9)->(13,10))
+           ^ Token(Identifier, "v", (13,11)->(13,12))
+                Token(Comment, "", (13,15)->(13,15))
+enddef
+^^^^^^ Token(Identifier, "enddef", (14,0)->(14,6))
+       Token(EndOfLine, "\n", (14,6)->(14,6))
+
