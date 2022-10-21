@@ -517,17 +517,26 @@ impl Lexer {
     }
 
     fn read_line(&self) -> Result<Token<'static>> {
+        // TODO: Could probably do this without static and just peek until we see
+        // a newline, then return that slice, but I wrote it this way the first time
+        // so I think it's OK
+        //
+        // Also, we're only using this right now for NormalModeParser, so we need
+        // to figure that out later
         let position = self.position();
 
         let mut line = String::new();
         loop {
             match self.ch() {
                 Some(&ch) => {
-                    if ch == '\n' {
-                        break;
+                    line += &ch.to_string();
+
+                    if let Some(&peek) = self.peek_char() {
+                        if peek == '\n' {
+                            break;
+                        }
                     }
 
-                    line += &ch.to_string();
                     self.read_char();
                 }
                 None => panic!("OH NO"),

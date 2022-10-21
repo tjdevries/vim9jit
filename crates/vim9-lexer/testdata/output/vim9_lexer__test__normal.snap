@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-lexer/src/lib.rs
-assertion_line: 1156
+assertion_line: 1159
 expression: snapshot_lexing(contents)
 ---
 vim9script
@@ -11,13 +11,16 @@ vim9script
 normal! dd
 ^^^^^^ Token(Identifier, "normal", (2,0)->(2,6))
       ^ Token(Bang, "!", (2,6)->(2,7))
-        ^^ Token(Literal, "dd", (2,8)->(2,10))
+        ^ Token(Literal, "dd", (2,8)->(2,9))
+           Token(EndOfLine, "\n", (2,10)->(2,10))
 normal dd
 ^^^^^^ Token(Identifier, "normal", (3,0)->(3,6))
-       ^^ Token(Literal, "dd", (3,7)->(3,9))
+       ^ Token(Literal, "dd", (3,7)->(3,8))
+          Token(EndOfLine, "\n", (3,9)->(3,9))
 :normal! v"_y
 ^ Token(Colon, ":", (4,0)->(4,1))
  ^^^^^^ Token(Identifier, "normal", (4,1)->(4,7))
        ^ Token(Bang, "!", (4,7)->(4,8))
-         ^^^^ Token(Literal, "v\"_y", (4,9)->(4,13))
+         ^^^ Token(Literal, "v\"_y", (4,9)->(4,12))
+              Token(EndOfLine, "\n", (4,13)->(4,13))
 

@@ -619,7 +619,7 @@ impl StatementCommand {
     }
 
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
-        let expr = Expression::parse(parser, Precedence::Lowest)?;
+        let expr = dbg!(Expression::parse(parser, Precedence::Lowest)?);
         if parser.front_kind() == TokenKind::Equal {
             return Ok(ExCommand::Statement(StatementCommand::Assign(
                 AssignStatement {
@@ -2432,13 +2432,11 @@ impl<'a> Parser<'a> {
                 } else if self.command_match("continue") {
                     ContinueCommand::parse(self)?
                 }
-                // CallCommand should be lower, because it has less strict requirements,
+                // The following commands must remain at the bottom end of the list
                 //
                 // This is true of a few of the other kind of "dynamic" style commands
                 // that are detected/guessed by what the rest of the line looks like.
-                else if CallCommand::matches(self) {
-                    CallCommand::parse(self)?
-                } else if StatementCommand::matches(self) {
+                else if StatementCommand::matches(self) {
                     // TODO: There are some kind of assignments that aren't legal if there is a
                     // colon. I'm not sure what to do about that... it seems a bit weird.
                     //
@@ -2448,7 +2446,10 @@ impl<'a> Parser<'a> {
                     //
                     // var sum = 1
                     // :sum = sum + 1
+                    println!("STATEMENT TIME");
                     StatementCommand::parse(self)?
+                } else if CallCommand::matches(self) {
+                    CallCommand::parse(self)?
                 } else if self.line_contains_kind(TokenKind::MethodArrow) {
                     EvalCommand::parse(self)?
                 } else {
@@ -2697,5 +2698,5 @@ mod test {
     }
 
     // TODO: Slowly but surely, we can work towards this
-    // snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
+    // snap!(test_matchparen, "../../shared/snapshots/matchparen.vim");
 }
