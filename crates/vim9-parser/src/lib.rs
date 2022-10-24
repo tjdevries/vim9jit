@@ -7,15 +7,15 @@ use std::{
     fmt::Debug,
 };
 
-use anyhow::Result;
+use anyhow::{Context, Result};
+use macros::parse_context;
 use once_cell::sync::OnceCell;
 use tracing_subscriber::util::SubscriberInitExt;
 use vim9_lexer::{Lexer, Span, Token, TokenKind};
-
 mod cmds;
 pub use cmds::{
     cmd_auto::{AugroupCommand, AutocmdBlock, AutocmdCommand},
-    cmd_if::IfCommand,
+    cmd_if::{ElseCommand, ElseIfCommand, IfCommand},
     cmd_try::TryCommand,
     cmd_user::UserCommand,
     BreakCommand, ContinueCommand, DeferCommand,
@@ -200,6 +200,7 @@ pub struct DefCommand {
     end_eol: TokenMeta,
 }
 
+#[parse_context]
 impl DefCommand {
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
         Ok(ExCommand::Def(DefCommand {
@@ -291,6 +292,7 @@ pub struct CallExpression {
     close: TokenMeta,
 }
 
+#[parse_context]
 impl CallExpression {
     pub fn name(&self) -> Option<&Identifier> {
         match self.expr.as_ref() {
@@ -307,9 +309,7 @@ impl CallExpression {
             expr: left,
             open: parser.ensure_token(TokenKind::LeftParen)?,
             args: parser.parse_expression_list(TokenKind::RightParen)?,
-            close: parser
-                .ensure_token(TokenKind::RightParen)
-                .expect("[CallExpression::parse]"),
+            close: parser.ensure_token(TokenKind::RightParen)?,
         })
     }
 }
@@ -673,6 +673,7 @@ pub struct Body {
     pub commands: Vec<ExCommand>,
 }
 
+#[parse_context]
 impl Body {
     pub fn parse_until_any(
         parser: &Parser,
@@ -971,6 +972,33 @@ pub struct MethodCall {
     pub left: Box<Expression>,
     tok: TokenMeta,
     pub right: Box<CallExpression>,
+}
+
+#[parse_context]
+impl MethodCall {
+    pub fn parse(parser: &Parser, left: Box<Expression>) -> Result<Expression> {
+        Ok(Expression::MethodCall(MethodCall {
+            left,
+            tok: {
+                parser.skip_whitespace();
+                parser.expect_token(TokenKind::MethodArrow)?.into()
+            },
+            right: {
+                // Parse up to the point it would be a call expr
+                let base = Expression::parse(parser, Precedence::Call)?.into();
+
+                parser.ensure_token(TokenKind::LeftParen)?;
+
+                // Create the call expr from the first base expression
+                let right = CallExpression::parse(parser, base)?.into();
+
+                // Closing on right paren, DO NOT advance
+                parser.ensure_token(TokenKind::RightParen)?;
+
+                right
+            },
+        }))
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -1682,7 +1710,7 @@ mod infix_expr {
     ) -> Result<Expression> {
         parser.skip_whitespace();
 
-        let prec = parser.current_precedence();
+        let prec = parser.current_precedence()?;
         let token = parser.pop();
         let operator = match token.kind {
             TokenKind::Plus => Operator::Plus,
@@ -1742,30 +1770,7 @@ mod infix_expr {
         parser: &Parser,
         left: Box<Expression>,
     ) -> Result<Expression> {
-        Ok(Expression::MethodCall(MethodCall {
-            left,
-            tok: {
-                parser.skip_whitespace();
-                parser.expect_token(TokenKind::MethodArrow)?.into()
-            },
-            right: {
-                // Parse up to the point it would be a call expr
-                let base = Expression::parse(parser, Precedence::Call)
-                    .expect("base")
-                    .into();
-
-                // Create the call expr from the first base expression
-                let right =
-                    CallExpression::parse(parser, base).expect("call").into();
-
-                // Closing on right paren, DO NOT advance
-                parser
-                    .ensure_token(TokenKind::RightParen)
-                    .expect("rightparen");
-
-                right
-            },
-        }))
+        MethodCall::parse(&parser, left)
     }
 
     pub fn parse_colon(
@@ -1928,8 +1933,8 @@ impl<'a> Parser<'a> {
         self.peek_non_whitespace().0.kind
     }
 
-    fn current_precedence(&self) -> Precedence {
-        self.get_precedence(&self.front_kind()).unwrap_or_default()
+    fn current_precedence(&self) -> Result<Precedence> {
+        Ok(self.get_precedence(&self.front_kind())?.unwrap_or_default())
     }
 
     fn line_matches<F>(&self, f: F) -> bool
@@ -2006,9 +2011,9 @@ impl<'a> Parser<'a> {
         (self.peek_n(peek_index), peek_index > 1)
     }
 
-    fn peek_precedence(&self) -> Precedence {
+    fn peek_precedence(&self) -> Result<Precedence> {
         let kind = self.peek_non_whitespace().0.kind;
-        self.get_precedence(&kind).unwrap_or_default()
+        Ok(self.get_precedence(&kind)?.unwrap_or_default())
     }
 
     fn get_prefix_fn(&self) -> Option<PrefixFn> {
@@ -2037,8 +2042,8 @@ impl<'a> Parser<'a> {
         }))
     }
 
-    fn get_precedence(&self, kind: &TokenKind) -> Option<Precedence> {
-        Some(match kind {
+    fn get_precedence(&self, kind: &TokenKind) -> Result<Option<Precedence>> {
+        Ok(Some(match kind {
             TokenKind::Plus | TokenKind::Minus => Precedence::Sum,
             TokenKind::Div | TokenKind::Mul => Precedence::Product,
             TokenKind::Or => Precedence::Or,
@@ -2077,9 +2082,13 @@ impl<'a> Parser<'a> {
             }
 
             _ => {
-                panic!("Unexpected precendence kind: {:?} // {:#?}", kind, self)
+                return Err(anyhow::anyhow!(
+                    "Unexpected precendence kind: {:?} // {:#?}",
+                    kind,
+                    self
+                ));
             }
-        })
+        }))
     }
 
     fn get_infix_fn(&self) -> Option<InfixFn> {
@@ -2150,7 +2159,7 @@ impl<'a> Parser<'a> {
             }
         };
 
-        while prec < self.peek_precedence() {
+        while prec < self.peek_precedence()? {
             let infix = match self.get_infix_fn() {
                 Some(infix) => infix,
                 None => return Ok(left),
@@ -2173,7 +2182,7 @@ impl<'a> Parser<'a> {
         {
             Ok(self.pop().into())
         } else {
-            Err(anyhow::anyhow!("expected eol or eof, got: {:?}", self))
+            Err(anyhow::anyhow!("expected eol or eof, got: {:#?}", self))
         }
     }
 
@@ -2436,7 +2445,9 @@ impl<'a> Parser<'a> {
                 //
                 // This is true of a few of the other kind of "dynamic" style commands
                 // that are detected/guessed by what the rest of the line looks like.
-                else if StatementCommand::matches(self) {
+                else if CallCommand::matches(self) {
+                    CallCommand::parse(self)?
+                } else if StatementCommand::matches(self) {
                     // TODO: There are some kind of assignments that aren't legal if there is a
                     // colon. I'm not sure what to do about that... it seems a bit weird.
                     //
@@ -2448,8 +2459,6 @@ impl<'a> Parser<'a> {
                     // :sum = sum + 1
                     println!("STATEMENT TIME");
                     StatementCommand::parse(self)?
-                } else if CallCommand::matches(self) {
-                    CallCommand::parse(self)?
                 } else if self.line_contains_kind(TokenKind::MethodArrow) {
                     EvalCommand::parse(self)?
                 } else {
@@ -2465,15 +2474,15 @@ impl<'a> Parser<'a> {
         let mut program = Program { commands: vec![] };
 
         while self.front_kind() != TokenKind::EndOfFile {
-            // let command = match self.parse_command() {
-            //     Ok(command) => command,
-            //     Err(err) => panic!(
-            //         "\nFailed to parse command.\nCurrent Commands:{:#?}.\nError: {}",
-            //         program, err
-            //     ),
-            // };
+            let command = match self.parse_command() {
+                Ok(command) => command,
+                Err(err) => panic!(
+                    "\nFailed to parse command.\nCurrent Commands:{:#?}.\nError: {}",
+                    program, err
+                ),
+            };
+            // let command = self.parse_command().unwrap();
 
-            let command = self.parse_command().unwrap();
             if command != ExCommand::Skip {
                 program.commands.push(command);
             }
@@ -2489,6 +2498,8 @@ impl<'a> Parser<'a> {
         F: Fn(&Self) -> Result<T>,
     {
         let mut results = vec![];
+
+        // Empty list, () or [], for example
         if self.peek_real_kind() == close {
             self.next_real_token();
             return Ok(results);
@@ -2526,7 +2537,12 @@ impl<'a> Parser<'a> {
             results.push(parse(self)?);
 
             self.skip_whitespace();
-            if self.front_kind() == close {
+
+            // Sometimes we can end here, but we need to make sure it doesn't happen
+            // that we close too early because we have two of the exact same kinds
+            // in a row... I'm actually not sure if this is the proper way to solve
+            // the problem, but it makes more things pass :)
+            if self.front_kind() == close && self.peek_real_kind() != close {
                 return Ok(results);
             } else if self.peek_kind() == close {
                 break;

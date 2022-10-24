@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2494
+assertion_line: 2667
 expression: snapshot_parsing(contents)
 ---
 [
@@ -24,5 +24,76 @@ expression: snapshot_parsing(contents)
             contents: "syn keyword contextConstants plusthree plusfour plusfive plussix plusseven contained",
             eol: Token(EndOfLine, (3,84)->(3,84)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (4,0)->(4,0)),
+    ),
+    Def(
+        DefCommand {
+            def: Token(Identifier, (5,0)->(5,3)),
+            name: Raw(Test_syn),
+            args: Signature {
+                open: Token(LeftParen, (5,12)->(5,13)),
+                params: [],
+                close: Token(RightParen, (5,13)->(5,14)),
+            },
+            ret: None,
+            def_eol: Token(EndOfLine, (5,14)->(5,14)),
+            body: Body {
+                commands: [
+                    SharedCommand(
+                        SharedCommand {
+                            contents: "  syn keyword Test testkeyword contained",
+                            eol: Token(EndOfLine, (6,40)->(6,40)),
+                        },
+                    ),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: Identifier(Raw(assert_equal)) arg: [
+                                    Number(
+                                        Number(2),
+                                    ),
+                                    MethodCall(
+                                        MethodCall {
+                                            left: MethodCall(
+                                                MethodCall {
+                                                    left: Call(
+                                                        f: Identifier(Raw(execute)) arg: [
+                                                            String(
+                                                                SingleQuote(
+                                                                    "syntax list Test",
+                                                                ),
+                                                            ),
+                                                        ],
+                                                    ),
+                                                    tok: Token(MethodArrow, (7,45)->(7,47)),
+                                                    right: f: Identifier(Raw(split)) arg: [
+                                                        String(
+                                                            DoubleQuote(
+                                                                "\\n",
+                                                            ),
+                                                        ),
+                                                    ],
+                                                },
+                                            ),
+                                            tok: Token(MethodArrow, (7,58)->(7,60)),
+                                            right: f: Identifier(Raw(len)) arg: [],
+                                        },
+                                    ),
+                                ],
+                            ),
+                            eol: Token(EndOfLine, (7,66)->(7,66)),
+                        },
+                    ),
+                ],
+            },
+            enddef: Token(Identifier, (8,0)->(8,6)),
+            end_eol: Token(EndOfLine, (8,6)->(8,6)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (9,0)->(9,0)),
     ),
 ]

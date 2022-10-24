@@ -6,3 +6,4 @@ def Test_syn()
         ->split("\n")
         ->len())
 enddef
+

@@ -1,12 +1,13 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1251
+assertion_line: 1364
 expression: "generate(contents, false)"
 ---
 local NVIM9 = require("vim9script")
 local __VIM9_MODULE = {}
 local Qf_filter = nil
 -- vim9script
+
 -- # cfilter.vim: Plugin to filter entries from a quickfix/location list
 -- # Last Change: Jun 30, 2022
 -- # Maintainer: Yegappan Lakshmanan (yegappan AT yahoo DOT com)

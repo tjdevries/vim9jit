@@ -7,14 +7,15 @@ use parser::{
     self, new_parser, ArrayLiteral, AssignStatement, AugroupCommand,
     AutocmdCommand, Body, BreakCommand, CallCommand, CallExpression,
     ContinueCommand, DeclCommand, DefCommand, DeferCommand, DictAccess,
-    DictLiteral, EchoCommand, ExecuteCommand, ElseCommand, ElseIfCommand, ExCommand,
-    Expandable, ExportCommand, Expression, ForCommand, GroupedExpression,
-    Heredoc, Identifier, IfCommand, ImportCommand, IndexExpression, IndexType,
-    InfixExpression, InnerType, Lambda, Literal, MethodCall, MutationStatement,
-    PrefixExpression, RawIdentifier, Register, ReturnCommand, ScopedIdentifier,
-    SharedCommand, Signature, StatementCommand, Ternary, TryCommand, Type,
-    UnpackIdentifier, UserCommand, VarCommand, Vim9ScriptCommand, VimBoolean,
-    VimKey, VimNumber, VimOption, VimScope, VimString, WhileCommand,
+    DictLiteral, EchoCommand, ElseCommand, ElseIfCommand, ExCommand,
+    ExecuteCommand, Expandable, ExportCommand, Expression, ForCommand,
+    GroupedExpression, Heredoc, Identifier, IfCommand, ImportCommand,
+    IndexExpression, IndexType, InfixExpression, InnerType, Lambda, Literal,
+    MethodCall, MutationStatement, PrefixExpression, RawIdentifier, Register,
+    ReturnCommand, ScopedIdentifier, SharedCommand, Signature,
+    StatementCommand, Ternary, TryCommand, Type, UnpackIdentifier, UserCommand,
+    VarCommand, Vim9ScriptCommand, VimBoolean, VimKey, VimNumber, VimOption,
+    VimScope, VimString, WhileCommand,
 };
 
 // this word is missspelled
@@ -1275,7 +1276,7 @@ pub fn eval(program: parser::Program, is_test: bool) -> String {
 
 pub fn generate(contents: &str, is_test: bool) -> String {
     let lexer = Lexer::new(contents);
-    let mut parser = new_parser(lexer);
+    let parser = new_parser(&lexer);
     let program = parser.parse_program();
 
     let result = eval(program, is_test);
