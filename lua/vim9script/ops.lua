@@ -46,6 +46,10 @@ ops["RegexpMatches"] = function(left, right)
   return not not vim.regex(right):match_str(left)
 end
 
+ops["RegexpMatchesIns"] = function(left, right)
+  return not not vim.regex("\\c" .. right):match_str(left)
+end
+
 ops["NotRegexpMatches"] = function(left, right)
   return not ops["RegexpMatches"](left, right)
 end

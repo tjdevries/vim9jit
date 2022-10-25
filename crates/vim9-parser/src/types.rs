@@ -39,11 +39,18 @@ pub enum InnerFuncType {
 }
 
 impl Type {
-    pub fn parse(parser: &Parser) -> Result<Type> {
+    pub fn parse_in_expression(parser: &Parser) -> Result<Type> {
         Ok(Type {
             colon: parser.expect_token(TokenKind::SpacedColon)?.into(),
-            inner: InnerType::parse(parser)?,
+            inner: InnerType::parse(parser, false)?,
         })
+    }
+
+    pub fn parse(parser: &Parser) -> Result<Type> {
+        let res = Self::parse_in_expression(parser)?;
+        parser.next_token();
+
+        Ok(res)
     }
 }
 
@@ -56,10 +63,15 @@ impl InnerType {
         matches!(k, TokenKind::GreaterThan | TokenKind::AngleRight)
     }
 
-    pub fn parse(parser: &Parser) -> Result<InnerType> {
+    fn parse(parser: &Parser, consume: bool) -> Result<InnerType> {
         match parser.front_kind() {
             TokenKind::Identifier => {
-                let literal: Literal = parser.pop().try_into()?;
+                let literal: Literal = match consume {
+                    true => parser.pop(),
+                    false => parser.front_owned(),
+                }
+                .try_into()?;
+
                 Ok(match literal.token.text.as_str() {
                     "any" => InnerType::Any,
                     "bool" => InnerType::Bool,
@@ -67,16 +79,32 @@ impl InnerType {
                     "void" => InnerType::Void,
                     "string" => InnerType::String,
                     "float" => InnerType::Float,
-                    "list" => InnerType::List {
-                        open: parser.expect_fn(Self::open, true)?.into(),
-                        inner: InnerType::parse(parser)?.into(),
-                        close: parser.expect_fn(Self::close, true)?.into(),
-                    },
-                    "dict" => InnerType::Dict {
-                        open: parser.expect_fn(Self::open, true)?.into(),
-                        inner: InnerType::parse(parser)?.into(),
-                        close: parser.expect_fn(Self::close, true)?.into(),
-                    },
+                    "list" => {
+                        if !consume {
+                            parser.pop();
+                        }
+
+                        InnerType::List {
+                            open: parser.expect_fn(Self::open, true)?.into(),
+                            inner: InnerType::parse(parser, true)?.into(),
+                            close: parser
+                                .expect_fn(Self::close, consume)?
+                                .into(),
+                        }
+                    }
+                    "dict" => {
+                        if !consume {
+                            parser.pop();
+                        }
+
+                        InnerType::Dict {
+                            open: parser.expect_fn(Self::open, true)?.into(),
+                            inner: InnerType::parse(parser, true)?.into(),
+                            close: parser
+                                .expect_fn(Self::close, consume)?
+                                .into(),
+                        }
+                    }
                     "func" => InnerType::Func(InnerFuncType::Naked),
                     "job" => InnerType::Job,
                     "channel" => InnerType::Channel,

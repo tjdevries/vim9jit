@@ -163,6 +163,7 @@ impl Generate for ExCommand {
             ExCommand::Break(b) => b.gen(state),
             ExCommand::Continue(c) => c.gen(state),
             ExCommand::Defer(defer) => defer.gen(state),
+            ExCommand::Execute(exec) => exec.gen(state),
             _ => todo!("Have not yet handled: {:?}", self),
         }
     }
@@ -358,7 +359,8 @@ impl Generate for ExportCommand {
 
 impl Generate for SharedCommand {
     fn gen(&self, _: &mut State) -> String {
-        format!("vim.cmd [[ {} ]]", self.contents.trim())
+        // Temp
+        format!("pcall(vim.cmd, [[ {} ]])", self.contents.trim())
     }
 }
 
@@ -379,6 +381,15 @@ impl Generate for UserCommand {
         state.command_depth += 1;
 
         let complete = to_str_or_nil(&self.command_complete);
+        let nargs = match &self.command_nargs {
+            Some(nargs) => match nargs.as_str() {
+                "0" => "0".to_string(),
+                "1" => "1".to_string(),
+                _ => format!("'{}'", nargs),
+            },
+            None => "nil".to_string(),
+        };
+
         let result = format!(
             r#"
             vim.api.nvim_create_user_command(
@@ -387,15 +398,14 @@ impl Generate for UserCommand {
                     {}
                 end,
                 {{
-                     nargs = '{}',
                      bang = {},
+                     nargs = {nargs},
                      complete = {complete},
                 }}
             )"#,
             self.name,
             make_user_command_arg(state),
             self.command.gen(state),
-            self.command_nargs.clone().unwrap_or("0".to_string()),
             self.command_bang,
         );
 
@@ -658,7 +668,7 @@ impl Generate for AssignStatement {
         let left = match &self.left {
             Expression::Index(idx) => {
                 format!(
-                    "{}[{} + 1]",
+                    "{}[NVIM9.index_expr({})]",
                     idx.container.gen(state),
                     match idx.index.as_ref() {
                         IndexType::Item(item) => item.gen(state),
@@ -795,6 +805,10 @@ impl Generate for VarCommand {
                 inner: InnerType::Bool,
                 ..
             }) => format!("NVIM9.convert.decl_bool({})", self.expr.gen(state)),
+            Some(Type {
+                inner: InnerType::Dict { .. },
+                ..
+            }) => format!("NVIM9.convert.decl_dict({})", self.expr.gen(state)),
             _ => self.expr.gen(state),
         };
 
@@ -839,7 +853,13 @@ impl Generate for ScopedIdentifier {
 
 impl Generate for RawIdentifier {
     fn gen(&self, _: &mut State) -> String {
-        self.name.clone()
+        // There are a variety of keywords we have to make sure
+        // that we don't use when creating identifiers
+        match self.name.as_str() {
+            "end" => "__end__",
+            _ => &self.name,
+        }
+        .to_string()
     }
 }
 
@@ -1059,7 +1079,9 @@ impl Generate for Literal {
 impl Generate for VimKey {
     fn gen(&self, state: &mut State) -> String {
         match self {
-            VimKey::Literal(literal) => literal.token.text.to_string(),
+            // TODO: For literals, we could simplify this to do
+            // direct key access if it doesn't contain any illegal characters
+            VimKey::Literal(literal) => format!("['{}']", literal.token.text),
             VimKey::Expression(expr) => format!("[{}]", expr.gen(state)),
         }
     }
@@ -1123,10 +1145,10 @@ impl Generate for VimString {
                 format!("\"{}\"", s)
             }
             VimString::Interpolated(interp) => {
-                format!("string.format('{}')", interp)
+                format!("string.format([=[{}]=])", interp)
             }
             VimString::InterpolatedLit(interp) => {
-                format!("string.format('{}')", interp)
+                format!("string.format([=[{}']=])", interp)
             }
             VimString::EnvironmentVariable(env) => {
                 format!("vim.env['{}']", env)
@@ -1274,13 +1296,16 @@ pub fn eval(program: parser::Program, is_test: bool) -> String {
     output
 }
 
-pub fn generate(contents: &str, is_test: bool) -> String {
+pub fn generate(
+    contents: &str,
+    is_test: bool,
+) -> Result<String, (String, String)> {
     let lexer = Lexer::new(contents);
     let parser = new_parser(&lexer);
     let program = parser.parse_program();
 
     let result = eval(program, is_test);
-    println!("{}", result);
+    // println!("{}", result);
 
     let config = stylua_lib::Config::new()
         .with_indent_type(stylua_lib::IndentType::Spaces)
@@ -1293,8 +1318,8 @@ pub fn generate(contents: &str, is_test: bool) -> String {
         None,
         stylua_lib::OutputVerification::None,
     ) {
-        Ok(res) => res,
-        Err(err) => format!("{}\n\n{}", result, err),
+        Ok(res) => Ok(res),
+        Err(err) => Err((result, err.to_string())),
     }
 }
 
@@ -1315,7 +1340,7 @@ mod test {
                 let mut settings = insta::Settings::clone_current();
                 settings.set_snapshot_path("../testdata/output/");
                 settings.bind(|| {
-                    insta::assert_snapshot!(generate(contents, false));
+                    insta::assert_snapshot!(generate(contents, false).unwrap());
                 });
             }
         };
@@ -1326,7 +1351,7 @@ mod test {
             #[test]
             fn $name() {
                 let vim_contents = include_str!($path);
-                let lua_contents = generate(vim_contents, true);
+                let lua_contents = generate(vim_contents, true).unwrap();
 
                 let filepath = concat!(
                     env!("CARGO_MANIFEST_DIR"),
@@ -1377,7 +1402,7 @@ mod test {
             export var x = MyCoolFunc() + 1
         "#;
 
-        let generated = generate(contents, false);
+        let generated = generate(contents, false).unwrap();
         let eval = exec_lua(&generated).unwrap();
         assert_eq!(eval["x"], 6.into());
     }
@@ -1390,7 +1415,7 @@ mod test {
             export var x = len("hello")
         "#;
 
-        let generated = generate(contents, false);
+        let generated = generate(contents, false).unwrap();
         let eval = exec_lua(&generated).unwrap();
         assert_eq!(eval["x"], 5.into());
     }
@@ -1412,7 +1437,7 @@ mod test {
             export var x = len(nvim_get_autocmds({group: "matchparen"}))
         "#;
 
-        let generated = generate(contents, false);
+        let generated = generate(contents, false).unwrap();
         let eval = exec_lua(&generated).unwrap();
         assert_eq!(eval["x"], 4.into());
     }

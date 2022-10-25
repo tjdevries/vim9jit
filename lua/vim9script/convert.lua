@@ -16,6 +16,22 @@ convert.decl_bool = function(val)
   error("invalid bool declaration: %s", vim.inspect(val))
 end
 
+convert.decl_dict = function(val)
+  if type(val) == "nil" then
+    return vim.empty_dict()
+  elseif type(val) == "table" then
+    if vim.tbl_isempty(val) then
+      return vim.empty_dict()
+    elseif vim.tbl_islist(val) then
+      error(string.format("Cannot pass list to dictionary? %s", vim.inspect(val)))
+    else
+      return val
+    end
+  end
+
+  error(string.format("invalid dict declaration: %s", vim.inspect(val)))
+end
+
 convert.to_vim_bool = function(val)
   if type(val) == "boolean" then
     return val

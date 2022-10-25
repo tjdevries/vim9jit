@@ -10,6 +10,24 @@ fn.insert = function(list, item, idx)
   return list
 end
 
+fn.extend = function(left, right, expr3)
+  if expr3 ~= nil then
+    error "haven't written this code yet"
+  end
+
+  if vim.tbl_islist(right) then
+    vim.list_extend(left, right)
+    return left
+  else
+    -- local result = vim.tbl_extend(left, right)
+    for k, v in pairs(right) do
+      left[k] = v
+    end
+
+    return left
+  end
+end
+
 fn.add = function(list, item)
   table.insert(list, item)
   return list
@@ -169,6 +187,15 @@ end
 
 fn.popup_setoptions = function(id, options)
   print("setting options...", id)
+end
+
+fn.job_start = function(...)
+  return vim.fn["vim9#job#start"](...)
+end
+
+fn.job_status = function()
+  -- LOL
+  return "run"
 end
 
 fn = setmetatable(fn, {

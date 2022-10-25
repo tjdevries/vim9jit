@@ -73,6 +73,16 @@ M.index = function(obj, idx)
   error("invalid type for indexing: " .. vim.inspect(obj))
 end
 
+M.index_expr = function(idx)
+  if type(idx) == "string" then
+    return idx
+  elseif type(idx) == "number" then
+    return idx + 1
+  else
+    error(string.format("not yet handled: %s", vim.inspect(idx)))
+  end
+end
+
 M.slice = function(obj, start, finish)
   if start == nil then
     start = 0

@@ -10,7 +10,10 @@ var x = [5, 4, 2, 1, 7, 12, 8]->sort()
      ->map((_, y) => y + 1)
      ->sort()
 
+# should be (-1.234)->string()
 var expr_prec = -1.234->string()
+# should be !(1.234->string())
+var expr_prec = !1.234->string()
 
 var foo = base->name(args)
 var foo = base->some.name(args)
@@ -24,4 +27,7 @@ var foo = [slnum, scol]->cursor()
 
 # Testing
 [slnum, scol]->cursor()
+
+# You can just call stuff on numbers...
+3->setwinvar(id, '&conceallevel')
 

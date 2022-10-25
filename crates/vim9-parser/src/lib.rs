@@ -20,14 +20,6 @@ pub use cmds::{
     cmd_user::UserCommand,
     BreakCommand, ContinueCommand, DeferCommand,
 };
-// pub use cmds::{
-//     cmd_auto::{AugroupCommand, AutocmdBlock, AutocmdCommand},
-//     cmd_if::{ElseCommand, ElseIfCommand, IfCommand},
-//     cmd_try::TryCommand,
-//     BreakCommand, CallCommand, ContinueCommand, DeclCommand, DefCommand,
-//     DeferCommand, EchoCommand, EvalCommand, ExportCommand, FinishCommand,
-//     ImportCommand, ReturnCommand, SharedCommand, VarCommand, Vim9ScriptCommand,
-// };
 
 mod types;
 pub use types::{InnerType, Type};
@@ -259,6 +251,7 @@ pub struct ExecuteCommand {
     eol: TokenMeta,
 }
 
+#[parse_context]
 impl ExecuteCommand {
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
         Ok(ExCommand::Execute(ExecuteCommand {
@@ -619,7 +612,7 @@ impl StatementCommand {
     }
 
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
-        let expr = dbg!(Expression::parse(parser, Precedence::Lowest)?);
+        let expr = Expression::parse(parser, Precedence::Lowest)?;
         if parser.front_kind() == TokenKind::Equal {
             return Ok(ExCommand::Statement(StatementCommand::Assign(
                 AssignStatement {
@@ -704,23 +697,12 @@ pub struct Signature {
     close: TokenMeta,
 }
 
+#[parse_context]
 impl Signature {
     fn parse(parser: &Parser) -> Result<Signature> {
         Ok(Self {
-            open: parser.expect_token(TokenKind::LeftParen)?.into(),
-            params: {
-                let mut params = Vec::new();
-                while parser.front_kind() != TokenKind::RightParen {
-                    params.push(Parameter::parse(parser)?);
-                    parser.skip_whitespace();
-                    if parser.front_kind() == TokenKind::Comma {
-                        parser.next_token();
-                        parser.skip_whitespace();
-                    }
-                }
-
-                params
-            },
+            open: parser.ensure_token(TokenKind::LeftParen)?.into(),
+            params: parser.parse_paramter_list()?,
             close: parser.expect_token(TokenKind::RightParen)?.into(),
         })
     }
@@ -740,24 +722,30 @@ pub struct Parameter {
     pub default_val: Option<Expression>,
 }
 
+#[parse_context]
 impl Parameter {
     fn parse(parser: &Parser) -> Result<Parameter> {
-        let name = Identifier::parse(parser)?;
+        let name = dbg!(Identifier::parse_in_expression(parser)?);
 
-        let ty = if parser.front_kind() == TokenKind::SpacedColon {
-            Some(Type::parse(parser)?)
+        let ty = if parser.peek_real_kind() == TokenKind::SpacedColon {
+            parser.next_real_token();
+            Some(dbg!(Type::parse_in_expression(parser)?))
         } else {
             None
         };
 
-        let (equal, default_val) = if parser.front_kind() == TokenKind::Equal {
-            (
-                Some(parser.expect_token(TokenKind::Equal)?.into()),
-                Some(Expression::parse(parser, Precedence::Lowest)?),
-            )
-        } else {
-            (None, None)
-        };
+        dbg!(parser);
+
+        let (equal, default_val) =
+            if parser.peek_real_kind() == TokenKind::Equal {
+                parser.next_real_token();
+                (
+                    Some(parser.expect_token(TokenKind::Equal)?.into()),
+                    Some(parser.parse_expression(Precedence::Lowest)?),
+                )
+            } else {
+                (None, None)
+            };
 
         Ok(Parameter {
             name,
@@ -1034,7 +1022,7 @@ impl Lambda {
                     None
                 }
             },
-            arrow: parser.expect_token(TokenKind::Arrow)?.into(),
+            arrow: dbg!(parser).expect_token(TokenKind::Arrow)?.into(),
             body: {
                 if parser.front_kind() == TokenKind::LeftBrace {
                     todo!("parse blocks correctly");
@@ -1319,8 +1307,19 @@ pub enum Precedence {
     Sum,
     Product,
     Modulo,
-    MethodCall,
     Prefix,
+    MethodCall,
+
+    /// PrefixExpr7 has a separate precendence:
+    ///
+    /// When using -> the |expr7| operators will be applied first, thus:  
+    ///  -1.234->string()
+    /// Is equivalent to:  
+    ///  (-1.234)->string()
+    /// And NOT:  
+    ///  -(1.234->string())
+    PrefixExpr7,
+
     Call,
     Index,
     Dot,
@@ -1355,6 +1354,7 @@ pub struct VarCommand {
     eol: TokenMeta,
 }
 
+#[parse_context]
 impl VarCommand {
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
         let var = parser.expect_token(TokenKind::Identifier)?;
@@ -1607,18 +1607,18 @@ mod prefix_expr {
 
     pub fn parse_prefix_operator(parser: &Parser) -> Result<Expression> {
         let token = parser.pop();
-        let operator = match &token.kind {
-            TokenKind::Plus => Operator::Plus,
-            TokenKind::Minus => Operator::Minus,
-            TokenKind::Bang => Operator::Bang,
-            TokenKind::Percent => Operator::Modulo,
+        let (operator, prec) = match &token.kind {
+            TokenKind::Plus => (Operator::Plus, Precedence::Prefix),
+            TokenKind::Minus => (Operator::Minus, Precedence::Prefix),
+            TokenKind::Percent => (Operator::Modulo, Precedence::Prefix),
+            TokenKind::Bang => (Operator::Bang, Precedence::PrefixExpr7),
             _ => unreachable!("Not a valid prefix operator: {:?}", token),
         };
 
         Ok(Expression::Prefix(PrefixExpression {
             token: token.into(),
             operator,
-            right: parser.parse_expression(Precedence::Prefix)?.into(),
+            right: parser.parse_expression(prec)?.into(),
         }))
     }
 
@@ -1838,14 +1838,14 @@ mod infix_expr {
         )
     }
 
-    pub fn parser_call_expr(
+    pub fn parse_call_expr(
         parser: &Parser,
         left: Box<Expression>,
     ) -> Result<Expression> {
         Ok(Expression::Call(CallExpression::parse(parser, left)?))
     }
 
-    pub fn parser_index_expr(
+    pub fn parse_index_expr(
         parser: &Parser,
         left: Box<Expression>,
     ) -> Result<Expression> {
@@ -2064,7 +2064,10 @@ impl<'a> Parser<'a> {
 
             // We have to check new lines to see if we need to handle anything there.
             //  I'm not sure this is 100% great, but we'll leave it this way for now.
-            TokenKind::Identifier | TokenKind::Comment => Precedence::Lowest,
+            TokenKind::Identifier
+            | TokenKind::Integer
+            | TokenKind::Float
+            | TokenKind::Comment => Precedence::Lowest,
 
             // TODO: Not confident that this is the right level
             TokenKind::AngleLeft => Precedence::Lowest,
@@ -2103,8 +2106,8 @@ impl<'a> Parser<'a> {
             | TokenKind::StringConcat => infix_expr::parse_infix_operator,
             // Logical comparisons
             TokenKind::Or | TokenKind::And => infix_expr::parse_infix_operator,
-            TokenKind::LeftParen => infix_expr::parser_call_expr,
-            TokenKind::LeftBracket => infix_expr::parser_index_expr,
+            TokenKind::LeftParen => infix_expr::parse_call_expr,
+            TokenKind::LeftBracket => infix_expr::parse_index_expr,
             TokenKind::Colon => {
                 if skipped {
                     return None;
@@ -2457,7 +2460,6 @@ impl<'a> Parser<'a> {
                     //
                     // var sum = 1
                     // :sum = sum + 1
-                    println!("STATEMENT TIME");
                     StatementCommand::parse(self)?
                 } else if self.line_contains_kind(TokenKind::MethodArrow) {
                     EvalCommand::parse(self)?
@@ -2466,6 +2468,16 @@ impl<'a> Parser<'a> {
                 }
             }
             TokenKind::LeftBracket => EvalCommand::parse(self)?,
+
+            // Method calls can start with a number/float (and probably others)
+            // It looks something like:
+            //
+            // 3->setwinvar(id, '&conceallevel')
+            TokenKind::Integer | TokenKind::Float
+                if self.line_contains_kind(TokenKind::MethodArrow) =>
+            {
+                EvalCommand::parse(self)?
+            }
             _ => ExCommand::NoOp(self.pop().into()),
         })
     }
@@ -2474,14 +2486,14 @@ impl<'a> Parser<'a> {
         let mut program = Program { commands: vec![] };
 
         while self.front_kind() != TokenKind::EndOfFile {
-            let command = match self.parse_command() {
-                Ok(command) => command,
-                Err(err) => panic!(
-                    "\nFailed to parse command.\nCurrent Commands:{:#?}.\nError: {}",
-                    program, err
-                ),
-            };
-            // let command = self.parse_command().unwrap();
+            // let command = match self.parse_command() {
+            //     Ok(command) => command,
+            //     Err(err) => panic!(
+            //         "\nFailed to parse command.\nCurrent Commands:{:#?}.\nError: {}",
+            //         program, err
+            //     ),
+            // };
+            let command = self.parse_command().unwrap();
 
             if command != ExCommand::Skip {
                 program.commands.push(command);
@@ -2536,15 +2548,10 @@ impl<'a> Parser<'a> {
             // Next T
             results.push(parse(self)?);
 
+            // If the next token is close, then it's time to be done.
+            // We've consume everything that we need.
             self.skip_whitespace();
-
-            // Sometimes we can end here, but we need to make sure it doesn't happen
-            // that we close too early because we have two of the exact same kinds
-            // in a row... I'm actually not sure if this is the proper way to solve
-            // the problem, but it makes more things pass :)
-            if self.front_kind() == close && self.peek_real_kind() != close {
-                return Ok(results);
-            } else if self.peek_kind() == close {
+            if self.peek_kind() == close {
                 break;
             }
 
@@ -2571,6 +2578,24 @@ impl<'a> Parser<'a> {
 
     fn parse_keyvalue_list(&self, k: TokenKind) -> Result<Vec<KeyValue>> {
         self.list_parser(k, |p| KeyValue::parse(p))
+    }
+
+    fn parse_paramter_list(&self) -> Result<Vec<Parameter>> {
+        self.list_parser(TokenKind::RightParen, |p| {
+            dbg!(Parameter::parse(self))
+        })
+
+        // let mut params = Vec::new();
+        // while self.front_kind() != TokenKind::RightParen {
+        //     params.push(Parameter::parse(self)?);
+        //     self.skip_whitespace();
+        //     if self.front_kind() == TokenKind::Comma {
+        //         self.next_token();
+        //         self.skip_whitespace();
+        //     }
+        // }
+        //
+        // Ok(params)
     }
 
     #[tracing::instrument]

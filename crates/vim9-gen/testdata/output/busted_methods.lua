@@ -6,6 +6,7 @@ describe("filename", function()
   local Test_inplace = nil
   local Test_inplace_inplace_multi = nil
   local Test_inplace_inplace_single = nil
+  local Test_method_precedence = nil
   -- vim9script
 
   it("Test_string_methods", function()
@@ -91,6 +92,18 @@ describe("filename", function()
     )
 
     NVIM9.fn["assert_equal"]({ 2, 4 }, foo)
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_method_precedence", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
+    local server = { ["filetype"] = true }
+    NVIM9.fn["assert_equal"](false, NVIM9.prefix["Bang"](NVIM9.fn["has_key"](server, "filetype")))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

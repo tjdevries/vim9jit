@@ -13,3 +13,6 @@ var zed = symbolTable[mid].name->len()
 prop_add(symbolTable[mid].outlineLine, col,
           {bufnr: bnr, type: 'LspOutlineHighlight',
           length: symbolTable[mid].name->len()})
+
+
+dirName = input("Add Workspace Folder: ", getcwd(), 'dir')

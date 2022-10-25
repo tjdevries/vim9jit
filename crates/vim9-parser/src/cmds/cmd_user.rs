@@ -50,7 +50,13 @@ impl UserCommand {
                 }
                 "complete" => {
                     parser.expect_token(TokenKind::Equal)?;
-                    command_complete = Some(parser.pop().text.to_string());
+                    let mut complete = parser.pop().text.to_string();
+                    if parser.front_kind() == TokenKind::Comma {
+                        complete += &parser.pop().text.to_string();
+                        complete += &parser.pop().text.to_string();
+                    }
+
+                    command_complete = Some(complete);
                 }
                 "range" => {
                     parser.expect_token(TokenKind::Equal)?;

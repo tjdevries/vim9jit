@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{ffi::OsStr, path::Path};
 
 use anyhow::Result;
 use clap::Parser;
@@ -8,13 +8,20 @@ use clap::Parser;
 struct Args {
     /// The directory for generating paths
     #[arg(short, long)]
-    dir: String,
+    dir: Option<String>,
+
+    #[arg(long)]
+    file: Option<String>,
 }
 
-fn gen_directory(src: &Path, gen: &Path, subdir: &str) -> Result<()> {
+fn gen_directory(src: &Path, gen: &Path, subdir: &OsStr) -> Result<()> {
     // base: /path/src/
     // subdir: autoload,
     // subdir: plugin
+
+    dbg!(src);
+    dbg!(gen);
+    dbg!(subdir);
 
     let src_subdir = src.join(subdir);
     anyhow::ensure!(src_subdir.is_dir());
@@ -26,8 +33,11 @@ fn gen_directory(src: &Path, gen: &Path, subdir: &str) -> Result<()> {
 
     for f in src_subdir.read_dir()? {
         let f = f?;
+
+        // Recursively traverse directories until complete
         if f.file_type()?.is_dir() {
-            gen_directory(src, gen, f.path().to_str().unwrap())?
+            gen_directory(&src_subdir, &gen_subdir, &f.file_name())?;
+            continue;
         }
 
         match f.path().extension() {
@@ -48,10 +58,14 @@ fn gen_directory(src: &Path, gen: &Path, subdir: &str) -> Result<()> {
         println!("plugin: {:?}", f);
         println!("  filename: {:?}", generated_file);
 
-        let generated = gen::generate(&contents, false);
+        let generated = match gen::generate(&contents, false) {
+            Ok(generated) => generated,
+            Err(err) => {
+                println!("  FAILED: {}", err.1);
+                err.0
+            }
+        };
         std::fs::write(generated_file, generated)?;
-
-        // TODO: Go DEEPER
     }
 
     Ok(())
@@ -60,18 +74,33 @@ fn gen_directory(src: &Path, gen: &Path, subdir: &str) -> Result<()> {
 fn main() -> Result<()> {
     parser::setup_trace();
     let args = Args::parse();
-    println!("dir: {}", args.dir);
 
-    let dir_base = Path::new(&args.dir);
-    let dir_src = dir_base.join("src");
+    if let Some(dir) = args.dir {
+        println!("dir: {}", dir);
 
-    let dir_gen = dir_base.join("gen");
-    if !dir_gen.is_dir() {
-        std::fs::create_dir(dir_gen.clone())?;
+        let dir_base = Path::new(&dir);
+        let dir_src = dir_base.join("src");
+
+        let dir_gen = dir_base.join("gen");
+        if !dir_gen.is_dir() {
+            std::fs::create_dir(dir_gen.clone())?;
+        }
+
+        gen_directory(&dir_src, &dir_gen, OsStr::new("plugin"))?;
+        gen_directory(&dir_src, &dir_gen, OsStr::new("autoload"))?;
+        return Ok(());
+    } else if let Some(file) = args.file {
+        let path = Path::new(&file);
+        if !path.is_file() {
+            return Err(anyhow::anyhow!("not a valid file"));
+        }
+
+        let contents = std::fs::read_to_string(path)?;
+        let generated = gen::generate(&contents, false).expect("generation");
+
+        let generated_file = Path::with_extension(path, "lua");
+        std::fs::write(generated_file, generated)?;
     }
 
-    gen_directory(&dir_src, &dir_gen, "plugin")?;
-    gen_directory(&dir_src, &dir_gen, "autoload")?;
-
-    Ok(())
+    Err(anyhow::anyhow!("Need to pass either --dir or --file"))
 }

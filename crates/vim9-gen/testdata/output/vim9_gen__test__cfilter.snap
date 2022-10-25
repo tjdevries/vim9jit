@@ -1,7 +1,7 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1364
-expression: "generate(contents, false)"
+assertion_line: 1388
+expression: "generate(contents, false).unwrap()"
 ---
 local NVIM9 = require("vim9script")
 local __VIM9_MODULE = {}
@@ -110,22 +110,22 @@ Qf_filter = function(qf, searchpat, bang)
 
   items = NVIM9.fn_mut("filter", { Xgetlist(), Cond }, { replace = 0 })
   title = NVIM9.ops["StringConcat"](NVIM9.ops["StringConcat"](NVIM9.ops["StringConcat"](cmd, " /"), pat), "/")
-  Xsetlist({}, " ", { title = title, items = items })
+  Xsetlist({}, " ", { ["title"] = title, ["items"] = items })
 end
 
 vim.api.nvim_create_user_command("Cfilter", function(__vim9_arg_1)
   Qf_filter(true, __vim9_arg_1.args, (__vim9_arg_1.bang and "!" or ""))
 end, {
-  nargs = "+",
   bang = true,
+  nargs = "+",
   complete = nil,
 })
 
 vim.api.nvim_create_user_command("Lfilter", function(__vim9_arg_1)
   Qf_filter(false, __vim9_arg_1.args, (__vim9_arg_1.bang and "!" or ""))
 end, {
-  nargs = "+",
   bang = true,
+  nargs = "+",
   complete = nil,
 })
 

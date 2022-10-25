@@ -41,3 +41,8 @@ def Test_inplace_inplace_single()
 
   assert_equal([2, 4], foo)
 enddef
+
+def Test_method_precedence()
+  var server = {filetype: true}
+  assert_equal(false, !server->has_key('filetype'))
+enddef

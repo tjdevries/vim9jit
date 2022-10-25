@@ -71,19 +71,17 @@ pub fn mutates(
         Some(ident) => match ident {
             Identifier::Raw(raw) => match raw.name.as_str() {
                 // We have overriden insert
-                "add" | "insert" => None,
+                "add" | "insert" | "extend" => None,
 
                 "remove" => Some(VimFuncMutability {
                     returned: None,
                     modified_args: HashSet::from_iter(vec![0].into_iter()),
                 }),
 
-                "extend" | "reverse" | "sort" | "filter" => {
-                    Some(VimFuncMutability {
-                        returned: Some(0),
-                        modified_args: HashSet::from_iter(vec![0].into_iter()),
-                    })
-                }
+                "reverse" | "sort" | "filter" => Some(VimFuncMutability {
+                    returned: Some(0),
+                    modified_args: HashSet::from_iter(vec![0].into_iter()),
+                }),
                 _ => None,
             },
             Identifier::Scope(_) => todo!(),
@@ -121,7 +119,7 @@ pub enum FunctionData {
     },
     VimFunc(VimFunc),
     VimFuncRef {
-        name: String,
+        name: Expression,
         arglist: Option<Expression>,
         dict: Option<Expression>,
     },
@@ -140,7 +138,7 @@ impl FunctionData {
         match self {
             FunctionData::ApiFunc { name, .. } => name,
             FunctionData::VimFunc(vimfunc) => vimfunc.name.as_str(),
-            FunctionData::VimFuncRef { name, .. } => name,
+            FunctionData::VimFuncRef { .. } => todo!("VimFuncRef.name()"),
             FunctionData::GeneratedFunc { name, .. } => name,
             FunctionData::ExprFunc { .. } => todo!("ExprFunc.name()"),
         }
@@ -185,10 +183,12 @@ impl From<&CallExpression> for FunctionData {
             Expression::Identifier(id) => {
                 ident_to_func_data(expr.clone(), id.clone())
             }
-            Expression::DictAccess(_) => FunctionData::ExprFunc {
-                caller: *expr.expr.clone(),
-                args: expr.args.clone(),
-            },
+            Expression::DictAccess(_) | Expression::Index(_) => {
+                FunctionData::ExprFunc {
+                    caller: *expr.expr.clone(),
+                    args: expr.args.clone(),
+                }
+            }
             _ => todo!("{:#?}", expr),
         }
     }
@@ -205,7 +205,7 @@ fn ident_to_func_data(call: CallExpression, ident: Identifier) -> FunctionData {
                     }
                 } else if raw.name == "function" {
                     FunctionData::VimFuncRef {
-                        name: raw.name,
+                        name: call.args[0].clone(),
                         arglist: call.args.get(1).cloned(),
                         dict: call.args.get(2).cloned(),
                     }
@@ -274,11 +274,19 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
                               for _, val in ipairs({{...}}) do
                                 table.insert(copied, val)
                               end
-                              return vim.fn['{}'](unpack(copied))
+
+                              local funcref = {}
+                              if type(funcref) == "function" then
+                                return funcref(unpack(copied))
+                              elseif type(funcref) == "string" then
+                                return vim.fn[funcref](unpack(copied))
+                              else
+                                error(string.format("unable to call funcref: %s", funcref))
+                              end
                             end
                             "#,
                     arglist.gen(state),
-                    name
+                    name.gen(state)
                 )
             }
             None => {

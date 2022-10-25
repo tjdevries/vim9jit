@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2546
+assertion_line: 2680
 expression: snapshot_parsing(contents)
 ---
 [
@@ -242,5 +242,39 @@ expression: snapshot_parsing(contents)
             close: Token(RightParen, (14,47)->(14,48)),
             eol: Token(EndOfLine, (14,48)->(14,48)),
         },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (15,0)->(15,0)),
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (16,0)->(16,0)),
+    ),
+    Statement(
+        Assign(
+            AssignStatement {
+                left: Identifier(
+                    Raw(dirName),
+                ),
+                equals: Token(Equal, (17,8)->(17,9)),
+                right: Call(
+                    f: Identifier(Raw(input)) arg: [
+                        String(
+                            DoubleQuote(
+                                "Add Workspace Folder: ",
+                            ),
+                        ),
+                        Call(
+                            f: Identifier(Raw(getcwd)) arg: [],
+                        ),
+                        String(
+                            SingleQuote(
+                                "dir",
+                            ),
+                        ),
+                    ],
+                ),
+                eol: Token(EndOfLine, (17,58)->(17,58)),
+            },
+        ),
     ),
 ]
