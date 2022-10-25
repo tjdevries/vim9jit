@@ -725,16 +725,14 @@ pub struct Parameter {
 #[parse_context]
 impl Parameter {
     fn parse(parser: &Parser) -> Result<Parameter> {
-        let name = dbg!(Identifier::parse_in_expression(parser)?);
+        let name = Identifier::parse_in_expression(parser)?;
 
         let ty = if parser.peek_real_kind() == TokenKind::SpacedColon {
             parser.next_real_token();
-            Some(dbg!(Type::parse_in_expression(parser)?))
+            Some(Type::parse_in_expression(parser)?)
         } else {
             None
         };
-
-        dbg!(parser);
 
         let (equal, default_val) =
             if parser.peek_real_kind() == TokenKind::Equal {
@@ -1022,7 +1020,7 @@ impl Lambda {
                     None
                 }
             },
-            arrow: dbg!(parser).expect_token(TokenKind::Arrow)?.into(),
+            arrow: parser.expect_token(TokenKind::Arrow)?.into(),
             body: {
                 if parser.front_kind() == TokenKind::LeftBrace {
                     todo!("parse blocks correctly");
@@ -1307,8 +1305,6 @@ pub enum Precedence {
     Sum,
     Product,
     Modulo,
-    Prefix,
-    MethodCall,
 
     /// PrefixExpr7 has a separate precendence:
     ///
@@ -1319,6 +1315,14 @@ pub enum Precedence {
     /// And NOT:  
     ///  -(1.234->string())
     PrefixExpr7,
+
+    // <expr>-><funcname>()
+    MethodCall,
+
+    // +, -
+    //  This is different than PrefixExpr7.
+    //  See that enum for more details
+    Prefix,
 
     Call,
     Index,
@@ -2581,9 +2585,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_paramter_list(&self) -> Result<Vec<Parameter>> {
-        self.list_parser(TokenKind::RightParen, |p| {
-            dbg!(Parameter::parse(self))
-        })
+        self.list_parser(TokenKind::RightParen, |p| Parameter::parse(self))
 
         // let mut params = Vec::new();
         // while self.front_kind() != TokenKind::RightParen {

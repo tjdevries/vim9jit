@@ -31,3 +31,4 @@ var foo = [slnum, scol]->cursor()
 # You can just call stuff on numbers...
 3->setwinvar(id, '&conceallevel')
 
+assert_equal(false, !server->has_key('filetype'))

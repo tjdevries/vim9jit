@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2674
+assertion_line: 2719
 expression: snapshot_parsing(contents)
 ---
 [
@@ -5277,23 +5277,23 @@ expression: snapshot_parsing(contents)
                                     If(
                                         IfCommand {
                                             if_tok: Token(Identifier, (332,4)->(332,6)),
-                                            condition: MethodCall(
-                                                MethodCall {
-                                                    left: Prefix(
-                                                        PrefixExpression {
-                                                            token: Token(Bang, (332,7)->(332,8)),
-                                                            operator: Bang,
-                                                            right: Identifier(
+                                            condition: Prefix(
+                                                PrefixExpression {
+                                                    token: Token(Bang, (332,7)->(332,8)),
+                                                    operator: Bang,
+                                                    right: MethodCall(
+                                                        MethodCall {
+                                                            left: Identifier(
                                                                 Raw(symbolTypeTable),
                                                             ),
+                                                            tok: Token(MethodArrow, (332,23)->(332,25)),
+                                                            right: f: Identifier(Raw(has_key)) arg: [
+                                                                Identifier(
+                                                                    Raw(symbolType),
+                                                                ),
+                                                            ],
                                                         },
                                                     ),
-                                                    tok: Token(MethodArrow, (332,23)->(332,25)),
-                                                    right: f: Identifier(Raw(has_key)) arg: [
-                                                        Identifier(
-                                                            Raw(symbolType),
-                                                        ),
-                                                    ],
                                                 },
                                             ),
                                             if_eol: Token(EndOfLine, (332,44)->(332,44)),
@@ -5759,23 +5759,23 @@ expression: snapshot_parsing(contents)
                                     If(
                                         IfCommand {
                                             if_tok: Token(Identifier, (359,4)->(359,6)),
-                                            condition: MethodCall(
-                                                MethodCall {
-                                                    left: Prefix(
-                                                        PrefixExpression {
-                                                            token: Token(Bang, (359,7)->(359,8)),
-                                                            operator: Bang,
-                                                            right: Identifier(
+                                            condition: Prefix(
+                                                PrefixExpression {
+                                                    token: Token(Bang, (359,7)->(359,8)),
+                                                    operator: Bang,
+                                                    right: MethodCall(
+                                                        MethodCall {
+                                                            left: Identifier(
                                                                 Raw(symbolTypeTable),
                                                             ),
+                                                            tok: Token(MethodArrow, (359,23)->(359,25)),
+                                                            right: f: Identifier(Raw(has_key)) arg: [
+                                                                Identifier(
+                                                                    Raw(symbolType),
+                                                                ),
+                                                            ],
                                                         },
                                                     ),
-                                                    tok: Token(MethodArrow, (359,23)->(359,25)),
-                                                    right: f: Identifier(Raw(has_key)) arg: [
-                                                        Identifier(
-                                                            Raw(symbolType),
-                                                        ),
-                                                    ],
                                                 },
                                             ),
                                             if_eol: Token(EndOfLine, (359,44)->(359,44)),
@@ -7873,25 +7873,25 @@ expression: snapshot_parsing(contents)
                                     If(
                                         IfCommand {
                                             if_tok: Token(Identifier, (487,4)->(487,6)),
-                                            condition: MethodCall(
-                                                MethodCall {
-                                                    left: Prefix(
-                                                        PrefixExpression {
-                                                            token: Token(Bang, (487,7)->(487,8)),
-                                                            operator: Bang,
-                                                            right: Identifier(
+                                            condition: Prefix(
+                                                PrefixExpression {
+                                                    token: Token(Bang, (487,7)->(487,8)),
+                                                    operator: Bang,
+                                                    right: MethodCall(
+                                                        MethodCall {
+                                                            left: Identifier(
                                                                 Raw(symbol),
                                                             ),
+                                                            tok: Token(MethodArrow, (487,14)->(487,16)),
+                                                            right: f: Identifier(Raw(has_key)) arg: [
+                                                                String(
+                                                                    SingleQuote(
+                                                                        "location",
+                                                                    ),
+                                                                ),
+                                                            ],
                                                         },
                                                     ),
-                                                    tok: Token(MethodArrow, (487,14)->(487,16)),
-                                                    right: f: Identifier(Raw(has_key)) arg: [
-                                                        String(
-                                                            SingleQuote(
-                                                                "location",
-                                                            ),
-                                                        ),
-                                                    ],
                                                 },
                                             ),
                                             if_eol: Token(EndOfLine, (487,35)->(487,35)),
@@ -10503,31 +10503,31 @@ expression: snapshot_parsing(contents)
                     If(
                         IfCommand {
                             if_tok: Token(Identifier, (642,2)->(642,4)),
-                            condition: MethodCall(
-                                MethodCall {
-                                    left: Prefix(
-                                        PrefixExpression {
-                                            token: Token(Bang, (642,5)->(642,6)),
-                                            operator: Bang,
-                                            right: Identifier(
+                            condition: Prefix(
+                                PrefixExpression {
+                                    token: Token(Bang, (642,5)->(642,6)),
+                                    operator: Bang,
+                                    right: MethodCall(
+                                        MethodCall {
+                                            left: Identifier(
                                                 Raw(ftypeNtfOnceMap),
                                             ),
+                                            tok: Token(MethodArrow, (642,21)->(642,23)),
+                                            right: f: Identifier(Raw(get)) arg: [
+                                                VimOption(
+                                                    VimOption {
+                                                        ampersand: Token(Ampersand, (642,27)->(642,28)),
+                                                        option: Literal {
+                                                            token: Token(Identifier, "ft", (642,28)->(642,30)),
+                                                        },
+                                                    },
+                                                ),
+                                                Identifier(
+                                                    Scope(ScopedIdentifier { scope: VimVar, colon: Token(Colon, (642,33)->(642,34)), accessor: Raw(false) }),
+                                                ),
+                                            ],
                                         },
                                     ),
-                                    tok: Token(MethodArrow, (642,21)->(642,23)),
-                                    right: f: Identifier(Raw(get)) arg: [
-                                        VimOption(
-                                            VimOption {
-                                                ampersand: Token(Ampersand, (642,27)->(642,28)),
-                                                option: Literal {
-                                                    token: Token(Identifier, "ft", (642,28)->(642,30)),
-                                                },
-                                            },
-                                        ),
-                                        Identifier(
-                                            Scope(ScopedIdentifier { scope: VimVar, colon: Token(Colon, (642,33)->(642,34)), accessor: Raw(false) }),
-                                        ),
-                                    ],
                                 },
                             ),
                             if_eol: Token(EndOfLine, (642,40)->(642,40)),
@@ -10994,25 +10994,25 @@ expression: snapshot_parsing(contents)
                     If(
                         IfCommand {
                             if_tok: Token(Identifier, (678,2)->(678,4)),
-                            condition: MethodCall(
-                                MethodCall {
-                                    left: Prefix(
-                                        PrefixExpression {
-                                            token: Token(Bang, (678,5)->(678,6)),
-                                            operator: Bang,
-                                            right: Identifier(
+                            condition: Prefix(
+                                PrefixExpression {
+                                    token: Token(Bang, (678,5)->(678,6)),
+                                    operator: Bang,
+                                    right: MethodCall(
+                                        MethodCall {
+                                            left: Identifier(
                                                 Raw(request),
                                             ),
+                                            tok: Token(MethodArrow, (678,13)->(678,15)),
+                                            right: f: Identifier(Raw(has_key)) arg: [
+                                                String(
+                                                    SingleQuote(
+                                                        "params",
+                                                    ),
+                                                ),
+                                            ],
                                         },
                                     ),
-                                    tok: Token(MethodArrow, (678,13)->(678,15)),
-                                    right: f: Identifier(Raw(has_key)) arg: [
-                                        String(
-                                            SingleQuote(
-                                                "params",
-                                            ),
-                                        ),
-                                    ],
                                 },
                             ),
                             if_eol: Token(EndOfLine, (678,32)->(678,32)),
@@ -12104,19 +12104,19 @@ expression: snapshot_parsing(contents)
                                             If(
                                                 IfCommand {
                                                     if_tok: Token(Identifier, (748,4)->(748,6)),
-                                                    condition: MethodCall(
-                                                        MethodCall {
-                                                            left: Prefix(
-                                                                PrefixExpression {
-                                                                    token: Token(Bang, (748,7)->(748,8)),
-                                                                    operator: Bang,
-                                                                    right: Identifier(
+                                                    condition: Prefix(
+                                                        PrefixExpression {
+                                                            token: Token(Bang, (748,7)->(748,8)),
+                                                            operator: Bang,
+                                                            right: MethodCall(
+                                                                MethodCall {
+                                                                    left: Identifier(
                                                                         Raw(req),
                                                                     ),
+                                                                    tok: Token(MethodArrow, (748,11)->(748,13)),
+                                                                    right: f: Identifier(Raw(empty)) arg: [],
                                                                 },
                                                             ),
-                                                            tok: Token(MethodArrow, (748,11)->(748,13)),
-                                                            right: f: Identifier(Raw(empty)) arg: [],
                                                         },
                                                     ),
                                                     if_eol: Token(EndOfLine, (748,20)->(748,20)),

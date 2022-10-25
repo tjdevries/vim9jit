@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2719
+assertion_line: 2711
 expression: snapshot_parsing(contents)
 ---
 [
@@ -252,19 +252,19 @@ expression: snapshot_parsing(contents)
             ty: None,
             name: Raw(expr_prec),
             equal: Token(Equal, (13,14)->(13,15)),
-            expr: Prefix(
-                PrefixExpression {
-                    token: Token(Minus, (13,16)->(13,17)),
-                    operator: Minus,
-                    right: MethodCall(
-                        MethodCall {
-                            left: Number(
+            expr: MethodCall(
+                MethodCall {
+                    left: Prefix(
+                        PrefixExpression {
+                            token: Token(Minus, (13,16)->(13,17)),
+                            operator: Minus,
+                            right: Number(
                                 Number(1.234),
                             ),
-                            tok: Token(MethodArrow, (13,22)->(13,24)),
-                            right: f: Identifier(Raw(string)) arg: [],
                         },
                     ),
+                    tok: Token(MethodArrow, (13,22)->(13,24)),
+                    right: f: Identifier(Raw(string)) arg: [],
                 },
             ),
             eol: Token(EndOfLine, (13,32)->(13,32)),
@@ -279,19 +279,19 @@ expression: snapshot_parsing(contents)
             ty: None,
             name: Raw(expr_prec),
             equal: Token(Equal, (15,14)->(15,15)),
-            expr: MethodCall(
-                MethodCall {
-                    left: Prefix(
-                        PrefixExpression {
-                            token: Token(Bang, (15,16)->(15,17)),
-                            operator: Bang,
-                            right: Number(
+            expr: Prefix(
+                PrefixExpression {
+                    token: Token(Bang, (15,16)->(15,17)),
+                    operator: Bang,
+                    right: MethodCall(
+                        MethodCall {
+                            left: Number(
                                 Number(1.234),
                             ),
+                            tok: Token(MethodArrow, (15,22)->(15,24)),
+                            right: f: Identifier(Raw(string)) arg: [],
                         },
                     ),
-                    tok: Token(MethodArrow, (15,22)->(15,24)),
-                    right: f: Identifier(Raw(string)) arg: [],
                 },
             ),
             eol: Token(EndOfLine, (15,32)->(15,32)),
@@ -531,5 +531,41 @@ expression: snapshot_parsing(contents)
     ),
     NoOp(
         Token(EndOfLine, "\n", (32,0)->(32,0)),
+    ),
+    Eval(
+        EvalCommand {
+            eval: None,
+            expr: Call(
+                f: Identifier(Raw(assert_equal)) arg: [
+                    Boolean(
+                        VimBoolean {
+                            value: false,
+                        },
+                    ),
+                    Prefix(
+                        PrefixExpression {
+                            token: Token(Bang, (33,20)->(33,21)),
+                            operator: Bang,
+                            right: MethodCall(
+                                MethodCall {
+                                    left: Identifier(
+                                        Raw(server),
+                                    ),
+                                    tok: Token(MethodArrow, (33,27)->(33,29)),
+                                    right: f: Identifier(Raw(has_key)) arg: [
+                                        String(
+                                            SingleQuote(
+                                                "filetype",
+                                            ),
+                                        ),
+                                    ],
+                                },
+                            ),
+                        },
+                    ),
+                ],
+            ),
+            eol: Token(EndOfLine, (33,49)->(33,49)),
+        },
     ),
 ]

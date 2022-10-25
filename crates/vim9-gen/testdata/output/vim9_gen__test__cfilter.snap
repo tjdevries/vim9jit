@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1388
+assertion_line: 1389
 expression: "generate(contents, false).unwrap()"
 ---
 local NVIM9 = require("vim9script")
@@ -50,7 +50,15 @@ Qf_filter = function(qf, searchpat, bang)
       for _, val in ipairs({ ... }) do
         table.insert(copied, val)
       end
-      return vim.fn["function"](unpack(copied))
+
+      local funcref = "getloclist"
+      if type(funcref) == "function" then
+        return funcref(unpack(copied))
+      elseif type(funcref) == "string" then
+        return vim.fn[funcref](unpack(copied))
+      else
+        error(string.format("unable to call funcref: %s", funcref))
+      end
     end
 
     Xsetlist = function(...)
@@ -58,7 +66,15 @@ Qf_filter = function(qf, searchpat, bang)
       for _, val in ipairs({ ... }) do
         table.insert(copied, val)
       end
-      return vim.fn["function"](unpack(copied))
+
+      local funcref = "setloclist"
+      if type(funcref) == "function" then
+        return funcref(unpack(copied))
+      elseif type(funcref) == "string" then
+        return vim.fn[funcref](unpack(copied))
+      else
+        error(string.format("unable to call funcref: %s", funcref))
+      end
     end
 
     cmd = NVIM9.ops["StringConcat"](":Lfilter", bang)
