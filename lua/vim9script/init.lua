@@ -63,7 +63,11 @@ end
 
 M.index = function(obj, idx)
   if vim.tbl_islist(obj) then
-    return obj[idx + 1]
+    if idx < 0 then
+      return obj[#obj + idx + 1]
+    else
+      return obj[idx + 1]
+    end
   elseif type(obj) == "table" then
     return obj[idx]
   elseif type(obj) == "string" then

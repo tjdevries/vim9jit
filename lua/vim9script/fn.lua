@@ -33,6 +33,10 @@ fn.add = function(list, item)
   return list
 end
 
+fn.has_key = function(obj, key)
+  return not not obj[key]
+end
+
 fn.prop_type_add = function(...)
   local args = { ... }
   print("[prop_type_add]", vim.inspect(args))

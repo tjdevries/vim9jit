@@ -1,5 +1,5 @@
 use anyhow::Result;
-use vim9_lexer::{Span, Token, TokenKind};
+use vim9_lexer::{Span, TokenKind};
 
 use crate::{Block, Body, ExCommand, Literal, Parser, TokenMeta};
 

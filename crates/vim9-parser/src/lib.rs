@@ -7,7 +7,7 @@ use std::{
     fmt::Debug,
 };
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use macros::parse_context;
 use once_cell::sync::OnceCell;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -472,6 +472,7 @@ impl EchoCommand {
 pub struct ForCommand {
     for_: TokenMeta,
     pub for_identifier: Identifier,
+    pub for_type: Option<Type>,
     in_: TokenMeta,
     pub for_expr: Expression,
     eol: TokenMeta,
@@ -485,6 +486,11 @@ impl ForCommand {
         Ok(ExCommand::For(ForCommand {
             for_: parser.expect_identifier_with_text("for")?.into(),
             for_identifier: Identifier::parse(parser)?,
+            for_type: if parser.front_kind() == TokenKind::SpacedColon {
+                Some(Type::parse(parser)?)
+            } else {
+                None
+            },
             in_: parser.expect_identifier_with_text("in")?.into(),
             for_expr: Expression::parse(parser, Precedence::Lowest)?,
             eol: parser.expect_eol()?,
@@ -700,6 +706,8 @@ pub struct Signature {
 #[parse_context]
 impl Signature {
     fn parse(parser: &Parser) -> Result<Signature> {
+        parser.skip_whitespace();
+
         Ok(Self {
             open: parser.ensure_token(TokenKind::LeftParen)?.into(),
             params: parser.parse_paramter_list()?,
@@ -725,6 +733,8 @@ pub struct Parameter {
 #[parse_context]
 impl Parameter {
     fn parse(parser: &Parser) -> Result<Parameter> {
+        parser.skip_whitespace();
+
         let name = Identifier::parse_in_expression(parser)?;
 
         let ty = if parser.peek_real_kind() == TokenKind::SpacedColon {
@@ -1250,6 +1260,8 @@ pub enum Operator {
     StringConcat,
     Divide,
     Multiply,
+    Increment,
+    Decrement,
 
     // Comparisons
     EqualTo,
@@ -1330,6 +1342,8 @@ pub enum Precedence {
 
     // g:something, x[1 : 2], x[1 :]
     Colon,
+    // --, ++
+    // PrefixMutator,
 }
 
 // The parseIdentifier method doesn’t do a lot. It only returns a *ast.Identifier with the current
@@ -1360,11 +1374,16 @@ pub struct VarCommand {
 
 #[parse_context]
 impl VarCommand {
+    pub fn matches(parser: &Parser) -> bool {
+        parser.command_match("var")
+            || parser.command_match("const")
+            || parser.command_match("final")
+    }
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
         let var = parser.expect_token(TokenKind::Identifier)?;
         anyhow::ensure!(matches!(
             var.text.to_string().as_str(),
-            "var" | "const"
+            "var" | "const" | "final"
         ));
 
         let var: TokenMeta = var.into();
@@ -1616,6 +1635,8 @@ mod prefix_expr {
             TokenKind::Minus => (Operator::Minus, Precedence::Prefix),
             TokenKind::Percent => (Operator::Modulo, Precedence::Prefix),
             TokenKind::Bang => (Operator::Bang, Precedence::PrefixExpr7),
+            TokenKind::Increment => (Operator::Increment, Precedence::Prefix),
+            TokenKind::Decrement => (Operator::Decrement, Precedence::Prefix),
             _ => unreachable!("Not a valid prefix operator: {:?}", token),
         };
 
@@ -1720,6 +1741,7 @@ mod infix_expr {
             TokenKind::Plus => Operator::Plus,
             TokenKind::Div => Operator::Divide,
             TokenKind::Minus => Operator::Minus,
+            TokenKind::Mul => Operator::Multiply,
             TokenKind::Or => Operator::Or,
             TokenKind::And => Operator::And,
             TokenKind::Percent => Operator::Modulo,
@@ -1867,11 +1889,42 @@ mod infix_expr {
     ) -> Result<Expression> {
         Ok(Expression::Ternary(Ternary {
             cond: left,
-            question: parser.expect_token(TokenKind::QuestionMark)?.into(),
+            question: {
+                parser.skip_whitespace();
+                parser.expect_token(TokenKind::QuestionMark)?.into()
+            },
             if_true: Expression::parse(parser, Precedence::Lowest)?.into(),
-            colon: parser.expect_token(TokenKind::SpacedColon)?.into(),
+            colon: {
+                parser.skip_whitespace();
+                parser.expect_token(TokenKind::SpacedColon)?.into()
+            },
             if_false: parser.parse_expression(Precedence::Lowest)?.into(),
         }))
+    }
+}
+
+#[derive(Debug)]
+pub struct PeekInfo {
+    next: TokenOwned,
+    post_whitespace: TokenOwned,
+    post_comment: TokenOwned,
+}
+
+impl PeekInfo {
+    fn relevant_kind(&self) -> &TokenKind {
+        if is_multiline_kind(&self.post_comment.kind) {
+            &self.post_comment.kind
+        } else {
+            &self.post_whitespace.kind
+        }
+    }
+
+    fn infix_token(&self) -> &TokenOwned {
+        if is_multiline_kind(&self.post_comment.kind) {
+            &self.post_comment
+        } else {
+            &self.post_whitespace
+        }
     }
 }
 
@@ -1934,7 +1987,7 @@ impl<'a> Parser<'a> {
     }
 
     fn peek_real_kind(&self) -> TokenKind {
-        self.peek_non_whitespace().0.kind
+        self.peek_info().post_whitespace.kind
     }
 
     fn current_precedence(&self) -> Result<Precedence> {
@@ -1995,9 +2048,11 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn peek_non_whitespace(&self) -> (TokenOwned, bool) {
-        // let mut peek_index = 1;
-        // let mut peek_token = self.peek_token.clone();
+    fn peek_info(&self) -> PeekInfo {
+        let next = self.peek();
+        let mut post_whitespace = None;
+        let mut post_comment = None;
+
         let mut peek_index = 1;
         loop {
             let kind = self.peek_nkind(peek_index);
@@ -2005,19 +2060,30 @@ impl<'a> Parser<'a> {
                 break;
             }
 
-            if !kind.is_whitespace() {
-                break;
+            if post_whitespace.is_none() {
+                if !kind.is_whitespace() {
+                    post_whitespace = Some(self.peek_n(peek_index));
+                }
+            }
+
+            if post_comment.is_none() {
+                if !kind.is_whitespace() && kind != TokenKind::Comment {
+                    println!("POST COMMENT: {:?}", self.peek_n(peek_index));
+                    post_comment = Some(self.peek_n(peek_index));
+                    break;
+                }
             }
 
             peek_index += 1;
         }
 
-        (self.peek_n(peek_index), peek_index > 1)
-    }
-
-    fn peek_precedence(&self) -> Result<Precedence> {
-        let kind = self.peek_non_whitespace().0.kind;
-        Ok(self.get_precedence(&kind)?.unwrap_or_default())
+        PeekInfo {
+            next,
+            post_whitespace: post_whitespace
+                .unwrap_or_else(|| self.peek_n(peek_index)),
+            post_comment: post_comment
+                .unwrap_or_else(|| self.peek_n(peek_index)),
+        }
     }
 
     fn get_prefix_fn(&self) -> Option<PrefixFn> {
@@ -2041,7 +2107,9 @@ impl<'a> Parser<'a> {
             SpacedColon => parse_prefix_spaced_colon,
             AngleLeft => parse_expandable_sequence,
             True | False => parse_bool,
-            Plus | Minus | Bang | Percent => parse_prefix_operator,
+            Plus | Minus | Bang | Percent | Increment | Decrement => {
+                parse_prefix_operator
+            }
             _ => return None,
         }))
     }
@@ -2071,7 +2139,9 @@ impl<'a> Parser<'a> {
             TokenKind::Identifier
             | TokenKind::Integer
             | TokenKind::Float
-            | TokenKind::Comment => Precedence::Lowest,
+            | TokenKind::Comment
+            | TokenKind::Increment
+            | TokenKind::Decrement => Precedence::Lowest,
 
             // TODO: Not confident that this is the right level
             TokenKind::AngleLeft => Precedence::Lowest,
@@ -2099,7 +2169,9 @@ impl<'a> Parser<'a> {
     }
 
     fn get_infix_fn(&self) -> Option<InfixFn> {
-        let (peek_token, skipped) = self.peek_non_whitespace();
+        let peek_info = self.peek_info();
+        let peek_token = dbg!(peek_info.infix_token());
+        let skipped = &peek_info.next != peek_token;
 
         Some(Box::new(match peek_token.kind {
             // Mathemtical operations
@@ -2107,11 +2179,13 @@ impl<'a> Parser<'a> {
             | TokenKind::Minus
             | TokenKind::Div
             | TokenKind::Percent
+            | TokenKind::Mul
             | TokenKind::StringConcat => infix_expr::parse_infix_operator,
-            // Logical comparisons
-            TokenKind::Or | TokenKind::And => infix_expr::parse_infix_operator,
+            TokenKind::MethodArrow => infix_expr::parse_method_call,
             TokenKind::LeftParen => infix_expr::parse_call_expr,
             TokenKind::LeftBracket => infix_expr::parse_index_expr,
+            TokenKind::Dot => infix_expr::parse_dot_operator,
+            TokenKind::QuestionMark => infix_expr::parse_ternary_expr,
             TokenKind::Colon => {
                 if skipped {
                     return None;
@@ -2119,7 +2193,9 @@ impl<'a> Parser<'a> {
                     infix_expr::parse_colon
                 }
             }
-            TokenKind::MethodArrow => infix_expr::parse_method_call,
+            // Logical comparisons
+            TokenKind::Or | TokenKind::And => infix_expr::parse_infix_operator,
+            // Type comparisons
             TokenKind::EqualTo
             | TokenKind::EqualToIns
             | TokenKind::NotEqualTo
@@ -2140,8 +2216,6 @@ impl<'a> Parser<'a> {
             | TokenKind::IsInsensitive
             | TokenKind::IsNot
             | TokenKind::IsNotInsensitive => infix_expr::parse_infix_operator,
-            TokenKind::Dot => infix_expr::parse_dot_operator,
-            TokenKind::QuestionMark => infix_expr::parse_ternary_expr,
             // TokenKind::SpacedColon => infix_expr::parser_index_type,
             TokenKind::Identifier => return None,
             _ => unimplemented!("get_infix_fn: {:#?}", self),
@@ -2155,18 +2229,19 @@ impl<'a> Parser<'a> {
 
         let prefix = self.get_prefix_fn();
 
-        #[allow(unused_mut)]
         let mut left = match prefix {
             Some(prefix) => prefix(self)?,
             None => {
-                return Err(anyhow::anyhow!(
-                    "Failed to find prefix function for {:#?}",
-                    self
-                ));
+                return Err(anyhow::anyhow!("No prefix function: {:#?}", self));
             }
         };
 
-        while prec < self.peek_precedence()? {
+        loop {
+            let peeked = dbg!(self.peek_info());
+            if prec >= self.get_precedence(peeked.relevant_kind())?.unwrap() {
+                break;
+            }
+
             let infix = match self.get_infix_fn() {
                 Some(infix) => infix,
                 None => return Ok(left),
@@ -2176,7 +2251,7 @@ impl<'a> Parser<'a> {
             left = infix(self, left.into())?;
         }
 
-        Ok(left)
+        Ok(dbg!(left))
     }
 
     pub fn expect_eol(&self) -> Result<TokenMeta> {
@@ -2363,8 +2438,10 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_command(&self) -> Result<ExCommand> {
+        use TokenKind::*;
+
         // If the line starts with a colon, then just skip over it.
-        if self.front_kind() == TokenKind::Colon {
+        if self.front_kind() == Colon {
             self.next_token();
         }
 
@@ -2374,9 +2451,13 @@ impl<'a> Parser<'a> {
         //  Will just be an annoying amount of writing :)
         if self.front_ref().text.eq("silent") {
             self.next_token();
-            if self.front_kind() == TokenKind::Bang {
+            if self.front_kind() == Bang {
                 self.next_token();
             }
+        }
+
+        if let Some(res) = self.is_multiline_expr() {
+            return res;
         }
 
         // For the following branches, you need to return early if it completely consumes
@@ -2385,17 +2466,19 @@ impl<'a> Parser<'a> {
         // This is the desired behavior for `parse` which will consume until the end of line
         // generally speaking.
         Ok(match &self.front_kind() {
-            TokenKind::EndOfFile => ExCommand::NoOp(self.pop().into()),
-            TokenKind::Comment => ExCommand::Comment(self.pop().into()),
-            TokenKind::EndOfLine => ExCommand::NoOp(self.pop().into()),
-            TokenKind::Identifier => {
+            // Whitespace
+            EndOfFile => ExCommand::NoOp(self.pop().into()),
+            EndOfLine => ExCommand::NoOp(self.pop().into()),
+
+            // Comments
+            Comment => ExCommand::Comment(self.pop().into()),
+
+            Identifier => {
                 if self.command_match("vim9script") {
                     ExCommand::Vim9Script(Vim9ScriptCommand::parse(self)?)
                 } else if self.command_match("execute") {
                     ExecuteCommand::parse(self)?
-                } else if self.command_match("var")
-                    || self.command_match("const")
-                {
+                } else if VarCommand::matches(self) {
                     VarCommand::parse(self)?
                 } else if self.command_match("echo")
                     || self.command_match("echon")
@@ -2465,24 +2548,28 @@ impl<'a> Parser<'a> {
                     // var sum = 1
                     // :sum = sum + 1
                     StatementCommand::parse(self)?
-                } else if self.line_contains_kind(TokenKind::MethodArrow) {
+                } else if self.line_contains_kind(MethodArrow) {
                     EvalCommand::parse(self)?
                 } else {
                     SharedCommand::parse(self)?
                 }
             }
-            TokenKind::LeftBracket => EvalCommand::parse(self)?,
+            LeftBracket => EvalCommand::parse(self)?,
 
             // Method calls can start with a number/float (and probably others)
             // It looks something like:
             //
             // 3->setwinvar(id, '&conceallevel')
-            TokenKind::Integer | TokenKind::Float
-                if self.line_contains_kind(TokenKind::MethodArrow) =>
-            {
+            Integer | Float if self.line_contains_kind(MethodArrow) => {
                 EvalCommand::parse(self)?
             }
-            _ => ExCommand::NoOp(self.pop().into()),
+
+            // As of writing this, vim9script only allows increment / decrement
+            // operators at the beginning of a line. They can't be used in expressions
+            // at this time.
+            Decrement | Increment => EvalCommand::parse(self)?,
+
+            _ => return Err(anyhow::anyhow!("TODO: Parser kind: {:#?}", self)),
         })
     }
 
@@ -2490,14 +2577,14 @@ impl<'a> Parser<'a> {
         let mut program = Program { commands: vec![] };
 
         while self.front_kind() != TokenKind::EndOfFile {
-            // let command = match self.parse_command() {
-            //     Ok(command) => command,
-            //     Err(err) => panic!(
-            //         "\nFailed to parse command.\nCurrent Commands:{:#?}.\nError: {}",
-            //         program, err
-            //     ),
-            // };
-            let command = self.parse_command().unwrap();
+            let command = match self.parse_command() {
+                Ok(command) => command,
+                Err(err) => panic!(
+                    "\nFailed to parse command.\nCurrent Commands:{:#?}.\nError: {}",
+                    program, err
+                ),
+            };
+            // let command = self.parse_command().unwrap();
 
             if command != ExCommand::Skip {
                 program.commands.push(command);
@@ -2643,6 +2730,28 @@ impl<'a> Parser<'a> {
             self.pop();
         }
     }
+
+    pub fn is_multiline_expr(&self) -> Option<Result<ExCommand>> {
+        // This (partially) handles the case of doing:
+        // > foo
+        // >    ->something()
+        //
+        // Honestly, this is not a good solution :/
+        let peek_info = self.peek_info();
+
+        if self.front_kind() == TokenKind::Identifier
+            && peek_info.next.kind == TokenKind::EndOfLine
+            && peek_info.post_comment.kind == TokenKind::MethodArrow
+        {
+            return Some(EvalCommand::parse(self));
+        }
+
+        None
+    }
+}
+
+fn is_multiline_kind(kind: &TokenKind) -> bool {
+    matches!(kind, TokenKind::MethodArrow)
 }
 
 fn snapshot_parsing(input: &str) -> String {
@@ -2714,17 +2823,18 @@ mod test {
     snap!(test_cfilter, "../testdata/snapshots/cfilter.vim");
     snap!(test_lambda, "../testdata/snapshots/lambda.vim");
     snap!(test_comparisons, "../testdata/snapshots/comparisons.vim");
-    snap!(test_methods, "../testdata/snapshots/methods.vim");
     snap!(test_eval, "../testdata/snapshots/eval.vim");
     snap!(test_export, "../testdata/snapshots/export.vim");
     snap!(test_import, "../testdata/snapshots/import.vim");
     snap!(test_autocmd, "../testdata/snapshots/autocmd.vim");
     snap!(test_unpack, "../testdata/snapshots/unpack.vim");
+    snap!(test_methods, "../testdata/snapshots/methods.vim");
 
     // https://github.com/yegappan/lsp test suite
     snap!(test_handlers, "../../shared/snapshots/lsp_handlers.vim");
     snap!(test_selection, "../../shared/snapshots/lsp_selection.vim");
     snap!(test_fileselect, "../../shared/snapshots/lsp_fileselect.vim");
+    snap!(test_startup, "../../shared/snapshots/startup9.vim");
 
     #[test]
     fn test_peek_n() {

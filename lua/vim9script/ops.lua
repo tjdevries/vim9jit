@@ -1,5 +1,9 @@
 local to_vim_bool = require("vim9script.convert").to_vim_bool
 
+-- TODO: It seems possible that for some of the ones here
+-- we could just directly inline them (for example, I don't
+-- think that divide has additional overrides in vim9script...
+-- we just have to verify that [and make sure it's worht it])
 local ops = {}
 
 ops["And"] = function(left, right)
@@ -12,6 +16,14 @@ end
 
 ops["Plus"] = function(left, right)
   return left + right
+end
+
+ops["Multiply"] = function(left, right)
+  return left * right
+end
+
+ops["Divide"] = function(left, right)
+  return left / right
 end
 
 ops["StringConcat"] = function(left, right)

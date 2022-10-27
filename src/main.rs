@@ -96,10 +96,17 @@ fn main() -> Result<()> {
         }
 
         let contents = std::fs::read_to_string(path)?;
-        let generated = gen::generate(&contents, false).expect("generation");
+        let generated = match gen::generate(&contents, false) {
+            Ok(generated) => generated,
+            Err(err) => {
+                println!("  FAILED: {}", err.1);
+                err.0
+            }
+        };
 
         let generated_file = Path::with_extension(path, "lua");
         std::fs::write(generated_file, generated)?;
+        return Ok(());
     }
 
     Err(anyhow::anyhow!("Need to pass either --dir or --file"))

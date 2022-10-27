@@ -5,7 +5,6 @@ use syn::{parse_macro_input, visit_mut::VisitMut, ImplItem};
 
 struct ReplaceQuestions {
     name: syn::Type,
-    count: usize,
 }
 
 impl VisitMut for ReplaceQuestions {
@@ -16,23 +15,22 @@ impl VisitMut for ReplaceQuestions {
 
                 // let name = syn::LitStr::new(&self.name, self.span);
                 let e = &try_expr.expr;
-                // *i = syn::parse_quote! {
-                //     match #e {
-                //         ::core::result::Result::Ok(v) => v,
-                //         ::core::result::Result::Err(e) => {
-                //             panic!(#name);
-                //             // return Err(e.context("oh no"));
-                //         }
-                //     }
-                // };
-
-                self.count += 1;
                 let name = &self.name;
-                // let count = &self.count;
-
                 *i = syn::parse_quote! {
-                    #e.expect(&format!("{}.{}", stringify!(#name), stringify!(#e)))
-                }
+                    match #e {
+                        ::core::result::Result::Ok(v) => v,
+                        ::core::result::Result::Err(e) => {
+                            // panic!(#name);
+                            return Err(::anyhow::anyhow!(
+                                format!("{}\n- {}::{}", e, stringify!(#name), stringify!(#e))
+                            ));
+                        }
+                    }
+                };
+
+                // *i = syn::parse_quote! {
+                //     #e.expect(&format!("{}.{}", stringify!(#name), stringify!(#e)))
+                // }
             }
             _ => syn::visit_mut::visit_expr_mut(self, i),
         }
@@ -48,7 +46,6 @@ pub fn parse_context(_attr: TokenStream, tokens: TokenStream) -> TokenStream {
             ImplItem::Method(_) => {
                 let mut replacer = ReplaceQuestions {
                     name: *input.self_ty.clone(),
-                    count: 0,
                 };
 
                 replacer.visit_impl_item_mut(&mut item);

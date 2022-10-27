@@ -18,7 +18,7 @@ fn expr_is_func_mutable(arg: &Expression) -> bool {
             Identifier::Unpacked(_) => todo!(),
             Identifier::Ellipsis => true,
         },
-        Expression::Grouped(_) => todo!(),
+        Expression::Grouped(g) => expr_is_func_mutable(&g.expr),
         Expression::VimOption(_) => false,
         Expression::Prefix(pre) => expr_is_func_mutable(&pre.right),
         Expression::Infix(infix) => expr_is_func_mutable(&infix.left),

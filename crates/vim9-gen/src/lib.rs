@@ -419,7 +419,27 @@ impl Generate for DeclCommand {
     fn gen(&self, state: &mut State) -> String {
         // TODO: default value should not be nil for everything here
         // i think?
-        format!("local {} = {}", self.name.gen(state), "nil")
+        format!(
+            "local {} = {}",
+            self.name.gen(state),
+            match &self.ty {
+                Some(ty) => match ty.inner {
+                    InnerType::Any => "0",
+                    InnerType::Bool => "false",
+                    InnerType::Number => "0",
+                    InnerType::Float => "0",
+                    InnerType::String => "''",
+                    InnerType::List { .. } => "{}",
+                    InnerType::Dict { .. } => "vim.empty_dict()",
+                    InnerType::Job => todo!(),
+                    InnerType::Channel => todo!(),
+                    InnerType::Void => "nil",
+                    InnerType::Func(_) => "function() end",
+                    InnerType::Blob => unreachable!(),
+                },
+                None => "nil",
+            }
+        )
     }
 }
 
@@ -635,10 +655,26 @@ impl Generate for StatementCommand {
     }
 }
 
+fn statement_lhs(expr: &Expression, state: &mut State) -> String {
+    match &expr {
+        Expression::Index(idx) => {
+            format!(
+                "{}[NVIM9.index_expr({})]",
+                idx.container.gen(state),
+                match idx.index.as_ref() {
+                    IndexType::Item(item) => item.gen(state),
+                    IndexType::Slice(_) => todo!("Unknown index type"),
+                }
+            )
+        }
+        _ => expr.gen(state),
+    }
+}
+
 impl Generate for MutationStatement {
     fn gen(&self, state: &mut State) -> String {
         // format!("--[[ {:#?} ]]", self)
-        let left = self.left.gen(state);
+        let left = statement_lhs(&self.left, state);
         let operator = match self.modifier.kind {
             lexer::TokenKind::PlusEquals => parser::Operator::Plus,
             lexer::TokenKind::MinusEquals => parser::Operator::Minus,
@@ -665,39 +701,7 @@ impl Generate for MutationStatement {
 
 impl Generate for AssignStatement {
     fn gen(&self, state: &mut State) -> String {
-        let left = match &self.left {
-            Expression::Index(idx) => {
-                format!(
-                    "{}[NVIM9.index_expr({})]",
-                    idx.container.gen(state),
-                    match idx.index.as_ref() {
-                        IndexType::Item(item) => item.gen(state),
-                        IndexType::Slice(_) => todo!("Unknown index type"),
-                    }
-                )
-            }
-            // Expression::Empty => todo!(),
-            // Expression::Identifier(_) => todo!(),
-            // Expression::Number(_) => todo!(),
-            // Expression::String(_) => todo!(),
-            // Expression::Boolean(_) => todo!(),
-            // Expression::Grouped(_) => todo!(),
-            // Expression::Call(_) => todo!(),
-            // Expression::Slice(_) => todo!(),
-            // Expression::Array(_) => todo!(),
-            // Expression::Dict(_) => todo!(),
-            // Expression::DictAccess(_) => todo!(),
-            // Expression::VimOption(_) => todo!(),
-            // Expression::Register(_) => todo!(),
-            // Expression::Lambda(_) => todo!(),
-            // Expression::Expandable(_) => todo!(),
-            // Expression::MethodCall(_) => todo!(),
-            // Expression::Ternary(_) => todo!(),
-            // Expression::Prefix(_) => todo!(),
-            // Expression::Infix(_) => todo!(),
-            _ => self.left.gen(state),
-        };
-
+        let left = statement_lhs(&self.left, state);
         let right = self.right.gen(state);
 
         format!("{left} = {right}")
@@ -1374,12 +1378,15 @@ mod test {
     busted!(busted_indexing, "../testdata/busted/indexing.vim");
     busted!(busted_multiline, "../testdata/busted/multiline.vim");
     busted!(busted_function, "../testdata/busted/function.vim");
-    busted!(busted_methods, "../testdata/busted/methods.vim");
-    busted!(busted_megamethods, "../testdata/busted/megamethods.vim");
     busted!(busted_shared, "../testdata/busted/shared.vim");
     busted!(busted_loops, "../testdata/busted/loops.vim");
     busted!(busted_defer, "../testdata/busted/defer.vim");
     // busted!(busted_vimvars, "../testdata/busted/vimvars.vim");
+
+    busted!(busted_methods, "../testdata/busted/methods.vim");
+    busted!(busted_methods_1, "../testdata/busted/methods_1.vim");
+    busted!(busted_methods_2, "../testdata/busted/methods_2.vim");
+    busted!(busted_megamethods, "../testdata/busted/megamethods.vim");
 
     snapshot!(test_expr, "../testdata/snapshots/expr.vim");
     snapshot!(test_if, "../testdata/snapshots/if.vim");

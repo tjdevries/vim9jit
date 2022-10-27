@@ -193,6 +193,10 @@ pub enum TokenKind {
     StringConcat,
     StringConcatEquals,
 
+    // Prepended operators
+    Decrement,
+    Increment,
+
     //                  use 'ignorecase'    match case      ignore case
     // equal                   ==              ==#             ==?
     // not equal               !=              !=#             !=?
@@ -753,7 +757,7 @@ impl Lexer {
                     '-' => self.handle_dash(),
                     '$' => self.handle_dollar(),
                     '.' => self.handle_dot(),
-                    '+' => self.if_peek('=', Plus, PlusEquals),
+                    '+' => self.handle_plus(),
                     '*' => self.if_peek('=', Mul, MulEquals),
                     '/' => self.if_peek('=', Div, DivEquals),
                     '|' => self.if_peek('|', Illegal, Or),
@@ -946,6 +950,7 @@ impl Lexer {
         match self.peek_char().unwrap() {
             '=' => self.read_two(TokenKind::MinusEquals),
             '>' => self.read_two(TokenKind::MethodArrow),
+            '-' => self.read_two(TokenKind::Decrement),
             _ => self.read_one(TokenKind::Minus),
         }
     }
@@ -1004,6 +1009,14 @@ impl Lexer {
             ('.', '.') => self.read_three(TokenKind::Ellipsis),
             ('.', _) => self.read_two(TokenKind::StringConcat),
             (_, _) => self.read_one(TokenKind::Dot),
+        }
+    }
+
+    fn handle_plus(&self) -> Result<Token> {
+        match self.peek_n(1).unwrap() {
+            '=' => self.read_two(TokenKind::PlusEquals),
+            '+' => self.read_two(TokenKind::Increment),
+            _ => self.read_one(TokenKind::Plus),
         }
     }
 

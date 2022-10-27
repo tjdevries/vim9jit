@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2719
+assertion_line: 2822
 expression: snapshot_parsing(contents)
 ---
 [
@@ -1340,6 +1340,7 @@ expression: snapshot_parsing(contents)
                         ForCommand {
                             for_: Token(Identifier, (116,2)->(116,5)),
                             for_identifier: Raw(item),
+                            for_type: None,
                             in_: Token(Identifier, (116,11)->(116,13)),
                             for_expr: Identifier(
                                 Raw(items),
@@ -2286,6 +2287,7 @@ expression: snapshot_parsing(contents)
                                         ForCommand {
                                             for_: Token(Identifier, (166,4)->(166,7)),
                                             for_identifier: Raw(item),
+                                            for_type: None,
                                             in_: Token(Identifier, (166,13)->(166,15)),
                                             for_expr: Identifier(
                                                 Raw(items),
@@ -3358,6 +3360,7 @@ expression: snapshot_parsing(contents)
                                                 ForCommand {
                                                     for_: Token(Identifier, (223,4)->(223,7)),
                                                     for_identifier: Raw(e),
+                                                    for_type: None,
                                                     in_: Token(Identifier, (223,10)->(223,12)),
                                                     for_expr: DictAccess(
                                                         DictAccess {
@@ -4256,6 +4259,7 @@ expression: snapshot_parsing(contents)
                         ForCommand {
                             for_: Token(Identifier, (276,2)->(276,5)),
                             for_identifier: Raw(docHL),
+                            for_type: None,
                             in_: Token(Identifier, (276,12)->(276,14)),
                             for_expr: DictAccess(
                                 DictAccess {
@@ -5071,6 +5075,7 @@ expression: snapshot_parsing(contents)
                         ForCommand {
                             for_: Token(Identifier, (321,2)->(321,5)),
                             for_identifier: Raw(symbol),
+                            for_type: None,
                             in_: Token(Identifier, (321,13)->(321,15)),
                             for_expr: Identifier(
                                 Raw(symbolInfoTable),
@@ -5628,6 +5633,7 @@ expression: snapshot_parsing(contents)
                         ForCommand {
                             for_: Token(Identifier, (352,2)->(352,5)),
                             for_identifier: Raw(symbol),
+                            for_type: None,
                             in_: Token(Identifier, (352,13)->(352,15)),
                             for_expr: Identifier(
                                 Raw(docSymbolTable),
@@ -6952,6 +6958,7 @@ expression: snapshot_parsing(contents)
                         ForCommand {
                             for_: Token(Identifier, (426,2)->(426,5)),
                             for_identifier: Raw(foldRange),
+                            for_type: None,
                             in_: Token(Identifier, (426,16)->(426,18)),
                             for_expr: DictAccess(
                                 DictAccess {
@@ -7855,6 +7862,7 @@ expression: snapshot_parsing(contents)
                         ForCommand {
                             for_: Token(Identifier, (486,2)->(486,5)),
                             for_identifier: Raw(symbol),
+                            for_type: None,
                             in_: Token(Identifier, (486,13)->(486,15)),
                             for_expr: DictAccess(
                                 DictAccess {
@@ -8599,6 +8607,7 @@ expression: snapshot_parsing(contents)
                                         ForCommand {
                                             for_: Token(Identifier, (529,4)->(529,7)),
                                             for_identifier: Raw(i),
+                                            for_type: None,
                                             in_: Token(Identifier, (529,10)->(529,12)),
                                             for_expr: Call(
                                                 f: Identifier(Raw(range)) arg: [
