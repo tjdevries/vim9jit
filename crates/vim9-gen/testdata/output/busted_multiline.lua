@@ -11,7 +11,7 @@ describe("filename", function()
     vim.v.errors = {}
 
     -- Actual test
-    local x = NVIM9.convert.decl_bool(NVIM9.ops["And"](true, false))
+    local x = NVIM9.convert.decl_bool(true and false)
 
     NVIM9.fn["assert_equal"](x, false)
 
@@ -24,7 +24,7 @@ describe("filename", function()
     vim.v.errors = {}
 
     -- Actual test
-    local y = NVIM9.convert.decl_bool(NVIM9.ops["And"](true, false))
+    local y = NVIM9.convert.decl_bool(true and false)
 
     NVIM9.fn["assert_equal"](y, false)
 
@@ -37,7 +37,7 @@ describe("filename", function()
     vim.v.errors = {}
 
     -- Actual test
-    local z = NVIM9.ops["Or"](true, false)
+    local z = true or false
 
     NVIM9.fn["assert_equal"](z, true)
 

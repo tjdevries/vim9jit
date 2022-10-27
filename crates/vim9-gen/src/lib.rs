@@ -867,7 +867,7 @@ fn identifier_list(state: &mut State, unpacked: &UnpackIdentifier) -> String {
         .collect()
 }
 
-fn guess_type_of_expr(_: &State, expr: &Expression) -> Type {
+fn guess_type_of_expr(state: &State, expr: &Expression) -> Type {
     match expr {
         Expression::Number(_) => Type::Number,
         Expression::String(_) => Type::String,
@@ -886,16 +886,21 @@ fn guess_type_of_expr(_: &State, expr: &Expression) -> Type {
         Expression::Infix(infix) => {
             if infix.operator.is_comparison() {
                 return Type::Bool;
-            } else if matches!(infix.operator, Operator::And | Operator::Or) {
-                // if guess_type_of_expr(infix.left) {}
-                Type::Any
-                // todo!()
-            } else {
-                Type::Any
             }
+
+            if matches!(infix.operator, Operator::And | Operator::Or) {
+                if guess_type_of_expr(state, infix.left.as_ref()) == Type::Bool
+                    && guess_type_of_expr(state, infix.right.as_ref())
+                        == Type::Bool
+                {
+                    return Type::Bool;
+                }
+            }
+
+            Type::Any
         }
+        Expression::Grouped(g) => guess_type_of_expr(state, g.expr.as_ref()),
         _ => Type::Any,
-        // Expression::Grouped(_) => todo!(),
         // Expression::Index(_) => todo!(),
         // Expression::Slice(_) => todo!(),
         // Expression::Array(_) => todo!(),
