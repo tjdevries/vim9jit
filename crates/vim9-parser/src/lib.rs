@@ -11,6 +11,7 @@ use anyhow::Result;
 use macros::parse_context;
 use once_cell::sync::OnceCell;
 use tracing_subscriber::util::SubscriberInitExt;
+use types::TypeOpts;
 use vim9_lexer::{Lexer, Span, Token, TokenKind};
 mod cmds;
 pub use cmds::{
@@ -201,7 +202,7 @@ impl DefCommand {
             args: Signature::parse(parser)?,
             ret: {
                 if parser.front_kind() == TokenKind::SpacedColon {
-                    Some(Type::parse(parser)?)
+                    Some(Type::parse(parser, &TypeOpts { bool: Type::Bool })?)
                 } else {
                     None
                 }
@@ -487,7 +488,12 @@ impl ForCommand {
             for_: parser.expect_identifier_with_text("for")?.into(),
             for_identifier: Identifier::parse(parser)?,
             for_type: if parser.front_kind() == TokenKind::SpacedColon {
-                Some(Type::parse(parser)?)
+                Some(Type::parse(
+                    parser,
+                    &TypeOpts {
+                        bool: Type::BoolOrNumber,
+                    },
+                )?)
             } else {
                 None
             },
@@ -739,7 +745,12 @@ impl Parameter {
 
         let ty = if parser.peek_real_kind() == TokenKind::SpacedColon {
             parser.next_real_token();
-            Some(Type::parse_in_expression(parser)?)
+            Some(Type::parse_in_expression(
+                parser,
+                &TypeOpts {
+                    bool: Type::BoolOrNumber,
+                },
+            )?)
         } else {
             None
         };
@@ -1025,7 +1036,12 @@ impl Lambda {
             args: Signature::parse(parser)?,
             ret: {
                 if parser.front_kind() == TokenKind::SpacedColon {
-                    Some(Type::parse(parser)?)
+                    Some(Type::parse(
+                        parser,
+                        &TypeOpts {
+                            bool: Type::BoolOrNumber,
+                        },
+                    )?)
                 } else {
                     None
                 }
@@ -1449,7 +1465,9 @@ impl VarCommand {
             TokenKind::HeredocOperator => None,
             TokenKind::EndOfLine => None,
             TokenKind::EndOfFile => None,
-            TokenKind::SpacedColon => Some(Type::parse(parser)?),
+            TokenKind::SpacedColon => {
+                Some(Type::parse(parser, &TypeOpts { bool: Type::Bool })?)
+            }
             _ => {
                 return Err(anyhow::anyhow!(
                     "invalid type and/or equal for var: {:?}",

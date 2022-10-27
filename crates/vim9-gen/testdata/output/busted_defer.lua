@@ -39,7 +39,6 @@ describe("filename", function()
 
   MyDefer = function()
     local nvim9_deferred = {}
-
     local _, ret = pcall(function()
       local x = {}
       table.insert(nvim9_deferred, 1, function()
@@ -66,7 +65,6 @@ describe("filename", function()
 
   RangeDefer = function()
     local nvim9_deferred = {}
-
     local _, ret = pcall(function()
       local x = {}
 

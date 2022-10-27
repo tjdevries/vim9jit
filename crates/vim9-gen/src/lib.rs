@@ -475,6 +475,7 @@ impl Generate for DeclCommand {
                 Some(ty) => match ty {
                     Type::Any => "0",
                     Type::Bool => "false",
+                    Type::BoolOrNumber => "false",
                     Type::Number => "0",
                     Type::Float => "0",
                     Type::String => "''",
@@ -619,8 +620,7 @@ impl Generate for DefCommand {
                 "#,
             )
         } else {
-            let (signature, default_statements) =
-                gen_signature(state, &self.args);
+            let (signature, sig_statements) = gen_signature(state, &self.args);
 
             let local = if state.is_top_level() || !self.name.is_valid_local() {
                 ""
@@ -633,9 +633,9 @@ impl Generate for DefCommand {
                 format!(
                     r#"
                     {local} {name} = function({signature})
-                        local nvim9_deferred = {{}}
+                        {sig_statements}
 
-                        {default_statements}
+                        local nvim9_deferred = {{}}
                         local _, ret = pcall(function()
                             {body}
                         end)
@@ -663,7 +663,7 @@ impl Generate for DefCommand {
                 format!(
                     r#"
                     {local} {name} = function({signature})
-                        {default_statements}
+                        {sig_statements}
                         {body}
                     end
                 "#,
@@ -682,13 +682,27 @@ fn gen_signature(state: &mut State, args: &Signature) -> (String, String) {
             .join(", "),
         args.params
             .iter()
-            .filter(|p| p.default_val.is_some())
+            .filter(|p| {
+                p.default_val.is_some()
+                    || matches!(p.ty, Some(Type::BoolOrNumber))
+            })
             .map(|p| {
-                let name = p.name.gen(state);
-                let default_val = p.default_val.clone().unwrap();
-                let default_val = default_val.gen(state);
+                // TODO: What about val=true defaults?
+                match p.ty {
+                    Some(Type::BoolOrNumber) => {
+                        let name = p.name.gen(state);
+                        format!("{name} = not not {name}")
+                    }
+                    _ => {
+                        let name = p.name.gen(state);
+                        let default_val = p.default_val.clone().unwrap();
+                        let default_val = default_val.gen(state);
 
-                format!("{name} = vim.F.if_nil({name}, {default_val}, {name})")
+                        format!(
+                        "{name} = vim.F.if_nil({name}, {default_val}, {name})"
+                    )
+                    }
+                }
             })
             .collect::<Vec<String>>()
             .join("\n"),

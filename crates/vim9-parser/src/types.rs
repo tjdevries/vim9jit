@@ -1,12 +1,27 @@
 use anyhow::Result;
-use vim9_lexer::{Token, TokenKind};
+use vim9_lexer::TokenKind;
 
 use crate::{Literal, Parser, TokenMeta};
+
+pub struct TypeOpts {
+    pub bool: Type,
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Type {
     Any,
+
+    // TODO: Decide what to do with these.
+    //  It's possible we can just dismiss
+    //  BoolOrNumber, but i'm not 100% sure.
+    //
+    //  The way we could do that would be to
+    //  just "not not" everything that comes from
+    //  vimland... but I feel like BoolOrNumber makes
+    //  that better by only doing it when we see a BoolOrNumber
     Bool,
+    BoolOrNumber,
+
     Number,
     Float,
     String,
@@ -41,7 +56,11 @@ impl Type {
         matches!(k, TokenKind::GreaterThan | TokenKind::AngleRight)
     }
 
-    fn parse_inner(parser: &Parser, consume: bool) -> Result<Type> {
+    fn parse_inner(
+        parser: &Parser,
+        consume: bool,
+        opts: &TypeOpts,
+    ) -> Result<Type> {
         match parser.front_kind() {
             TokenKind::Identifier => {
                 let literal: Literal = match consume {
@@ -52,7 +71,8 @@ impl Type {
 
                 Ok(match literal.token.text.as_str() {
                     "any" => Type::Any,
-                    "bool" => Type::Bool,
+                    // "bool" => Type::BoolOrNumber,
+                    "bool" => opts.bool.clone(),
                     "number" => Type::Number,
                     "void" => Type::Void,
                     "string" => Type::String,
@@ -64,7 +84,8 @@ impl Type {
 
                         Type::List {
                             open: parser.expect_fn(Self::open, true)?.into(),
-                            inner: Type::parse_inner(parser, true)?.into(),
+                            inner: Type::parse_inner(parser, true, &opts)?
+                                .into(),
                             close: parser
                                 .expect_fn(Self::close, consume)?
                                 .into(),
@@ -77,7 +98,8 @@ impl Type {
 
                         Type::Dict {
                             open: parser.expect_fn(Self::open, true)?.into(),
-                            inner: Type::parse_inner(parser, true)?.into(),
+                            inner: Type::parse_inner(parser, true, &opts)?
+                                .into(),
                             close: parser
                                 .expect_fn(Self::close, consume)?
                                 .into(),
@@ -93,13 +115,16 @@ impl Type {
         }
     }
 
-    pub fn parse_in_expression(parser: &Parser) -> Result<Type> {
+    pub fn parse_in_expression(
+        parser: &Parser,
+        opts: &TypeOpts,
+    ) -> Result<Type> {
         parser.expect_token(TokenKind::SpacedColon)?;
-        Self::parse_inner(parser, false)
+        Self::parse_inner(parser, false, opts)
     }
 
-    pub fn parse(parser: &Parser) -> Result<Type> {
+    pub fn parse(parser: &Parser, opts: &TypeOpts) -> Result<Type> {
         parser.expect_token(TokenKind::SpacedColon)?;
-        Self::parse_inner(parser, true)
+        Self::parse_inner(parser, true, opts)
     }
 }

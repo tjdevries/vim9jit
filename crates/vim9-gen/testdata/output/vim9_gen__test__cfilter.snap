@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1542
+assertion_line: 1553
 expression: "generate(contents, false).unwrap()"
 ---
 local NVIM9 = require("vim9script")
@@ -26,6 +26,7 @@ local Qf_filter = nil
 -- #
 
 Qf_filter = function(qf, searchpat, bang)
+  qf = not not qf
   local Xgetlist = function() end
   local Xsetlist = function() end
   local cmd = ""

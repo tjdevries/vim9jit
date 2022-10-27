@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2877
+assertion_line: 2895
 expression: snapshot_parsing(contents)
 ---
 [
@@ -74,7 +74,7 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(qf),
                         ty: Some(
-                            Bool,
+                            BoolOrNumber,
                         ),
                         equal: None,
                         default_val: None,
