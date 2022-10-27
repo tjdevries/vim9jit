@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2667
+assertion_line: 2877
 expression: snapshot_parsing(contents)
 ---
 [
@@ -74,10 +74,7 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(qf),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (19,16)->(19,18)),
-                                inner: Bool,
-                            },
+                            Bool,
                         ),
                         equal: None,
                         default_val: None,
@@ -85,10 +82,7 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(searchpat),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (19,33)->(19,35)),
-                                inner: String,
-                            },
+                            String,
                         ),
                         equal: None,
                         default_val: None,
@@ -96,10 +90,7 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(bang),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (19,47)->(19,49)),
-                                inner: String,
-                            },
+                            String,
                         ),
                         equal: None,
                         default_val: None,
@@ -116,12 +107,9 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (20,2)->(20,5)),
                             name: Raw(Xgetlist),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (20,14)->(20,16)),
-                                    inner: Func(
-                                        Naked,
-                                    ),
-                                },
+                                Func(
+                                    Naked,
+                                ),
                             ),
                             eol: Token(EndOfLine, (20,20)->(20,20)),
                         },
@@ -131,12 +119,9 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (21,2)->(21,5)),
                             name: Raw(Xsetlist),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (21,14)->(21,16)),
-                                    inner: Func(
-                                        Naked,
-                                    ),
-                                },
+                                Func(
+                                    Naked,
+                                ),
                             ),
                             eol: Token(EndOfLine, (21,20)->(21,20)),
                         },
@@ -146,10 +131,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (22,2)->(22,5)),
                             name: Raw(cmd),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (22,9)->(22,11)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (22,17)->(22,17)),
                         },
@@ -159,10 +141,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (23,2)->(23,5)),
                             name: Raw(firstchar),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (23,15)->(23,17)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (23,23)->(23,23)),
                         },
@@ -172,10 +151,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (24,2)->(24,5)),
                             name: Raw(lastchar),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (24,14)->(24,16)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (24,22)->(24,22)),
                         },
@@ -185,10 +161,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (25,2)->(25,5)),
                             name: Raw(pat),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (25,9)->(25,11)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (25,17)->(25,17)),
                         },
@@ -198,10 +171,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (26,2)->(26,5)),
                             name: Raw(title),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (26,11)->(26,13)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (26,19)->(26,19)),
                         },
@@ -211,12 +181,9 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (27,2)->(27,5)),
                             name: Raw(Cond),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (27,10)->(27,12)),
-                                    inner: Func(
-                                        Naked,
-                                    ),
-                                },
+                                Func(
+                                    Naked,
+                                ),
                             ),
                             eol: Token(EndOfLine, (27,16)->(27,16)),
                         },
@@ -226,13 +193,10 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (28,2)->(28,5)),
                             name: Raw(items),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (28,11)->(28,13)),
-                                    inner: List {
-                                        open: Token(AngleLeft, (28,17)->(28,18)),
-                                        inner: Any,
-                                        close: Token(GreaterThan, (28,21)->(28,22)),
-                                    },
+                                List {
+                                    open: Token(AngleLeft, (28,17)->(28,18)),
+                                    inner: Any,
+                                    close: Token(GreaterThan, (28,21)->(28,22)),
                                 },
                             ),
                             eol: Token(EndOfLine, (28,22)->(28,22)),

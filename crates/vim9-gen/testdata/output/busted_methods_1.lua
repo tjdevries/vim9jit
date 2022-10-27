@@ -9,12 +9,9 @@ describe("filename", function()
 
     -- Actual test
     local x = { 1, 2, 3 }
-    NVIM9.fn_mut("filter", {
-      x,
-      function(_, y)
-        return NVIM9.ops["EqualTo"](y, 2)
-      end,
-    }, { replace = 0 })
+    NVIM9.fn_mut("filter", { x, function(_, y)
+      return y == 2
+    end }, { replace = 0 })
 
     NVIM9.fn["assert_equal"]({ 2 }, x)
 

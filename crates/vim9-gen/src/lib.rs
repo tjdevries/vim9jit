@@ -1,6 +1,6 @@
 #![feature(iter_intersperse)]
 
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 
 use lexer::Lexer;
 use parser::{
@@ -10,8 +10,8 @@ use parser::{
     DictLiteral, EchoCommand, ElseCommand, ElseIfCommand, ExCommand,
     ExecuteCommand, Expandable, ExportCommand, Expression, ForCommand,
     GroupedExpression, Heredoc, Identifier, IfCommand, ImportCommand,
-    IndexExpression, IndexType, InfixExpression, InnerType, Lambda, Literal,
-    MethodCall, MutationStatement, PrefixExpression, RawIdentifier, Register,
+    IndexExpression, IndexType, InfixExpression, Lambda, Literal, MethodCall,
+    MutationStatement, Operator, PrefixExpression, RawIdentifier, Register,
     ReturnCommand, ScopedIdentifier, SharedCommand, Signature,
     StatementCommand, Ternary, TryCommand, Type, UnpackIdentifier, UserCommand,
     VarCommand, Vim9ScriptCommand, VimBoolean, VimKey, VimNumber, VimOption,
@@ -68,6 +68,24 @@ impl State {
         let res = f(self);
         (res, self.scopes.pop().expect("balanced scopes"))
     }
+
+    fn push_declaration(&mut self, expr_1: &Expression, expr_2: Type) -> Type {
+        self.scopes
+            .last_mut()
+            .unwrap()
+            .push_declaration(expr_1, expr_2)
+    }
+
+    fn lookup_declaration(&self, expr_1: &Expression) -> Option<Type> {
+        match Scope::declaration_key(expr_1) {
+            Some(key) => self
+                .scopes
+                .iter()
+                .rev()
+                .find_map(|s| s.declarations.get(&key).cloned()),
+            None => None,
+        }
+    }
 }
 
 macro_rules! find_scope {
@@ -94,24 +112,33 @@ macro_rules! scope_or_empty {
     }};
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Default)]
 pub enum ScopeKind {
+    #[default]
     TopLevel,
     Function,
-    While { has_continue: bool },
-    For { has_continue: bool },
+    While {
+        has_continue: bool,
+    },
+    For {
+        has_continue: bool,
+    },
     If,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Scope {
     kind: ScopeKind,
     deferred: usize,
+    declarations: HashMap<String, Type>,
 }
 
 impl Scope {
     pub fn new(kind: ScopeKind) -> Self {
-        Self { kind, deferred: 0 }
+        Self {
+            kind,
+            ..Default::default()
+        }
     }
 
     /// Whether the current scope contains any unique behavior for embedded continues
@@ -121,6 +148,28 @@ impl Scope {
             ScopeKind::For { has_continue } => has_continue,
             _ => false,
         }
+    }
+
+    pub fn declaration_key(expr: &Expression) -> Option<String> {
+        match expr {
+            Expression::Identifier(ident) => match &ident {
+                Identifier::Raw(raw) => Some(raw.name.clone()),
+                Identifier::Scope(_) => return None,
+                Identifier::Unpacked(_) => return None,
+                Identifier::Ellipsis => return None,
+            },
+            _ => return None,
+        }
+    }
+
+    pub fn push_declaration(&mut self, expr: &Expression, ty: Type) -> Type {
+        let key = match Self::declaration_key(expr) {
+            Some(key) => key,
+            None => return ty,
+        };
+
+        self.declarations.insert(key, ty.clone());
+        ty
     }
 }
 
@@ -423,19 +472,19 @@ impl Generate for DeclCommand {
             "local {} = {}",
             self.name.gen(state),
             match &self.ty {
-                Some(ty) => match ty.inner {
-                    InnerType::Any => "0",
-                    InnerType::Bool => "false",
-                    InnerType::Number => "0",
-                    InnerType::Float => "0",
-                    InnerType::String => "''",
-                    InnerType::List { .. } => "{}",
-                    InnerType::Dict { .. } => "vim.empty_dict()",
-                    InnerType::Job => todo!(),
-                    InnerType::Channel => todo!(),
-                    InnerType::Void => "nil",
-                    InnerType::Func(_) => "function() end",
-                    InnerType::Blob => unreachable!(),
+                Some(ty) => match ty {
+                    Type::Any => "0",
+                    Type::Bool => "false",
+                    Type::Number => "0",
+                    Type::Float => "0",
+                    Type::String => "''",
+                    Type::List { .. } => "{}",
+                    Type::Dict { .. } => "vim.empty_dict()",
+                    Type::Job => todo!(),
+                    Type::Channel => todo!(),
+                    Type::Void => "nil",
+                    Type::Func(_) => "function() end",
+                    Type::Blob => unreachable!(),
                 },
                 None => "nil",
             }
@@ -715,14 +764,30 @@ impl Generate for IfCommand {
             None => "".to_string(),
         };
 
+        let condition = self.condition.gen(state);
+
+        // TODO: Numbers are automatically coerced into bools for vim
+        // so sometimes the type system lies to us.
+        //
+        // Perhaps I need an additional type: BoolNumber that we use
+        // for most cases of vim, and we only escalate to Bool when we're confident
+        // that this what is happening.
+        //
+        // This would allow us to remove the NVIM9.bool condition (assuming the type
+        // system is correct in vim9script)
+        //
+        // let condition = match guess_type_of_expr(state, &self.condition).inner {
+        //     Type::Bool => condition,
+        //     _ => format!("NVIM9.bool({condition})"),
+        // };
+
         format!(
             r#"
-if NVIM9.bool({}) then
+if NVIM9.bool({condition}) then
   {}
 {}
 {}
 end"#,
-            self.condition.gen(state),
             self.body.gen(state),
             self.elseifs
                 .iter()
@@ -740,7 +805,7 @@ impl Generate for ElseIfCommand {
     fn gen(&self, state: &mut State) -> String {
         format!(
             r#"
-        elseif {} then
+        elseif NVIM9.bool({}) then
             {}
         "#,
             self.condition.gen(state),
@@ -802,17 +867,68 @@ fn identifier_list(state: &mut State, unpacked: &UnpackIdentifier) -> String {
         .collect()
 }
 
+fn guess_type_of_expr(_: &State, expr: &Expression) -> Type {
+    match expr {
+        Expression::Number(_) => Type::Number,
+        Expression::String(_) => Type::String,
+        Expression::Boolean(_) => Type::Bool,
+        Expression::Call(c) => match c.name() {
+            Some(ident) => match ident {
+                // TODO: Use our very cool new generated stuff here
+                Identifier::Raw(raw) => match raw.name.as_str() {
+                    "charcol" => Type::Number,
+                    _ => Type::Any,
+                },
+                _ => Type::Any,
+            },
+            _ => Type::Any,
+        },
+        Expression::Infix(infix) => {
+            if infix.operator.is_comparison() {
+                return Type::Bool;
+            } else if matches!(infix.operator, Operator::And | Operator::Or) {
+                // if guess_type_of_expr(infix.left) {}
+                Type::Any
+                // todo!()
+            } else {
+                Type::Any
+            }
+        }
+        _ => Type::Any,
+        // Expression::Grouped(_) => todo!(),
+        // Expression::Index(_) => todo!(),
+        // Expression::Slice(_) => todo!(),
+        // Expression::Array(_) => todo!(),
+        // Expression::Dict(_) => todo!(),
+        // Expression::DictAccess(_) => todo!(),
+        // Expression::VimOption(_) => todo!(),
+        // Expression::Register(_) => todo!(),
+        // Expression::Lambda(_) => todo!(),
+        // Expression::Expandable(_) => todo!(),
+        // Expression::MethodCall(_) => todo!(),
+        // Expression::Ternary(_) => todo!(),
+        // Expression::Prefix(_) => todo!(),
+        // Expression::Infix(_) => todo!(),
+    }
+}
+
 impl Generate for VarCommand {
     fn gen(&self, state: &mut State) -> String {
+        state.push_declaration(
+            &self.expr,
+            match &self.ty {
+                Some(ty) => ty.clone(),
+                None => guess_type_of_expr(state, &self.expr),
+            },
+        );
+
         let expr = match self.ty {
-            Some(Type {
-                inner: InnerType::Bool,
-                ..
-            }) => format!("NVIM9.convert.decl_bool({})", self.expr.gen(state)),
-            Some(Type {
-                inner: InnerType::Dict { .. },
-                ..
-            }) => format!("NVIM9.convert.decl_dict({})", self.expr.gen(state)),
+            Some(Type::Bool) => {
+                format!("NVIM9.convert.decl_bool({})", self.expr.gen(state))
+            }
+            Some(Type::Dict { .. }) => {
+                format!("NVIM9.convert.decl_dict({})", self.expr.gen(state))
+            }
             _ => self.expr.gen(state),
         };
 
@@ -1029,7 +1145,22 @@ impl Generate for PrefixExpression {
         match &self.operator {
             parser::Operator::Increment => format!("{right} = {right} + 1"),
             parser::Operator::Decrement => format!("{right} = {right} - 1"),
-            _ => format!("NVIM9.prefix['{:?}']({right})", self.operator,),
+            _ => {
+                let ty = guess_type_of_expr(state, &self.right);
+                match ty {
+                    Type::Number => {
+                        let operator = match &self.operator {
+                            parser::Operator::Minus => "-",
+                            _ => todo!("OPERATOR: {:?}", self.operator),
+                        };
+
+                        format!("{operator}{right}")
+                    }
+                    _ => {
+                        format!("NVIM9.prefix['{:?}']({right})", self.operator,)
+                    }
+                }
+            }
         }
     }
 }
@@ -1188,12 +1319,21 @@ impl Generate for VimNumber {
 
 impl Generate for InfixExpression {
     fn gen(&self, state: &mut State) -> String {
-        format!(
-            "NVIM9.ops['{:?}']({}, {})",
-            self.operator,
-            self.left.gen(state),
-            self.right.gen(state)
-        )
+        use Type::*;
+
+        let ty = guess_type_of_expr(state, &Expression::Infix(self.clone()));
+
+        let left = self.left.gen(state);
+        let right = self.right.gen(state);
+
+        if let Some(literal) = self.operator.literal() {
+            match ty {
+                Bool => return format!("{left} {literal} {right}",),
+                _ => {}
+            }
+        }
+
+        format!("NVIM9.ops['{:?}']({left}, {right})", self.operator)
 
         // match self.operator {
         //     Operator::And => gen_operation(

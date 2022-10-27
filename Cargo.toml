@@ -21,4 +21,5 @@ members = [
     "crates/vim9-parser",
     "crates/vim9-gen",
     "crates/macros",
+    "crates/vimfuncs",
 ]

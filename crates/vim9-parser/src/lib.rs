@@ -22,7 +22,7 @@ pub use cmds::{
 };
 
 mod types;
-pub use types::{InnerType, Type};
+pub use types::Type;
 
 #[derive(PartialEq, Clone)]
 pub struct TokenMeta {
@@ -1284,6 +1284,61 @@ pub enum Operator {
     IsInsensitive,
     IsNot,
     IsNotInsensitive,
+}
+
+impl Operator {
+    pub fn is_comparison(&self) -> bool {
+        use Operator::*;
+
+        matches!(
+            self,
+            EqualTo
+                | EqualToIns
+                | NotEqualTo
+                | NotEqualToIns
+                | LessThan
+                | LessThanIns
+                | LessThanOrEqual
+                | LessThanOrEqualIns
+                | GreaterThan
+                | GreaterThanIns
+                | GreaterThanOrEqual
+                | GreaterThanOrEqualIns
+                | RegexpMatches
+                | RegexpMatchesIns
+                | NotRegexpMatches
+                | NotRegexpMatchesIns
+                | Is
+                | IsInsensitive
+                | IsNot
+                | IsNotInsensitive
+        )
+    }
+
+    pub fn literal(&self) -> Option<&'static str> {
+        Some(match self {
+            Operator::Plus => "+",
+            Operator::Minus => "-",
+            Operator::Bang => todo!(),
+            Operator::Modulo => "%",
+            Operator::Or => "or",
+            Operator::And => "and",
+            Operator::StringConcat => "..",
+            Operator::Divide => "/",
+            Operator::Multiply => "*",
+            Operator::EqualTo => "==",
+            Operator::NotEqualTo => "~=",
+            Operator::LessThan => "<",
+            Operator::LessThanOrEqual => "<=",
+            Operator::GreaterThan => ">",
+            Operator::GreaterThanOrEqual => ">=",
+            Operator::Is => todo!(),
+            Operator::IsInsensitive => todo!(),
+            Operator::IsNot => todo!(),
+            Operator::IsNotInsensitive => todo!(),
+            _ => return None,
+        })
+    }
 }
 
 // const (

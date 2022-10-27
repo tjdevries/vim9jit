@@ -1,12 +1,14 @@
 local NVIM9 = require("vim9script")
 local __VIM9_MODULE = {}
 describe("filename", function()
-  local Test_assignment_bool = nil
+  local Test_assignment_bool_1 = nil
+  local Test_assignment_bool_2 = nil
+  local Test_assignment_bool_3 = nil
   local Test_unpacked_identifiers = nil
   local Test_modifier_prefixes = nil
   -- vim9script
 
-  it("Test_assignment_bool", function()
+  it("Test_assignment_bool_1", function()
     -- Set errors to empty
     vim.v.errors = {}
 
@@ -16,11 +18,29 @@ describe("filename", function()
     local bool2 = NVIM9.convert.decl_bool(false)
     NVIM9.fn["assert_equal"](vim.v["false"], bool2)
 
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_assignment_bool_2", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local bool3 = NVIM9.convert.decl_bool(0)
     NVIM9.fn["assert_equal"](false, bool3)
     local bool4 = NVIM9.convert.decl_bool(1)
     NVIM9.fn["assert_equal"](true, bool4)
 
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_assignment_bool_3", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local bool5 = NVIM9.convert.decl_bool(NVIM9.ops["And"](1, true))
     NVIM9.fn["assert_equal"](true, bool5)
     local bool6 = NVIM9.convert.decl_bool(NVIM9.ops["And"](0, 1))

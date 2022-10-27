@@ -27,14 +27,7 @@ describe("filename", function()
 
     -- Actual test
     local x = true
-    if
-      NVIM9.bool(
-        NVIM9.ops["Or"](
-          NVIM9.prefix["Bang"](NVIM9.fn["has"]("vim9script")),
-          NVIM9.ops["LessThan"](vim.v["version"], 900)
-        )
-      )
-    then
+    if NVIM9.bool(NVIM9.ops["Or"](NVIM9.prefix["Bang"](NVIM9.fn["has"]("vim9script")), vim.v["version"] < 900)) then
       x = false
     end
 

@@ -61,13 +61,12 @@ describe("filename", function()
     -- Actual test
     local x = { 1, 4, 2, 5 }
     NVIM9.fn_mut("sort", { x }, { replace = 0 })
-    NVIM9.fn_mut(
-      "filter",
-      { x, function(_, y)
-        return NVIM9.ops["EqualTo"](NVIM9.ops["Modulo"](y, 2), 0)
-      end },
-      { replace = 0 }
-    )
+    NVIM9.fn_mut("filter", {
+      x,
+      function(_, y)
+        return NVIM9.ops["Modulo"](y, 2) == 0
+      end,
+    }, { replace = 0 })
     NVIM9.fn["assert_equal"]({ 2, 4 }, x)
 
     -- Assert that errors is still empty
@@ -85,7 +84,7 @@ describe("filename", function()
       {
         NVIM9.fn_mut("sort", { foo }, { replace = 0 }),
         function(_, y)
-          return NVIM9.ops["EqualTo"](NVIM9.ops["Modulo"](y, 2), 0)
+          return NVIM9.ops["Modulo"](y, 2) == 0
         end,
       },
       { replace = 0 }

@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2822
+assertion_line: 2888
 expression: snapshot_parsing(contents)
 ---
 [
@@ -142,13 +142,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (21,36)->(21,38)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (21,42)->(21,43)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (21,46)->(21,47)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (21,42)->(21,43)),
+                                inner: Any,
+                                close: Token(AngleRight, (21,46)->(21,47)),
                             },
                         ),
                         equal: None,
@@ -157,13 +154,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (21,52)->(21,54)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (21,58)->(21,59)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (21,62)->(21,63)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (21,58)->(21,59)),
+                                inner: Any,
+                                close: Token(AngleRight, (21,62)->(21,63)),
                             },
                         ),
                         equal: None,
@@ -172,13 +166,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (21,70)->(21,72)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (21,76)->(21,77)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (21,80)->(21,81)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (21,76)->(21,77)),
+                                inner: Any,
+                                close: Token(AngleRight, (21,80)->(21,81)),
                             },
                         ),
                         equal: None,
@@ -188,10 +179,7 @@ expression: snapshot_parsing(contents)
                 close: Token(RightParen, (21,81)->(21,82)),
             },
             ret: Some(
-                Type {
-                    colon: Token(SpacedColon, (21,82)->(21,84)),
-                    inner: Void,
-                },
+                Void,
             ),
             def_eol: Token(EndOfLine, (21,88)->(21,88)),
             body: Body {
@@ -241,13 +229,10 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (26,2)->(26,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (26,10)->(26,12)),
-                                    inner: Dict {
-                                        open: Token(AngleLeft, (26,16)->(26,17)),
-                                        inner: Any,
-                                        close: Token(GreaterThan, (26,20)->(26,21)),
-                                    },
+                                Dict {
+                                    open: Token(AngleLeft, (26,16)->(26,17)),
+                                    inner: Any,
+                                    close: Token(GreaterThan, (26,20)->(26,21)),
                                 },
                             ),
                             name: Raw(caps),
@@ -590,13 +575,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (53,34)->(53,36)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (53,40)->(53,41)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (53,44)->(53,45)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (53,40)->(53,41)),
+                                inner: Any,
+                                close: Token(AngleRight, (53,44)->(53,45)),
                             },
                         ),
                         equal: None,
@@ -605,13 +587,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (53,50)->(53,52)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (53,56)->(53,57)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (53,60)->(53,61)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (53,56)->(53,57)),
+                                inner: Any,
+                                close: Token(AngleRight, (53,60)->(53,61)),
                             },
                         ),
                         equal: None,
@@ -620,13 +599,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (53,68)->(53,70)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (53,74)->(53,75)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (53,78)->(53,79)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (53,74)->(53,75)),
+                                inner: Any,
+                                close: Token(AngleRight, (53,78)->(53,79)),
                             },
                         ),
                         equal: None,
@@ -636,10 +612,7 @@ expression: snapshot_parsing(contents)
                 close: Token(RightParen, (53,79)->(53,80)),
             },
             ret: Some(
-                Type {
-                    colon: Token(SpacedColon, (53,80)->(53,82)),
-                    inner: Void,
-                },
+                Void,
             ),
             def_eol: Token(EndOfLine, (53,86)->(53,86)),
             body: Body {
@@ -676,13 +649,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (59,39)->(59,41)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (59,45)->(59,46)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (59,49)->(59,50)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (59,45)->(59,46)),
+                                inner: Any,
+                                close: Token(AngleRight, (59,49)->(59,50)),
                             },
                         ),
                         equal: None,
@@ -691,13 +661,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (59,55)->(59,57)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (59,61)->(59,62)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (59,65)->(59,66)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (59,61)->(59,62)),
+                                inner: Any,
+                                close: Token(AngleRight, (59,65)->(59,66)),
                             },
                         ),
                         equal: None,
@@ -706,13 +673,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (59,73)->(59,75)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (59,79)->(59,80)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (59,83)->(59,84)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (59,79)->(59,80)),
+                                inner: Any,
+                                close: Token(AngleRight, (59,83)->(59,84)),
                             },
                         ),
                         equal: None,
@@ -722,10 +686,7 @@ expression: snapshot_parsing(contents)
                 close: Token(RightParen, (59,84)->(59,85)),
             },
             ret: Some(
-                Type {
-                    colon: Token(SpacedColon, (59,85)->(59,87)),
-                    inner: Void,
-                },
+                Void,
             ),
             def_eol: Token(EndOfLine, (59,91)->(59,91)),
             body: Body {
@@ -825,10 +786,7 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(kind),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (67,32)->(67,34)),
-                                inner: Number,
-                            },
+                            Number,
                         ),
                         equal: None,
                         default_val: None,
@@ -837,10 +795,7 @@ expression: snapshot_parsing(contents)
                 close: Token(RightParen, (67,40)->(67,41)),
             },
             ret: Some(
-                Type {
-                    colon: Token(SpacedColon, (67,41)->(67,43)),
-                    inner: String,
-                },
+                String,
             ),
             def_eol: Token(EndOfLine, (67,49)->(67,49)),
             body: Body {
@@ -849,13 +804,10 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (68,2)->(68,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (68,13)->(68,15)),
-                                    inner: List {
-                                        open: Token(AngleLeft, (68,19)->(68,20)),
-                                        inner: String,
-                                        close: Token(GreaterThan, (68,26)->(68,27)),
-                                    },
+                                List {
+                                    open: Token(AngleLeft, (68,19)->(68,20)),
+                                    inner: String,
+                                    close: Token(GreaterThan, (68,26)->(68,27)),
                                 },
                             ),
                             name: Raw(kindMap),
@@ -1087,13 +1039,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (103,36)->(103,38)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (103,42)->(103,43)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (103,46)->(103,47)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (103,42)->(103,43)),
+                                inner: Any,
+                                close: Token(AngleRight, (103,46)->(103,47)),
                             },
                         ),
                         equal: None,
@@ -1102,13 +1051,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (103,52)->(103,54)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (103,58)->(103,59)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (103,62)->(103,63)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (103,58)->(103,59)),
+                                inner: Any,
+                                close: Token(AngleRight, (103,62)->(103,63)),
                             },
                         ),
                         equal: None,
@@ -1117,13 +1063,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (103,70)->(103,72)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (103,76)->(103,77)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (103,80)->(103,81)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (103,76)->(103,77)),
+                                inner: Any,
+                                close: Token(AngleRight, (103,80)->(103,81)),
                             },
                         ),
                         equal: None,
@@ -1133,10 +1076,7 @@ expression: snapshot_parsing(contents)
                 close: Token(RightParen, (103,81)->(103,82)),
             },
             ret: Some(
-                Type {
-                    colon: Token(SpacedColon, (103,82)->(103,84)),
-                    inner: Void,
-                },
+                Void,
             ),
             def_eol: Token(EndOfLine, (103,88)->(103,88)),
             body: Body {
@@ -1187,17 +1127,14 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (108,2)->(108,5)),
                             name: Raw(items),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (108,11)->(108,13)),
-                                    inner: List {
-                                        open: Token(AngleLeft, (108,17)->(108,18)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (108,22)->(108,23)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (108,26)->(108,27)),
-                                        },
-                                        close: Token(GreaterThan, (108,27)->(108,28)),
+                                List {
+                                    open: Token(AngleLeft, (108,17)->(108,18)),
+                                    inner: Dict {
+                                        open: Token(AngleLeft, (108,22)->(108,23)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (108,26)->(108,27)),
                                     },
+                                    close: Token(GreaterThan, (108,27)->(108,28)),
                                 },
                             ),
                             eol: Token(EndOfLine, (108,28)->(108,28)),
@@ -1311,17 +1248,14 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (115,2)->(115,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (115,19)->(115,21)),
-                                    inner: List {
-                                        open: Token(AngleLeft, (115,25)->(115,26)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (115,30)->(115,31)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (115,34)->(115,35)),
-                                        },
-                                        close: Token(GreaterThan, (115,35)->(115,36)),
+                                List {
+                                    open: Token(AngleLeft, (115,25)->(115,26)),
+                                    inner: Dict {
+                                        open: Token(AngleLeft, (115,30)->(115,31)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (115,34)->(115,35)),
                                     },
+                                    close: Token(GreaterThan, (115,35)->(115,36)),
                                 },
                             ),
                             name: Raw(completeItems),
@@ -1352,13 +1286,10 @@ expression: snapshot_parsing(contents)
                                         VarCommand {
                                             var: Token(Identifier, (117,4)->(117,7)),
                                             ty: Some(
-                                                Type {
-                                                    colon: Token(SpacedColon, (117,9)->(117,11)),
-                                                    inner: Dict {
-                                                        open: Token(AngleLeft, (117,15)->(117,16)),
-                                                        inner: Any,
-                                                        close: Token(GreaterThan, (117,19)->(117,20)),
-                                                    },
+                                                Dict {
+                                                    open: Token(AngleLeft, (117,15)->(117,16)),
+                                                    inner: Any,
+                                                    close: Token(GreaterThan, (117,19)->(117,20)),
                                                 },
                                             ),
                                             name: Raw(d),
@@ -2270,10 +2201,7 @@ expression: snapshot_parsing(contents)
                                         VarCommand {
                                             var: Token(Identifier, (165,4)->(165,7)),
                                             ty: Some(
-                                                Type {
-                                                    colon: Token(SpacedColon, (165,17)->(165,19)),
-                                                    inner: Number,
-                                                },
+                                                Number,
                                             ),
                                             name: Raw(start_col),
                                             equal: Token(Equal, (165,26)->(165,27)),
@@ -2422,10 +2350,7 @@ expression: snapshot_parsing(contents)
                                                         VarCommand {
                                                             var: Token(Identifier, (176,6)->(176,9)),
                                                             ty: Some(
-                                                                Type {
-                                                                    colon: Token(SpacedColon, (176,14)->(176,16)),
-                                                                    inner: String,
-                                                                },
+                                                                String,
                                                             ),
                                                             name: Raw(line),
                                                             equal: Token(Equal, (176,23)->(176,24)),
@@ -2687,13 +2612,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (193,31)->(193,33)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (193,37)->(193,38)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (193,41)->(193,42)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (193,37)->(193,38)),
+                                inner: Any,
+                                close: Token(AngleRight, (193,41)->(193,42)),
                             },
                         ),
                         equal: None,
@@ -2702,13 +2624,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (193,47)->(193,49)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (193,53)->(193,54)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (193,57)->(193,58)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (193,53)->(193,54)),
+                                inner: Any,
+                                close: Token(AngleRight, (193,57)->(193,58)),
                             },
                         ),
                         equal: None,
@@ -2717,13 +2636,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (193,65)->(193,67)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (193,71)->(193,72)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (193,75)->(193,76)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (193,71)->(193,72)),
+                                inner: Any,
+                                close: Token(AngleRight, (193,75)->(193,76)),
                             },
                         ),
                         equal: None,
@@ -2733,10 +2649,7 @@ expression: snapshot_parsing(contents)
                 close: Token(RightParen, (193,76)->(193,77)),
             },
             ret: Some(
-                Type {
-                    colon: Token(SpacedColon, (193,77)->(193,79)),
-                    inner: Void,
-                },
+                Void,
             ),
             def_eol: Token(EndOfLine, (193,83)->(193,83)),
             body: Body {
@@ -2787,13 +2700,10 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (198,2)->(198,5)),
                             name: Raw(hoverText),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (198,15)->(198,17)),
-                                    inner: List {
-                                        open: Token(AngleLeft, (198,21)->(198,22)),
-                                        inner: String,
-                                        close: Token(GreaterThan, (198,28)->(198,29)),
-                                    },
+                                List {
+                                    open: Token(AngleLeft, (198,21)->(198,22)),
+                                    inner: String,
+                                    close: Token(GreaterThan, (198,28)->(198,29)),
                                 },
                             ),
                             eol: Token(EndOfLine, (198,29)->(198,29)),
@@ -2804,10 +2714,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (199,2)->(199,5)),
                             name: Raw(hoverKind),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (199,15)->(199,17)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (199,23)->(199,23)),
                         },
@@ -3889,13 +3796,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (256,36)->(256,38)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (256,42)->(256,43)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (256,46)->(256,47)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (256,42)->(256,43)),
+                                inner: Any,
+                                close: Token(AngleRight, (256,46)->(256,47)),
                             },
                         ),
                         equal: None,
@@ -3904,13 +3808,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (256,52)->(256,54)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (256,58)->(256,59)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (256,62)->(256,63)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (256,58)->(256,59)),
+                                inner: Any,
+                                close: Token(AngleRight, (256,62)->(256,63)),
                             },
                         ),
                         equal: None,
@@ -3919,13 +3820,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (256,70)->(256,72)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (256,76)->(256,77)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (256,80)->(256,81)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (256,76)->(256,77)),
+                                inner: Any,
+                                close: Token(AngleRight, (256,80)->(256,81)),
                             },
                         ),
                         equal: None,
@@ -3935,10 +3833,7 @@ expression: snapshot_parsing(contents)
                 close: Token(RightParen, (256,81)->(256,82)),
             },
             ret: Some(
-                Type {
-                    colon: Token(SpacedColon, (256,82)->(256,84)),
-                    inner: Void,
-                },
+                Void,
             ),
             def_eol: Token(EndOfLine, (256,88)->(256,88)),
             body: Body {
@@ -4094,13 +3989,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (268,38)->(268,40)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (268,44)->(268,45)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (268,48)->(268,49)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (268,44)->(268,45)),
+                                inner: Any,
+                                close: Token(AngleRight, (268,48)->(268,49)),
                             },
                         ),
                         equal: None,
@@ -4109,13 +4001,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (268,54)->(268,56)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (268,60)->(268,61)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (268,64)->(268,65)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (268,60)->(268,61)),
+                                inner: Any,
+                                close: Token(AngleRight, (268,64)->(268,65)),
                             },
                         ),
                         equal: None,
@@ -4124,13 +4013,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (268,72)->(268,74)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (268,78)->(268,79)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (268,82)->(268,83)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (268,78)->(268,79)),
+                                inner: Any,
+                                close: Token(AngleRight, (268,82)->(268,83)),
                             },
                         ),
                         equal: None,
@@ -4140,10 +4026,7 @@ expression: snapshot_parsing(contents)
                 close: Token(RightParen, (268,83)->(268,84)),
             },
             ret: Some(
-                Type {
-                    colon: Token(SpacedColon, (268,84)->(268,86)),
-                    inner: Void,
-                },
+                Void,
             ),
             def_eol: Token(EndOfLine, (268,90)->(268,90)),
             body: Body {
@@ -4193,10 +4076,7 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (273,2)->(273,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (273,11)->(273,13)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             name: Raw(fname),
                             equal: Token(Equal, (273,20)->(273,21)),
@@ -4279,10 +4159,7 @@ expression: snapshot_parsing(contents)
                                         VarCommand {
                                             var: Token(Identifier, (277,4)->(277,7)),
                                             ty: Some(
-                                                Type {
-                                                    colon: Token(SpacedColon, (277,12)->(277,14)),
-                                                    inner: Number,
-                                                },
+                                                Number,
                                             ),
                                             name: Raw(kind),
                                             equal: Token(Equal, (277,21)->(277,22)),
@@ -4312,10 +4189,7 @@ expression: snapshot_parsing(contents)
                                             var: Token(Identifier, (278,4)->(278,7)),
                                             name: Raw(propName),
                                             ty: Some(
-                                                Type {
-                                                    colon: Token(SpacedColon, (278,16)->(278,18)),
-                                                    inner: String,
-                                                },
+                                                String,
                                             ),
                                             eol: Token(EndOfLine, (278,24)->(278,24)),
                                         },
@@ -4662,10 +4536,7 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(symkind),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (299,31)->(299,33)),
-                                inner: Number,
-                            },
+                            Number,
                         ),
                         equal: None,
                         default_val: None,
@@ -4674,10 +4545,7 @@ expression: snapshot_parsing(contents)
                 close: Token(RightParen, (299,39)->(299,40)),
             },
             ret: Some(
-                Type {
-                    colon: Token(SpacedColon, (299,40)->(299,42)),
-                    inner: String,
-                },
+                String,
             ),
             def_eol: Token(EndOfLine, (299,48)->(299,48)),
             body: Body {
@@ -4686,13 +4554,10 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (300,2)->(300,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (300,15)->(300,17)),
-                                    inner: List {
-                                        open: Token(AngleLeft, (300,21)->(300,22)),
-                                        inner: String,
-                                        close: Token(GreaterThan, (300,28)->(300,29)),
-                                    },
+                                List {
+                                    open: Token(AngleLeft, (300,21)->(300,22)),
+                                    inner: String,
+                                    close: Token(GreaterThan, (300,28)->(300,29)),
                                 },
                             ),
                             name: Raw(symbolMap),
@@ -4926,17 +4791,14 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(symbolInfoTable),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (312,42)->(312,44)),
-                                inner: List {
-                                    open: Token(AngleLeft, (312,48)->(312,49)),
-                                    inner: Dict {
-                                        open: Token(AngleLeft, (312,53)->(312,54)),
-                                        inner: Any,
-                                        close: Token(AngleRight, (312,57)->(312,58)),
-                                    },
-                                    close: Token(AngleRight, (312,58)->(312,59)),
+                            List {
+                                open: Token(AngleLeft, (312,48)->(312,49)),
+                                inner: Dict {
+                                    open: Token(AngleLeft, (312,53)->(312,54)),
+                                    inner: Any,
+                                    close: Token(AngleRight, (312,57)->(312,58)),
                                 },
+                                close: Token(AngleRight, (312,58)->(312,59)),
                             },
                         ),
                         equal: None,
@@ -4945,21 +4807,18 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(symbolTypeTable),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (313,19)->(313,21)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (313,25)->(313,26)),
-                                    inner: List {
-                                        open: Token(AngleLeft, (313,30)->(313,31)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (313,35)->(313,36)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (313,39)->(313,40)),
-                                        },
-                                        close: Token(AngleRight, (313,40)->(313,41)),
+                            Dict {
+                                open: Token(AngleLeft, (313,25)->(313,26)),
+                                inner: List {
+                                    open: Token(AngleLeft, (313,30)->(313,31)),
+                                    inner: Dict {
+                                        open: Token(AngleLeft, (313,35)->(313,36)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (313,39)->(313,40)),
                                     },
-                                    close: Token(AngleRight, (313,41)->(313,42)),
+                                    close: Token(AngleRight, (313,40)->(313,41)),
                                 },
+                                close: Token(AngleRight, (313,41)->(313,42)),
                             },
                         ),
                         equal: None,
@@ -4968,17 +4827,14 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(symbolLineTable),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (314,19)->(314,21)),
-                                inner: List {
-                                    open: Token(AngleLeft, (314,25)->(314,26)),
-                                    inner: Dict {
-                                        open: Token(AngleLeft, (314,30)->(314,31)),
-                                        inner: Any,
-                                        close: Token(AngleRight, (314,34)->(314,35)),
-                                    },
-                                    close: Token(AngleRight, (314,35)->(314,36)),
+                            List {
+                                open: Token(AngleLeft, (314,25)->(314,26)),
+                                inner: Dict {
+                                    open: Token(AngleLeft, (314,30)->(314,31)),
+                                    inner: Any,
+                                    close: Token(AngleRight, (314,34)->(314,35)),
                                 },
+                                close: Token(AngleRight, (314,35)->(314,36)),
                             },
                         ),
                         equal: None,
@@ -4996,10 +4852,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (315,2)->(315,5)),
                             name: Raw(fname),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (315,11)->(315,13)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (315,19)->(315,19)),
                         },
@@ -5009,10 +4862,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (316,2)->(316,5)),
                             name: Raw(symbolType),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (316,16)->(316,18)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (316,24)->(316,24)),
                         },
@@ -5022,10 +4872,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (317,2)->(317,5)),
                             name: Raw(name),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (317,10)->(317,12)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (317,18)->(317,18)),
                         },
@@ -5035,17 +4882,14 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (318,2)->(318,5)),
                             name: Raw(r),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (318,7)->(318,9)),
+                                Dict {
+                                    open: Token(AngleLeft, (318,13)->(318,14)),
                                     inner: Dict {
-                                        open: Token(AngleLeft, (318,13)->(318,14)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (318,18)->(318,19)),
-                                            inner: Number,
-                                            close: Token(AngleRight, (318,25)->(318,26)),
-                                        },
-                                        close: Token(GreaterThan, (318,26)->(318,27)),
+                                        open: Token(AngleLeft, (318,18)->(318,19)),
+                                        inner: Number,
+                                        close: Token(AngleRight, (318,25)->(318,26)),
                                     },
+                                    close: Token(GreaterThan, (318,26)->(318,27)),
                                 },
                             ),
                             eol: Token(EndOfLine, (318,27)->(318,27)),
@@ -5056,13 +4900,10 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (319,2)->(319,5)),
                             name: Raw(symInfo),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (319,13)->(319,15)),
-                                    inner: Dict {
-                                        open: Token(AngleLeft, (319,19)->(319,20)),
-                                        inner: Any,
-                                        close: Token(GreaterThan, (319,23)->(319,24)),
-                                    },
+                                Dict {
+                                    open: Token(AngleLeft, (319,19)->(319,20)),
+                                    inner: Any,
+                                    close: Token(GreaterThan, (319,23)->(319,24)),
                                 },
                             ),
                             eol: Token(EndOfLine, (319,24)->(319,24)),
@@ -5459,17 +5300,14 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(docSymbolTable),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (342,40)->(342,42)),
-                                inner: List {
-                                    open: Token(AngleLeft, (342,46)->(342,47)),
-                                    inner: Dict {
-                                        open: Token(AngleLeft, (342,51)->(342,52)),
-                                        inner: Any,
-                                        close: Token(AngleRight, (342,55)->(342,56)),
-                                    },
-                                    close: Token(AngleRight, (342,56)->(342,57)),
+                            List {
+                                open: Token(AngleLeft, (342,46)->(342,47)),
+                                inner: Dict {
+                                    open: Token(AngleLeft, (342,51)->(342,52)),
+                                    inner: Any,
+                                    close: Token(AngleRight, (342,55)->(342,56)),
                                 },
+                                close: Token(AngleRight, (342,56)->(342,57)),
                             },
                         ),
                         equal: None,
@@ -5478,21 +5316,18 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(symbolTypeTable),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (343,19)->(343,21)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (343,25)->(343,26)),
-                                    inner: List {
-                                        open: Token(AngleLeft, (343,30)->(343,31)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (343,35)->(343,36)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (343,39)->(343,40)),
-                                        },
-                                        close: Token(AngleRight, (343,40)->(343,41)),
+                            Dict {
+                                open: Token(AngleLeft, (343,25)->(343,26)),
+                                inner: List {
+                                    open: Token(AngleLeft, (343,30)->(343,31)),
+                                    inner: Dict {
+                                        open: Token(AngleLeft, (343,35)->(343,36)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (343,39)->(343,40)),
                                     },
-                                    close: Token(AngleRight, (343,41)->(343,42)),
+                                    close: Token(AngleRight, (343,40)->(343,41)),
                                 },
+                                close: Token(AngleRight, (343,41)->(343,42)),
                             },
                         ),
                         equal: None,
@@ -5501,17 +5336,14 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(symbolLineTable),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (344,19)->(344,21)),
-                                inner: List {
-                                    open: Token(AngleLeft, (344,25)->(344,26)),
-                                    inner: Dict {
-                                        open: Token(AngleLeft, (344,30)->(344,31)),
-                                        inner: Any,
-                                        close: Token(AngleRight, (344,34)->(344,35)),
-                                    },
-                                    close: Token(AngleRight, (344,35)->(344,36)),
+                            List {
+                                open: Token(AngleLeft, (344,25)->(344,26)),
+                                inner: Dict {
+                                    open: Token(AngleLeft, (344,30)->(344,31)),
+                                    inner: Any,
+                                    close: Token(AngleRight, (344,34)->(344,35)),
                                 },
+                                close: Token(AngleRight, (344,35)->(344,36)),
                             },
                         ),
                         equal: None,
@@ -5529,10 +5361,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (345,2)->(345,5)),
                             name: Raw(symbolType),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (345,16)->(345,18)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (345,24)->(345,24)),
                         },
@@ -5542,10 +5371,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (346,2)->(346,5)),
                             name: Raw(name),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (346,10)->(346,12)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (346,18)->(346,18)),
                         },
@@ -5555,17 +5381,14 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (347,2)->(347,5)),
                             name: Raw(r),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (347,7)->(347,9)),
+                                Dict {
+                                    open: Token(AngleLeft, (347,13)->(347,14)),
                                     inner: Dict {
-                                        open: Token(AngleLeft, (347,13)->(347,14)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (347,18)->(347,19)),
-                                            inner: Number,
-                                            close: Token(AngleRight, (347,25)->(347,26)),
-                                        },
-                                        close: Token(GreaterThan, (347,26)->(347,27)),
+                                        open: Token(AngleLeft, (347,18)->(347,19)),
+                                        inner: Number,
+                                        close: Token(AngleRight, (347,25)->(347,26)),
                                     },
+                                    close: Token(GreaterThan, (347,26)->(347,27)),
                                 },
                             ),
                             eol: Token(EndOfLine, (347,27)->(347,27)),
@@ -5576,13 +5399,10 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (348,2)->(348,5)),
                             name: Raw(symInfo),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (348,13)->(348,15)),
-                                    inner: Dict {
-                                        open: Token(AngleLeft, (348,19)->(348,20)),
-                                        inner: Any,
-                                        close: Token(GreaterThan, (348,23)->(348,24)),
-                                    },
+                                Dict {
+                                    open: Token(AngleLeft, (348,19)->(348,20)),
+                                    inner: Any,
+                                    close: Token(GreaterThan, (348,23)->(348,24)),
                                 },
                             ),
                             eol: Token(EndOfLine, (348,24)->(348,24)),
@@ -5593,10 +5413,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (349,2)->(349,5)),
                             name: Raw(symbolDetail),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (349,18)->(349,20)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (349,26)->(349,26)),
                         },
@@ -5606,21 +5423,18 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (350,2)->(350,5)),
                             name: Raw(childSymbols),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (350,18)->(350,20)),
-                                    inner: Dict {
-                                        open: Token(AngleLeft, (350,24)->(350,25)),
-                                        inner: List {
-                                            open: Token(AngleLeft, (350,29)->(350,30)),
-                                            inner: Dict {
-                                                open: Token(AngleLeft, (350,34)->(350,35)),
-                                                inner: Any,
-                                                close: Token(AngleRight, (350,38)->(350,39)),
-                                            },
-                                            close: Token(AngleRight, (350,39)->(350,40)),
+                                Dict {
+                                    open: Token(AngleLeft, (350,24)->(350,25)),
+                                    inner: List {
+                                        open: Token(AngleLeft, (350,29)->(350,30)),
+                                        inner: Dict {
+                                            open: Token(AngleLeft, (350,34)->(350,35)),
+                                            inner: Any,
+                                            close: Token(AngleRight, (350,38)->(350,39)),
                                         },
-                                        close: Token(GreaterThan, (350,40)->(350,41)),
+                                        close: Token(AngleRight, (350,39)->(350,40)),
                                     },
+                                    close: Token(GreaterThan, (350,40)->(350,41)),
                                 },
                             ),
                             eol: Token(EndOfLine, (350,41)->(350,41)),
@@ -6047,13 +5861,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (376,35)->(376,37)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (376,41)->(376,42)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (376,45)->(376,46)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (376,41)->(376,42)),
+                                inner: Any,
+                                close: Token(AngleRight, (376,45)->(376,46)),
                             },
                         ),
                         equal: None,
@@ -6062,13 +5873,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (376,51)->(376,53)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (376,57)->(376,58)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (376,61)->(376,62)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (376,57)->(376,58)),
+                                inner: Any,
+                                close: Token(AngleRight, (376,61)->(376,62)),
                             },
                         ),
                         equal: None,
@@ -6077,13 +5885,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (376,69)->(376,71)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (376,75)->(376,76)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (376,79)->(376,80)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (376,75)->(376,76)),
+                                inner: Any,
+                                close: Token(AngleRight, (376,79)->(376,80)),
                             },
                         ),
                         equal: None,
@@ -6093,10 +5898,7 @@ expression: snapshot_parsing(contents)
                 close: Token(RightParen, (376,80)->(376,81)),
             },
             ret: Some(
-                Type {
-                    colon: Token(SpacedColon, (376,81)->(376,83)),
-                    inner: Void,
-                },
+                Void,
             ),
             def_eol: Token(EndOfLine, (376,87)->(376,87)),
             body: Body {
@@ -6106,10 +5908,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (377,2)->(377,5)),
                             name: Raw(fname),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (377,11)->(377,13)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (377,19)->(377,19)),
                         },
@@ -6118,21 +5917,18 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (378,2)->(378,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (378,21)->(378,23)),
-                                    inner: Dict {
-                                        open: Token(AngleLeft, (378,27)->(378,28)),
-                                        inner: List {
-                                            open: Token(AngleLeft, (378,32)->(378,33)),
-                                            inner: Dict {
-                                                open: Token(AngleLeft, (378,37)->(378,38)),
-                                                inner: Any,
-                                                close: Token(AngleRight, (378,41)->(378,42)),
-                                            },
-                                            close: Token(AngleRight, (378,42)->(378,43)),
+                                Dict {
+                                    open: Token(AngleLeft, (378,27)->(378,28)),
+                                    inner: List {
+                                        open: Token(AngleLeft, (378,32)->(378,33)),
+                                        inner: Dict {
+                                            open: Token(AngleLeft, (378,37)->(378,38)),
+                                            inner: Any,
+                                            close: Token(AngleRight, (378,41)->(378,42)),
                                         },
-                                        close: Token(GreaterThan, (378,43)->(378,44)),
+                                        close: Token(AngleRight, (378,42)->(378,43)),
                                     },
+                                    close: Token(GreaterThan, (378,43)->(378,44)),
                                 },
                             ),
                             name: Raw(symbolTypeTable),
@@ -6151,17 +5947,14 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (379,2)->(379,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (379,21)->(379,23)),
-                                    inner: List {
-                                        open: Token(AngleLeft, (379,27)->(379,28)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (379,32)->(379,33)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (379,36)->(379,37)),
-                                        },
-                                        close: Token(GreaterThan, (379,37)->(379,38)),
+                                List {
+                                    open: Token(AngleLeft, (379,27)->(379,28)),
+                                    inner: Dict {
+                                        open: Token(AngleLeft, (379,32)->(379,33)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (379,36)->(379,37)),
                                     },
+                                    close: Token(GreaterThan, (379,37)->(379,38)),
                                 },
                             ),
                             name: Raw(symbolLineTable),
@@ -6646,13 +6439,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (406,36)->(406,38)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (406,42)->(406,43)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (406,46)->(406,47)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (406,42)->(406,43)),
+                                inner: Any,
+                                close: Token(AngleRight, (406,46)->(406,47)),
                             },
                         ),
                         equal: None,
@@ -6661,13 +6451,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (406,52)->(406,54)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (406,58)->(406,59)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (406,62)->(406,63)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (406,58)->(406,59)),
+                                inner: Any,
+                                close: Token(AngleRight, (406,62)->(406,63)),
                             },
                         ),
                         equal: None,
@@ -6676,13 +6463,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (406,70)->(406,72)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (406,76)->(406,77)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (406,80)->(406,81)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (406,76)->(406,77)),
+                                inner: Any,
+                                close: Token(AngleRight, (406,80)->(406,81)),
                             },
                         ),
                         equal: None,
@@ -6825,13 +6609,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (418,38)->(418,40)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (418,44)->(418,45)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (418,48)->(418,49)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (418,44)->(418,45)),
+                                inner: Any,
+                                close: Token(AngleRight, (418,48)->(418,49)),
                             },
                         ),
                         equal: None,
@@ -6840,13 +6621,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (418,54)->(418,56)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (418,60)->(418,61)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (418,64)->(418,65)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (418,60)->(418,61)),
+                                inner: Any,
+                                close: Token(AngleRight, (418,64)->(418,65)),
                             },
                         ),
                         equal: None,
@@ -6855,13 +6633,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (418,72)->(418,74)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (418,78)->(418,79)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (418,82)->(418,83)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (418,78)->(418,79)),
+                                inner: Any,
+                                close: Token(AngleRight, (418,82)->(418,83)),
                             },
                         ),
                         equal: None,
@@ -6923,10 +6698,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (424,2)->(424,5)),
                             name: Raw(end_lnum),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (424,14)->(424,16)),
-                                    inner: Number,
-                                },
+                                Number,
                             ),
                             eol: Token(EndOfLine, (424,22)->(424,22)),
                         },
@@ -6935,10 +6707,7 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (425,2)->(425,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (425,15)->(425,17)),
-                                    inner: Number,
-                                },
+                                Number,
                             ),
                             name: Raw(last_lnum),
                             equal: Token(Equal, (425,24)->(425,25)),
@@ -7168,13 +6937,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (444,42)->(444,44)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (444,48)->(444,49)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (444,52)->(444,53)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (444,48)->(444,49)),
+                                inner: Any,
+                                close: Token(AngleRight, (444,52)->(444,53)),
                             },
                         ),
                         equal: None,
@@ -7183,13 +6949,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (444,58)->(444,60)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (444,64)->(444,65)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (444,68)->(444,69)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (444,64)->(444,65)),
+                                inner: Any,
+                                close: Token(AngleRight, (444,68)->(444,69)),
                             },
                         ),
                         equal: None,
@@ -7198,13 +6961,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (444,76)->(444,78)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (444,82)->(444,83)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (444,86)->(444,87)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (444,82)->(444,83)),
+                                inner: Any,
+                                close: Token(AngleRight, (444,86)->(444,87)),
                             },
                         ),
                         equal: None,
@@ -7286,10 +7046,7 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(popupWidth),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (454,27)->(454,29)),
-                                inner: Number,
-                            },
+                            Number,
                         ),
                         equal: None,
                         default_val: None,
@@ -7297,10 +7054,7 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(fname),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (454,42)->(454,44)),
-                                inner: String,
-                            },
+                            String,
                         ),
                         equal: None,
                         default_val: None,
@@ -7309,10 +7063,7 @@ expression: snapshot_parsing(contents)
                 close: Token(RightParen, (454,50)->(454,51)),
             },
             ret: Some(
-                Type {
-                    colon: Token(SpacedColon, (454,51)->(454,53)),
-                    inner: String,
-                },
+                String,
             ),
             def_eol: Token(EndOfLine, (454,59)->(454,59)),
             body: Body {
@@ -7321,10 +7072,7 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (455,2)->(455,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (455,14)->(455,16)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             name: Raw(filename),
                             equal: Token(Equal, (455,23)->(455,24)),
@@ -7350,10 +7098,7 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (456,2)->(456,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (456,10)->(456,12)),
-                                    inner: Number,
-                                },
+                                Number,
                             ),
                             name: Raw(flen),
                             equal: Token(Equal, (456,19)->(456,20)),
@@ -7373,10 +7118,7 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (457,2)->(457,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (457,13)->(457,15)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             name: Raw(dirname),
                             equal: Token(Equal, (457,22)->(457,23)),
@@ -7583,10 +7325,7 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (466,2)->(466,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (466,9)->(466,11)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             name: Raw(str),
                             equal: Token(Equal, (466,18)->(466,19)),
@@ -7676,13 +7415,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (475,41)->(475,43)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (475,47)->(475,48)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (475,51)->(475,52)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (475,47)->(475,48)),
+                                inner: Any,
+                                close: Token(AngleRight, (475,51)->(475,52)),
                             },
                         ),
                         equal: None,
@@ -7691,13 +7427,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (475,57)->(475,59)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (475,63)->(475,64)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (475,67)->(475,68)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (475,63)->(475,64)),
+                                inner: Any,
+                                close: Token(AngleRight, (475,67)->(475,68)),
                             },
                         ),
                         equal: None,
@@ -7706,13 +7439,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (475,75)->(475,77)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (475,81)->(475,82)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (475,85)->(475,86)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (475,81)->(475,82)),
+                                inner: Any,
+                                close: Token(AngleRight, (475,85)->(475,86)),
                             },
                         ),
                         equal: None,
@@ -7729,17 +7459,14 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (476,2)->(476,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (476,13)->(476,15)),
-                                    inner: List {
-                                        open: Token(AngleLeft, (476,19)->(476,20)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (476,24)->(476,25)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (476,28)->(476,29)),
-                                        },
-                                        close: Token(GreaterThan, (476,29)->(476,30)),
+                                List {
+                                    open: Token(AngleLeft, (476,19)->(476,20)),
+                                    inner: Dict {
+                                        open: Token(AngleLeft, (476,24)->(476,25)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (476,28)->(476,29)),
                                     },
+                                    close: Token(GreaterThan, (476,29)->(476,30)),
                                 },
                             ),
                             name: Raw(symbols),
@@ -7759,10 +7486,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (477,2)->(477,5)),
                             name: Raw(symbolType),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (477,16)->(477,18)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (477,24)->(477,24)),
                         },
@@ -7772,10 +7496,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (478,2)->(478,5)),
                             name: Raw(fileName),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (478,14)->(478,16)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (478,22)->(478,22)),
                         },
@@ -7785,17 +7506,14 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (479,2)->(479,5)),
                             name: Raw(r),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (479,7)->(479,9)),
+                                Dict {
+                                    open: Token(AngleLeft, (479,13)->(479,14)),
                                     inner: Dict {
-                                        open: Token(AngleLeft, (479,13)->(479,14)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (479,18)->(479,19)),
-                                            inner: Number,
-                                            close: Token(AngleRight, (479,25)->(479,26)),
-                                        },
-                                        close: Token(GreaterThan, (479,26)->(479,27)),
+                                        open: Token(AngleLeft, (479,18)->(479,19)),
+                                        inner: Number,
+                                        close: Token(AngleRight, (479,25)->(479,26)),
                                     },
+                                    close: Token(GreaterThan, (479,26)->(479,27)),
                                 },
                             ),
                             eol: Token(EndOfLine, (479,27)->(479,27)),
@@ -7806,10 +7524,7 @@ expression: snapshot_parsing(contents)
                             var: Token(Identifier, (480,2)->(480,5)),
                             name: Raw(symName),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (480,13)->(480,15)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             eol: Token(EndOfLine, (480,21)->(480,21)),
                         },
@@ -8336,13 +8051,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (516,41)->(516,43)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (516,47)->(516,48)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (516,51)->(516,52)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (516,47)->(516,48)),
+                                inner: Any,
+                                close: Token(AngleRight, (516,51)->(516,52)),
                             },
                         ),
                         equal: None,
@@ -8351,13 +8063,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (516,57)->(516,59)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (516,63)->(516,64)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (516,67)->(516,68)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (516,63)->(516,64)),
+                                inner: Any,
+                                close: Token(AngleRight, (516,67)->(516,68)),
                             },
                         ),
                         equal: None,
@@ -8366,13 +8075,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (516,75)->(516,77)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (516,81)->(516,82)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (516,85)->(516,86)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (516,81)->(516,82)),
+                                inner: Any,
+                                close: Token(AngleRight, (516,85)->(516,86)),
                             },
                         ),
                         equal: None,
@@ -8527,10 +8233,7 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (526,2)->(526,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (526,12)->(526,14)),
-                                    inner: Number,
-                                },
+                                Number,
                             ),
                             name: Raw(choice),
                             equal: Token(Equal, (526,21)->(526,22)),
@@ -8576,13 +8279,10 @@ expression: snapshot_parsing(contents)
                                         VarCommand {
                                             var: Token(Identifier, (528,4)->(528,7)),
                                             ty: Some(
-                                                Type {
-                                                    colon: Token(SpacedColon, (528,13)->(528,15)),
-                                                    inner: List {
-                                                        open: Token(AngleLeft, (528,19)->(528,20)),
-                                                        inner: String,
-                                                        close: Token(GreaterThan, (528,26)->(528,27)),
-                                                    },
+                                                List {
+                                                    open: Token(AngleLeft, (528,19)->(528,20)),
+                                                    inner: String,
+                                                    close: Token(GreaterThan, (528,26)->(528,27)),
                                                 },
                                             ),
                                             name: Raw(items),
@@ -8950,13 +8650,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (547,34)->(547,36)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (547,40)->(547,41)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (547,44)->(547,45)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (547,40)->(547,41)),
+                                inner: Any,
+                                close: Token(AngleRight, (547,44)->(547,45)),
                             },
                         ),
                         equal: None,
@@ -8965,13 +8662,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (547,50)->(547,52)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (547,56)->(547,57)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (547,60)->(547,61)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (547,56)->(547,57)),
+                                inner: Any,
+                                close: Token(AngleRight, (547,60)->(547,61)),
                             },
                         ),
                         equal: None,
@@ -8980,13 +8674,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (547,68)->(547,70)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (547,74)->(547,75)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (547,78)->(547,79)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (547,74)->(547,75)),
+                                inner: Any,
+                                close: Token(AngleRight, (547,78)->(547,79)),
                             },
                         ),
                         equal: None,
@@ -9097,13 +8788,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (557,34)->(557,36)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (557,40)->(557,41)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (557,44)->(557,45)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (557,40)->(557,41)),
+                                inner: Any,
+                                close: Token(AngleRight, (557,44)->(557,45)),
                             },
                         ),
                         equal: None,
@@ -9112,13 +8800,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(req),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (557,50)->(557,52)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (557,56)->(557,57)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (557,60)->(557,61)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (557,56)->(557,57)),
+                                inner: Any,
+                                close: Token(AngleRight, (557,60)->(557,61)),
                             },
                         ),
                         equal: None,
@@ -9127,13 +8812,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (557,68)->(557,70)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (557,74)->(557,75)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (557,78)->(557,79)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (557,74)->(557,75)),
+                                inner: Any,
+                                close: Token(AngleRight, (557,78)->(557,79)),
                             },
                         ),
                         equal: None,
@@ -9244,13 +8926,10 @@ expression: snapshot_parsing(contents)
                             Parameter {
                                 name: Raw(lspserver),
                                 ty: Some(
-                                    Type {
-                                        colon: Token(SpacedColon, (566,33)->(566,35)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (566,39)->(566,40)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (566,43)->(566,44)),
-                                        },
+                                    Dict {
+                                        open: Token(AngleLeft, (566,39)->(566,40)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (566,43)->(566,44)),
                                     },
                                 ),
                                 equal: None,
@@ -9259,13 +8938,10 @@ expression: snapshot_parsing(contents)
                             Parameter {
                                 name: Raw(req),
                                 ty: Some(
-                                    Type {
-                                        colon: Token(SpacedColon, (566,49)->(566,51)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (566,55)->(566,56)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (566,59)->(566,60)),
-                                        },
+                                    Dict {
+                                        open: Token(AngleLeft, (566,55)->(566,56)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (566,59)->(566,60)),
                                     },
                                 ),
                                 equal: None,
@@ -9274,13 +8950,10 @@ expression: snapshot_parsing(contents)
                             Parameter {
                                 name: Raw(reply),
                                 ty: Some(
-                                    Type {
-                                        colon: Token(SpacedColon, (566,67)->(566,69)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (566,73)->(566,74)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (566,77)->(566,78)),
-                                        },
+                                    Dict {
+                                        open: Token(AngleLeft, (566,73)->(566,74)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (566,77)->(566,78)),
                                     },
                                 ),
                                 equal: None,
@@ -9290,10 +8963,7 @@ expression: snapshot_parsing(contents)
                         close: Token(RightParen, (566,78)->(566,79)),
                     },
                     ret: Some(
-                        Type {
-                            colon: Token(SpacedColon, (566,79)->(566,81)),
-                            inner: Void,
-                        },
+                        Void,
                     ),
                     def_eol: Token(EndOfLine, (566,85)->(566,85)),
                     body: Body {
@@ -9302,15 +8972,12 @@ expression: snapshot_parsing(contents)
                                 VarCommand {
                                     var: Token(Identifier, (567,2)->(567,5)),
                                     ty: Some(
-                                        Type {
-                                            colon: Token(SpacedColon, (567,24)->(567,26)),
-                                            inner: Dict {
-                                                open: Token(AngleLeft, (567,30)->(567,31)),
-                                                inner: Func(
-                                                    Naked,
-                                                ),
-                                                close: Token(GreaterThan, (567,35)->(567,36)),
-                                            },
+                                        Dict {
+                                            open: Token(AngleLeft, (567,30)->(567,31)),
+                                            inner: Func(
+                                                Naked,
+                                            ),
+                                            close: Token(GreaterThan, (567,35)->(567,36)),
                                         },
                                     ),
                                     name: Raw(lsp_reply_handlers),
@@ -9635,13 +9302,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (596,30)->(596,32)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (596,36)->(596,37)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (596,40)->(596,41)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (596,36)->(596,37)),
+                                inner: Any,
+                                close: Token(AngleRight, (596,40)->(596,41)),
                             },
                         ),
                         equal: None,
@@ -9650,13 +9314,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (596,48)->(596,50)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (596,54)->(596,55)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (596,58)->(596,59)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (596,54)->(596,55)),
+                                inner: Any,
+                                close: Token(AngleRight, (596,58)->(596,59)),
                             },
                         ),
                         equal: None,
@@ -9666,10 +9327,7 @@ expression: snapshot_parsing(contents)
                 close: Token(RightParen, (596,59)->(596,60)),
             },
             ret: Some(
-                Type {
-                    colon: Token(SpacedColon, (596,60)->(596,62)),
-                    inner: Void,
-                },
+                Void,
             ),
             def_eol: Token(EndOfLine, (596,66)->(596,66)),
             body: Body {
@@ -9764,13 +9422,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (603,33)->(603,35)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (603,39)->(603,40)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (603,43)->(603,44)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (603,39)->(603,40)),
+                                inner: Any,
+                                close: Token(AngleRight, (603,43)->(603,44)),
                             },
                         ),
                         equal: None,
@@ -9779,13 +9434,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (603,51)->(603,53)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (603,57)->(603,58)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (603,61)->(603,62)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (603,57)->(603,58)),
+                                inner: Any,
+                                close: Token(AngleRight, (603,61)->(603,62)),
                             },
                         ),
                         equal: None,
@@ -9802,13 +9454,10 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (604,2)->(604,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (604,13)->(604,15)),
-                                    inner: List {
-                                        open: Token(AngleLeft, (604,19)->(604,20)),
-                                        inner: String,
-                                        close: Token(GreaterThan, (604,26)->(604,27)),
-                                    },
+                                List {
+                                    open: Token(AngleLeft, (604,19)->(604,20)),
+                                    inner: String,
+                                    close: Token(GreaterThan, (604,26)->(604,27)),
                                 },
                             ),
                             name: Raw(msgType),
@@ -9914,10 +9563,7 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (612,2)->(612,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (612,11)->(612,13)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             name: Raw(mtype),
                             equal: Token(Equal, (612,20)->(612,21)),
@@ -10088,13 +9734,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (623,32)->(623,34)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (623,38)->(623,39)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (623,42)->(623,43)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (623,38)->(623,39)),
+                                inner: Any,
+                                close: Token(AngleRight, (623,42)->(623,43)),
                             },
                         ),
                         equal: None,
@@ -10103,13 +9746,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (623,50)->(623,52)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (623,56)->(623,57)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (623,60)->(623,61)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (623,56)->(623,57)),
+                                inner: Any,
+                                close: Token(AngleRight, (623,60)->(623,61)),
                             },
                         ),
                         equal: None,
@@ -10126,13 +9766,10 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (624,2)->(624,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (624,13)->(624,15)),
-                                    inner: List {
-                                        open: Token(AngleLeft, (624,19)->(624,20)),
-                                        inner: String,
-                                        close: Token(GreaterThan, (624,26)->(624,27)),
-                                    },
+                                List {
+                                    open: Token(AngleLeft, (624,19)->(624,20)),
+                                    inner: String,
+                                    close: Token(GreaterThan, (624,26)->(624,27)),
                                 },
                             ),
                             name: Raw(msgType),
@@ -10177,10 +9814,7 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (625,2)->(625,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (625,11)->(625,13)),
-                                    inner: String,
-                                },
+                                String,
                             ),
                             name: Raw(mtype),
                             equal: Token(Equal, (625,20)->(625,21)),
@@ -10365,13 +9999,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (634,37)->(634,39)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (634,43)->(634,44)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (634,47)->(634,48)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (634,43)->(634,44)),
+                                inner: Any,
+                                close: Token(AngleRight, (634,47)->(634,48)),
                             },
                         ),
                         equal: None,
@@ -10380,13 +10011,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (634,55)->(634,57)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (634,61)->(634,62)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (634,65)->(634,66)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (634,61)->(634,62)),
+                                inner: Any,
+                                close: Token(AngleRight, (634,65)->(634,66)),
                             },
                         ),
                         equal: None,
@@ -10441,13 +10069,10 @@ expression: snapshot_parsing(contents)
         VarCommand {
             var: Token(Identifier, (639,0)->(639,3)),
             ty: Some(
-                Type {
-                    colon: Token(SpacedColon, (639,19)->(639,21)),
-                    inner: Dict {
-                        open: Token(AngleLeft, (639,25)->(639,26)),
-                        inner: Bool,
-                        close: Token(GreaterThan, (639,30)->(639,31)),
-                    },
+                Dict {
+                    open: Token(AngleLeft, (639,25)->(639,26)),
+                    inner: Bool,
+                    close: Token(GreaterThan, (639,30)->(639,31)),
                 },
             ),
             name: Raw(ftypeNtfOnceMap),
@@ -10475,13 +10100,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (641,41)->(641,43)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (641,47)->(641,48)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (641,51)->(641,52)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (641,47)->(641,48)),
+                                inner: Any,
+                                close: Token(AngleRight, (641,51)->(641,52)),
                             },
                         ),
                         equal: None,
@@ -10490,13 +10112,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (641,59)->(641,61)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (641,65)->(641,66)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (641,69)->(641,70)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (641,65)->(641,66)),
+                                inner: Any,
+                                close: Token(AngleRight, (641,69)->(641,70)),
                             },
                         ),
                         equal: None,
@@ -10631,13 +10250,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (649,25)->(649,27)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (649,31)->(649,32)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (649,35)->(649,36)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (649,31)->(649,32)),
+                                inner: Any,
+                                close: Token(AngleRight, (649,35)->(649,36)),
                             },
                         ),
                         equal: None,
@@ -10646,13 +10262,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(reply),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (649,43)->(649,45)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (649,49)->(649,50)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (649,53)->(649,54)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (649,49)->(649,50)),
+                                inner: Any,
+                                close: Token(AngleRight, (649,53)->(649,54)),
                             },
                         ),
                         equal: None,
@@ -10689,13 +10302,10 @@ expression: snapshot_parsing(contents)
                             Parameter {
                                 name: Raw(lspserver),
                                 ty: Some(
-                                    Type {
-                                        colon: Token(SpacedColon, (653,33)->(653,35)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (653,39)->(653,40)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (653,43)->(653,44)),
-                                        },
+                                    Dict {
+                                        open: Token(AngleLeft, (653,39)->(653,40)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (653,43)->(653,44)),
                                     },
                                 ),
                                 equal: None,
@@ -10704,13 +10314,10 @@ expression: snapshot_parsing(contents)
                             Parameter {
                                 name: Raw(reply),
                                 ty: Some(
-                                    Type {
-                                        colon: Token(SpacedColon, (653,51)->(653,53)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (653,57)->(653,58)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (653,61)->(653,62)),
-                                        },
+                                    Dict {
+                                        open: Token(AngleLeft, (653,57)->(653,58)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (653,61)->(653,62)),
                                     },
                                 ),
                                 equal: None,
@@ -10720,10 +10327,7 @@ expression: snapshot_parsing(contents)
                         close: Token(RightParen, (653,62)->(653,63)),
                     },
                     ret: Some(
-                        Type {
-                            colon: Token(SpacedColon, (653,63)->(653,65)),
-                            inner: Void,
-                        },
+                        Void,
                     ),
                     def_eol: Token(EndOfLine, (653,69)->(653,69)),
                     body: Body {
@@ -10732,15 +10336,12 @@ expression: snapshot_parsing(contents)
                                 VarCommand {
                                     var: Token(Identifier, (654,2)->(654,5)),
                                     ty: Some(
-                                        Type {
-                                            colon: Token(SpacedColon, (654,24)->(654,26)),
-                                            inner: Dict {
-                                                open: Token(AngleLeft, (654,30)->(654,31)),
-                                                inner: Func(
-                                                    Naked,
-                                                ),
-                                                close: Token(GreaterThan, (654,35)->(654,36)),
-                                            },
+                                        Dict {
+                                            open: Token(AngleLeft, (654,30)->(654,31)),
+                                            inner: Func(
+                                                Naked,
+                                            ),
+                                            close: Token(GreaterThan, (654,35)->(654,36)),
                                         },
                                     ),
                                     name: Raw(lsp_notif_handlers),
@@ -10963,13 +10564,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (676,33)->(676,35)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (676,39)->(676,40)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (676,43)->(676,44)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (676,39)->(676,40)),
+                                inner: Any,
+                                close: Token(AngleRight, (676,43)->(676,44)),
                             },
                         ),
                         equal: None,
@@ -10978,13 +10576,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(request),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (676,53)->(676,55)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (676,59)->(676,60)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (676,63)->(676,64)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (676,59)->(676,60)),
+                                inner: Any,
+                                close: Token(AngleRight, (676,63)->(676,64)),
                             },
                         ),
                         equal: None,
@@ -11046,13 +10641,10 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (681,2)->(681,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (681,25)->(681,27)),
-                                    inner: Dict {
-                                        open: Token(AngleLeft, (681,31)->(681,32)),
-                                        inner: Any,
-                                        close: Token(GreaterThan, (681,35)->(681,36)),
-                                    },
+                                Dict {
+                                    open: Token(AngleLeft, (681,31)->(681,32)),
+                                    inner: Any,
+                                    close: Token(GreaterThan, (681,35)->(681,36)),
                                 },
                             ),
                             name: Raw(workspaceEditParams),
@@ -11226,13 +10818,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (693,40)->(693,42)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (693,46)->(693,47)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (693,50)->(693,51)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (693,46)->(693,47)),
+                                inner: Any,
+                                close: Token(AngleRight, (693,50)->(693,51)),
                             },
                         ),
                         equal: None,
@@ -11241,13 +10830,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(request),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (693,60)->(693,62)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (693,66)->(693,67)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (693,70)->(693,71)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (693,66)->(693,67)),
+                                inner: Any,
+                                close: Token(AngleRight, (693,70)->(693,71)),
                             },
                         ),
                         equal: None,
@@ -11326,13 +10912,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (700,38)->(700,40)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (700,44)->(700,45)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (700,48)->(700,49)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (700,44)->(700,45)),
+                                inner: Any,
+                                close: Token(AngleRight, (700,48)->(700,49)),
                             },
                         ),
                         equal: None,
@@ -11341,13 +10924,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(request),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (700,58)->(700,60)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (700,64)->(700,65)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (700,68)->(700,69)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (700,64)->(700,65)),
+                                inner: Any,
+                                close: Token(AngleRight, (700,68)->(700,69)),
                             },
                         ),
                         equal: None,
@@ -11426,13 +11006,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (707,40)->(707,42)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (707,46)->(707,47)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (707,50)->(707,51)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (707,46)->(707,47)),
+                                inner: Any,
+                                close: Token(AngleRight, (707,50)->(707,51)),
                             },
                         ),
                         equal: None,
@@ -11441,13 +11018,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(request),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (707,60)->(707,62)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (707,66)->(707,67)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (707,70)->(707,71)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (707,66)->(707,67)),
+                                inner: Any,
+                                close: Token(AngleRight, (707,70)->(707,71)),
                             },
                         ),
                         equal: None,
@@ -11517,13 +11091,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(lspserver),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (711,35)->(711,37)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (711,41)->(711,42)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (711,45)->(711,46)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (711,41)->(711,42)),
+                                inner: Any,
+                                close: Token(AngleRight, (711,45)->(711,46)),
                             },
                         ),
                         equal: None,
@@ -11532,13 +11103,10 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(request),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (711,55)->(711,57)),
-                                inner: Dict {
-                                    open: Token(AngleLeft, (711,61)->(711,62)),
-                                    inner: Any,
-                                    close: Token(AngleRight, (711,65)->(711,66)),
-                                },
+                            Dict {
+                                open: Token(AngleLeft, (711,61)->(711,62)),
+                                inner: Any,
+                                close: Token(AngleRight, (711,65)->(711,66)),
                             },
                         ),
                         equal: None,
@@ -11602,13 +11170,10 @@ expression: snapshot_parsing(contents)
                             Parameter {
                                 name: Raw(lspserver),
                                 ty: Some(
-                                    Type {
-                                        colon: Token(SpacedColon, (716,35)->(716,37)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (716,41)->(716,42)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (716,45)->(716,46)),
-                                        },
+                                    Dict {
+                                        open: Token(AngleLeft, (716,41)->(716,42)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (716,45)->(716,46)),
                                     },
                                 ),
                                 equal: None,
@@ -11617,13 +11182,10 @@ expression: snapshot_parsing(contents)
                             Parameter {
                                 name: Raw(request),
                                 ty: Some(
-                                    Type {
-                                        colon: Token(SpacedColon, (716,55)->(716,57)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (716,61)->(716,62)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (716,65)->(716,66)),
-                                        },
+                                    Dict {
+                                        open: Token(AngleLeft, (716,61)->(716,62)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (716,65)->(716,66)),
                                     },
                                 ),
                                 equal: None,
@@ -11640,15 +11202,12 @@ expression: snapshot_parsing(contents)
                                 VarCommand {
                                     var: Token(Identifier, (717,2)->(717,5)),
                                     ty: Some(
-                                        Type {
-                                            colon: Token(SpacedColon, (717,24)->(717,26)),
-                                            inner: Dict {
-                                                open: Token(AngleLeft, (717,30)->(717,31)),
-                                                inner: Func(
-                                                    Naked,
-                                                ),
-                                                close: Token(GreaterThan, (717,35)->(717,36)),
-                                            },
+                                        Dict {
+                                            open: Token(AngleLeft, (717,30)->(717,31)),
+                                            inner: Func(
+                                                Naked,
+                                            ),
+                                            close: Token(GreaterThan, (717,35)->(717,36)),
                                         },
                                     ),
                                     name: Raw(lspRequestHandlers),
@@ -11890,13 +11449,10 @@ expression: snapshot_parsing(contents)
                             Parameter {
                                 name: Raw(lspserver),
                                 ty: Some(
-                                    Type {
-                                        colon: Token(SpacedColon, (737,36)->(737,38)),
-                                        inner: Dict {
-                                            open: Token(AngleLeft, (737,42)->(737,43)),
-                                            inner: Any,
-                                            close: Token(AngleRight, (737,46)->(737,47)),
-                                        },
+                                    Dict {
+                                        open: Token(AngleLeft, (737,42)->(737,43)),
+                                        inner: Any,
+                                        close: Token(AngleRight, (737,46)->(737,47)),
                                     },
                                 ),
                                 equal: None,
@@ -11906,10 +11462,7 @@ expression: snapshot_parsing(contents)
                         close: Token(RightParen, (737,47)->(737,48)),
                     },
                     ret: Some(
-                        Type {
-                            colon: Token(SpacedColon, (737,48)->(737,50)),
-                            inner: Void,
-                        },
+                        Void,
                     ),
                     def_eol: Token(EndOfLine, (737,54)->(737,54)),
                     body: Body {
@@ -11919,10 +11472,7 @@ expression: snapshot_parsing(contents)
                                     var: Token(Identifier, (738,2)->(738,5)),
                                     name: Raw(idx),
                                     ty: Some(
-                                        Type {
-                                            colon: Token(SpacedColon, (738,9)->(738,11)),
-                                            inner: Number,
-                                        },
+                                        Number,
                                     ),
                                     eol: Token(EndOfLine, (738,17)->(738,17)),
                                 },
@@ -11932,10 +11482,7 @@ expression: snapshot_parsing(contents)
                                     var: Token(Identifier, (739,2)->(739,5)),
                                     name: Raw(len),
                                     ty: Some(
-                                        Type {
-                                            colon: Token(SpacedColon, (739,9)->(739,11)),
-                                            inner: Number,
-                                        },
+                                        Number,
                                     ),
                                     eol: Token(EndOfLine, (739,17)->(739,17)),
                                 },
@@ -11945,10 +11492,7 @@ expression: snapshot_parsing(contents)
                                     var: Token(Identifier, (740,2)->(740,5)),
                                     name: Raw(content),
                                     ty: Some(
-                                        Type {
-                                            colon: Token(SpacedColon, (740,13)->(740,15)),
-                                            inner: String,
-                                        },
+                                        String,
                                     ),
                                     eol: Token(EndOfLine, (740,21)->(740,21)),
                                 },
@@ -11958,13 +11502,10 @@ expression: snapshot_parsing(contents)
                                     var: Token(Identifier, (741,2)->(741,5)),
                                     name: Raw(msg),
                                     ty: Some(
-                                        Type {
-                                            colon: Token(SpacedColon, (741,9)->(741,11)),
-                                            inner: Dict {
-                                                open: Token(AngleLeft, (741,15)->(741,16)),
-                                                inner: Any,
-                                                close: Token(GreaterThan, (741,19)->(741,20)),
-                                            },
+                                        Dict {
+                                            open: Token(AngleLeft, (741,15)->(741,16)),
+                                            inner: Any,
+                                            close: Token(GreaterThan, (741,19)->(741,20)),
                                         },
                                     ),
                                     eol: Token(EndOfLine, (741,20)->(741,20)),
@@ -11975,13 +11516,10 @@ expression: snapshot_parsing(contents)
                                     var: Token(Identifier, (742,2)->(742,5)),
                                     name: Raw(req),
                                     ty: Some(
-                                        Type {
-                                            colon: Token(SpacedColon, (742,9)->(742,11)),
-                                            inner: Dict {
-                                                open: Token(AngleLeft, (742,15)->(742,16)),
-                                                inner: Any,
-                                                close: Token(GreaterThan, (742,19)->(742,20)),
-                                            },
+                                        Dict {
+                                            open: Token(AngleLeft, (742,15)->(742,16)),
+                                            inner: Any,
+                                            close: Token(GreaterThan, (742,19)->(742,20)),
                                         },
                                     ),
                                     eol: Token(EndOfLine, (742,20)->(742,20)),
@@ -12242,10 +11780,7 @@ expression: snapshot_parsing(contents)
                                                                                         VarCommand {
                                                                                             var: Token(Identifier, (756,1)->(756,4)),
                                                                                             ty: Some(
-                                                                                                Type {
-                                                                                                    colon: Token(SpacedColon, (756,9)->(756,11)),
-                                                                                                    inner: String,
-                                                                                                },
+                                                                                                String,
                                                                                             ),
                                                                                             name: Raw(emsg),
                                                                                             equal: Token(Equal, (756,18)->(756,19)),

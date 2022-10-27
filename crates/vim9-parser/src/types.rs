@@ -1,16 +1,10 @@
 use anyhow::Result;
-use vim9_lexer::TokenKind;
+use vim9_lexer::{Token, TokenKind};
 
 use crate::{Literal, Parser, TokenMeta};
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Type {
-    colon: TokenMeta,
-    pub inner: InnerType,
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum InnerType {
+pub enum Type {
     Any,
     Bool,
     Number,
@@ -19,12 +13,12 @@ pub enum InnerType {
     Blob,
     List {
         open: TokenMeta,
-        inner: Box<InnerType>,
+        inner: Box<Type>,
         close: TokenMeta,
     },
     Dict {
         open: TokenMeta,
-        inner: Box<InnerType>,
+        inner: Box<Type>,
         close: TokenMeta,
     },
     Job,
@@ -39,22 +33,6 @@ pub enum InnerFuncType {
 }
 
 impl Type {
-    pub fn parse_in_expression(parser: &Parser) -> Result<Type> {
-        Ok(Type {
-            colon: parser.expect_token(TokenKind::SpacedColon)?.into(),
-            inner: InnerType::parse(parser, false)?,
-        })
-    }
-
-    pub fn parse(parser: &Parser) -> Result<Type> {
-        let res = Self::parse_in_expression(parser)?;
-        parser.next_token();
-
-        Ok(res)
-    }
-}
-
-impl InnerType {
     fn open(k: &TokenKind) -> bool {
         matches!(k, TokenKind::LessThan | TokenKind::AngleLeft)
     }
@@ -63,7 +41,7 @@ impl InnerType {
         matches!(k, TokenKind::GreaterThan | TokenKind::AngleRight)
     }
 
-    fn parse(parser: &Parser, consume: bool) -> Result<InnerType> {
+    fn parse_inner(parser: &Parser, consume: bool) -> Result<Type> {
         match parser.front_kind() {
             TokenKind::Identifier => {
                 let literal: Literal = match consume {
@@ -73,20 +51,20 @@ impl InnerType {
                 .try_into()?;
 
                 Ok(match literal.token.text.as_str() {
-                    "any" => InnerType::Any,
-                    "bool" => InnerType::Bool,
-                    "number" => InnerType::Number,
-                    "void" => InnerType::Void,
-                    "string" => InnerType::String,
-                    "float" => InnerType::Float,
+                    "any" => Type::Any,
+                    "bool" => Type::Bool,
+                    "number" => Type::Number,
+                    "void" => Type::Void,
+                    "string" => Type::String,
+                    "float" => Type::Float,
                     "list" => {
                         if !consume {
                             parser.pop();
                         }
 
-                        InnerType::List {
+                        Type::List {
                             open: parser.expect_fn(Self::open, true)?.into(),
-                            inner: InnerType::parse(parser, true)?.into(),
+                            inner: Type::parse_inner(parser, true)?.into(),
                             close: parser
                                 .expect_fn(Self::close, consume)?
                                 .into(),
@@ -97,21 +75,31 @@ impl InnerType {
                             parser.pop();
                         }
 
-                        InnerType::Dict {
+                        Type::Dict {
                             open: parser.expect_fn(Self::open, true)?.into(),
-                            inner: InnerType::parse(parser, true)?.into(),
+                            inner: Type::parse_inner(parser, true)?.into(),
                             close: parser
                                 .expect_fn(Self::close, consume)?
                                 .into(),
                         }
                     }
-                    "func" => InnerType::Func(InnerFuncType::Naked),
-                    "job" => InnerType::Job,
-                    "channel" => InnerType::Channel,
+                    "func" => Type::Func(InnerFuncType::Naked),
+                    "job" => Type::Job,
+                    "channel" => Type::Channel,
                     _ => todo!("{:?}", literal.token),
                 })
             }
             _ => unreachable!("should probably return an error"),
         }
+    }
+
+    pub fn parse_in_expression(parser: &Parser) -> Result<Type> {
+        parser.expect_token(TokenKind::SpacedColon)?;
+        Self::parse_inner(parser, false)
+    }
+
+    pub fn parse(parser: &Parser) -> Result<Type> {
+        parser.expect_token(TokenKind::SpacedColon)?;
+        Self::parse_inner(parser, true)
     }
 }

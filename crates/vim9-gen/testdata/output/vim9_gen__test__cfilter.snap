@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1393
+assertion_line: 1537
 expression: "generate(contents, false).unwrap()"
 ---
 local NVIM9 = require("vim9script")
@@ -81,22 +81,17 @@ Qf_filter = function(qf, searchpat, bang)
   end
 
   firstchar = NVIM9.index(searchpat, 0)
-  lastchar = NVIM9.slice(searchpat, NVIM9.prefix["Minus"](1), nil)
+  lastchar = NVIM9.slice(searchpat, -1, nil)
   if
     NVIM9.bool(
       NVIM9.ops["And"](
-        NVIM9.ops["EqualTo"](firstchar, lastchar),
-        (
-          NVIM9.ops["Or"](
-            NVIM9.ops["Or"](NVIM9.ops["EqualTo"](firstchar, "/"), NVIM9.ops["EqualTo"](firstchar, '"')),
-            NVIM9.ops["EqualTo"](firstchar, "'")
-          )
-        )
+        firstchar == lastchar,
+        (NVIM9.ops["Or"](NVIM9.ops["Or"](firstchar == "/", firstchar == '"'), firstchar == "'"))
       )
     )
   then
-    pat = NVIM9.slice(searchpat, 1, NVIM9.prefix["Minus"](2))
-    if NVIM9.bool(NVIM9.ops["EqualTo"](pat, "")) then
+    pat = NVIM9.slice(searchpat, 1, -2)
+    if NVIM9.bool(pat == "") then
       -- # Use the last search pattern
       pat = vim.fn.getreg("/")
     end
@@ -104,11 +99,11 @@ Qf_filter = function(qf, searchpat, bang)
     pat = searchpat
   end
 
-  if NVIM9.bool(NVIM9.ops["EqualTo"](pat, "")) then
+  if NVIM9.bool(pat == "") then
     return
   end
 
-  if NVIM9.bool(NVIM9.ops["EqualTo"](bang, "!")) then
+  if NVIM9.bool(bang == "!") then
     Cond = function(_, val)
       return NVIM9.ops["And"](
         NVIM9.ops["NotRegexpMatches"](val["text"], pat),

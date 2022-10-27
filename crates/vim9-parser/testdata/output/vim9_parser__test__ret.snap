@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2465
+assertion_line: 2856
 expression: snapshot_parsing(contents)
 ---
 [
@@ -23,10 +23,7 @@ expression: snapshot_parsing(contents)
                 close: Token(RightParen, (2,11)->(2,12)),
             },
             ret: Some(
-                Type {
-                    colon: Token(SpacedColon, (2,12)->(2,14)),
-                    inner: Number,
-                },
+                Number,
             ),
             def_eol: Token(EndOfLine, (2,20)->(2,20)),
             body: Body {

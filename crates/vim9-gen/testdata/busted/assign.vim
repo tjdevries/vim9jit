@@ -1,16 +1,20 @@
 vim9script
 
-def Test_assignment_bool()
+def Test_assignment_bool_1()
   var bool1: bool = true
   assert_equal(v:true, bool1)
   var bool2: bool = false
   assert_equal(v:false, bool2)
+enddef
 
+def Test_assignment_bool_2()
   var bool3: bool = 0
   assert_equal(false, bool3)
   var bool4: bool = 1
   assert_equal(true, bool4)
+enddef
 
+def Test_assignment_bool_3()
   var bool5: bool = 1 && true
   assert_equal(true, bool5)
   var bool6: bool = 0 && 1

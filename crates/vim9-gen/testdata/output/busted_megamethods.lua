@@ -16,7 +16,7 @@ describe("filename", function()
       NVIM9.fn["filter"](
         NVIM9.fn["sort"]({ 1, 4, 2, 5 }),
         function(_, y)
-          return NVIM9.ops["EqualTo"](NVIM9.ops["Modulo"](y, 2), 0)
+          return NVIM9.ops["Modulo"](y, 2) == 0
         end
       )
     )
@@ -24,7 +24,7 @@ describe("filename", function()
     local foo = NVIM9.fn["filter"](
       NVIM9.fn["sort"]({ 1, 4, 2, 5 }),
       function(_, y)
-        return NVIM9.ops["EqualTo"](NVIM9.ops["Modulo"](y, 2), 0)
+        return NVIM9.ops["Modulo"](y, 2) == 0
       end
     )
     NVIM9.fn["assert_equal"]({ 2, 4 }, foo)

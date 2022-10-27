@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2560
+assertion_line: 2876
 expression: snapshot_parsing(contents)
 ---
 [
@@ -20,10 +20,7 @@ expression: snapshot_parsing(contents)
         VarCommand {
             var: Token(Identifier, (3,0)->(3,3)),
             ty: Some(
-                Type {
-                    colon: Token(SpacedColon, (3,5)->(3,7)),
-                    inner: Bool,
-                },
+                Bool,
             ),
             name: Raw(x),
             equal: Token(Equal, (3,12)->(3,13)),
@@ -53,10 +50,7 @@ expression: snapshot_parsing(contents)
         VarCommand {
             var: Token(Identifier, (6,0)->(6,3)),
             ty: Some(
-                Type {
-                    colon: Token(SpacedColon, (6,5)->(6,7)),
-                    inner: Bool,
-                },
+                Bool,
             ),
             name: Raw(y),
             equal: Token(Equal, (6,12)->(6,13)),

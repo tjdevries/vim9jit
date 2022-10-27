@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2682
+assertion_line: 2889
 expression: snapshot_parsing(contents)
 ---
 [
@@ -50,10 +50,7 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(bnr),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (9,18)->(9,20)),
-                                inner: Number,
-                            },
+                            Number,
                         ),
                         equal: None,
                         default_val: None,
@@ -61,17 +58,14 @@ expression: snapshot_parsing(contents)
                     Parameter {
                         name: Raw(range),
                         ty: Some(
-                            Type {
-                                colon: Token(SpacedColon, (9,33)->(9,35)),
+                            Dict {
+                                open: Token(AngleLeft, (9,39)->(9,40)),
                                 inner: Dict {
-                                    open: Token(AngleLeft, (9,39)->(9,40)),
-                                    inner: Dict {
-                                        open: Token(AngleLeft, (9,44)->(9,45)),
-                                        inner: Number,
-                                        close: Token(AngleRight, (9,51)->(9,52)),
-                                    },
-                                    close: Token(AngleRight, (9,52)->(9,53)),
+                                    open: Token(AngleLeft, (9,44)->(9,45)),
+                                    inner: Number,
+                                    close: Token(AngleRight, (9,51)->(9,52)),
                                 },
+                                close: Token(AngleRight, (9,52)->(9,53)),
                             },
                         ),
                         equal: None,
@@ -88,10 +82,7 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (10,2)->(10,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (10,15)->(10,17)),
-                                    inner: Number,
-                                },
+                                Number,
                             ),
                             name: Raw(start_col),
                             equal: Token(Equal, (10,24)->(10,25)),
@@ -129,10 +120,7 @@ expression: snapshot_parsing(contents)
                         VarCommand {
                             var: Token(Identifier, (11,2)->(11,5)),
                             ty: Some(
-                                Type {
-                                    colon: Token(SpacedColon, (11,13)->(11,15)),
-                                    inner: Number,
-                                },
+                                Number,
                             ),
                             name: Raw(end_col),
                             equal: Token(Equal, (11,22)->(11,23)),
