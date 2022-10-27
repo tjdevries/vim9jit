@@ -9,5 +9,11 @@ local __VIM9_MODULE = {}
 
 local x = 1 + 2
 print(x)
+
+local literal = NVIM9.fn["charcol"](".") - 1
+print(literal)
+
+local func_call = NVIM9.ops["Minus"](MyFunc(), 1)
+print(func_call)
 return __VIM9_MODULE
 

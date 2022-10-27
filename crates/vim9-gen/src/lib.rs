@@ -896,28 +896,30 @@ fn vim_to_type(ret: &vimfuncs::FuncReturnType) -> Type {
     }
 }
 
+pub fn func_info_for_call(c: &CallExpression) -> Option<vimfuncs::FuncInfo> {
+    match c.name() {
+        Some(ident) => {
+            match ident {
+                // TODO: Use our very cool new generated stuff here
+                Identifier::Raw(raw) => {
+                    return vimfuncs::get_func_info(&raw.name);
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
 fn guess_type_of_expr(state: &State, expr: &Expression) -> Type {
     match expr {
         Expression::Number(_) => Type::Number,
         Expression::String(_) => Type::String,
         Expression::Boolean(_) => Type::Bool,
-        Expression::Call(c) => {
-            match c.name() {
-                Some(ident) => {
-                    match ident {
-                        // TODO: Use our very cool new generated stuff here
-                        Identifier::Raw(raw) => {
-                            match vimfuncs::get_func_info(&raw.name) {
-                                Some(info) => vim_to_type(&info.return_type),
-                                _ => Type::Any,
-                            }
-                        }
-                        _ => Type::Any,
-                    }
-                }
-                _ => Type::Any,
-            }
-        }
+        Expression::Call(c) => match func_info_for_call(&c) {
+            Some(info) => vim_to_type(&info.return_type),
+            _ => Type::Any,
+        },
         Expression::Infix(infix) => {
             if infix.operator.is_comparison() {
                 return Type::Bool;
@@ -936,7 +938,7 @@ fn guess_type_of_expr(state: &State, expr: &Expression) -> Type {
                 && right_ty == Type::Number
                 && infix.operator.is_math()
             {
-                return dbg!(Type::Number);
+                return Type::Number;
             }
 
             Type::Any
@@ -1580,6 +1582,10 @@ mod test {
     busted!(busted_methods_1, "../testdata/busted/methods_1.vim");
     busted!(busted_methods_2, "../testdata/busted/methods_2.vim");
     busted!(busted_megamethods, "../testdata/busted/megamethods.vim");
+    busted!(
+        busted_methods_shifted,
+        "../testdata/busted/methods_shifted.vim"
+    );
 
     snapshot!(test_expr, "../testdata/snapshots/expr.vim");
     snapshot!(test_if, "../testdata/snapshots/if.vim");

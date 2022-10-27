@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use parser::{CallExpression, Expression, Identifier};
 
-use crate::{Generate, State};
+use crate::{func_info_for_call, Generate, State};
 
 #[derive(Debug)]
 pub struct VimFuncMutability {
@@ -316,7 +316,18 @@ pub fn generate_method(
     state: &mut State,
 ) -> String {
     let mut call = *method.right.clone();
-    call.args.insert(0, *method.left.clone());
+
+    // Methods don't always get inserted in the first argument.
+    // Check if we have func info and use the method arg if applicable
+    let idx = match func_info_for_call(&call) {
+        Some(info) => info.method_arg.unwrap_or(1) - 1,
+        None => 0,
+    };
+
+    match idx == call.args.len() {
+        true => call.args.push(*method.left.clone()),
+        false => call.args.insert(idx, *method.left.clone()),
+    }
 
     let func_data: FunctionData = (&call).into();
     if expr_is_func_mutable(&method.left) {
@@ -333,8 +344,5 @@ pub fn generate_method(
         }
     }
 
-    let mut expr = method.right.clone();
-    expr.args.insert(0, *method.left.clone());
-
-    expr.gen(state)
+    call.gen(state)
 }
