@@ -115,9 +115,6 @@ M.slice = function(obj, start, finish)
     error("invalid type for slicing: " .. vim.inspect(obj))
   end
 
-  print("OBJ:", obj)
-  print("START", start)
-  print("FINISH", finish)
   return slicer(obj, start + 1, finish + 1)
 end
 

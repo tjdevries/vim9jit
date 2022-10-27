@@ -53,3 +53,13 @@ def Test_unpacked_identifiers()
   assert_equal(1, x)
   assert_equal(2, y)
 enddef
+
+def Test_modifier_prefixes()
+  var foo = 10
+  --foo
+  assert_equal(9, foo)
+
+  ++foo
+  ++foo
+  assert_equal(11, foo)
+enddef

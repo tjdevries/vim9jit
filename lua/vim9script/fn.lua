@@ -102,7 +102,6 @@ readdirex({directory} [, {expr} [, {dict}]])			*readdirex()*
 		itself because of performance reasons.
 --]=]
 fn.readdirex = function(dir)
-  print("DIR:", vim.inspect(dir))
   local files = vim.fn.readdir(dir)
   local direx = {}
   for _, f in ipairs(files) do
@@ -119,6 +118,19 @@ fn.mapnew = function(tbl, expr)
   return vim.fn.map(tbl, expr)
 end
 
+fn.typename = function(val)
+  local ty = type(val)
+  if ty == "string" then
+    return "string"
+  elseif ty == "boolean" then
+    return "bool"
+  elseif ty == "number" then
+    return "number"
+  else
+    error(string.format("typename: %s", val))
+  end
+end
+
 -- Popup menu stuff
 
 do
@@ -131,7 +143,6 @@ do
 
   fn.popup_menu = function(what, options)
     -- print "OPTIONS:"
-    -- P(options)
 
     local buf = vim.api.nvim_create_buf(false, true)
     local win = vim.api.nvim_open_win(buf, true, {

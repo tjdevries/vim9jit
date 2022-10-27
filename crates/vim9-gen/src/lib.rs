@@ -1025,11 +1025,12 @@ impl Generate for Register {
 
 impl Generate for PrefixExpression {
     fn gen(&self, state: &mut State) -> String {
-        format!(
-            "NVIM9.prefix['{:?}']({})",
-            self.operator,
-            self.right.gen(state)
-        )
+        let right = self.right.gen(state);
+        match &self.operator {
+            parser::Operator::Increment => format!("{right} = {right} + 1"),
+            parser::Operator::Decrement => format!("{right} = {right} - 1"),
+            _ => format!("NVIM9.prefix['{:?}']({right})", self.operator,),
+        }
     }
 }
 

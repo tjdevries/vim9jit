@@ -3,6 +3,7 @@ local __VIM9_MODULE = {}
 describe("filename", function()
   local Test_assignment_bool = nil
   local Test_unpacked_identifiers = nil
+  local Test_modifier_prefixes = nil
   -- vim9script
 
   it("Test_assignment_bool", function()
@@ -68,6 +69,23 @@ describe("filename", function()
     local x, y = unpack({ 1, 2 })
     NVIM9.fn["assert_equal"](1, x)
     NVIM9.fn["assert_equal"](2, y)
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_modifier_prefixes", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
+    local foo = 10
+    foo = foo - 1
+    NVIM9.fn["assert_equal"](9, foo)
+
+    foo = foo + 1
+    foo = foo + 1
+    NVIM9.fn["assert_equal"](11, foo)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
