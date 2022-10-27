@@ -6,7 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+phf = "0.11.1"
 
-[[bin]]
-name = "main"
-path = "src/main.rs"
+[build-dependencies]
+anyhow = "1.0.66"
+phf_codegen = "0.11.1"

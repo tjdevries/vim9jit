@@ -1,13 +1,13 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1359
-expression: "generate(contents, false)"
+assertion_line: 1584
+expression: "generate(contents, false).unwrap()"
 ---
 local NVIM9 = require("vim9script")
 local __VIM9_MODULE = {}
 -- vim9script
 
-local x = NVIM9.ops["Plus"](1, 2)
+local x = 1 + 2
 print(x)
 return __VIM9_MODULE
 

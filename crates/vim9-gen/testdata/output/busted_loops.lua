@@ -35,7 +35,7 @@ describe("filename", function()
     for _, y in NVIM9.iter({ 1, 2, 3 }) do
       x = NVIM9.ops["Plus"](x, y)
 
-      if NVIM9.bool(y == 2) then
+      if y == 2 then
         break
       end
     end
@@ -56,11 +56,11 @@ describe("filename", function()
     local body = function(_, y)
       x = NVIM9.ops["Plus"](x, y)
 
-      if NVIM9.bool(y == 2) then
+      if y == 2 then
         return NVIM9.ITER_CONTINUE
       end
 
-      if NVIM9.bool(y == 3) then
+      if y == 3 then
         return NVIM9.ITER_BREAK
       end
 
@@ -90,7 +90,7 @@ describe("filename", function()
     local x = 0
 
     local body = function(_, y)
-      if NVIM9.bool(y == 2) then
+      if y == 2 then
         return NVIM9.ITER_CONTINUE
       end
 
@@ -124,11 +124,11 @@ describe("filename", function()
       local x = 0
 
       local body = function(_, y)
-        if NVIM9.bool(y == 2) then
+        if y == 2 then
           return NVIM9.ITER_RETURN, 5
         end
 
-        if NVIM9.bool(y == 10) then
+        if y == 10 then
           return NVIM9.ITER_CONTINUE
         end
 

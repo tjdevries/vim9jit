@@ -789,15 +789,14 @@ impl Generate for IfCommand {
         //
         // This would allow us to remove the NVIM9.bool condition (assuming the type
         // system is correct in vim9script)
-        //
-        // let condition = match guess_type_of_expr(state, &self.condition).inner {
-        //     Type::Bool => condition,
-        //     _ => format!("NVIM9.bool({condition})"),
-        // };
+        let condition = match guess_type_of_expr(state, &self.condition) {
+            Type::Bool => condition,
+            _ => format!("NVIM9.bool({condition})"),
+        };
 
         format!(
             r#"
-if NVIM9.bool({condition}) then
+if {condition} then
   {}
 {}
 {}
@@ -881,34 +880,63 @@ fn identifier_list(state: &mut State, unpacked: &UnpackIdentifier) -> String {
         .collect()
 }
 
+fn vim_to_type(ret: &vimfuncs::FuncReturnType) -> Type {
+    match ret {
+        vimfuncs::FuncReturnType::Any => Type::Any,
+        vimfuncs::FuncReturnType::Bool => Type::Bool,
+        vimfuncs::FuncReturnType::Float => Type::Float,
+        vimfuncs::FuncReturnType::Number => Type::Number,
+        vimfuncs::FuncReturnType::NumberBool => Type::BoolOrNumber,
+        vimfuncs::FuncReturnType::String => Type::String,
+        // vimfuncs::FuncReturnType::Void => Type::Any,
+        // vimfuncs::FuncReturnType::Dict(_) => Type,
+        // vimfuncs::FuncReturnType::List(_) => todo!(),
+        // vimfuncs::FuncReturnType::Func(_) => todo!(),
+        _ => Type::Any,
+    }
+}
+
 fn guess_type_of_expr(state: &State, expr: &Expression) -> Type {
     match expr {
         Expression::Number(_) => Type::Number,
         Expression::String(_) => Type::String,
         Expression::Boolean(_) => Type::Bool,
-        Expression::Call(c) => match c.name() {
-            Some(ident) => match ident {
-                // TODO: Use our very cool new generated stuff here
-                Identifier::Raw(raw) => match raw.name.as_str() {
-                    "charcol" => Type::Number,
-                    _ => Type::Any,
-                },
+        Expression::Call(c) => {
+            match c.name() {
+                Some(ident) => {
+                    match ident {
+                        // TODO: Use our very cool new generated stuff here
+                        Identifier::Raw(raw) => {
+                            match vimfuncs::get_func_info(&raw.name) {
+                                Some(info) => vim_to_type(&info.return_type),
+                                _ => Type::Any,
+                            }
+                        }
+                        _ => Type::Any,
+                    }
+                }
                 _ => Type::Any,
-            },
-            _ => Type::Any,
-        },
+            }
+        }
         Expression::Infix(infix) => {
             if infix.operator.is_comparison() {
                 return Type::Bool;
             }
 
+            let left_ty = guess_type_of_expr(state, infix.left.as_ref());
+            let right_ty = guess_type_of_expr(state, infix.right.as_ref());
+
             if matches!(infix.operator, Operator::And | Operator::Or) {
-                if guess_type_of_expr(state, infix.left.as_ref()) == Type::Bool
-                    && guess_type_of_expr(state, infix.right.as_ref())
-                        == Type::Bool
-                {
+                if left_ty == Type::Bool && right_ty == Type::Bool {
                     return Type::Bool;
                 }
+            }
+
+            if left_ty == Type::Number
+                && right_ty == Type::Number
+                && infix.operator.is_math()
+            {
+                return dbg!(Type::Number);
             }
 
             Type::Any
@@ -1348,6 +1376,11 @@ impl Generate for InfixExpression {
         if let Some(literal) = self.operator.literal() {
             match ty {
                 Bool => return format!("{left} {literal} {right}",),
+                Number => {
+                    if self.operator.is_math() {
+                        return format!("{left} {literal} {right}");
+                    }
+                }
                 _ => {}
             }
         }

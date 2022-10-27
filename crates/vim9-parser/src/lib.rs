@@ -1331,6 +1331,11 @@ impl Operator {
         )
     }
 
+    pub fn is_math(&self) -> bool {
+        use Operator::*;
+        matches!(self, Plus | Minus | Multiply | Divide)
+    }
+
     pub fn literal(&self) -> Option<&'static str> {
         Some(match self {
             Operator::Plus => "+",

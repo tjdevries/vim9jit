@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1553
+assertion_line: 1577
 expression: "generate(contents, false).unwrap()"
 ---
 local NVIM9 = require("vim9script")
@@ -83,9 +83,9 @@ Qf_filter = function(qf, searchpat, bang)
 
   firstchar = NVIM9.index(searchpat, 0)
   lastchar = NVIM9.slice(searchpat, -1, nil)
-  if NVIM9.bool(firstchar == lastchar and (firstchar == "/" or firstchar == '"' or firstchar == "'")) then
+  if firstchar == lastchar and (firstchar == "/" or firstchar == '"' or firstchar == "'") then
     pat = NVIM9.slice(searchpat, 1, -2)
-    if NVIM9.bool(pat == "") then
+    if pat == "" then
       -- # Use the last search pattern
       pat = vim.fn.getreg("/")
     end
@@ -93,11 +93,11 @@ Qf_filter = function(qf, searchpat, bang)
     pat = searchpat
   end
 
-  if NVIM9.bool(pat == "") then
+  if pat == "" then
     return
   end
 
-  if NVIM9.bool(bang == "!") then
+  if bang == "!" then
     Cond = function(_, val)
       return NVIM9.ops["NotRegexpMatches"](val["text"], pat)
         and NVIM9.ops["NotRegexpMatches"](NVIM9.fn["bufname"](val["bufnr"]), pat)

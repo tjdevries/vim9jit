@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 lexer = { path = "../vim9-lexer", package = "vim9-lexer" }
 parser = { path = "../vim9-parser", package = "vim9-parser" }
+vimfuncs = { path = "../vimfuncs" }
 
 anyhow = "1.0.62"
 stylua = "0.14.3"
