@@ -2068,7 +2068,6 @@ impl<'a> Parser<'a> {
 
             if post_comment.is_none() {
                 if !kind.is_whitespace() && kind != TokenKind::Comment {
-                    println!("POST COMMENT: {:?}", self.peek_n(peek_index));
                     post_comment = Some(self.peek_n(peek_index));
                     break;
                 }
@@ -2170,7 +2169,7 @@ impl<'a> Parser<'a> {
 
     fn get_infix_fn(&self) -> Option<InfixFn> {
         let peek_info = self.peek_info();
-        let peek_token = dbg!(peek_info.infix_token());
+        let peek_token = peek_info.infix_token();
         let skipped = &peek_info.next != peek_token;
 
         Some(Box::new(match peek_token.kind {
@@ -2237,7 +2236,7 @@ impl<'a> Parser<'a> {
         };
 
         loop {
-            let peeked = dbg!(self.peek_info());
+            let peeked = self.peek_info();
             if prec >= self.get_precedence(peeked.relevant_kind())?.unwrap() {
                 break;
             }
@@ -2251,7 +2250,7 @@ impl<'a> Parser<'a> {
             left = infix(self, left.into())?;
         }
 
-        Ok(dbg!(left))
+        Ok(left)
     }
 
     pub fn expect_eol(&self) -> Result<TokenMeta> {
