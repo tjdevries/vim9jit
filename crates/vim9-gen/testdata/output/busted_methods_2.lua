@@ -1,4 +1,4 @@
-local NVIM9 = require("vim9script")
+local NVIM9 = require("_vim9script")
 local __VIM9_MODULE = {}
 describe("filename", function()
   local Test_method_comments = nil

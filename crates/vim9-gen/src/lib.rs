@@ -1501,7 +1501,7 @@ pub fn eval(program: parser::Program, opts: ParserOpts) -> String {
     };
 
     let mut output = String::new();
-    output += "local NVIM9 = require('vim9script')";
+    output += "local NVIM9 = require('_vim9script')";
     output += "local __VIM9_MODULE = {}\n";
 
     if state.is_test_mode() {

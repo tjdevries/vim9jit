@@ -534,6 +534,12 @@ M.slice = function(obj, start, finish)
   return slicer(obj, start + 1, finish + 1)
 end
 
+-- Currently unused, but this could be used to embed vim9jit within a
+-- running nvim application and transpile "on the fly" as files are
+-- sourced. There would still need to be some work done to make that
+-- work correctly with imports and what not, but overall it could
+-- work well for calling ":source X" from within a vimscript/vim9script
+-- function
 M.make_source_cmd = function()
   local group = vim.api.nvim_create_augroup("vim9script-source", {})
   vim.api.nvim_create_autocmd("SourceCmd", {

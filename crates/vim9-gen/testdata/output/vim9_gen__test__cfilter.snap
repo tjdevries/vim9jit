@@ -1,9 +1,9 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1577
-expression: "generate(contents, false).unwrap()"
+assertion_line: 1641
+expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unwrap()"
 ---
-local NVIM9 = require("vim9script")
+local NVIM9 = require("_vim9script")
 local __VIM9_MODULE = {}
 local Qf_filter = nil
 -- vim9script
