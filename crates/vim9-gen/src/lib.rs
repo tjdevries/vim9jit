@@ -22,13 +22,31 @@ use parser::{
 pub mod call_expr;
 mod test_harness;
 
+#[derive(Debug, PartialEq)]
+pub enum ParserMode {
+    Test,
+    Autoload,
+    Standalone,
+}
+
+#[derive(Debug)]
+pub struct ParserOpts {
+    pub mode: ParserMode,
+}
+
 #[derive(Debug)]
 pub struct State {
-    pub augroup: Option<Literal>,
-    pub is_test: bool,
+    pub opts: ParserOpts,
 
     pub command_depth: i32,
     pub method_depth: i32,
+
+    // TODO: Consider moving augroup -> scopes
+    // with a new scope type of augroup.
+    //
+    // That might be a nicer strategy (and mirrors
+    // the same thing as we've done before).
+    pub augroup: Option<Literal>,
 
     // TODO: We could modify the state as we are generating code.
     //  As we generate the code and notice certain identifiers are certain
@@ -37,6 +55,10 @@ pub struct State {
 }
 
 impl State {
+    fn is_test_mode(&self) -> bool {
+        self.opts.mode == ParserMode::Test
+    }
+
     fn is_top_level(&self) -> bool {
         self.scopes.len() == 1
     }
@@ -76,6 +98,7 @@ impl State {
             .push_declaration(expr_1, expr_2)
     }
 
+    #[allow(unused)]
     fn lookup_declaration(&self, expr_1: &Expression) -> Option<Type> {
         match Scope::declaration_key(expr_1) {
             Some(key) => self
@@ -602,7 +625,7 @@ impl Generate for DefCommand {
         let (body, scope) =
             state.with_scope(ScopeKind::Function, |s| self.body.gen(s));
 
-        if state.is_test && name.starts_with("Test") {
+        if state.opts.mode == ParserMode::Test && name.starts_with("Test") {
             assert!(scope.deferred == 0, "have not handled deferred in tests");
 
             format!(
@@ -1006,6 +1029,17 @@ impl Generate for Identifier {
 
 impl Generate for ScopedIdentifier {
     fn gen(&self, state: &mut State) -> String {
+        if self.scope == VimScope::VimVar {
+            if let Identifier::Raw(raw) = self.accessor.as_ref() {
+                if raw.name == "version" {
+                    // "lie" to vim9script code and say that we are
+                    // version 9. This may need to be updated if
+                    // vim updates their v:version variable
+                    return "900".to_string();
+                }
+            }
+        }
+
         let scope = match self.scope {
             VimScope::Global => "vim.g",
             VimScope::VimVar => "vim.v",
@@ -1419,13 +1453,13 @@ impl Generate for InfixExpression {
     }
 }
 
-fn toplevel_id(s: &mut State, command: &ExCommand) -> Option<String> {
+fn toplevel_ident(s: &mut State, command: &ExCommand) -> Option<String> {
     match command {
         ExCommand::Decl(decl) => Some(decl.name.gen(s)),
         ExCommand::Def(def) => {
             def.name.is_valid_local().then_some(def.name.gen(s))
         }
-        ExCommand::ExportCommand(e) => toplevel_id(s, e.command.as_ref()),
+        ExCommand::ExportCommand(e) => toplevel_ident(s, e.command.as_ref()),
         ExCommand::Heredoc(here) => Some(here.name.gen(s)),
         // This might make sense, but I don't think it allows you to do this?
         ExCommand::Var(_) => None,
@@ -1457,26 +1491,26 @@ fn toplevel_id(s: &mut State, command: &ExCommand) -> Option<String> {
     }
 }
 
-pub fn eval(program: parser::Program, is_test: bool) -> String {
+pub fn eval(program: parser::Program, opts: ParserOpts) -> String {
     let mut state = State {
         augroup: None,
         command_depth: 0,
         method_depth: 0,
         scopes: vec![Scope::new(ScopeKind::TopLevel)],
-        is_test,
+        opts,
     };
 
     let mut output = String::new();
     output += "local NVIM9 = require('vim9script')";
     output += "local __VIM9_MODULE = {}\n";
 
-    if is_test {
+    if state.is_test_mode() {
         output += "describe(\"filename\", function()\n"
     }
 
     // "hoist" top-level declaractions to top of program.
     for command in program.commands.iter() {
-        if let Some(toplevel) = toplevel_id(&mut state, command) {
+        if let Some(toplevel) = toplevel_ident(&mut state, command) {
             output += &format!("local {} = nil\n", toplevel);
         }
     }
@@ -1486,7 +1520,7 @@ pub fn eval(program: parser::Program, is_test: bool) -> String {
         output += "\n";
     }
 
-    if is_test {
+    if state.is_test_mode() {
         output += "end)"
     }
 
@@ -1497,13 +1531,13 @@ pub fn eval(program: parser::Program, is_test: bool) -> String {
 
 pub fn generate(
     contents: &str,
-    is_test: bool,
+    opts: ParserOpts,
 ) -> Result<String, (String, String)> {
     let lexer = Lexer::new(contents);
     let parser = new_parser(&lexer);
     let program = parser.parse_program();
 
-    let result = eval(program, is_test);
+    let result = eval(program, opts);
     // println!("{}", result);
 
     let config = stylua_lib::Config::new()
@@ -1539,7 +1573,13 @@ mod test {
                 let mut settings = insta::Settings::clone_current();
                 settings.set_snapshot_path("../testdata/output/");
                 settings.bind(|| {
-                    insta::assert_snapshot!(generate(contents, false).unwrap());
+                    insta::assert_snapshot!(generate(
+                        contents,
+                        ParserOpts {
+                            mode: ParserMode::Standalone,
+                        }
+                    )
+                    .unwrap());
                 });
             }
         };
@@ -1550,7 +1590,13 @@ mod test {
             #[test]
             fn $name() {
                 let vim_contents = include_str!($path);
-                let lua_contents = generate(vim_contents, true).unwrap();
+                let lua_contents = generate(
+                    vim_contents,
+                    ParserOpts {
+                        mode: ParserMode::Test,
+                    },
+                )
+                .unwrap();
 
                 let filepath = concat!(
                     env!("CARGO_MANIFEST_DIR"),
@@ -1608,7 +1654,13 @@ mod test {
             export var x = MyCoolFunc() + 1
         "#;
 
-        let generated = generate(contents, false).unwrap();
+        let generated = generate(
+            contents,
+            ParserOpts {
+                mode: ParserMode::Standalone,
+            },
+        )
+        .unwrap();
         let eval = exec_lua(&generated).unwrap();
         assert_eq!(eval["x"], 6.into());
     }
@@ -1621,7 +1673,13 @@ mod test {
             export var x = len("hello")
         "#;
 
-        let generated = generate(contents, false).unwrap();
+        let generated = generate(
+            contents,
+            ParserOpts {
+                mode: ParserMode::Standalone,
+            },
+        )
+        .unwrap();
         let eval = exec_lua(&generated).unwrap();
         assert_eq!(eval["x"], 5.into());
     }
@@ -1643,7 +1701,13 @@ mod test {
             export var x = len(nvim_get_autocmds({group: "matchparen"}))
         "#;
 
-        let generated = generate(contents, false).unwrap();
+        let generated = generate(
+            contents,
+            ParserOpts {
+                mode: ParserMode::Standalone,
+            },
+        )
+        .unwrap();
         let eval = exec_lua(&generated).unwrap();
         assert_eq!(eval["x"], 4.into());
     }

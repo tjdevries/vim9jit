@@ -58,7 +58,12 @@ fn gen_directory(src: &Path, gen: &Path, subdir: &OsStr) -> Result<()> {
         println!("plugin: {:?}", f);
         println!("  filename: {:?}", generated_file);
 
-        let generated = match gen::generate(&contents, false) {
+        let generated = match gen::generate(
+            &contents,
+            gen::ParserOpts {
+                mode: gen::ParserMode::Standalone,
+            },
+        ) {
             Ok(generated) => generated,
             Err(err) => {
                 println!("  FAILED: {}", err.1);
@@ -96,7 +101,12 @@ fn main() -> Result<()> {
         }
 
         let contents = std::fs::read_to_string(path)?;
-        let generated = match gen::generate(&contents, false) {
+        let generated = match gen::generate(
+            &contents,
+            gen::ParserOpts {
+                mode: gen::ParserMode::Standalone,
+            },
+        ) {
             Ok(generated) => generated,
             Err(err) => {
                 println!("  FAILED: {}", err.1);
