@@ -1,6 +1,6 @@
 #![feature(iter_intersperse)]
 
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, fmt::Write as _, path::Path};
 
 use lexer::Lexer;
 use parser::{
@@ -11,8 +11,8 @@ use parser::{
     ExecuteCommand, Expandable, ExportCommand, Expression, ForCommand,
     GroupedExpression, Heredoc, Identifier, IfCommand, ImportCommand,
     IndexExpression, IndexType, InfixExpression, Lambda, Literal, MethodCall,
-    MutationStatement, Operator, PrefixExpression, RawIdentifier, Register,
-    ReturnCommand, ScopedIdentifier, SharedCommand, Signature,
+    MutationStatement, Operator, PrefixExpression, Program, RawIdentifier,
+    Register, ReturnCommand, ScopedIdentifier, SharedCommand, Signature,
     StatementCommand, Ternary, TryCommand, Type, UnpackIdentifier, UserCommand,
     VarCommand, Vim9ScriptCommand, VimBoolean, VimKey, VimNumber, VimOption,
     VimScope, VimString, WhileCommand,
@@ -21,6 +21,8 @@ use parser::{
 // this word is missspelled
 pub mod call_expr;
 mod test_harness;
+
+pub type GenResult = Result<(), std::fmt::Error>;
 
 #[derive(Debug, PartialEq)]
 pub enum ParserMode {
@@ -32,6 +34,35 @@ pub enum ParserMode {
 #[derive(Debug)]
 pub struct ParserOpts {
     pub mode: ParserMode,
+}
+
+pub struct Output {
+    lua: String,
+    vim: String,
+}
+
+// Writing related impls
+impl Output {
+    pub fn new() -> Self {
+        Self {
+            lua: String::new(),
+            vim: String::new(),
+        }
+    }
+
+    pub fn get_lua(generator: impl Generate, state: &mut State) -> String {
+        let mut temp = Output::new();
+        write(generator, state, &mut temp);
+        temp.lua
+    }
+
+    pub fn write_lua(&mut self, contents: &str) {
+        let _ = write!(self.lua, "{}", contents);
+    }
+
+    pub fn write_vim(&mut self, contents: &str) {
+        let _ = write!(self.vim, "{}", contents);
+    }
 }
 
 #[derive(Debug)]
@@ -55,10 +86,6 @@ pub struct State {
 }
 
 impl State {
-    fn is_test_mode(&self) -> bool {
-        self.opts.mode == ParserMode::Test
-    }
-
     fn is_top_level(&self) -> bool {
         self.scopes.len() == 1
     }
@@ -196,74 +223,100 @@ impl Scope {
     }
 }
 
+fn write(generator: impl Generate, state: &mut State, output: &mut Output) {
+    match state.opts.mode {
+        ParserMode::Standalone => generator.write(state, output),
+        ParserMode::Test => generator.write_test(state, output),
+        ParserMode::Autoload => generator.write_autoload(state, output),
+    }
+}
+
 pub trait Generate {
-    fn gen(&self, state: &mut State) -> String;
+    fn write(&self, state: &mut State, output: &mut Output);
+
+    fn write_test(&self, state: &mut State, output: &mut Output) {
+        self.write(state, output)
+    }
+
+    fn write_autoload(&self, state: &mut State, output: &mut Output) {
+        self.write(state, output)
+    }
+
+    // TODO: can we remove this?
+    fn gen(&self, state: &mut State) -> String {
+        Output::get_lua(self, state)
+    }
 }
 
 impl Generate for ExCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         match self {
-            ExCommand::Vim9Script(cmd) => cmd.gen(state),
-            ExCommand::Var(cmd) => cmd.gen(state),
-            ExCommand::Echo(cmd) => cmd.gen(state),
-            ExCommand::Statement(cmd) => cmd.gen(state),
-            ExCommand::Return(cmd) => cmd.gen(state),
-            ExCommand::Def(cmd) => cmd.gen(state),
-            ExCommand::If(cmd) => cmd.gen(state),
-            ExCommand::Augroup(cmd) => cmd.gen(state),
-            ExCommand::Autocmd(cmd) => cmd.gen(state),
-            ExCommand::Call(cmd) => cmd.gen(state),
-            ExCommand::Decl(cmd) => cmd.gen(state),
-            ExCommand::Comment(token) => format!("-- {}", token.text),
             ExCommand::NoOp(token) => {
-                if token.kind.is_whitespace() {
-                    String::new()
-                } else {
-                    format!("\n-- {:?}", token)
+                if !token.kind.is_whitespace() {
+                    output.write_lua(&format!("\n-- {:?}", token))
                 }
             }
-            ExCommand::Heredoc(heredoc) => heredoc.gen(state),
-            ExCommand::UserCommand(usercmd) => usercmd.gen(state),
-            ExCommand::Eval(eval) => format!("{};", eval.expr.gen(state)),
-            ExCommand::SharedCommand(shared) => shared.gen(state),
-            ExCommand::ExportCommand(export) => export.gen(state),
-            ExCommand::ImportCommand(import) => import.gen(state),
-            ExCommand::Finish(_) => format!("return __VIM9_MODULE"),
-            ExCommand::For(f) => f.gen(state),
-            ExCommand::Try(t) => t.gen(state),
-            ExCommand::While(w) => w.gen(state),
-            ExCommand::Break(b) => b.gen(state),
-            ExCommand::Continue(c) => c.gen(state),
-            ExCommand::Defer(defer) => defer.gen(state),
-            ExCommand::Execute(exec) => exec.gen(state),
+            ExCommand::Comment(token) => {
+                output.write_lua(&format!("-- {}", token.text))
+            }
+            ExCommand::Finish(_) => output.write_lua("return __VIM9_MODULE"),
+            ExCommand::Vim9Script(cmd) => cmd.write(state, output),
+            ExCommand::Var(cmd) => cmd.write(state, output),
+            ExCommand::Echo(cmd) => cmd.write(state, output),
+            ExCommand::Statement(cmd) => cmd.write(state, output),
+            ExCommand::Return(cmd) => cmd.write(state, output),
+            ExCommand::Def(cmd) => cmd.write(state, output),
+            ExCommand::If(cmd) => cmd.write(state, output),
+            ExCommand::Augroup(cmd) => cmd.write(state, output),
+            ExCommand::Autocmd(cmd) => cmd.write(state, output),
+            ExCommand::Call(cmd) => cmd.write(state, output),
+            ExCommand::Decl(cmd) => cmd.write(state, output),
+            ExCommand::Heredoc(heredoc) => heredoc.write(state, output),
+            ExCommand::UserCommand(usercmd) => usercmd.write(state, output),
+            ExCommand::SharedCommand(shared) => shared.write(state, output),
+            ExCommand::ExportCommand(export) => export.write(state, output),
+            ExCommand::ImportCommand(import) => import.write(state, output),
+            ExCommand::For(f) => f.write(state, output),
+            ExCommand::Try(t) => t.write(state, output),
+            ExCommand::While(w) => w.write(state, output),
+            ExCommand::Break(b) => b.write(state, output),
+            ExCommand::Continue(c) => c.write(state, output),
+            ExCommand::Defer(defer) => defer.write(state, output),
+            ExCommand::Execute(exec) => exec.write(state, output),
+            // ExCommand::Eval(eval) => format!("{};", eval.expr.gen(state)),
             _ => todo!("Have not yet handled: {:?}", self),
         }
     }
 }
 
 impl Generate for DeferCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         state.push_defer();
 
-        let expr = self.call.gen(state);
+        // let mut temp = Output::new();
+        // self.call.write(state, &mut temp);
+        // let expr = temp.lua;
 
-        // format!("-- deferred expression")
-        format!("table.insert(nvim9_deferred, 1, function() {expr} end)")
+        let expr = Output::get_lua(self.call, state);
+
+        output.write_lua(&format!(
+            "table.insert(nvim9_deferred, 1, function() {expr} end)"
+        ))
     }
 }
 
 impl Generate for ContinueCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         let scope = find_scope!(state, Function | While { .. } | For { .. });
         assert!(scope.kind != ScopeKind::Function, "continue: While/For");
         assert!(scope.has_continue(), "must have continue...");
 
-        format!("return NVIM9.ITER_CONTINUE")
+        output.write_lua("return NVIM9.ITER_CONTINUE")
     }
 }
 
 impl Generate for BreakCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         let scope = find_scope!(state, Function | While { .. } | For { .. });
         assert!(
             scope.kind != ScopeKind::Function,
@@ -273,24 +326,26 @@ impl Generate for BreakCommand {
         );
 
         if scope.has_continue() {
-            format!("return NVIM9.ITER_BREAK")
+            output.write_lua("return NVIM9.ITER_BREAK")
         } else {
-            format!("break")
+            output.write_lua("break")
         }
     }
 }
 
 impl Generate for WhileCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         let has_continue = continue_exists_in_scope(&self.body);
-        let (body, _) = state
-            .with_scope(ScopeKind::While { has_continue }, |s| {
-                self.body.gen(s)
+        let (body, _) =
+            state.with_scope(ScopeKind::While { has_continue }, |s| {
+                // self.body.gen(s)
+                Output::get_lua(self.body, s)
             });
 
         if has_continue {
-            let condition = self.condition.gen(state);
-            return format!(
+            // let condition = self.condition.gen(state);
+            let condition = Output::get_lua(self.condition, state);
+            return output.write_lua(
                 r#"
                     local body = function()
                         {body}
@@ -306,18 +361,26 @@ impl Generate for WhileCommand {
                             return nvim9_ret
                         end
                     end
-                "#
+                "#,
             );
         }
 
-        format!("while {}\ndo\n{}\nend", self.condition.gen(state), body)
+        // output.write_lua(&format!(
+        //     "while {}\ndo\n{}\nend",
+        //     self.condition.gen(state),
+        //     body
+        // ))
+        output.write_lua("while ");
+        write(self.condition, state, output);
+        output.write_lua(&format!("\ndo\n{}\nend", body));
     }
 }
 
 impl Generate for TryCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         // TODO: try and catch LUL
-        self.body.gen(state)
+        // self.body.gen(state)
+        write(self.body, state, output)
     }
 }
 
@@ -334,10 +397,12 @@ impl Generate for ForCommand {
     // 1 => continue
     // 2 => break
     // 3 => return
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         let has_continue = continue_exists_in_scope(&self.body);
         let (body, _) = state
-            .with_scope(ScopeKind::For { has_continue }, |s| self.body.gen(s));
+            .with_scope(ScopeKind::For { has_continue }, |s| {
+                Output::get_lua(self.body, s)
+            });
 
         let expr = self.for_expr.gen(state);
         let (ident, unpacked) = match &self.for_identifier {
@@ -887,9 +952,10 @@ impl Generate for ExecuteCommand {
 }
 
 impl Generate for Vim9ScriptCommand {
-    fn gen(&self, _: &mut State) -> String {
+    fn gen(&self, state: &mut State) -> String {
         // TODO: Actually connect this
         // format!("NVIM9.new_script {{ noclear = {} }}", self.noclear)
+        // write!(state.lua_contents, "-- vim9script")
         format!("-- vim9script")
     }
 }
@@ -1491,53 +1557,83 @@ fn toplevel_ident(s: &mut State, command: &ExCommand) -> Option<String> {
     }
 }
 
-pub fn eval(program: parser::Program, opts: ParserOpts) -> String {
+mod generate_program {
+    use super::*;
+
+    pub fn preamble() -> String {
+        let mut output = String::new();
+        output += "local NVIM9 = require('_vim9script')";
+        output += "local __VIM9_MODULE = {}\n";
+        output
+    }
+
+    // "hoist" top-level declaractions to top of program, to ensure proper names
+    pub fn hoist(state: &mut State, program: &Program, writer: &mut String) {
+        for command in program.commands.iter() {
+            if let Some(toplevel) = toplevel_ident(state, command) {
+                let _ = writeln!(writer, "local {} = nil", toplevel);
+            }
+        }
+    }
+}
+
+impl Generate for Program {
+    fn gen(&self, state: &mut State) -> String {
+        let mut generated = generate_program::preamble();
+        generate_program::hoist(state, self, &mut generated);
+
+        for command in self.commands.iter() {
+            write(*command, state)
+        }
+
+        generated += "return __VIM9_MODULE";
+        generated
+    }
+
+    fn gen_autoload(&self, state: &mut State) -> (String, String) {
+        (self.gen(state), "".to_owned())
+    }
+
+    fn gen_test(&self, state: &mut State) -> String {
+        let mut generated = generate_program::preamble();
+        generate_program::hoist(state, self, &mut generated);
+
+        generated += "describe(\"filename\", function()\n";
+
+        generated += "end)";
+
+        generated
+    }
+}
+
+pub fn eval(
+    program: parser::Program,
+    opts: ParserOpts,
+) -> anyhow::Result<State> {
     let mut state = State {
         augroup: None,
         command_depth: 0,
         method_depth: 0,
+        lua_contents: String::new(),
+        vim_contents: String::new(),
         scopes: vec![Scope::new(ScopeKind::TopLevel)],
         opts,
     };
 
-    let mut output = String::new();
-    output += "local NVIM9 = require('_vim9script')";
-    output += "local __VIM9_MODULE = {}\n";
+    write(program, &mut state);
 
-    if state.is_test_mode() {
-        output += "describe(\"filename\", function()\n"
-    }
-
-    // "hoist" top-level declaractions to top of program.
-    for command in program.commands.iter() {
-        if let Some(toplevel) = toplevel_ident(&mut state, command) {
-            output += &format!("local {} = nil\n", toplevel);
-        }
-    }
-
-    for command in program.commands.iter() {
-        output += &command.gen(&mut state);
-        output += "\n";
-    }
-
-    if state.is_test_mode() {
-        output += "end)"
-    }
-
-    output += "return __VIM9_MODULE";
-
-    output
+    Ok(state)
 }
 
 pub fn generate(
     contents: &str,
     opts: ParserOpts,
-) -> Result<String, (String, String)> {
+) -> Result<State, (String, String)> {
     let lexer = Lexer::new(contents);
     let parser = new_parser(&lexer);
     let program = parser.parse_program();
 
-    let result = eval(program, opts);
+    let mut result = eval(program, opts).unwrap();
     // println!("{}", result);
 
     let config = stylua_lib::Config::new()
@@ -1545,15 +1641,18 @@ pub fn generate(
         .with_indent_width(2)
         .with_column_width(120);
 
-    match stylua_lib::format_code(
-        &result,
+    // Format lua code, so we can actually read it.
+    result.lua_contents = match stylua_lib::format_code(
+        &result.lua_contents,
         config,
         None,
         stylua_lib::OutputVerification::None,
     ) {
-        Ok(res) => Ok(res),
-        Err(err) => Err((result, err.to_string())),
-    }
+        Ok(res) => res,
+        Err(err) => return Err((result.lua_contents, err.to_string())),
+    };
+
+    Ok(result)
 }
 
 #[cfg(test)]
