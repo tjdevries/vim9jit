@@ -1,10 +1,7 @@
 local NVIM9 = require("_vim9script")
-local __VIM9_MODULE = {}
+local MyDefer = nil
+local RangeDefer = nil
 describe("filename", function()
-  local MyDefer = nil
-  local RangeDefer = nil
-  local Test_defer = nil
-
   -- # def AddDefer(arg1)
   -- #   call extend(g:deferred, [arg1])
   -- #   # if a:0 == 1
@@ -84,19 +81,11 @@ describe("filename", function()
     return ret
   end
 
-  it("Test_defer", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_defer = function()
     local x = MyDefer()
     NVIM9.fn["assert_equal"]({ 3, 2, 1 }, x)
 
     local y = RangeDefer()
     NVIM9.fn["assert_equal"]({ 3, 2, 1 }, x)
-
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
+  end
 end)
-return __VIM9_MODULE

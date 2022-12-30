@@ -35,9 +35,10 @@ pub struct ParserOpts {
     pub mode: ParserMode,
 }
 
+#[derive(Debug)]
 pub struct Output {
-    lua: String,
-    vim: String,
+    pub lua: String,
+    pub vim: String,
 }
 
 // Writing related impls
@@ -240,6 +241,19 @@ pub trait Generate {
     fn write_autoload(&self, state: &mut State, output: &mut Output) {
         self.write(state, output)
     }
+
+    fn gen(&self, state: &mut State) -> String {
+        let mut output = Output::new();
+
+        // TODO: Feels like I'm repeating myself...?
+        match state.opts.mode {
+            ParserMode::Standalone => self.write(state, &mut output),
+            ParserMode::Test => self.write_test(state, &mut output),
+            ParserMode::Autoload => self.write_autoload(state, &mut output),
+        }
+
+        output.lua
+    }
 }
 
 impl Generate for ExCommand {
@@ -277,7 +291,9 @@ impl Generate for ExCommand {
             ExCommand::Continue(c) => c.write(state, output),
             ExCommand::Defer(defer) => defer.write(state, output),
             ExCommand::Execute(exec) => exec.write(state, output),
-            // ExCommand::Eval(eval) => format!("{};", eval.expr.gen(state)),
+            ExCommand::Eval(eval) => {
+                output.write_lua(&format!("{};", eval.expr.gen(state)))
+            }
             _ => todo!("Have not yet handled: {:?}", self),
         }
     }
@@ -287,11 +303,9 @@ impl Generate for DeferCommand {
     fn write(&self, state: &mut State, output: &mut Output) {
         state.push_defer();
 
-        // let mut temp = Output::new();
-        // self.call.write(state, &mut temp);
-        // let expr = temp.lua;
-
-        let expr = Output::get_lua(self.call, state);
+        let mut temp = Output::new();
+        self.call.write(state, &mut temp);
+        let expr = self.call.gen(state);
 
         output.write_lua(&format!(
             "table.insert(nvim9_deferred, 1, function() {expr} end)"
@@ -330,16 +344,15 @@ impl Generate for BreakCommand {
 impl Generate for WhileCommand {
     fn write(&self, state: &mut State, output: &mut Output) {
         let has_continue = continue_exists_in_scope(&self.body);
-        let (body, _) =
-            state.with_scope(ScopeKind::While { has_continue }, |s| {
-                // self.body.gen(s)
-                Output::get_lua(self.body, s)
+        let (body, _) = state
+            .with_scope(ScopeKind::While { has_continue }, |s| {
+                (&self.body).gen(s)
             });
 
         if has_continue {
             // let condition = self.condition.gen(state);
-            let condition = Output::get_lua(self.condition, state);
-            return output.write_lua(
+            let condition = self.condition.gen(state);
+            return output.write_lua(&format!(
                 r#"
                     local body = function()
                         {body}
@@ -356,7 +369,7 @@ impl Generate for WhileCommand {
                         end
                     end
                 "#,
-            );
+            ));
         }
 
         // output.write_lua(&format!(
@@ -365,7 +378,7 @@ impl Generate for WhileCommand {
         //     body
         // ))
         output.write_lua("while ");
-        output.write(self.condition, state);
+        output.write_lua(&self.condition.gen(state));
         output.write_lua(&format!("\ndo\n{}\nend", body));
     }
 }
@@ -374,7 +387,7 @@ impl Generate for TryCommand {
     fn write(&self, state: &mut State, output: &mut Output) {
         // TODO: try and catch LUL
         // self.body.gen(state)
-        output.write(self.body, state)
+        output.write(&self.body, state)
     }
 }
 
@@ -395,10 +408,10 @@ impl Generate for ForCommand {
         let has_continue = continue_exists_in_scope(&self.body);
         let (body, _) = state
             .with_scope(ScopeKind::For { has_continue }, |s| {
-                Output::get_lua(self.body, s)
+                Output::get_lua(&self.body, s)
             });
 
-        let expr = Output::get_lua(self.for_expr, state);
+        let expr = &self.for_expr.gen(state);
         let (ident, unpacked) = match &self.for_identifier {
             Identifier::Unpacked(unpacked) => (
                 "__unpack_result".to_string(),
@@ -407,7 +420,7 @@ impl Generate for ForCommand {
                     identifier_list(state, unpacked)
                 ),
             ),
-            _ => (Output::get_lua(self.for_identifier, state), "".to_string()),
+            _ => (self.for_identifier.gen(state), "".to_string()),
         };
 
         let result = if has_continue {
@@ -450,7 +463,7 @@ impl Generate for ImportCommand {
         output.write_lua(&match self {
             ImportCommand::ImportImplicit { file, name, autoload, ..} => match name {
                 Some(name) =>  {
-                    let var = Output::get_lua(*name, state);
+                    let var = name.gen(state);
                     format!(
                             "local {var} = NVIM9.import({{ name = '{file}', autoload = {autoload} }})"
                     )
@@ -465,7 +478,7 @@ impl Generate for ImportCommand {
             },
             ImportCommand::ImportUnpacked { names, file,  .. } => {
                 names.iter().map(|name| {
-                    let name = Output::get_lua(*name, state);
+                    let name = name.gen(state);
                     format!("local {name} = NVIM9.import({{ name = '{file}' }})['{name}']")
                 }).collect::<Vec<String>>().join("\n")
             }
@@ -474,7 +487,7 @@ impl Generate for ImportCommand {
 }
 
 impl Generate for ExportCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         let exported = self.command.gen(state);
         let ident = match self.command.as_ref() {
             ExCommand::Var(var) => var.name.gen(state),
@@ -486,14 +499,19 @@ impl Generate for ExportCommand {
             }
         };
 
-        format!("{exported};\n__VIM9_MODULE['{ident}'] = {ident};")
+        output.write_lua(&format!(
+            "{exported};\n__VIM9_MODULE['{ident}'] = {ident};"
+        ))
     }
 }
 
 impl Generate for SharedCommand {
-    fn gen(&self, _: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         // Temp
-        format!("pcall(vim.cmd, [[ {} ]])", self.contents.trim())
+        output.write_lua(&format!(
+            "pcall(vim.cmd, [[ {} ]])",
+            self.contents.trim()
+        ))
     }
 }
 
@@ -510,7 +528,7 @@ fn to_str_or_nil(s: &Option<String>) -> String {
 }
 
 impl Generate for UserCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         state.command_depth += 1;
 
         let complete = to_str_or_nil(&self.command_complete);
@@ -544,15 +562,15 @@ impl Generate for UserCommand {
 
         state.command_depth -= 1;
 
-        result
+        output.write_lua(&result)
     }
 }
 
 impl Generate for DeclCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         // TODO: default value should not be nil for everything here
         // i think?
-        format!(
+        output.write_lua(&format!(
             "local {} = {}",
             self.name.gen(state),
             match &self.ty {
@@ -573,12 +591,12 @@ impl Generate for DeclCommand {
                 },
                 None => "nil",
             }
-        )
+        ))
     }
 }
 
 impl Generate for Heredoc {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         // this works for non-trim and non-eval heredocs perfect
         let inner = self
             .contents
@@ -592,19 +610,20 @@ impl Generate for Heredoc {
             list = format!("NVIM9.heredoc.trim({})", list)
         }
 
-        format!("local {} = {}", self.name.gen(state), list)
+        output.write_lua(&format!("local {} = {}", self.name.gen(state), list))
     }
 }
 
 impl Generate for CallCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         let call: CallExpression = self.into();
-        format!("{};", call.gen(state))
+        output.write(call, state);
+        output.write_lua(";");
     }
 }
 
 impl Generate for AugroupCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         state.augroup = Some(self.augroup_name.clone());
 
         let group = self.augroup_name.token.text.clone();
@@ -620,12 +639,12 @@ impl Generate for AugroupCommand {
 
         state.augroup = None;
 
-        result
+        output.write_lua(&result)
     }
 }
 
 impl Generate for AutocmdCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         let group = match &state.augroup {
             Some(group) => format!("group = '{}',", group.token.text),
             None => "".to_string(),
@@ -647,7 +666,7 @@ impl Generate for AutocmdCommand {
             }
         };
 
-        format!(
+        output.write_lua(&format!(
             r#"
 vim.api.nvim_create_autocmd({{ {} }}, {{
     {}
@@ -655,16 +674,16 @@ vim.api.nvim_create_autocmd({{ {} }}, {{
 }})
 "#,
             event_list, group, callback
-        )
+        ))
     }
 }
 
 impl Generate for ReturnCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         let scope =
             scope_or_empty!(state, Function | While { .. } | For { .. });
 
-        if scope.has_continue() {
+        output.write_lua(&if scope.has_continue() {
             match &self.expr {
                 Some(expr) => {
                     format!("return NVIM9.ITER_RETURN, {}", expr.gen(state))
@@ -676,46 +695,43 @@ impl Generate for ReturnCommand {
                 Some(expr) => format!("return {}", expr.gen(state)),
                 None => "return".to_string(),
             }
-        }
+        })
     }
 }
 
 impl Generate for DefCommand {
-    fn gen(&self, state: &mut State) -> String {
+    /*
+       let generated_vim = if state.opts.mode == ParserMode::Autoload {
+               Some(r#"
+       let s:PATH = expand("<script>")
+       let s:NVIM_MODULE = luaeval(printf('require("_vim9script").autoload(%s)', s:PATH))
+
+       function! ccomplete#Complete(findstart, abase) abort
+         # return luaeval('require("...").autoload(...)(...
+         return s:NVIM_MODULE.Complete(a:findstart, a:abase)
+       endfunction"#.to_string())
+           } else {
+               None
+           };
+    */
+
+    fn write(&self, state: &mut State, output: &mut Output) {
         let name = self.name.gen(state);
         let (body, scope) =
             state.with_scope(ScopeKind::Function, |s| self.body.gen(s));
 
-        if state.opts.mode == ParserMode::Test && name.starts_with("Test") {
-            assert!(scope.deferred == 0, "have not handled deferred in tests");
+        let (signature, sig_statements) = gen_signature(state, &self.args);
 
+        let local = if state.is_top_level() || !self.name.is_valid_local() {
+            ""
+        } else {
+            "local"
+        };
+
+        let result = if scope.deferred > 0 {
+            // TODO: Should probably handle errors in default statements or body
             format!(
                 r#"
-                    it("{name}", function()
-                       -- Set errors to empty
-                       vim.v.errors = {{}}
-
-                       -- Actual test
-                       {body}
-
-                       -- Assert that errors is still empty
-                       assert.are.same({{}}, vim.v.errors)
-                    end)
-                "#,
-            )
-        } else {
-            let (signature, sig_statements) = gen_signature(state, &self.args);
-
-            let local = if state.is_top_level() || !self.name.is_valid_local() {
-                ""
-            } else {
-                "local"
-            };
-
-            if scope.deferred > 0 {
-                // TODO: Should probably handle errors in default statements or body
-                format!(
-                    r#"
                     {local} {name} = function({signature})
                         {sig_statements}
 
@@ -731,29 +747,56 @@ impl Generate for DefCommand {
                         return ret
                     end
                     "#
-                )
-            } else {
-                // TODO: If this command follows certain patterns,
-                // we will also need to define a vimscript function,
-                // so that this function is available.
-                //
-                // this could be something just like:
-                // function <NAME>(...)
-                //   return luaeval('...', ...)
-                // endfunction
-                //
-                // but we haven't done this part yet.
-                // This is a "must-have" aspect of what we're doing.
-                format!(
-                    r#"
+            )
+        } else {
+            // TODO: If this command follows certain patterns,
+            // we will also need to define a vimscript function,
+            // so that this function is available.
+            //
+            // this could be something just like:
+            // function <NAME>(...)
+            //   return luaeval('...', ...)
+            // endfunction
+            //
+            // but we haven't done this part yet.
+            // This is a "must-have" aspect of what we're doing.
+            format!(
+                r#"
                     {local} {name} = function({signature})
                         {sig_statements}
                         {body}
                     end
                 "#,
-                )
-            }
+            )
+        };
+
+        output.write_lua(&result);
+    }
+
+    fn write_test(&self, state: &mut State, output: &mut Output) {
+        let name = self.name.gen(state);
+        if state.opts.mode != ParserMode::Test || !name.starts_with("Test") {
+            return self.write(state, output);
         }
+
+        let (body, scope) =
+            state.with_scope(ScopeKind::Function, |s| self.body.gen(s));
+        assert!(scope.deferred == 0, "have not handled deferred in tests");
+
+        output.write_lua(&format!(
+            r#"
+                it("{name}", function()
+                   -- Set errors to empty
+                   vim.v.errors = {{}}
+
+                   -- Actual test
+                   {body}
+
+                   -- Assert that errors is still empty
+                   assert.are.same({{}}, vim.v.errors)
+                end)
+            "#,
+        ))
     }
 }
 
@@ -794,10 +837,10 @@ fn gen_signature(state: &mut State, args: &Signature) -> (String, String) {
 }
 
 impl Generate for StatementCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         match self {
-            StatementCommand::Assign(assign) => assign.gen(state),
-            StatementCommand::Mutate(mutate) => mutate.gen(state),
+            StatementCommand::Assign(assign) => assign.write(state, output),
+            StatementCommand::Mutate(mutate) => mutate.write(state, output),
         }
     }
 }
@@ -819,7 +862,7 @@ fn statement_lhs(expr: &Expression, state: &mut State) -> String {
 }
 
 impl Generate for MutationStatement {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         // format!("--[[ {:#?} ]]", self)
         let left = statement_lhs(&self.left, state);
         let operator = match self.modifier.kind {
@@ -842,21 +885,21 @@ impl Generate for MutationStatement {
         )
         .gen(state);
 
-        format!("{left} = {infix}")
+        output.write_lua(&format!("{left} = {infix}"))
     }
 }
 
 impl Generate for AssignStatement {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         let left = statement_lhs(&self.left, state);
         let right = self.right.gen(state);
 
-        format!("{left} = {right}")
+        output.write_lua(&format!("{left} = {right}"))
     }
 }
 
 impl Generate for IfCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         let else_result = match &self.else_command {
             Some(e) => e.gen(state),
             None => "".to_string(),
@@ -878,57 +921,67 @@ impl Generate for IfCommand {
             _ => format!("NVIM9.bool({condition})"),
         };
 
-        format!(
-            r#"
+        output.write_lua(
+            format!(
+                r#"
 if {condition} then
   {}
 {}
 {}
 end"#,
-            self.body.gen(state),
-            self.elseifs
-                .iter()
-                .map(|e| e.gen(state))
-                .collect::<Vec<String>>()
-                .join("\n"),
-            else_result,
+                self.body.gen(state),
+                self.elseifs
+                    .iter()
+                    .map(|e| e.gen(state))
+                    .collect::<Vec<String>>()
+                    .join("\n"),
+                else_result,
+            )
+            .trim(),
         )
-        .trim()
-        .to_string()
     }
 }
 
 impl Generate for ElseIfCommand {
-    fn gen(&self, state: &mut State) -> String {
-        format!(
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(&format!(
             r#"
         elseif NVIM9.bool({}) then
             {}
         "#,
             self.condition.gen(state),
             self.body.gen(state)
-        )
+        ))
     }
 }
 
 impl Generate for ElseCommand {
-    fn gen(&self, state: &mut State) -> String {
-        format!("else\n{}\n", self.body.gen(state))
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(&format!("else\n{}\n", self.body.gen(state)))
     }
 }
 
 impl Generate for Body {
-    fn gen(&self, state: &mut State) -> String {
-        self.commands
-            .iter()
-            .map(|cmd| cmd.gen(state))
-            .collect::<Vec<String>>()
-            .join("\n")
+    fn write(&self, state: &mut State, output: &mut Output) {
+        (&self).write(state, output)
+    }
+}
+
+impl Generate for &Body {
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(
+            &self
+                .commands
+                .iter()
+                .map(|cmd| cmd.gen(state))
+                .collect::<Vec<String>>()
+                .join("\n"),
+        )
     }
 }
 
 impl Generate for EchoCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         // TODO: Probably should add some function that
         // pretty prints these the way they would get printed in vim
         // or maybe just call vim.cmd [[echo <...>]] ?
@@ -937,22 +990,25 @@ impl Generate for EchoCommand {
         //  results
         //
         // format!("vim.api.nvim_echo({}, false, {{}})", chunks)
-        format!("print({})", self.expr.gen(state))
+        output.write_lua(&format!("print({})", self.expr.gen(state)))
     }
 }
 
 impl Generate for ExecuteCommand {
-    fn gen(&self, state: &mut State) -> String {
-        format!("vim.api.nvim_command({})", self.expr.gen(state))
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(&format!(
+            "vim.api.nvim_command({})",
+            self.expr.gen(state)
+        ))
     }
 }
 
 impl Generate for Vim9ScriptCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, _: &mut State, output: &mut Output) {
         // TODO: Actually connect this
         // format!("NVIM9.new_script {{ noclear = {} }}", self.noclear)
         // write!(state.lua_contents, "-- vim9script")
-        format!("-- vim9script")
+        output.write_lua("-- vim9script")
     }
 }
 
@@ -1047,7 +1103,7 @@ fn guess_type_of_expr(state: &State, expr: &Expression) -> Type {
 }
 
 impl Generate for VarCommand {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         state.push_declaration(
             &self.expr,
             match &self.ty {
@@ -1069,35 +1125,41 @@ impl Generate for VarCommand {
         match &self.name {
             Identifier::Unpacked(unpacked) => {
                 let identifiers: String = identifier_list(state, &unpacked);
-                format!("local {identifiers} = unpack({expr})")
+                output
+                    .write_lua(&format!("local {identifiers} = unpack({expr})"))
             }
-            _ => format!("local {} = {}", self.name.gen(state), expr),
+            _ => output.write_lua(&format!(
+                "local {} = {}",
+                self.name.gen(state),
+                expr
+            )),
         }
     }
 }
 
 impl Generate for Identifier {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         match self {
-            Identifier::Raw(raw) => raw.gen(state),
-            Identifier::Scope(scoped) => scoped.gen(state),
+            Identifier::Raw(raw) => raw.write(state, output),
+            Identifier::Scope(scoped) => scoped.write(state, output),
+            Identifier::Ellipsis => output.write_lua("..."),
             Identifier::Unpacked(_) => {
                 unreachable!("must be handled higher {:#?}", self)
             }
-            Identifier::Ellipsis => "...".to_string(),
         }
     }
 }
 
 impl Generate for ScopedIdentifier {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         if self.scope == VimScope::VimVar {
             if let Identifier::Raw(raw) = self.accessor.as_ref() {
                 if raw.name == "version" {
                     // "lie" to vim9script code and say that we are
                     // version 9. This may need to be updated if
                     // vim updates their v:version variable
-                    return "900".to_string();
+                    output.write_lua("900");
+                    return;
                 }
             }
         }
@@ -1112,25 +1174,30 @@ impl Generate for ScopedIdentifier {
             VimScope::Local => todo!("Not sure how to handle local"),
         };
 
-        format!("{}['{}']", scope, self.accessor.gen(state))
+        output.write_lua(&format!("{}['{}']", scope, self.accessor.gen(state)))
     }
 }
 
 impl Generate for RawIdentifier {
-    fn gen(&self, _: &mut State) -> String {
+    fn write(&self, _: &mut State, output: &mut Output) {
         // There are a variety of keywords we have to make sure
         // that we don't use when creating identifiers
-        match self.name.as_str() {
+        output.write_lua(match self.name.as_str() {
             "end" => "__end__",
             _ => &self.name,
-        }
-        .to_string()
+        })
     }
 }
 
 impl Generate for Expression {
-    fn gen(&self, state: &mut State) -> String {
-        match self {
+    fn write(&self, state: &mut State, output: &mut Output) {
+        (&self).write(state, output)
+    }
+}
+
+impl Generate for &Expression {
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(&match self {
             Expression::Identifier(identifier) => identifier.gen(state),
             Expression::Number(num) => num.gen(state),
             Expression::String(str) => str.gen(state),
@@ -1153,7 +1220,8 @@ impl Generate for Expression {
 
             // Some expressions can only be triggered from containing expressions
             Expression::Slice(_) => unreachable!("cannot gen slice by itself"),
-        }
+            _ => todo!("gen {:#?}", self),
+        })
     }
 }
 
@@ -1210,7 +1278,7 @@ mod expr_utils {
 }
 
 impl Generate for Ternary {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         let if_true = if expr_utils::has_possible_sideffects(&self.if_true) {
             format!("function() return {} end", self.if_true.gen(state))
         } else {
@@ -1223,28 +1291,32 @@ impl Generate for Ternary {
             self.if_false.gen(state)
         };
 
-        format!(
+        output.write_lua(&format!(
             "NVIM9.ternary({}, {if_true}, {if_false})",
             self.cond.gen(state),
-        )
+        ))
     }
 }
 
 impl Generate for MethodCall {
-    fn gen(&self, state: &mut State) -> String {
-        call_expr::generate_method(self, state)
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(&call_expr::generate_method(self, state))
     }
 }
 
 impl Generate for DictAccess {
-    fn gen(&self, state: &mut State) -> String {
-        format!("{}['{}']", self.container.gen(state), self.index.gen(state))
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(&format!(
+            "{}['{}']",
+            self.container.gen(state),
+            self.index.gen(state)
+        ))
     }
 }
 
 impl Generate for Expandable {
-    fn gen(&self, state: &mut State) -> String {
-        match &self.ident {
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(&match &self.ident {
             Identifier::Raw(RawIdentifier { name }) if name == "q-args" => {
                 format!("{}.{}", make_user_command_arg(state), "args")
             }
@@ -1259,14 +1331,14 @@ impl Generate for Expandable {
                 )
             }
             _ => format!("vim.fn.expand('<{}>')", self.ident.gen(state)),
-        }
+        })
     }
 }
 
 impl Generate for Lambda {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         let (signature, default_statements) = gen_signature(state, &self.args);
-        format!(
+        output.write_lua(&format!(
             r#"(function({})
                 {}
                 {}
@@ -1274,20 +1346,20 @@ impl Generate for Lambda {
             signature,
             default_statements,
             self.body.gen(state)
-        )
+        ))
     }
 }
 
 impl Generate for Register {
-    fn gen(&self, _: &mut State) -> String {
-        format!("vim.fn.getreg({:?})", self.register)
+    fn write(&self, _: &mut State, output: &mut Output) {
+        output.write_lua(&format!("vim.fn.getreg({:?})", self.register))
     }
 }
 
 impl Generate for PrefixExpression {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         let right = self.right.gen(state);
-        match &self.operator {
+        output.write_lua(&match &self.operator {
             parser::Operator::Increment => format!("{right} = {right} + 1"),
             parser::Operator::Decrement => format!("{right} = {right} - 1"),
             _ => {
@@ -1306,15 +1378,15 @@ impl Generate for PrefixExpression {
                     }
                 }
             }
-        }
+        })
     }
 }
 
 impl Generate for IndexExpression {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         // println!("self.index = {:#?}", self.index);
 
-        match self.index.as_ref() {
+        output.write_lua(&match self.index.as_ref() {
             IndexType::Item(item) => {
                 format!(
                     "NVIM9.index({}, {})",
@@ -1336,41 +1408,41 @@ impl Generate for IndexExpression {
                         .map_or("nil".to_string(), |item| item.gen(state)),
                 )
             }
-        }
+        })
     }
 }
 
 impl Generate for VimOption {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         // TODO: not sure if i need to do something smarter than this
-        format!(
+        output.write_lua(&format!(
             // "vim.api.nvim_get_option_value('{}', {{}})",
             "vim.o['{}']",
             self.option.gen(state)
-        )
+        ))
     }
 }
 
 impl Generate for Literal {
-    fn gen(&self, _: &mut State) -> String {
-        self.token.text.to_string()
+    fn write(&self, _: &mut State, output: &mut Output) {
+        output.write_lua(&self.token.text)
     }
 }
 
 impl Generate for VimKey {
-    fn gen(&self, state: &mut State) -> String {
-        match self {
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(&match self {
             // TODO: For literals, we could simplify this to do
             // direct key access if it doesn't contain any illegal characters
             VimKey::Literal(literal) => format!("['{}']", literal.token.text),
             VimKey::Expression(expr) => format!("[{}]", expr.gen(state)),
-        }
+        })
     }
 }
 
 impl Generate for DictLiteral {
-    fn gen(&self, state: &mut State) -> String {
-        format!(
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(&format!(
             "{{ {} }}",
             self.elements
                 .iter()
@@ -1381,26 +1453,26 @@ impl Generate for DictLiteral {
                 ))
                 .collect::<Vec<String>>()
                 .join(", ")
-        )
+        ))
     }
 }
 
 impl Generate for ArrayLiteral {
-    fn gen(&self, state: &mut State) -> String {
-        format!(
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(&format!(
             "{{ {} }}",
             self.elements
                 .iter()
                 .map(|x| x.gen(state))
                 .collect::<Vec<String>>()
                 .join(", ")
-        )
+        ))
     }
 }
 
 impl Generate for VimString {
-    fn gen(&self, _: &mut State) -> String {
-        match self {
+    fn write(&self, _: &mut State, output: &mut Output) {
+        output.write_lua(&match self {
             VimString::SingleQuote(s) => format!(
                 "'{}'",
                 s.chars()
@@ -1413,11 +1485,13 @@ impl Generate for VimString {
             ),
             VimString::DoubleQuote(s) => {
                 let mut cs = s.chars();
+                // TODO: This is ugly
                 while let Some(ch) = cs.next() {
                     if ch == '\\' {
                         if let Some(ch) = cs.next() {
                             if ch == '<' {
-                                return format!("vim.api.nvim_replace_termcodes(\"{}\", true, true, true)", s);
+                                output.write_lua(& format!("vim.api.nvim_replace_termcodes(\"{}\", true, true, true)", s));
+                                return
                             }
                         }
                     }
@@ -1434,36 +1508,36 @@ impl Generate for VimString {
             VimString::EnvironmentVariable(env) => {
                 format!("vim.env['{}']", env)
             }
-        }
+        })
     }
 }
 
 impl Generate for CallExpression {
-    fn gen(&self, state: &mut State) -> String {
-        call_expr::generate(self, state)
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(&call_expr::generate(self, state));
     }
 }
 
 impl Generate for GroupedExpression {
-    fn gen(&self, state: &mut State) -> String {
-        format!("({})", self.expr.gen(state))
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(&format!("({})", self.expr.gen(state)));
     }
 }
 
 impl Generate for VimBoolean {
-    fn gen(&self, _: &mut State) -> String {
-        format!("{}", self.value)
+    fn write(&self, _: &mut State, output: &mut Output) {
+        output.write_lua(&self.value.to_string())
     }
 }
 
 impl Generate for VimNumber {
-    fn gen(&self, _: &mut State) -> String {
-        self.value.clone()
+    fn write(&self, _: &mut State, output: &mut Output) {
+        output.write_lua(&self.value)
     }
 }
 
 impl Generate for InfixExpression {
-    fn gen(&self, state: &mut State) -> String {
+    fn write(&self, state: &mut State, output: &mut Output) {
         use Type::*;
 
         let ty = guess_type_of_expr(state, &Expression::Infix(self.clone()));
@@ -1471,19 +1545,19 @@ impl Generate for InfixExpression {
         let left = self.left.gen(state);
         let right = self.right.gen(state);
 
-        if let Some(literal) = self.operator.literal() {
+        output.write_lua(&if let Some(literal) = self.operator.literal() {
             match ty {
-                Bool => return format!("{left} {literal} {right}",),
-                Number => {
-                    if self.operator.is_math() {
-                        return format!("{left} {literal} {right}");
-                    }
+                Bool => format!("{left} {literal} {right}",),
+                Number if self.operator.is_math() => {
+                    format!("{left} {literal} {right}")
                 }
-                _ => {}
+                _ => {
+                    format!("NVIM9.ops['{:?}']({left}, {right})", self.operator)
+                }
             }
-        }
-
-        format!("NVIM9.ops['{:?}']({left}, {right})", self.operator)
+        } else {
+            format!("NVIM9.ops['{:?}']({left}, {right})", self.operator)
+        })
 
         // match self.operator {
         //     Operator::And => gen_operation(
@@ -1519,7 +1593,16 @@ fn toplevel_ident(s: &mut State, command: &ExCommand) -> Option<String> {
     match command {
         ExCommand::Decl(decl) => Some(decl.name.gen(s)),
         ExCommand::Def(def) => {
-            def.name.is_valid_local().then_some(def.name.gen(s))
+            if def.name.is_valid_local() {
+                let name = def.name.gen(s);
+                if s.opts.mode == ParserMode::Test && name.starts_with("Test") {
+                    None
+                } else {
+                    Some(name)
+                }
+            } else {
+                None
+            }
         }
         ExCommand::ExportCommand(e) => toplevel_ident(s, e.command.as_ref()),
         ExCommand::Heredoc(here) => Some(here.name.gen(s)),
@@ -1550,62 +1633,67 @@ fn toplevel_ident(s: &mut State, command: &ExCommand) -> Option<String> {
         ExCommand::Comment(_) => None,
         ExCommand::NoOp(_) => None,
         ExCommand::Defer(_) => None,
+        _ => todo!("{:?}", command),
     }
 }
 
 mod generate_program {
     use super::*;
 
-    pub fn preamble() -> String {
-        let mut output = String::new();
-        output += "local NVIM9 = require('_vim9script')";
-        output += "local __VIM9_MODULE = {}\n";
-        output
+    pub fn preamble(state: &State, output: &mut Output) {
+        output.write_lua("local NVIM9 = require('_vim9script')");
+
+        if state.opts.mode != ParserMode::Test {
+            output.write_lua("local __VIM9_MODULE = {}\n");
+        }
     }
 
     // "hoist" top-level declaractions to top of program, to ensure proper names
-    pub fn hoist(state: &mut State, program: &Program, writer: &mut String) {
+    pub fn hoist(program: &Program, state: &mut State, output: &mut Output) {
         for command in program.commands.iter() {
             if let Some(toplevel) = toplevel_ident(state, command) {
-                let _ = writeln!(writer, "local {} = nil", toplevel);
+                output.write_lua(&format!("local {} = nil\n", toplevel));
             }
         }
     }
 }
 
 impl Generate for Program {
-    fn gen(&self, state: &mut State) -> String {
-        let mut generated = generate_program::preamble();
-        generate_program::hoist(state, self, &mut generated);
+    fn write(&self, state: &mut State, output: &mut Output) {
+        generate_program::preamble(state, output);
+        generate_program::hoist(self, state, output);
 
         for command in self.commands.iter() {
-            write(*command, state)
+            command.write(state, output);
+            output.write_lua("\n");
         }
 
-        generated += "return __VIM9_MODULE";
-        generated
+        output.write_lua("return __VIM9_MODULE");
     }
 
-    fn gen_autoload(&self, state: &mut State) -> (String, String) {
-        (self.gen(state), "".to_owned())
-    }
+    // fn write_autoload(&self, state: &mut State, output: &mut Output) {
+    //     (self.gen(state), "".to_owned())
+    // }
 
-    fn gen_test(&self, state: &mut State) -> String {
-        let mut generated = generate_program::preamble();
-        generate_program::hoist(state, self, &mut generated);
+    fn write_test(&self, state: &mut State, output: &mut Output) {
+        generate_program::preamble(state, output);
+        generate_program::hoist(self, state, output);
 
-        generated += "describe(\"filename\", function()\n";
+        output.write_lua("describe(\"filename\", function()\n");
 
-        generated += "end)";
+        for command in self.commands.iter() {
+            command.write(state, output);
+            output.write_lua("\n");
+        }
 
-        generated
+        output.write_lua("end)");
     }
 }
 
 pub fn eval(
     program: parser::Program,
     opts: ParserOpts,
-) -> anyhow::Result<State> {
+) -> anyhow::Result<Output> {
     let mut state = State {
         augroup: None,
         command_depth: 0,
@@ -1614,9 +1702,9 @@ pub fn eval(
         opts,
     };
 
-    write(program, &mut state);
-
-    Ok(state)
+    let mut output = Output::new();
+    output.write(program, &mut state);
+    Ok(output)
 }
 
 fn get_stylua_config() -> stylua_lib::Config {
@@ -1629,7 +1717,7 @@ fn get_stylua_config() -> stylua_lib::Config {
 pub fn generate(
     contents: &str,
     opts: ParserOpts,
-) -> Result<State, (String, String)> {
+) -> Result<Output, (Output, String)> {
     let lexer = Lexer::new(contents);
     let parser = new_parser(&lexer);
     let program = parser.parse_program();
@@ -1640,14 +1728,14 @@ pub fn generate(
     let config = get_stylua_config();
 
     // Format lua code, so we can actually read it.
-    result.lua_contents = match stylua_lib::format_code(
-        &result.lua_contents,
+    result.lua = match stylua_lib::format_code(
+        &result.lua,
         config,
         None,
         stylua_lib::OutputVerification::None,
     ) {
         Ok(res) => res,
-        Err(err) => return Err((result.lua_contents, err.to_string())),
+        Err(err) => return Err((result, err.to_string())),
     };
 
     Ok(result)
@@ -1670,13 +1758,16 @@ mod test {
                 let mut settings = insta::Settings::clone_current();
                 settings.set_snapshot_path("../testdata/output/");
                 settings.bind(|| {
-                    insta::assert_snapshot!(generate(
-                        contents,
-                        ParserOpts {
-                            mode: ParserMode::Standalone,
-                        }
-                    )
-                    .unwrap());
+                    insta::assert_snapshot!(
+                        generate(
+                            contents,
+                            ParserOpts {
+                                mode: ParserMode::Standalone,
+                            }
+                        )
+                        .unwrap()
+                        .lua
+                    );
                 });
             }
         };
@@ -1693,7 +1784,8 @@ mod test {
                         mode: ParserMode::Test,
                     },
                 )
-                .unwrap();
+                .unwrap()
+                .lua;
 
                 let filepath = concat!(
                     env!("CARGO_MANIFEST_DIR"),
@@ -1758,7 +1850,7 @@ mod test {
             },
         )
         .unwrap();
-        let eval = exec_lua(&generated).unwrap();
+        let eval = exec_lua(&generated.lua).unwrap();
         assert_eq!(eval["x"], 6.into());
     }
 
@@ -1777,7 +1869,7 @@ mod test {
             },
         )
         .unwrap();
-        let eval = exec_lua(&generated).unwrap();
+        let eval = exec_lua(&generated.lua).unwrap();
         assert_eq!(eval["x"], 5.into());
     }
 
@@ -1805,7 +1897,7 @@ mod test {
             },
         )
         .unwrap();
-        let eval = exec_lua(&generated).unwrap();
+        let eval = exec_lua(&generated.lua).unwrap();
         assert_eq!(eval["x"], 4.into());
     }
 }

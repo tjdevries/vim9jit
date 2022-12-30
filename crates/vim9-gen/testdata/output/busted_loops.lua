@@ -1,18 +1,8 @@
 local NVIM9 = require("_vim9script")
-local __VIM9_MODULE = {}
 describe("filename", function()
-  local Test_can_do_for_loop = nil
-  local Test_can_do_for_loop_with_break = nil
-  local Test_can_do_for_loop_with_break_with_continue = nil
-  local Test_can_do_for_loop_with_continue = nil
-  local Test_can_do_for_loop_with_return = nil
   -- vim9script
 
-  it("Test_can_do_for_loop", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_can_do_for_loop = function()
     local x = 0
 
     for _, y in NVIM9.iter({ 1, 2, 3 }) do
@@ -20,16 +10,9 @@ describe("filename", function()
     end
 
     NVIM9.fn["assert_equal"](6, x)
+  end
 
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
-
-  it("Test_can_do_for_loop_with_break", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_can_do_for_loop_with_break = function()
     local x = 0
 
     for _, y in NVIM9.iter({ 1, 2, 3 }) do
@@ -41,16 +24,9 @@ describe("filename", function()
     end
 
     NVIM9.fn["assert_equal"](3, x)
+  end
 
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
-
-  it("Test_can_do_for_loop_with_break_with_continue", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_can_do_for_loop_with_break_with_continue = function()
     local x = 0
 
     local body = function(_, y)
@@ -77,16 +53,9 @@ describe("filename", function()
     end
 
     NVIM9.fn["assert_equal"](6, x)
+  end
 
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
-
-  it("Test_can_do_for_loop_with_continue", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_can_do_for_loop_with_continue = function()
     local x = 0
 
     local body = function(_, y)
@@ -109,17 +78,9 @@ describe("filename", function()
     end
 
     NVIM9.fn["assert_equal"](4, x)
+  end
 
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
-
-  it("Test_can_do_for_loop_with_return", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
-
+  Test_can_do_for_loop_with_return = function()
     local Something = function()
       local x = 0
 
@@ -150,9 +111,5 @@ describe("filename", function()
     end
 
     NVIM9.fn["assert_equal"](5, Something())
-
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
+  end
 end)
-return __VIM9_MODULE

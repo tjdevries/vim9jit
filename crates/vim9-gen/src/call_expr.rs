@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use parser::{CallExpression, Expression, Identifier};
 
-use crate::{func_info_for_call, Generate, State};
+use crate::{func_info_for_call, Generate, Output, State};
 
 #[derive(Debug)]
 pub struct VimFuncMutability {
@@ -231,11 +231,14 @@ fn ident_to_func_data(call: CallExpression, ident: Identifier) -> FunctionData {
 }
 
 impl Generate for Vec<Expression> {
-    fn gen(&self, state: &mut State) -> String {
-        self.iter()
-            .map(|e| e.gen(state))
-            .collect::<Vec<String>>()
-            .join(", ")
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(
+            &self
+                .iter()
+                .map(|e| e.gen(state))
+                .collect::<Vec<String>>()
+                .join(", "),
+        )
     }
 }
 

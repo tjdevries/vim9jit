@@ -70,7 +70,7 @@ fn gen_directory(src: &Path, gen: &Path, subdir: &OsStr) -> Result<()> {
                 err.0
             }
         };
-        std::fs::write(generated_file, generated)?;
+        std::fs::write(generated_file, generated.lua)?;
     }
 
     Ok(())
@@ -115,7 +115,7 @@ fn main() -> Result<()> {
         };
 
         let generated_file = Path::with_extension(path, "lua");
-        std::fs::write(generated_file, generated)?;
+        std::fs::write(generated_file, generated.lua)?;
         return Ok(());
     }
 

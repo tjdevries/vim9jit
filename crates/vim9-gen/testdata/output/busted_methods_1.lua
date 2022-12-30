@@ -1,22 +1,11 @@
 local NVIM9 = require("_vim9script")
-local __VIM9_MODULE = {}
 describe("filename", function()
-  local Test_method_newline = nil
-
-  it("Test_method_newline", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_method_newline = function()
     local x = { 1, 2, 3 }
     NVIM9.fn_mut("filter", { x, function(_, y)
       return y == 2
     end }, { replace = 0 })
 
     NVIM9.fn["assert_equal"]({ 2 }, x)
-
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
+  end
 end)
-return __VIM9_MODULE

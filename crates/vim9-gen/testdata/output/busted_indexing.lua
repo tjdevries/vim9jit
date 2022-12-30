@@ -1,106 +1,40 @@
 local NVIM9 = require("_vim9script")
-local __VIM9_MODULE = {}
 describe("filename", function()
-  local Test_can_index = nil
-  local Test_minus = nil
-  local Test_both = nil
-  local Test_left = nil
-  local Test_right = nil
-  local Test_index_with_prefix_spaced = nil
-  local Test_index_with_prefix = nil
-  local Test_string = nil
   -- vim9script
 
   local l = { 1, 2, 3 }
 
-  it("Test_can_index", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_can_index = function()
     NVIM9.fn["assert_equal"](1, NVIM9.index(l, 0))
+  end
 
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
-
-  it("Test_minus", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_minus = function()
     local index = 1
     NVIM9.fn["assert_equal"](1, NVIM9.index(l, NVIM9.ops["Minus"](index, 1)))
+  end
 
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
-
-  it("Test_both", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_both = function()
     NVIM9.fn["assert_equal"]({ 1, 2 }, NVIM9.slice(l, 0, 1))
+  end
 
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
-
-  it("Test_left", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_left = function()
     NVIM9.fn["assert_equal"]({ 2, 3 }, NVIM9.slice(l, 1, nil))
+  end
 
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
-
-  it("Test_right", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_right = function()
     NVIM9.fn["assert_equal"]({ 1, 2 }, NVIM9.slice(l, nil, 1))
+  end
 
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
-
-  it("Test_index_with_prefix_spaced", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_index_with_prefix_spaced = function()
     NVIM9.fn["assert_equal"]({ 3 }, NVIM9.slice(l, -1, nil))
+  end
 
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
-
-  it("Test_index_with_prefix", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_index_with_prefix = function()
     NVIM9.fn["assert_equal"]({ 3 }, NVIM9.slice(l, -1, nil))
+  end
 
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
-
-  it("Test_string", function()
-    -- Set errors to empty
-    vim.v.errors = {}
-
-    -- Actual test
+  Test_string = function()
     local foo = "abcd"
     NVIM9.fn["assert_equal"](NVIM9.slice(foo, nil, -2), "abc")
-
-    -- Assert that errors is still empty
-    assert.are.same({}, vim.v.errors)
-  end)
+  end
 end)
-return __VIM9_MODULE
