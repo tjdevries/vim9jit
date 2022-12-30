@@ -107,9 +107,7 @@ impl FuncLexer {
         let position = self.position;
         while self.read_char() != Some('"') {}
 
-        FuncToken::String(String::from_iter(
-            &self.chars[position..self.position - 1],
-        ))
+        FuncToken::String(String::from_iter(&self.chars[position..self.position - 1]))
     }
 
     fn read_number(&mut self) -> FuncToken {
@@ -148,9 +146,7 @@ impl FuncLexer {
             }
         }
 
-        FuncToken::Identifier(String::from_iter(
-            &self.chars[position..self.position],
-        ))
+        FuncToken::Identifier(String::from_iter(&self.chars[position..self.position]))
     }
 
     fn read_ifdef(&mut self) -> FuncToken {
@@ -269,10 +265,7 @@ impl FuncParser {
                 break;
             }
 
-            assert_eq!(
-                token_stream.next().expect("internal"),
-                FuncToken::LeftBrace
-            );
+            assert_eq!(token_stream.next().expect("internal"), FuncToken::LeftBrace);
 
             info.push(FuncInfo {
                 name: token_stream.next().unwrap().string(),
@@ -313,9 +306,7 @@ impl FuncParser {
                     // Read the actual function name
                     match after_comma!() {
                         FuncToken::Identifier(s) => {
-                            if token_stream.peek().unwrap()
-                                == &FuncToken::LeftParen
-                            {
+                            if token_stream.peek().unwrap() == &FuncToken::LeftParen {
                                 token_stream.next();
                                 token_stream.next();
                                 token_stream.next();
@@ -348,10 +339,7 @@ impl FuncParser {
 fn main() -> Result<()> {
     println!("cargo:rerun-if-changed=data/global_functions.txt");
 
-    let mut lib = std::fs::File::create(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/src/lib.rs"
-    ))?;
+    let mut lib = std::fs::File::create(concat!(env!("CARGO_MANIFEST_DIR"), "/src/lib.rs"))?;
 
     // Write our struct definitions out here:
     writeln!(

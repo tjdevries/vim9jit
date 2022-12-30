@@ -52,10 +52,7 @@ impl IfCommand {
                 while parser.front_ref().text.eq("elseif") {
                     elseifs.push(ElseIfCommand {
                         elseif_tok: parser.pop().into(),
-                        condition: Expression::parse(
-                            parser,
-                            Precedence::Lowest,
-                        )?,
+                        condition: Expression::parse(parser, Precedence::Lowest)?,
                         elseif_eol: parser.expect_eol()?,
                         body: Body::parse_until_any(parser, &if_endings)?,
                     })

@@ -24,8 +24,7 @@ fn expr_is_func_mutable(arg: &Expression) -> bool {
         Expression::Infix(infix) => expr_is_func_mutable(&infix.left),
         Expression::MethodCall(meth) => expr_is_func_mutable(&meth.left),
         Expression::Ternary(tern) => {
-            expr_is_func_mutable(&tern.if_true)
-                || expr_is_func_mutable(&tern.if_false)
+            expr_is_func_mutable(&tern.if_true) || expr_is_func_mutable(&tern.if_false)
         }
         Expression::Number(_) => false,
         Expression::String(_) => false,
@@ -51,10 +50,7 @@ fn expr_is_func_mutable(arg: &Expression) -> bool {
     }
 }
 
-pub fn mutates(
-    expr: &CallExpression,
-    data: &FunctionData,
-) -> Option<VimFuncMutability> {
+pub fn mutates(expr: &CallExpression, data: &FunctionData) -> Option<VimFuncMutability> {
     match data {
         // FunctionData::VimFunc { .. } => return None,
         _ => {}
@@ -92,10 +88,7 @@ pub fn mutates(
     }
 }
 
-pub fn args_to_generated_list(
-    state: &mut State,
-    args: &[Expression],
-) -> String {
+pub fn args_to_generated_list(state: &mut State, args: &[Expression]) -> String {
     args.iter()
         .map(|e| e.gen(state))
         .collect::<Vec<String>>()
@@ -151,11 +144,7 @@ pub struct VimFunc {
 }
 
 impl VimFunc {
-    fn inplace(
-        &self,
-        mutability: &VimFuncMutability,
-        state: &mut State,
-    ) -> String {
+    fn inplace(&self, mutability: &VimFuncMutability, state: &mut State) -> String {
         let name = &self.name;
         let args = self.args.gen(state);
         let replaced = match mutability.returned {
@@ -180,15 +169,11 @@ impl VimFunc {
 impl From<&CallExpression> for FunctionData {
     fn from(expr: &CallExpression) -> Self {
         match expr.expr.as_ref() {
-            Expression::Identifier(id) => {
-                ident_to_func_data(expr.clone(), id.clone())
-            }
-            Expression::DictAccess(_) | Expression::Index(_) => {
-                FunctionData::ExprFunc {
-                    caller: *expr.expr.clone(),
-                    args: expr.args.clone(),
-                }
-            }
+            Expression::Identifier(id) => ident_to_func_data(expr.clone(), id.clone()),
+            Expression::DictAccess(_) | Expression::Index(_) => FunctionData::ExprFunc {
+                caller: *expr.expr.clone(),
+                args: expr.args.clone(),
+            },
             _ => todo!("{:#?}", expr),
         }
     }
@@ -309,15 +294,10 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
 }
 
 fn generate_mutable_fn_call(name: &str, args: &str, replace: &str) -> String {
-    return format!(
-        "NVIM9.fn_mut('{name}', {{ {args} }}, {{ replace = {replace} }})"
-    );
+    return format!("NVIM9.fn_mut('{name}', {{ {args} }}, {{ replace = {replace} }})");
 }
 
-pub fn generate_method(
-    method: &parser::MethodCall,
-    state: &mut State,
-) -> String {
+pub fn generate_method(method: &parser::MethodCall, state: &mut State) -> String {
     let mut call = *method.right.clone();
 
     // Methods don't always get inserted in the first argument.
@@ -336,9 +316,7 @@ pub fn generate_method(
     if expr_is_func_mutable(&method.left) {
         let mutability = mutates(&call, &func_data);
         if let Some(mutability) = mutability {
-            if mutability.returned == Some(0)
-                && mutability.modified_args.contains(&0)
-            {
+            if mutability.returned == Some(0) && mutability.modified_args.contains(&0) {
                 let name = func_data.name();
                 let args = call.args.gen(state);
                 let replace = mutability.returned.unwrap().to_string();

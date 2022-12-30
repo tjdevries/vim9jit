@@ -99,10 +99,10 @@ pub fn exec_lua(preamble: &str) -> Result<HashMap<String, Value>> {
 
     // We good
     let val = val.as_map().expect("returns a map");
-    let val =
-        HashMap::from_iter(val.into_iter().map(|(key, value)| {
-            (key.as_str().unwrap().to_owned(), value.clone())
-        }));
+    let val = HashMap::from_iter(
+        val.into_iter()
+            .map(|(key, value)| (key.as_str().unwrap().to_owned(), value.clone())),
+    );
 
     Ok(val)
 }
