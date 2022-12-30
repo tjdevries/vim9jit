@@ -18,7 +18,6 @@ use parser::{
     VimScope, VimString, WhileCommand,
 };
 
-// this word is missspelled
 pub mod call_expr;
 mod test_harness;
 
@@ -34,6 +33,14 @@ pub enum ParserMode {
 #[derive(Debug)]
 pub struct ParserOpts {
     pub mode: ParserMode,
+}
+
+fn write(generator: impl Generate, state: &mut State, output: &mut Output) {
+    match state.opts.mode {
+        ParserMode::Standalone => generator.write(state, output),
+        ParserMode::Test => generator.write_test(state, output),
+        ParserMode::Autoload => generator.write_autoload(state, output),
+    }
 }
 
 pub struct Output {
@@ -223,14 +230,6 @@ impl Scope {
     }
 }
 
-fn write(generator: impl Generate, state: &mut State, output: &mut Output) {
-    match state.opts.mode {
-        ParserMode::Standalone => generator.write(state, output),
-        ParserMode::Test => generator.write_test(state, output),
-        ParserMode::Autoload => generator.write_autoload(state, output),
-    }
-}
-
 pub trait Generate {
     fn write(&self, state: &mut State, output: &mut Output);
 
@@ -240,11 +239,6 @@ pub trait Generate {
 
     fn write_autoload(&self, state: &mut State, output: &mut Output) {
         self.write(state, output)
-    }
-
-    // TODO: can we remove this?
-    fn gen(&self, state: &mut State) -> String {
-        Output::get_lua(self, state)
     }
 }
 
@@ -404,7 +398,7 @@ impl Generate for ForCommand {
                 Output::get_lua(self.body, s)
             });
 
-        let expr = self.for_expr.gen(state);
+        let expr = self.for_expr.write(state, output);
         let (ident, unpacked) = match &self.for_identifier {
             Identifier::Unpacked(unpacked) => (
                 "__unpack_result".to_string(),
@@ -413,7 +407,7 @@ impl Generate for ForCommand {
                     identifier_list(state, unpacked)
                 ),
             ),
-            _ => (self.for_identifier.gen(state), "".to_string()),
+            _ => (self.for_identifier.write(state, gen), "".to_string()),
         };
 
         if has_continue {
@@ -1614,8 +1608,6 @@ pub fn eval(
         augroup: None,
         command_depth: 0,
         method_depth: 0,
-        lua_contents: String::new(),
-        vim_contents: String::new(),
         scopes: vec![Scope::new(ScopeKind::TopLevel)],
         opts,
     };
@@ -1623,6 +1615,13 @@ pub fn eval(
     write(program, &mut state);
 
     Ok(state)
+}
+
+fn get_stylua_config() -> stylua_lib::Config {
+    stylua_lib::Config::new()
+        .with_indent_type(stylua_lib::IndentType::Spaces)
+        .with_indent_width(2)
+        .with_column_width(120)
 }
 
 pub fn generate(
@@ -1636,10 +1635,7 @@ pub fn generate(
     let mut result = eval(program, opts).unwrap();
     // println!("{}", result);
 
-    let config = stylua_lib::Config::new()
-        .with_indent_type(stylua_lib::IndentType::Spaces)
-        .with_indent_width(2)
-        .with_column_width(120);
+    let config = get_stylua_config();
 
     // Format lua code, so we can actually read it.
     result.lua_contents = match stylua_lib::format_code(
