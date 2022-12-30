@@ -35,14 +35,6 @@ pub struct ParserOpts {
     pub mode: ParserMode,
 }
 
-fn write(generator: impl Generate, state: &mut State, output: &mut Output) {
-    match state.opts.mode {
-        ParserMode::Standalone => generator.write(state, output),
-        ParserMode::Test => generator.write_test(state, output),
-        ParserMode::Autoload => generator.write_autoload(state, output),
-    }
-}
-
 pub struct Output {
     lua: String,
     vim: String,
@@ -57,9 +49,17 @@ impl Output {
         }
     }
 
+    pub fn write(&mut self, generator: impl Generate, state: &mut State) {
+        match state.opts.mode {
+            ParserMode::Standalone => generator.write(state, self),
+            ParserMode::Test => generator.write_test(state, self),
+            ParserMode::Autoload => generator.write_autoload(state, self),
+        }
+    }
+
     pub fn get_lua(generator: impl Generate, state: &mut State) -> String {
         let mut temp = Output::new();
-        write(generator, state, &mut temp);
+        temp.write(generator, state);
         temp.lua
     }
 
@@ -365,7 +365,7 @@ impl Generate for WhileCommand {
         //     body
         // ))
         output.write_lua("while ");
-        write(self.condition, state, output);
+        output.write(self.condition, state);
         output.write_lua(&format!("\ndo\n{}\nend", body));
     }
 }
@@ -374,7 +374,7 @@ impl Generate for TryCommand {
     fn write(&self, state: &mut State, output: &mut Output) {
         // TODO: try and catch LUL
         // self.body.gen(state)
-        write(self.body, state, output)
+        output.write(self.body, state)
     }
 }
 
@@ -398,7 +398,7 @@ impl Generate for ForCommand {
                 Output::get_lua(self.body, s)
             });
 
-        let expr = self.for_expr.write(state, output);
+        let expr = Output::get_lua(self.for_expr, state);
         let (ident, unpacked) = match &self.for_identifier {
             Identifier::Unpacked(unpacked) => (
                 "__unpack_result".to_string(),
@@ -407,10 +407,10 @@ impl Generate for ForCommand {
                     identifier_list(state, unpacked)
                 ),
             ),
-            _ => (self.for_identifier.write(state, gen), "".to_string()),
+            _ => (Output::get_lua(self.for_identifier, state), "".to_string()),
         };
 
-        if has_continue {
+        let result = if has_continue {
             format!(
                 r#"
                     local body = function(_, {ident})
@@ -439,16 +439,18 @@ impl Generate for ForCommand {
                 end
                 "#,
             )
-        }
+        };
+
+        output.write_lua(&result);
     }
 }
 
 impl Generate for ImportCommand {
-    fn gen(&self, state: &mut State) -> String {
-        match self {
+    fn write(&self, state: &mut State, output: &mut Output) {
+        output.write_lua(&match self {
             ImportCommand::ImportImplicit { file, name, autoload, ..} => match name {
                 Some(name) =>  {
-                    let var = name.gen(state);
+                    let var = Output::get_lua(*name, state);
                     format!(
                             "local {var} = NVIM9.import({{ name = '{file}', autoload = {autoload} }})"
                     )
@@ -463,11 +465,11 @@ impl Generate for ImportCommand {
             },
             ImportCommand::ImportUnpacked { names, file,  .. } => {
                 names.iter().map(|name| {
-                    let name = name.gen(state);
+                    let name = Output::get_lua(*name, state);
                     format!("local {name} = NVIM9.import({{ name = '{file}' }})['{name}']")
                 }).collect::<Vec<String>>().join("\n")
             }
-        }
+        })
     }
 }
 
