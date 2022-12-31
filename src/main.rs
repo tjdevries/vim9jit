@@ -108,6 +108,7 @@ fn main() -> Result<()> {
             &contents,
             gen::ParserOpts {
                 mode: gen::ParserMode::Autoload {
+                    // TODO: Calculate this correctly...
                     prefix: "something".to_string(),
                 },
             },
