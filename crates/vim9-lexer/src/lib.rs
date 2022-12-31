@@ -309,21 +309,13 @@ impl TokenKind {
         use TokenKind::*;
         matches!(
             self,
-            Equal
-                | PlusEquals
-                | MinusEquals
-                | MulEquals
-                | DivEquals
-                | StringConcatEquals
+            Equal | PlusEquals | MinusEquals | MulEquals | DivEquals | StringConcatEquals
         )
     }
 }
 
 trait SubLexer {
-    fn next_token(
-        &self,
-        lexer: &Lexer,
-    ) -> Result<(Token<'static>, Option<Box<dyn SubLexer>>)>;
+    fn next_token(&self, lexer: &Lexer) -> Result<(Token<'static>, Option<Box<dyn SubLexer>>)>;
 }
 
 type TokenAndLexer = (Token<'static>, Option<Box<dyn SubLexer>>);
@@ -513,9 +505,7 @@ impl Lexer {
 
         Ok(Token {
             kind: passed,
-            text: TokenText::Slice(
-                self.chars[position..self.position()].into(),
-            ),
+            text: TokenText::Slice(self.chars[position..self.position()].into()),
             span: self.make_span(position, self.position() - 1)?,
         })
     }
@@ -554,12 +544,7 @@ impl Lexer {
         })
     }
 
-    fn read_until<F>(
-        &self,
-        until: char,
-        kind: TokenKind,
-        fail: F,
-    ) -> Result<Option<Token>>
+    fn read_until<F>(&self, until: char, kind: TokenKind, fail: F) -> Result<Option<Token>>
     where
         F: Fn(&char) -> bool,
     {
@@ -584,9 +569,7 @@ impl Lexer {
 
         Ok(Some(Token {
             kind,
-            text: TokenText::Slice(
-                self.chars[position..self.position()].into(),
-            ),
+            text: TokenText::Slice(self.chars[position..self.position()].into()),
             span: self.make_span(position, self.position() - 1)?,
         }))
     }
@@ -612,8 +595,7 @@ impl Lexer {
             .iter()
             .collect::<String>();
 
-        let text =
-            TokenText::Slice(self.chars[position..self.position()].into());
+        let text = TokenText::Slice(self.chars[position..self.position()].into());
 
         let kind = match text_str.as_str() {
             "true" => TokenKind::True,
@@ -678,12 +660,7 @@ impl Lexer {
         self.chars.get(self.position() + n)
     }
 
-    fn if_peek(
-        &self,
-        peeked: char,
-        no: TokenKind,
-        yes: TokenKind,
-    ) -> Result<Token> {
+    fn if_peek(&self, peeked: char, no: TokenKind, yes: TokenKind) -> Result<Token> {
         if let Some(ch) = self.peek_char() {
             if *ch == peeked {
                 let position = self.position();
@@ -691,20 +668,15 @@ impl Lexer {
 
                 Ok(Token {
                     kind: yes,
-                    text: TokenText::Slice(
-                        self.chars[position..=self.position()].into(),
-                    ),
+                    text: TokenText::Slice(self.chars[position..=self.position()].into()),
                     span: self.make_span(position, self.position() + 1)?,
                 })
             } else {
                 Ok(Token {
                     kind: no,
                     // text: self.ch.unwrap().to_string(),
-                    text: TokenText::Slice(
-                        self.chars[self.position()..=self.position()].into(),
-                    ),
-                    span: self
-                        .make_span(self.position(), self.position() + 1)?,
+                    text: TokenText::Slice(self.chars[self.position()..=self.position()].into()),
+                    span: self.make_span(self.position(), self.position() + 1)?,
                 })
             }
         } else {
@@ -767,26 +739,16 @@ impl Lexer {
                         self.read_char();
                         Ok(Token {
                             kind: Escaped,
-                            text: TokenText::Owned(
-                                self.ch().unwrap().to_string(),
-                            ),
-                            span: self.make_span(
-                                self.position() - 1,
-                                self.position(),
-                            )?,
+                            text: TokenText::Owned(self.ch().unwrap().to_string()),
+                            span: self.make_span(self.position() - 1, self.position())?,
                         })
                     }
                     '@' => {
                         self.read_char();
                         Ok(Token {
                             kind: Register,
-                            text: TokenText::Owned(
-                                self.ch().unwrap().to_string(),
-                            ),
-                            span: self.make_span(
-                                self.position() - 1,
-                                self.position(),
-                            )?,
+                            text: TokenText::Owned(self.ch().unwrap().to_string()),
+                            span: self.make_span(self.position() - 1, self.position())?,
                         })
                     }
 
@@ -818,10 +780,7 @@ impl Lexer {
                                 kind: Illegal,
                                 // text: TokenText::Ch(ch),
                                 text: todo!(),
-                                span: self.make_span(
-                                    self.position(),
-                                    self.position(),
-                                )?,
+                                span: self.make_span(self.position(), self.position())?,
                             })
                         }
                     }
@@ -852,9 +811,7 @@ impl Lexer {
 
         Ok(Token {
             kind,
-            text: TokenText::Slice(
-                self.chars[position..=self.position()].into(),
-            ),
+            text: TokenText::Slice(self.chars[position..=self.position()].into()),
             span: self.make_span(position, self.position() + 1)?,
         })
     }
@@ -866,9 +823,7 @@ impl Lexer {
 
         Ok(Token {
             kind,
-            text: TokenText::Slice(
-                self.chars[position..=self.position()].into(),
-            ),
+            text: TokenText::Slice(self.chars[position..=self.position()].into()),
             span: self.make_span(position, self.position() + 1)?,
         })
     }
@@ -922,9 +877,7 @@ impl Lexer {
             ('=', _) => self.read_two(TokenKind::GreaterThanOrEqual),
             ('#', _) => self.read_two(TokenKind::GreaterThan),
             ('?', _) => self.read_two(TokenKind::GreaterThanIns),
-            (c, _) if c.is_whitespace() => {
-                self.read_one(TokenKind::GreaterThan)
-            }
+            (c, _) if c.is_whitespace() => self.read_one(TokenKind::GreaterThan),
             (_, _) => self.read_one(TokenKind::AngleRight),
         }
     }
@@ -959,19 +912,13 @@ impl Lexer {
         Ok(match self.peek_char().unwrap() {
             '\'' => {
                 self.read_char();
-                self.read_until(
-                    '\'',
-                    TokenKind::InterpolatedLiteralString,
-                    |ch| *ch == '\n',
-                )?
-                .unwrap()
+                self.read_until('\'', TokenKind::InterpolatedLiteralString, |ch| *ch == '\n')?
+                    .unwrap()
             }
             '"' => {
                 self.read_char();
-                self.read_until('\"', TokenKind::InterpolatedString, |ch| {
-                    *ch == '\n'
-                })?
-                .unwrap()
+                self.read_until('\"', TokenKind::InterpolatedString, |ch| *ch == '\n')?
+                    .unwrap()
             }
             c if is_identifier(*c) => {
                 self.read_char();
@@ -983,9 +930,7 @@ impl Lexer {
 
                 Token {
                     kind: TokenKind::EnvironmentVariable,
-                    text: TokenText::Slice(
-                        self.chars[position..self.position()].into(),
-                    ),
+                    text: TokenText::Slice(self.chars[position..self.position()].into()),
                     span: self.make_span(position, self.position())?,
                 }
             }

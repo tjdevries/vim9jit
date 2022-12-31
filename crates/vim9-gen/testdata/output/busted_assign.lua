@@ -1,11 +1,5 @@
 local NVIM9 = require("_vim9script")
-local __VIM9_MODULE = {}
 describe("filename", function()
-  local Test_assignment_bool_1 = nil
-  local Test_assignment_bool_2 = nil
-  local Test_assignment_bool_3 = nil
-  local Test_unpacked_identifiers = nil
-  local Test_modifier_prefixes = nil
   -- vim9script
 
   it("Test_assignment_bool_1", function()
@@ -111,4 +105,3 @@ describe("filename", function()
     assert.are.same({}, vim.v.errors)
   end)
 end)
-return __VIM9_MODULE

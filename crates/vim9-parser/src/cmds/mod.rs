@@ -1,9 +1,7 @@
 use anyhow::Result;
 use vim9_lexer::TokenKind;
 
-use crate::{
-    CallExpression, ExCommand, Expression, Parser, Precedence, TokenMeta,
-};
+use crate::{CallExpression, ExCommand, Expression, Parser, Precedence, TokenMeta};
 
 pub mod cmd_auto;
 pub mod cmd_if;
@@ -27,8 +25,7 @@ impl DeferCommand {
                     .into();
 
                 // Create the call expr from the first base expression
-                let right =
-                    CallExpression::parse(parser, base).expect("call").into();
+                let right = CallExpression::parse(parser, base).expect("call").into();
 
                 // Closing on right paren, DO NOT advance
                 parser

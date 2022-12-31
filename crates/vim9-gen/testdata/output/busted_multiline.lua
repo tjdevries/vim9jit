@@ -1,9 +1,5 @@
 local NVIM9 = require("_vim9script")
-local __VIM9_MODULE = {}
 describe("filename", function()
-  local Test_same_line = nil
-  local Test_next_line = nil
-  local Test_missing_lines = nil
   -- vim9script
 
   it("Test_same_line", function()
@@ -45,4 +41,3 @@ describe("filename", function()
     assert.are.same({}, vim.v.errors)
   end)
 end)
-return __VIM9_MODULE

@@ -1,9 +1,5 @@
 local NVIM9 = require("_vim9script")
-local __VIM9_MODULE = {}
 describe("filename", function()
-  local Test_inplace_discarded = nil
-  local Test_returned_foo = nil
-  local Test_returned_foo = nil
   -- vim9script
 
   it("Test_inplace_discarded", function()
@@ -64,4 +60,3 @@ describe("filename", function()
     assert.are.same({}, vim.v.errors)
   end)
 end)
-return __VIM9_MODULE

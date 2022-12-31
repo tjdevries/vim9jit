@@ -18,9 +18,7 @@ impl AugroupCommand {
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
         Ok(ExCommand::Augroup(AugroupCommand {
             augroup: parser.expect_identifier_with_text("augroup")?.into(),
-            augroup_name: parser
-                .expect_token(TokenKind::Identifier)?
-                .try_into()?,
+            augroup_name: parser.expect_token(TokenKind::Identifier)?.try_into()?,
             augroup_eol: parser.expect_eol()?,
             // TODO: This should be until augroup END, unless you can't have nested ones legally
             body: Body::parse_until(parser, "augroup")?,
@@ -98,9 +96,7 @@ impl AutocmdBlock {
 impl AutocmdPattern {
     fn parse(parser: &Parser) -> Result<Self> {
         Ok(if parser.front_kind() == TokenKind::AngleLeft {
-            parser.read_until(|t| {
-                matches!(t.kind, TokenKind::AngleRight | TokenKind::GreaterThan)
-            });
+            parser.read_until(|t| matches!(t.kind, TokenKind::AngleRight | TokenKind::GreaterThan));
 
             AutocmdPattern::Buffer
         } else {
@@ -120,10 +116,7 @@ impl AutocmdPattern {
                     // Append the text of the token.
                     text += tok.text.as_str();
 
-                    if !tokens_are_neighbors(
-                        &tok.span,
-                        &parser.front_ref().span,
-                    ) {
+                    if !tokens_are_neighbors(&tok.span, &parser.front_ref().span) {
                         pattern.push(std::mem::take(&mut text));
                         break pattern;
                     }

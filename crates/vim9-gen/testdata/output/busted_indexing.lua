@@ -1,14 +1,5 @@
 local NVIM9 = require("_vim9script")
-local __VIM9_MODULE = {}
 describe("filename", function()
-  local Test_can_index = nil
-  local Test_minus = nil
-  local Test_both = nil
-  local Test_left = nil
-  local Test_right = nil
-  local Test_index_with_prefix_spaced = nil
-  local Test_index_with_prefix = nil
-  local Test_string = nil
   -- vim9script
 
   local l = { 1, 2, 3 }
@@ -103,4 +94,3 @@ describe("filename", function()
     assert.are.same({}, vim.v.errors)
   end)
 end)
-return __VIM9_MODULE

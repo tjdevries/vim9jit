@@ -1,10 +1,5 @@
 local NVIM9 = require("_vim9script")
-local __VIM9_MODULE = {}
 describe("filename", function()
-  local Test_simple_heredoc = nil
-  local Test_simple_heredoc_with_whitespace = nil
-  local Test_simple_heredoc_with_no_whitespace_trim = nil
-  local Test_simple_heredoc_with_whitespace_trim = nil
   -- vim9script
 
   it("Test_simple_heredoc", function()
@@ -68,4 +63,3 @@ describe("filename", function()
   -- #   assert_equal(["    "hello"", "  world"], x)
   -- # enddef
 end)
-return __VIM9_MODULE

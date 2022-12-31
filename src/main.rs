@@ -12,6 +12,9 @@ struct Args {
 
     #[arg(long)]
     file: Option<String>,
+
+    #[arg(short, long)]
+    outdir: String,
 }
 
 fn gen_directory(src: &Path, gen: &Path, subdir: &OsStr) -> Result<()> {
@@ -70,7 +73,7 @@ fn gen_directory(src: &Path, gen: &Path, subdir: &OsStr) -> Result<()> {
                 err.0
             }
         };
-        std::fs::write(generated_file, generated)?;
+        std::fs::write(generated_file, generated.lua)?;
     }
 
     Ok(())
@@ -104,7 +107,10 @@ fn main() -> Result<()> {
         let generated = match gen::generate(
             &contents,
             gen::ParserOpts {
-                mode: gen::ParserMode::Standalone,
+                mode: gen::ParserMode::Autoload {
+                    // TODO: Calculate this correctly...
+                    prefix: "something".to_string(),
+                },
             },
         ) {
             Ok(generated) => generated,
@@ -114,8 +120,21 @@ fn main() -> Result<()> {
             }
         };
 
-        let generated_file = Path::with_extension(path, "lua");
-        std::fs::write(generated_file, generated)?;
+        let file_name = path.file_name().unwrap();
+        let generated_file = Path::new(&args.outdir)
+            .join(file_name)
+            .with_extension("lua");
+        // let generated_file = Path::with_extension(path, "lua");
+        println!("generated lua: {:?}", generated_file);
+        std::fs::write(generated_file, generated.lua)?;
+        if generated.vim != "" {
+            let generated_file = Path::new(&args.outdir)
+                .join(file_name)
+                .with_extension("vim");
+            println!("generated vim: {:?}", generated_file);
+            std::fs::write(generated_file, generated.vim)?;
+        }
+
         return Ok(());
     }
 

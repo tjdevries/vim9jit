@@ -56,11 +56,7 @@ impl Type {
         matches!(k, TokenKind::GreaterThan | TokenKind::AngleRight)
     }
 
-    fn parse_inner(
-        parser: &Parser,
-        consume: bool,
-        opts: &TypeOpts,
-    ) -> Result<Type> {
+    fn parse_inner(parser: &Parser, consume: bool, opts: &TypeOpts) -> Result<Type> {
         match parser.front_kind() {
             TokenKind::Identifier => {
                 let literal: Literal = match consume {
@@ -84,11 +80,8 @@ impl Type {
 
                         Type::List {
                             open: parser.expect_fn(Self::open, true)?.into(),
-                            inner: Type::parse_inner(parser, true, &opts)?
-                                .into(),
-                            close: parser
-                                .expect_fn(Self::close, consume)?
-                                .into(),
+                            inner: Type::parse_inner(parser, true, &opts)?.into(),
+                            close: parser.expect_fn(Self::close, consume)?.into(),
                         }
                     }
                     "dict" => {
@@ -98,11 +91,8 @@ impl Type {
 
                         Type::Dict {
                             open: parser.expect_fn(Self::open, true)?.into(),
-                            inner: Type::parse_inner(parser, true, &opts)?
-                                .into(),
-                            close: parser
-                                .expect_fn(Self::close, consume)?
-                                .into(),
+                            inner: Type::parse_inner(parser, true, &opts)?.into(),
+                            close: parser.expect_fn(Self::close, consume)?.into(),
                         }
                     }
                     "func" => Type::Func(InnerFuncType::Naked),
@@ -115,10 +105,7 @@ impl Type {
         }
     }
 
-    pub fn parse_in_expression(
-        parser: &Parser,
-        opts: &TypeOpts,
-    ) -> Result<Type> {
+    pub fn parse_in_expression(parser: &Parser, opts: &TypeOpts) -> Result<Type> {
         parser.expect_token(TokenKind::SpacedColon)?;
         Self::parse_inner(parser, false, opts)
     }

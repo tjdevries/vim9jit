@@ -1,8 +1,5 @@
 local NVIM9 = require("_vim9script")
-local __VIM9_MODULE = {}
 describe("filename", function()
-  local Test_operations = nil
-  local Test_lsp_from_yega = nil
   -- vim9script
 
   it("Test_operations", function()
@@ -37,4 +34,3 @@ describe("filename", function()
     assert.are.same({}, vim.v.errors)
   end)
 end)
-return __VIM9_MODULE

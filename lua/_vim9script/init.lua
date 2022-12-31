@@ -428,6 +428,10 @@ do -- Import {{{
 
     error("Unhandled case" .. vim.inspect(info) .. vim.inspect(debug_info))
   end
+
+  M.autoload = function(path)
+    return loadfile(path)()
+  end
 end -- }}}
 M.bool = M.convert.to_vim_bool
 M.ternary = function(cond, if_true, if_false)

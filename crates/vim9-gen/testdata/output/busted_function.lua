@@ -1,10 +1,5 @@
 local NVIM9 = require("_vim9script")
-local __VIM9_MODULE = {}
 describe("filename", function()
-  local Test_default_args = nil
-  local Test_inplace = nil
-  local Test_insert_inplace = nil
-  local Test_insert_inplace = nil
   -- vim9script
 
   it("Test_default_args", function()
@@ -76,4 +71,3 @@ describe("filename", function()
     assert.are.same({}, vim.v.errors)
   end)
 end)
-return __VIM9_MODULE

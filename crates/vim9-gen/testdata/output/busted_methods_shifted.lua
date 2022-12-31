@@ -1,8 +1,5 @@
 local NVIM9 = require("_vim9script")
-local __VIM9_MODULE = {}
 describe("filename", function()
-  local Test_settabvar_method = nil
-
   it("Test_settabvar_method", function()
     -- Set errors to empty
     vim.v.errors = {}
@@ -18,4 +15,3 @@ describe("filename", function()
     assert.are.same({}, vim.v.errors)
   end)
 end)
-return __VIM9_MODULE

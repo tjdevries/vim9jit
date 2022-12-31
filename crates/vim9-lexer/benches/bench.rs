@@ -5,9 +5,7 @@ extern crate test;
 #[bench]
 fn lexer_handler(b: &mut test::Bencher) {
     b.iter(|| {
-        let contents = include_str!(
-            "/home/tjdevries/git/lsp/src/autoload/lsp/handlers.vim"
-        );
+        let contents = include_str!("/home/tjdevries/git/lsp/src/autoload/lsp/handlers.vim");
         let lexer = vim9_lexer::Lexer::new(&contents);
 
         let mut res = vec![];
