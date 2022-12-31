@@ -2,8 +2,15 @@ local NVIM9 = require("_vim9script")
 describe("filename", function()
   -- vim9script
 
-  Test_assignment_one = function()
+  it("Test_assignment_one", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local bool1 = NVIM9.convert.decl_bool(true)
     NVIM9.fn["assert_equal"](vim.v["true"], bool1)
-  end
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
 end)

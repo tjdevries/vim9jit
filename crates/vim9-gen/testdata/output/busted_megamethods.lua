@@ -2,7 +2,11 @@ local NVIM9 = require("_vim9script")
 describe("filename", function()
   -- vim9script
 
-  Test_inplace_discarded = function()
+  it("Test_inplace_discarded", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     NVIM9.fn["assert_equal"](
       { 2, 4 },
       NVIM9.fn["filter"](
@@ -20,22 +24,39 @@ describe("filename", function()
       end
     )
     NVIM9.fn["assert_equal"]({ 2, 4 }, foo)
-  end
 
-  Test_returned_foo = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_returned_foo", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local foo = { 1, 4, 2, 5 }
     NVIM9.fn["assert_equal"](
       { 5, 4, 2, 1 },
       NVIM9.fn_mut("reverse", { NVIM9.fn_mut("sort", { foo }, { replace = 0 }) }, { replace = 0 })
     )
-  end
 
-  Test_returned_foo = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_returned_foo", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local foo = { 1, 4, 2, 5 }
     local bar = foo
     NVIM9.fn_mut("reverse", { NVIM9.fn_mut("sort", { foo }, { replace = 0 }) }, { replace = 0 })
     NVIM9.fn["assert_equal"]({ 5, 4, 2, 1 }, foo)
     NVIM9.fn["assert_equal"]({ 5, 4, 2, 1 }, bar)
     NVIM9.fn["assert_equal"](foo, bar)
-  end
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
 end)

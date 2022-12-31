@@ -2,7 +2,11 @@ local NVIM9 = require("_vim9script")
 describe("filename", function()
   -- vim9script
 
-  Test_can_do_for_loop = function()
+  it("Test_can_do_for_loop", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local x = 0
 
     for _, y in NVIM9.iter({ 1, 2, 3 }) do
@@ -10,9 +14,16 @@ describe("filename", function()
     end
 
     NVIM9.fn["assert_equal"](6, x)
-  end
 
-  Test_can_do_for_loop_with_break = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_can_do_for_loop_with_break", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local x = 0
 
     for _, y in NVIM9.iter({ 1, 2, 3 }) do
@@ -24,9 +35,16 @@ describe("filename", function()
     end
 
     NVIM9.fn["assert_equal"](3, x)
-  end
 
-  Test_can_do_for_loop_with_break_with_continue = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_can_do_for_loop_with_break_with_continue", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local x = 0
 
     local body = function(_, y)
@@ -53,9 +71,16 @@ describe("filename", function()
     end
 
     NVIM9.fn["assert_equal"](6, x)
-  end
 
-  Test_can_do_for_loop_with_continue = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_can_do_for_loop_with_continue", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local x = 0
 
     local body = function(_, y)
@@ -78,9 +103,17 @@ describe("filename", function()
     end
 
     NVIM9.fn["assert_equal"](4, x)
-  end
 
-  Test_can_do_for_loop_with_return = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_can_do_for_loop_with_return", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
+
     local Something = function()
       local x = 0
 
@@ -111,5 +144,8 @@ describe("filename", function()
     end
 
     NVIM9.fn["assert_equal"](5, Something())
-  end
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
 end)

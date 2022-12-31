@@ -4,37 +4,93 @@ describe("filename", function()
 
   local l = { 1, 2, 3 }
 
-  Test_can_index = function()
-    NVIM9.fn["assert_equal"](1, NVIM9.index(l, 0))
-  end
+  it("Test_can_index", function()
+    -- Set errors to empty
+    vim.v.errors = {}
 
-  Test_minus = function()
+    -- Actual test
+    NVIM9.fn["assert_equal"](1, NVIM9.index(l, 0))
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_minus", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local index = 1
     NVIM9.fn["assert_equal"](1, NVIM9.index(l, NVIM9.ops["Minus"](index, 1)))
-  end
 
-  Test_both = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_both", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     NVIM9.fn["assert_equal"]({ 1, 2 }, NVIM9.slice(l, 0, 1))
-  end
 
-  Test_left = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_left", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     NVIM9.fn["assert_equal"]({ 2, 3 }, NVIM9.slice(l, 1, nil))
-  end
 
-  Test_right = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_right", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     NVIM9.fn["assert_equal"]({ 1, 2 }, NVIM9.slice(l, nil, 1))
-  end
 
-  Test_index_with_prefix_spaced = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_index_with_prefix_spaced", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     NVIM9.fn["assert_equal"]({ 3 }, NVIM9.slice(l, -1, nil))
-  end
 
-  Test_index_with_prefix = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_index_with_prefix", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     NVIM9.fn["assert_equal"]({ 3 }, NVIM9.slice(l, -1, nil))
-  end
 
-  Test_string = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_string", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local foo = "abcd"
     NVIM9.fn["assert_equal"](NVIM9.slice(foo, nil, -2), "abc")
-  end
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
 end)

@@ -216,7 +216,7 @@ fn ident_to_func_data(call: CallExpression, ident: Identifier) -> FunctionData {
 }
 
 impl Generate for Vec<Expression> {
-    fn write(&self, state: &mut State, output: &mut Output) {
+    fn write_default(&self, state: &mut State, output: &mut Output) {
         output.write_lua(
             &self
                 .iter()

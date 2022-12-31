@@ -1,7 +1,7 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1641
-expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unwrap()"
+assertion_line: 1825
+expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unwrap().lua"
 ---
 local NVIM9 = require("_vim9script")
 local __VIM9_MODULE = {}
@@ -26,7 +26,7 @@ local Qf_filter = nil
 -- #
 
 Qf_filter = function(qf, searchpat, bang)
-  qf = not not qf
+  qf = NVIM9.bool(qf)
   local Xgetlist = function() end
   local Xsetlist = function() end
   local cmd = ""
@@ -44,7 +44,7 @@ Qf_filter = function(qf, searchpat, bang)
     Xsetlist = function(...)
       return vim.fn["setqflist"](...)
     end
-    cmd = NVIM9.ops["StringConcat"](":Cfilter", bang)
+    cmd = ":Cfilter" .. bang
   else
     Xgetlist = function(...)
       local copied = vim.deepcopy({ 0 })
@@ -78,7 +78,7 @@ Qf_filter = function(qf, searchpat, bang)
       end
     end
 
-    cmd = NVIM9.ops["StringConcat"](":Lfilter", bang)
+    cmd = ":Lfilter" .. bang
   end
 
   firstchar = NVIM9.index(searchpat, 0)
@@ -110,7 +110,7 @@ Qf_filter = function(qf, searchpat, bang)
   end
 
   items = NVIM9.fn_mut("filter", { Xgetlist(), Cond }, { replace = 0 })
-  title = NVIM9.ops["StringConcat"](NVIM9.ops["StringConcat"](NVIM9.ops["StringConcat"](cmd, " /"), pat), "/")
+  title = cmd .. " /" .. pat .. "/"
   Xsetlist({}, " ", { ["title"] = title, ["items"] = items })
 end
 

@@ -81,11 +81,18 @@ describe("filename", function()
     return ret
   end
 
-  Test_defer = function()
+  it("Test_defer", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local x = MyDefer()
     NVIM9.fn["assert_equal"]({ 3, 2, 1 }, x)
 
     local y = RangeDefer()
     NVIM9.fn["assert_equal"]({ 3, 2, 1 }, x)
-  end
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
 end)

@@ -2,14 +2,25 @@ local NVIM9 = require("_vim9script")
 describe("filename", function()
   -- vim9script
 
-  Test_string_methods = function()
+  it("Test_string_methods", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local s = "hello"
     NVIM9.fn["assert_equal"](NVIM9.fn["len"](s), 5)
 
     NVIM9.fn["assert_equal"](NVIM9.fn["len"]("hello"), 5)
-  end
 
-  Test_list_methods = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_list_methods", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local x = NVIM9.fn["sort"]({ 5, 4, 2, 1, 7, 12, 8 })
 
     NVIM9.fn["assert_equal"]({ 1, 12, 2, 4, 5, 7, 8 }, x)
@@ -17,16 +28,30 @@ describe("filename", function()
     local numeric = NVIM9.fn["sort"]({ 5, 4, 2, 1, 7, 12, 8 }, "n")
 
     NVIM9.fn["assert_equal"]({ 1, 2, 4, 5, 7, 8, 12 }, numeric)
-  end
 
-  Test_inplace = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_inplace", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local x = { 1, 4, 2, 5 }
     NVIM9.fn_mut("sort", { x }, { replace = 0 })
 
     NVIM9.fn["assert_equal"]({ 1, 2, 4, 5 }, x)
-  end
 
-  Test_inplace_inplace_multi = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_inplace_inplace_multi", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local x = { 1, 4, 2, 5 }
     NVIM9.fn_mut("sort", { x }, { replace = 0 })
     NVIM9.fn_mut("filter", {
@@ -36,9 +61,16 @@ describe("filename", function()
       end,
     }, { replace = 0 })
     NVIM9.fn["assert_equal"]({ 2, 4 }, x)
-  end
 
-  Test_inplace_inplace_single = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_inplace_inplace_single", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local foo = { 1, 4, 2, 5 }
     NVIM9.fn_mut(
       "filter",
@@ -52,10 +84,20 @@ describe("filename", function()
     )
 
     NVIM9.fn["assert_equal"]({ 2, 4 }, foo)
-  end
 
-  Test_method_precedence = function()
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it("Test_method_precedence", function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
     local server = { ["filetype"] = true }
     NVIM9.fn["assert_equal"](false, NVIM9.prefix["Bang"](NVIM9.fn["has_key"](server, "filetype")))
-  end
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
 end)
