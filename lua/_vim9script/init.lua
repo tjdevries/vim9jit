@@ -1,5 +1,21 @@
 local M = {}
 
+vim.cmd [[
+function! _Vim9ScriptFn(name, args) abort
+  try
+    let ret = function(a:name, a:args)()
+  catch
+    echo "Failed..."
+    echo a:name
+    echo a:args
+
+    throw v:errmsg
+  endtry
+
+  return [ret, a:args]
+endfunction
+]]
+
 do -- Ops {{{
   M.ops = {}
 
@@ -451,7 +467,7 @@ M.ternary = function(cond, if_true, if_false)
 end
 
 M.fn_mut = function(name, args, info)
-  local result = vim.fn["vim9script#fn"](name, args)
+  local result = vim.fn._Vim9ScriptFn(name, args)
   for idx, val in pairs(result[2]) do
     M.replace(args[idx], val)
   end
