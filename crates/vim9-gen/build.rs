@@ -2,9 +2,12 @@ use std::{fmt::Write, fs, path::Path};
 
 fn get_stylua_config() -> stylua_lib::Config {
     stylua_lib::Config::new()
+        .with_column_width(100)
+        .with_line_endings(stylua_lib::LineEndings::Unix)
         .with_indent_type(stylua_lib::IndentType::Spaces)
         .with_indent_width(2)
-        .with_column_width(120)
+        .with_quote_style(stylua_lib::QuoteStyle::AutoPreferSingle)
+        .with_call_parentheses(stylua_lib::CallParenType::Always)
 }
 
 fn main() -> anyhow::Result<()> {

@@ -1720,7 +1720,7 @@ fn get_stylua_config() -> stylua_lib::Config {
         .with_line_endings(stylua_lib::LineEndings::Unix)
         .with_indent_type(stylua_lib::IndentType::Spaces)
         .with_indent_width(2)
-        .with_quote_style(stylua_lib::QuoteStyle::AutoPreferDouble)
+        .with_quote_style(stylua_lib::QuoteStyle::AutoPreferSingle)
         .with_call_parentheses(stylua_lib::CallParenType::Always)
 }
 

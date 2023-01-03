@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1834
+assertion_line: 1837
 expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unwrap().lua"
 ---
 ----------------------------------------
@@ -8,7 +8,7 @@ expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unw
 -- For any bugs, please first consider reporting there.
 ----------------------------------------
 
-local NVIM9 = require("_vim9script")
+local NVIM9 = require('_vim9script')
 local __VIM9_MODULE = {}
 local Qf_filter = nil
 -- vim9script
@@ -34,22 +34,22 @@ Qf_filter = function(qf, searchpat, bang)
   qf = NVIM9.bool(qf)
   local Xgetlist = function() end
   local Xsetlist = function() end
-  local cmd = ""
-  local firstchar = ""
-  local lastchar = ""
-  local pat = ""
-  local title = ""
+  local cmd = ''
+  local firstchar = ''
+  local lastchar = ''
+  local pat = ''
+  local title = ''
   local Cond = function() end
   local items = {}
 
   if NVIM9.bool(qf) then
     Xgetlist = function(...)
-      return vim.fn["getqflist"](...)
+      return vim.fn['getqflist'](...)
     end
     Xsetlist = function(...)
-      return vim.fn["setqflist"](...)
+      return vim.fn['setqflist'](...)
     end
-    cmd = ":Cfilter" .. bang
+    cmd = ':Cfilter' .. bang
   else
     Xgetlist = function(...)
       local copied = vim.deepcopy({ 0 })
@@ -57,13 +57,13 @@ Qf_filter = function(qf, searchpat, bang)
         table.insert(copied, val)
       end
 
-      local funcref = "getloclist"
-      if type(funcref) == "function" then
+      local funcref = 'getloclist'
+      if type(funcref) == 'function' then
         return funcref(unpack(copied))
-      elseif type(funcref) == "string" then
+      elseif type(funcref) == 'string' then
         return vim.fn[funcref](unpack(copied))
       else
-        error(string.format("unable to call funcref: %s", funcref))
+        error(string.format('unable to call funcref: %s', funcref))
       end
     end
 
@@ -73,65 +73,65 @@ Qf_filter = function(qf, searchpat, bang)
         table.insert(copied, val)
       end
 
-      local funcref = "setloclist"
-      if type(funcref) == "function" then
+      local funcref = 'setloclist'
+      if type(funcref) == 'function' then
         return funcref(unpack(copied))
-      elseif type(funcref) == "string" then
+      elseif type(funcref) == 'string' then
         return vim.fn[funcref](unpack(copied))
       else
-        error(string.format("unable to call funcref: %s", funcref))
+        error(string.format('unable to call funcref: %s', funcref))
       end
     end
 
-    cmd = ":Lfilter" .. bang
+    cmd = ':Lfilter' .. bang
   end
 
   firstchar = NVIM9.index(searchpat, 0)
   lastchar = NVIM9.slice(searchpat, -1, nil)
-  if firstchar == lastchar and (firstchar == "/" or firstchar == '"' or firstchar == "'") then
+  if firstchar == lastchar and (firstchar == '/' or firstchar == '"' or firstchar == "'") then
     pat = NVIM9.slice(searchpat, 1, -2)
-    if pat == "" then
+    if pat == '' then
       -- # Use the last search pattern
-      pat = vim.fn.getreg("/")
+      pat = vim.fn.getreg('/')
     end
   else
     pat = searchpat
   end
 
-  if pat == "" then
+  if pat == '' then
     return
   end
 
-  if bang == "!" then
+  if bang == '!' then
     Cond = function(_, val)
-      return NVIM9.ops["NotRegexpMatches"](val["text"], pat)
-        and NVIM9.ops["NotRegexpMatches"](NVIM9.fn["bufname"](val["bufnr"]), pat)
+      return NVIM9.ops['NotRegexpMatches'](val['text'], pat)
+        and NVIM9.ops['NotRegexpMatches'](NVIM9.fn['bufname'](val['bufnr']), pat)
     end
   else
     Cond = function(_, val)
-      return NVIM9.ops["RegexpMatches"](val["text"], pat)
-        or NVIM9.ops["RegexpMatches"](NVIM9.fn["bufname"](val["bufnr"]), pat)
+      return NVIM9.ops['RegexpMatches'](val['text'], pat)
+        or NVIM9.ops['RegexpMatches'](NVIM9.fn['bufname'](val['bufnr']), pat)
     end
   end
 
-  items = NVIM9.fn_mut("filter", { Xgetlist(), Cond }, { replace = 0 })
-  title = cmd .. " /" .. pat .. "/"
-  Xsetlist({}, " ", { ["title"] = title, ["items"] = items })
+  items = NVIM9.fn_mut('filter', { Xgetlist(), Cond }, { replace = 0 })
+  title = cmd .. ' /' .. pat .. '/'
+  Xsetlist({}, ' ', { ['title'] = title, ['items'] = items })
 end
 
-vim.api.nvim_create_user_command("Cfilter", function(__vim9_arg_1)
-  Qf_filter(true, __vim9_arg_1.args, (__vim9_arg_1.bang and "!" or ""))
+vim.api.nvim_create_user_command('Cfilter', function(__vim9_arg_1)
+  Qf_filter(true, __vim9_arg_1.args, (__vim9_arg_1.bang and '!' or ''))
 end, {
   bang = true,
-  nargs = "+",
+  nargs = '+',
   complete = nil,
 })
 
-vim.api.nvim_create_user_command("Lfilter", function(__vim9_arg_1)
-  Qf_filter(false, __vim9_arg_1.args, (__vim9_arg_1.bang and "!" or ""))
+vim.api.nvim_create_user_command('Lfilter', function(__vim9_arg_1)
+  Qf_filter(false, __vim9_arg_1.args, (__vim9_arg_1.bang and '!' or ''))
 end, {
   bang = true,
-  nargs = "+",
+  nargs = '+',
   complete = nil,
 })
 
