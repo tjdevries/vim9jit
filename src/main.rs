@@ -109,7 +109,7 @@ fn main() -> Result<()> {
             gen::ParserOpts {
                 mode: gen::ParserMode::Autoload {
                     // TODO: Calculate this correctly...
-                    prefix: "something".to_string(),
+                    prefix: "ccomplete".to_string(),
                 },
             },
         ) {
