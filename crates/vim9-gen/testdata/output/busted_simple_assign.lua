@@ -13,7 +13,7 @@ describe('filename', function()
 
     -- Actual test
     local bool1 = NVIM9.convert.decl_bool(true)
-    NVIM9.fn['assert_equal'](vim.v['true'], bool1)
+    NVIM9.fn.assert_equal(vim.v['true'], bool1)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

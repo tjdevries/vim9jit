@@ -15,10 +15,10 @@ describe('filename', function()
     local x = 0
 
     for _, y in NVIM9.iter({ 1, 2, 3 }) do
-      x = NVIM9.ops['Plus'](x, y)
+      x = NVIM9.ops.Plus(x, y)
     end
 
-    NVIM9.fn['assert_equal'](6, x)
+    NVIM9.fn.assert_equal(6, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -32,14 +32,14 @@ describe('filename', function()
     local x = 0
 
     for _, y in NVIM9.iter({ 1, 2, 3 }) do
-      x = NVIM9.ops['Plus'](x, y)
+      x = NVIM9.ops.Plus(x, y)
 
       if y == 2 then
         break
       end
     end
 
-    NVIM9.fn['assert_equal'](3, x)
+    NVIM9.fn.assert_equal(3, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -53,7 +53,7 @@ describe('filename', function()
     local x = 0
 
     local body = function(_, y)
-      x = NVIM9.ops['Plus'](x, y)
+      x = NVIM9.ops.Plus(x, y)
 
       if y == 2 then
         return NVIM9.ITER_CONTINUE
@@ -75,7 +75,7 @@ describe('filename', function()
       end
     end
 
-    NVIM9.fn['assert_equal'](6, x)
+    NVIM9.fn.assert_equal(6, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -93,7 +93,7 @@ describe('filename', function()
         return NVIM9.ITER_CONTINUE
       end
 
-      x = NVIM9.ops['Plus'](x, y)
+      x = NVIM9.ops.Plus(x, y)
 
       return NVIM9.ITER_DEFAULT
     end
@@ -107,7 +107,7 @@ describe('filename', function()
       end
     end
 
-    NVIM9.fn['assert_equal'](4, x)
+    NVIM9.fn.assert_equal(4, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -131,7 +131,7 @@ describe('filename', function()
           return NVIM9.ITER_CONTINUE
         end
 
-        x = NVIM9.ops['Plus'](x, y)
+        x = NVIM9.ops.Plus(x, y)
 
         return NVIM9.ITER_DEFAULT
       end
@@ -148,7 +148,7 @@ describe('filename', function()
       return 0
     end
 
-    NVIM9.fn['assert_equal'](5, Something())
+    NVIM9.fn.assert_equal(5, Something())
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

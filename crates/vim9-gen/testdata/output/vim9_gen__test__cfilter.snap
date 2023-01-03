@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1837
+assertion_line: 1885
 expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unwrap().lua"
 ---
 ----------------------------------------
@@ -104,13 +104,13 @@ Qf_filter = function(qf, searchpat, bang)
 
   if bang == '!' then
     Cond = function(_, val)
-      return NVIM9.ops['NotRegexpMatches'](val['text'], pat)
-        and NVIM9.ops['NotRegexpMatches'](NVIM9.fn['bufname'](val['bufnr']), pat)
+      return NVIM9.ops.NotRegexpMatches(val.text, pat)
+        and NVIM9.ops.NotRegexpMatches(NVIM9.fn.bufname(val.bufnr), pat)
     end
   else
     Cond = function(_, val)
-      return NVIM9.ops['RegexpMatches'](val['text'], pat)
-        or NVIM9.ops['RegexpMatches'](NVIM9.fn['bufname'](val['bufnr']), pat)
+      return NVIM9.ops.RegexpMatches(val.text, pat)
+        or NVIM9.ops.RegexpMatches(NVIM9.fn.bufname(val.bufnr), pat)
     end
   end
 

@@ -44,15 +44,15 @@ describe('filename', function()
     local _, ret = pcall(function()
       local x = {}
       table.insert(nvim9_deferred, 1, function()
-        NVIM9.fn['add'](x, 1)
+        NVIM9.fn.add(x, 1)
       end)
 
       table.insert(nvim9_deferred, 1, function()
-        NVIM9.fn['add'](x, 2)
+        NVIM9.fn.add(x, 2)
       end)
 
       table.insert(nvim9_deferred, 1, function()
-        NVIM9.fn['add'](x, 3)
+        NVIM9.fn.add(x, 3)
       end)
 
       return x
@@ -70,9 +70,9 @@ describe('filename', function()
     local _, ret = pcall(function()
       local x = {}
 
-      for _, i in NVIM9.iter(NVIM9.fn['range'](3)) do
+      for _, i in NVIM9.iter(NVIM9.fn.range(3)) do
         table.insert(nvim9_deferred, 1, function()
-          NVIM9.fn['add'](x, i)
+          NVIM9.fn.add(x, i)
         end)
       end
 
@@ -92,10 +92,10 @@ describe('filename', function()
 
     -- Actual test
     local x = MyDefer()
-    NVIM9.fn['assert_equal']({ 3, 2, 1 }, x)
+    NVIM9.fn.assert_equal({ 3, 2, 1 }, x)
 
     local y = RangeDefer()
-    NVIM9.fn['assert_equal']({ 3, 2, 1 }, x)
+    NVIM9.fn.assert_equal({ 3, 2, 1 }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

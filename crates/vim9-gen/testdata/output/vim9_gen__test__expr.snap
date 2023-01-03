@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1839
+assertion_line: 1880
 expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unwrap().lua"
 ---
 ----------------------------------------
@@ -18,10 +18,10 @@ local func_call = nil
 x = 1 + 2
 print(x)
 
-literal = NVIM9.fn['charcol']('.') - 1
+literal = NVIM9.fn.charcol('.') - 1
 print(literal)
 
-func_call = NVIM9.ops['Minus'](MyFunc(), 1)
+func_call = NVIM9.ops.Minus(MyFunc(), 1)
 print(func_call)
 return __VIM9_MODULE
 

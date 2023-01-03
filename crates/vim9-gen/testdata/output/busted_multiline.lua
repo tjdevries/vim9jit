@@ -14,7 +14,7 @@ describe('filename', function()
     -- Actual test
     local x = NVIM9.convert.decl_bool(true and false)
 
-    NVIM9.fn['assert_equal'](x, false)
+    NVIM9.fn.assert_equal(x, false)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -27,7 +27,7 @@ describe('filename', function()
     -- Actual test
     local y = NVIM9.convert.decl_bool(true and false)
 
-    NVIM9.fn['assert_equal'](y, false)
+    NVIM9.fn.assert_equal(y, false)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -40,7 +40,7 @@ describe('filename', function()
     -- Actual test
     local z = true or false
 
-    NVIM9.fn['assert_equal'](z, true)
+    NVIM9.fn.assert_equal(z, true)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

@@ -18,7 +18,7 @@ describe('filename', function()
       end,
     }, { replace = 0 })
 
-    NVIM9.fn['assert_equal']({ 2 }, x)
+    NVIM9.fn.assert_equal({ 2 }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

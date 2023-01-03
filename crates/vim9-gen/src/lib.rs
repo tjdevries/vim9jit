@@ -523,7 +523,7 @@ impl Generate for ExportCommand {
                 output.write_vim(&format!(
                     r#"
 function! {prefix}#{name}({sig}) abort
- return s:NVIM_MODULE.{name}({call})
+ return s:nvim_module.{name}({call})
 endfunction
 "#
                 ))
@@ -1303,13 +1303,55 @@ impl Generate for MethodCall {
     }
 }
 
+mod ident {
+    pub fn str_is_keyword(s: &str) -> bool {
+        match s {
+            "end" => true,
+            "repeat" => true,
+            "for" => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_safe_str(name: &str) -> bool {
+        !str_is_keyword(name) && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+    }
+
+    // pub fn is_lua_keyword(ident: &Identifier) -> bool {
+    //     match ident {
+    //         Identifier::Raw(raw) => str_is_keyword(&raw.name),
+    //         Identifier::Scope(_) => false,
+    //         Identifier::Unpacked(idents) => idents.identifiers.iter().any(is_lua_keyword),
+    //         Identifier::Ellipsis => false,
+    //     }
+    // }
+
+    // pub fn is_safe_identifier(ident: &Identifier) -> bool {
+    //     !is_lua_keyword(ident)
+    //         && match ident {
+    //             Identifier::Raw(raw) => is_safe_str(&raw.name),
+    //             Identifier::Scope(_) => false,
+    //             Identifier::Unpacked(_) => false,
+    //             Identifier::Ellipsis => false,
+    //         }
+    // }
+}
+
 impl Generate for DictAccess {
     fn write_default(&self, state: &mut State, output: &mut Output) {
-        output.write_lua(&format!(
-            "{}['{}']",
-            self.container.gen(state),
-            self.index.gen(state)
-        ))
+        if ident::is_safe_str(&self.index.name) {
+            output.write_lua(&format!(
+                "{}.{}",
+                self.container.gen(state),
+                self.index.gen(state)
+            ))
+        } else {
+            output.write_lua(&format!(
+                "{}['{}']",
+                self.container.gen(state),
+                self.index.gen(state)
+            ))
+        }
     }
 }
 
@@ -1553,11 +1595,11 @@ impl Generate for InfixExpression {
                     format!("{left} .. {right}")
                 }
                 _ => {
-                    format!("NVIM9.ops['{:?}']({left}, {right})", self.operator)
+                    format!("NVIM9.ops.{:?}({left}, {right})", self.operator)
                 }
             }
         } else {
-            format!("NVIM9.ops['{:?}']({left}, {right})", self.operator)
+            format!("NVIM9.ops.{:?}({left}, {right})", self.operator)
         })
 
         // match self.operator {
@@ -1683,9 +1725,9 @@ impl Generate for Program {
     fn write_autoload(&self, state: &mut State, output: &mut Output) {
         output.write_vim(
             r#"" Generated vim file by vim9jit. Please do not edit
-let s:PATH = expand("<script>")
-let s:LUA_PATH = fnamemodify(s:PATH, ":r") . ".lua"
-let s:NVIM_MODULE = luaeval(printf('require("_vim9script").autoload("%s")', s:LUA_PATH))
+let s:path = expand("<script>")
+let s:lua_path = fnamemodify(s:path, ":r") . ".lua"
+let s:nvim_module = luaeval(printf('require("_vim9script").autoload("%s")', s:lua_path))
 "#,
         );
 

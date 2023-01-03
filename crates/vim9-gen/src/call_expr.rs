@@ -248,10 +248,18 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
 
     match func_data {
         FunctionData::ApiFunc { name, args } => {
-            format!("vim.api['{}']({})", name, args.gen(state))
+            if crate::ident::is_safe_str(&name) {
+                format!("vim.api.{}({})", name, args.gen(state))
+            } else {
+                format!("vim.api['{}']({})", name, args.gen(state))
+            }
         }
         FunctionData::VimFunc(VimFunc { name, args }) => {
-            format!("NVIM9.fn['{}']({})", name, args.gen(state))
+            if crate::ident::is_safe_str(&name) {
+                format!("NVIM9.fn.{}({})", name, args.gen(state))
+            } else {
+                format!("NVIM9.fn['{}']({})", name, args.gen(state))
+            }
         }
         FunctionData::VimFuncRef { name, arglist, .. } => match arglist {
             Some(arglist) => {

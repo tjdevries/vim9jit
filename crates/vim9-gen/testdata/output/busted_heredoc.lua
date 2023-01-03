@@ -14,7 +14,7 @@ describe('filename', function()
     -- Actual test
     local x = { [==[hello]==], [==[world]==] }
 
-    NVIM9.fn['assert_equal']({ 'hello', 'world' }, x)
+    NVIM9.fn.assert_equal({ 'hello', 'world' }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -27,7 +27,7 @@ describe('filename', function()
     -- Actual test
     local x = { [==[    hello]==], [==[  world]==] }
 
-    NVIM9.fn['assert_equal']({ '    hello', '  world' }, x)
+    NVIM9.fn.assert_equal({ '    hello', '  world' }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -40,7 +40,7 @@ describe('filename', function()
     -- Actual test
     local x = NVIM9.heredoc.trim({ [==[    hello]==], [==[world]==] })
 
-    NVIM9.fn['assert_equal']({ '    hello', 'world' }, x)
+    NVIM9.fn.assert_equal({ '    hello', 'world' }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -53,7 +53,7 @@ describe('filename', function()
     -- Actual test
     local x = NVIM9.heredoc.trim({ [==[        hello]==], [==[          world]==] })
 
-    NVIM9.fn['assert_equal']({ 'hello', '  world' }, x)
+    NVIM9.fn.assert_equal({ 'hello', '  world' }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

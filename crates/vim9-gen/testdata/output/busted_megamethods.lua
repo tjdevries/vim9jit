@@ -12,23 +12,23 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn['assert_equal'](
+    NVIM9.fn.assert_equal(
       { 2, 4 },
-      NVIM9.fn['filter'](
-        NVIM9.fn['sort']({ 1, 4, 2, 5 }),
+      NVIM9.fn.filter(
+        NVIM9.fn.sort({ 1, 4, 2, 5 }),
         function(_, y)
-          return NVIM9.ops['Modulo'](y, 2) == 0
+          return NVIM9.ops.Modulo(y, 2) == 0
         end
       )
     )
 
-    local foo = NVIM9.fn['filter'](
-      NVIM9.fn['sort']({ 1, 4, 2, 5 }),
+    local foo = NVIM9.fn.filter(
+      NVIM9.fn.sort({ 1, 4, 2, 5 }),
       function(_, y)
-        return NVIM9.ops['Modulo'](y, 2) == 0
+        return NVIM9.ops.Modulo(y, 2) == 0
       end
     )
-    NVIM9.fn['assert_equal']({ 2, 4 }, foo)
+    NVIM9.fn.assert_equal({ 2, 4 }, foo)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -40,7 +40,7 @@ describe('filename', function()
 
     -- Actual test
     local foo = { 1, 4, 2, 5 }
-    NVIM9.fn['assert_equal'](
+    NVIM9.fn.assert_equal(
       { 5, 4, 2, 1 },
       NVIM9.fn_mut('reverse', { NVIM9.fn_mut('sort', { foo }, { replace = 0 }) }, { replace = 0 })
     )
@@ -57,9 +57,9 @@ describe('filename', function()
     local foo = { 1, 4, 2, 5 }
     local bar = foo
     NVIM9.fn_mut('reverse', { NVIM9.fn_mut('sort', { foo }, { replace = 0 }) }, { replace = 0 })
-    NVIM9.fn['assert_equal']({ 5, 4, 2, 1 }, foo)
-    NVIM9.fn['assert_equal']({ 5, 4, 2, 1 }, bar)
-    NVIM9.fn['assert_equal'](foo, bar)
+    NVIM9.fn.assert_equal({ 5, 4, 2, 1 }, foo)
+    NVIM9.fn.assert_equal({ 5, 4, 2, 1 }, bar)
+    NVIM9.fn.assert_equal(foo, bar)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

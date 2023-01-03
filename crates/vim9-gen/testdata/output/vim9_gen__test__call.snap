@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1842
+assertion_line: 1874
 expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unwrap().lua"
 ---
 ----------------------------------------
@@ -18,6 +18,6 @@ MyCoolFunc = function()
   return 5
 end
 
-x = NVIM9.ops['Plus'](MyCoolFunc(), 1)
+x = NVIM9.ops.Plus(MyCoolFunc(), 1)
 return __VIM9_MODULE
 

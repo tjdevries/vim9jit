@@ -15,7 +15,7 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn['assert_equal'](1, NVIM9.index(l, 0))
+    NVIM9.fn.assert_equal(1, NVIM9.index(l, 0))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -27,7 +27,7 @@ describe('filename', function()
 
     -- Actual test
     local index = 1
-    NVIM9.fn['assert_equal'](1, NVIM9.index(l, NVIM9.ops['Minus'](index, 1)))
+    NVIM9.fn.assert_equal(1, NVIM9.index(l, NVIM9.ops.Minus(index, 1)))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -38,7 +38,7 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn['assert_equal']({ 1, 2 }, NVIM9.slice(l, 0, 1))
+    NVIM9.fn.assert_equal({ 1, 2 }, NVIM9.slice(l, 0, 1))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -49,7 +49,7 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn['assert_equal']({ 2, 3 }, NVIM9.slice(l, 1, nil))
+    NVIM9.fn.assert_equal({ 2, 3 }, NVIM9.slice(l, 1, nil))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -60,7 +60,7 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn['assert_equal']({ 1, 2 }, NVIM9.slice(l, nil, 1))
+    NVIM9.fn.assert_equal({ 1, 2 }, NVIM9.slice(l, nil, 1))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -71,7 +71,7 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn['assert_equal']({ 3 }, NVIM9.slice(l, -1, nil))
+    NVIM9.fn.assert_equal({ 3 }, NVIM9.slice(l, -1, nil))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -82,7 +82,7 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn['assert_equal']({ 3 }, NVIM9.slice(l, -1, nil))
+    NVIM9.fn.assert_equal({ 3 }, NVIM9.slice(l, -1, nil))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -94,7 +94,7 @@ describe('filename', function()
 
     -- Actual test
     local foo = 'abcd'
-    NVIM9.fn['assert_equal'](NVIM9.slice(foo, nil, -2), 'abc')
+    NVIM9.fn.assert_equal(NVIM9.slice(foo, nil, -2), 'abc')
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

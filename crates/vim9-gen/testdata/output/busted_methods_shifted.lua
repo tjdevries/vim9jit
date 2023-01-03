@@ -10,11 +10,11 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn['settabvar'](1, 'testing', 0)
-    NVIM9.fn['assert_equal'](0, vim.t['testing'])
+    NVIM9.fn.settabvar(1, 'testing', 0)
+    NVIM9.fn.assert_equal(0, vim.t['testing'])
 
-    NVIM9.fn['settabvar'](1, 'testing', 25)
-    NVIM9.fn['assert_equal'](25, vim.t['testing'])
+    NVIM9.fn.settabvar(1, 'testing', 25)
+    NVIM9.fn.assert_equal(25, vim.t['testing'])
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
