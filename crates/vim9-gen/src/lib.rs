@@ -1185,6 +1185,7 @@ impl Generate for RawIdentifier {
         output.write_lua(match self.name.as_str() {
             "end" => "__end__",
             "M" => "__M__",
+            "vim9" => "__vim9__",
             _ => &self.name,
         })
     }
