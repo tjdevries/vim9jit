@@ -1,3 +1,8 @@
+----------------------------------------
+-- This file is generated via github.com/tjdevries/vim9jit
+-- For any bugs, please first consider reporting there.
+----------------------------------------
+
 local NVIM9 = require("_vim9script")
 local MyDefer = nil
 local RangeDefer = nil

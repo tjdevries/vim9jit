@@ -1634,7 +1634,16 @@ mod generate_program {
     use super::*;
 
     pub fn preamble(state: &State, output: &mut Output) {
-        output.write_lua("local NVIM9 = require('_vim9script')");
+        output.write_lua(
+            r#"
+----------------------------------------
+-- This file is generated via github.com/tjdevries/vim9jit
+-- For any bugs, please first consider reporting there.
+----------------------------------------
+
+local NVIM9 = require('_vim9script')
+"#,
+        );
 
         if state.opts.mode != ParserMode::Test {
             output.write_lua("local __VIM9_MODULE = {}\n");
