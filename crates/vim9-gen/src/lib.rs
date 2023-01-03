@@ -257,7 +257,7 @@ impl Generate for ExCommand {
                 }
             }
             ExCommand::Comment(token) => output.write_lua(&format!("-- {}", token.text)),
-            ExCommand::Finish(_) => output.write_lua("return __VIM9_MODULE"),
+            ExCommand::Finish(_) => output.write_lua("return M"),
             ExCommand::Vim9Script(cmd) => cmd.write(state, output),
             ExCommand::Var(cmd) => cmd.write(state, output),
             ExCommand::Echo(cmd) => cmd.write(state, output),
@@ -489,7 +489,7 @@ impl Generate for ExportCommand {
             }
         };
 
-        output.write_lua(&format!("{exported};\n__VIM9_MODULE['{ident}'] = {ident};"))
+        output.write_lua(&format!("{exported};\nM['{ident}'] = {ident};"))
     }
 
     fn write_autoload(&self, state: &mut State, output: &mut Output) {
@@ -1184,6 +1184,7 @@ impl Generate for RawIdentifier {
         // that we don't use when creating identifiers
         output.write_lua(match self.name.as_str() {
             "end" => "__end__",
+            "M" => "__M__",
             _ => &self.name,
         })
     }
@@ -1690,12 +1691,16 @@ mod generate_program {
 -- For any bugs, please first consider reporting there.
 ----------------------------------------
 
+-- Ignore "value assigned to a local variable is unused" because
+--  we can't guarantee that local variables will be used by plugins
+-- luacheck: ignore 311
+
 local NVIM9 = require('_vim9script')
 "#,
         );
 
         if state.opts.mode != ParserMode::Test {
-            output.write_lua("local __VIM9_MODULE = {}\n");
+            output.write_lua("local M = {}\n");
         }
     }
 
@@ -1719,7 +1724,7 @@ impl Generate for Program {
             output.write_lua("\n");
         }
 
-        output.write_lua("return __VIM9_MODULE");
+        output.write_lua("return M");
     }
 
     fn write_autoload(&self, state: &mut State, output: &mut Output) {
@@ -1844,6 +1849,8 @@ mod test {
     busted!(busted_shared, "../testdata/busted/shared.vim");
     busted!(busted_loops, "../testdata/busted/loops.vim");
     busted!(busted_defer, "../testdata/busted/defer.vim");
+
+    // TODO: Fix this
     // busted!(busted_vimvars, "../testdata/busted/vimvars.vim");
 
     busted!(busted_methods, "../testdata/busted/methods.vim");

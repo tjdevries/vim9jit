@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1880
+assertion_line: 1863
 expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unwrap().lua"
 ---
 ----------------------------------------
@@ -8,8 +8,12 @@ expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unw
 -- For any bugs, please first consider reporting there.
 ----------------------------------------
 
+-- Ignore "value assigned to a local variable is unused" because
+--  we can't guarantee that local variables will be used by plugins
+-- luacheck: ignore 311
+
 local NVIM9 = require('_vim9script')
-local __VIM9_MODULE = {}
+local M = {}
 local x = nil
 local literal = nil
 local func_call = nil
@@ -23,5 +27,5 @@ print(literal)
 
 func_call = NVIM9.ops.Minus(MyFunc(), 1)
 print(func_call)
-return __VIM9_MODULE
+return M
 

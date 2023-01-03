@@ -3,6 +3,10 @@
 -- For any bugs, please first consider reporting there.
 ----------------------------------------
 
+-- Ignore "value assigned to a local variable is unused" because
+--  we can't guarantee that local variables will be used by plugins
+-- luacheck: ignore 311
+
 local NVIM9 = require('_vim9script')
 describe('filename', function()
   -- vim9script
@@ -105,6 +109,21 @@ describe('filename', function()
     foo = foo + 1
     foo = foo + 1
     NVIM9.fn.assert_equal(11, foo)
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it('Test_using_reserved_words', function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
+    local __end__ = true
+    NVIM9.fn.assert_equal(__end__, true)
+
+    local __M__ = true
+    NVIM9.fn.assert_equal(__M__, true)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

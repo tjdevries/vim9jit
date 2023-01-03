@@ -67,3 +67,12 @@ def Test_modifier_prefixes()
   ++foo
   assert_equal(11, foo)
 enddef
+
+
+def Test_using_reserved_words()
+  var end = true
+  assert_equal(end, true)
+
+  var M = true
+  assert_equal(M, true)
+enddef
