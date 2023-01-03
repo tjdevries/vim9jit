@@ -1739,12 +1739,10 @@ pub fn generate(contents: &str, opts: ParserOpts) -> Result<Output, (Output, Str
     let mut result = eval(program, opts).unwrap();
     // println!("{}", result);
 
-    let config = get_stylua_config();
-
     // Format lua code, so we can actually read it.
     result.lua = match stylua_lib::format_code(
         &result.lua,
-        config,
+        get_stylua_config(),
         None,
         stylua_lib::OutputVerification::None,
     ) {

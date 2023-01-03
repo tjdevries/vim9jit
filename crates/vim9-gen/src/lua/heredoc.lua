@@ -3,7 +3,7 @@ local M = {}
 M.trim = function(lines)
   local min_whitespace = 9999
   for _, line in ipairs(lines) do
-    local _, finish = string.find(line, "^%s*")
+    local _, finish = string.find(line, '^%s*')
     min_whitespace = math.min(min_whitespace, finish)
   end
 

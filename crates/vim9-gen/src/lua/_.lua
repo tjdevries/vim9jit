@@ -1,4 +1,4 @@
-vim.cmd [[
+vim.cmd([[
 function! _Vim9ScriptFn(name, args) abort
   try
     let ret = function(a:name, a:args)()
@@ -12,4 +12,4 @@ function! _Vim9ScriptFn(name, args) abort
 
   return [ret, a:args]
 endfunction
-]]
+]])

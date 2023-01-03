@@ -12,7 +12,7 @@ end
 
 M.extend = function(left, right, expr3)
   if expr3 ~= nil then
-    error "haven't written this code yet"
+    error("haven't written this code yet")
   end
 
   if vim.tbl_islist(right) then
@@ -39,13 +39,13 @@ end
 
 M.prop_type_add = function(...)
   local args = { ... }
-  print("[prop_type_add]", vim.inspect(args))
+  print('[prop_type_add]', vim.inspect(args))
 end
 
 do
   local patch_overrides = {
     -- We do have vim9script :) that's this plugin
-    ["vim9script"] = true,
+    ['vim9script'] = true,
 
     -- Include some vim patches that I don't care about
     [ [[patch-8.2.2261]] ] = true,
@@ -120,14 +120,14 @@ end
 
 M.typename = function(val)
   local ty = type(val)
-  if ty == "string" then
-    return "string"
-  elseif ty == "boolean" then
-    return "bool"
-  elseif ty == "number" then
-    return "number"
+  if ty == 'string' then
+    return 'string'
+  elseif ty == 'boolean' then
+    return 'bool'
+  elseif ty == 'number' then
+    return 'number'
   else
-    error(string.format("typename: %s", val))
+    error(string.format('typename: %s', val))
   end
 end
 
@@ -135,19 +135,19 @@ end
 
 do
   local pos_map = {
-    topleft = "NW",
-    topright = "NE",
-    botleft = "SW",
-    botright = "SE",
+    topleft = 'NW',
+    topright = 'NE',
+    botleft = 'SW',
+    botright = 'SE',
   }
 
-  M.popup_menu = function(what, options)
+  M.popup_menu = function(_, options)
     -- print "OPTIONS:"
 
     local buf = vim.api.nvim_create_buf(false, true)
     local win = vim.api.nvim_open_win(buf, true, {
-      relative = "editor",
-      style = "minimal",
+      relative = 'editor',
+      style = 'minimal',
       anchor = pos_map[options.pos],
       height = options.maxheight or options.minheight,
       width = options.maxwidth or options.minwidth,
@@ -158,17 +158,17 @@ do
     if options.filter then
       local loop
       loop = function()
-        vim.cmd [[redraw!]]
+        vim.cmd([[redraw!]])
         local ok, ch = pcall(vim.fn.getcharstr)
         if not ok then
           return
         end -- interrupted
 
-        if ch == "<C-C>" then
+        if ch == '<C-C>' then
           return
         end
 
-        if not require("vim9script").bool(options.filter(nil, ch)) then
+        if not require('vim9script').bool(options.filter(nil, ch)) then
           vim.cmd.normal(ch)
         end
 
@@ -183,9 +183,9 @@ do
 end
 
 M.popup_settext = function(id, text)
-  if type(text) == "string" then
+  if type(text) == 'string' then
     -- text = vim.split(text, "\n")
-    error "Haven't handled string yet"
+    error("Haven't handled string yet")
   end
 
   local lines = {}
@@ -197,20 +197,20 @@ M.popup_settext = function(id, text)
 end
 
 M.popup_filter_menu = function()
-  print "ok, just pretend we filtered the menu"
+  print('ok, just pretend we filtered the menu')
 end
 
-M.popup_setoptions = function(id, options)
-  print("setting options...", id)
+M.popup_setoptions = function(id, _)
+  print('setting options...', id)
 end
 
 M.job_start = function(...)
-  return vim.fn["vim9#job#start"](...)
+  return vim.fn['vim9#job#start'](...)
 end
 
 M.job_status = function()
   -- LOL
-  return "run"
+  return 'run'
 end
 
 M = setmetatable(M, {
