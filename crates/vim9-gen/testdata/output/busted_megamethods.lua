@@ -14,20 +14,14 @@ describe('filename', function()
     -- Actual test
     NVIM9.fn.assert_equal(
       { 2, 4 },
-      NVIM9.fn.filter(
-        NVIM9.fn.sort({ 1, 4, 2, 5 }),
-        function(_, y)
-          return NVIM9.ops.Modulo(y, 2) == 0
-        end
-      )
+      NVIM9.fn.filter(NVIM9.fn.sort({ 1, 4, 2, 5 }), function(_, y)
+        return NVIM9.ops.Modulo(y, 2) == 0
+      end)
     )
 
-    local foo = NVIM9.fn.filter(
-      NVIM9.fn.sort({ 1, 4, 2, 5 }),
-      function(_, y)
-        return NVIM9.ops.Modulo(y, 2) == 0
-      end
-    )
+    local foo = NVIM9.fn.filter(NVIM9.fn.sort({ 1, 4, 2, 5 }), function(_, y)
+      return NVIM9.ops.Modulo(y, 2) == 0
+    end)
     NVIM9.fn.assert_equal({ 2, 4 }, foo)
 
     -- Assert that errors is still empty

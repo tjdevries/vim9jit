@@ -1793,6 +1793,18 @@ pub fn generate(contents: &str, opts: ParserOpts) -> Result<Output, (Output, Str
         Err(err) => return Err((result, err.to_string())),
     };
 
+    // Format lua code again... cause I think there's some indeterminism
+    // with crazy generated code :'(
+    result.lua = match stylua_lib::format_code(
+        &result.lua,
+        get_stylua_config(),
+        None,
+        stylua_lib::OutputVerification::None,
+    ) {
+        Ok(res) => res,
+        Err(err) => return Err((result, err.to_string())),
+    };
+
     Ok(result)
 }
 
