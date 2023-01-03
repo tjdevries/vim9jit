@@ -7,7 +7,7 @@
 --  we can't guarantee that local variables will be used by plugins
 -- luacheck: ignore 311
 
-local NVIM9 = require('_vim9script')
+local vim9 = require('_vim9script')
 describe('filename', function()
   -- vim9script
 
@@ -16,9 +16,9 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    local x = NVIM9.convert.decl_bool(true and false)
+    local x = vim9.convert.decl_bool(true and false)
 
-    NVIM9.fn.assert_equal(x, false)
+    vim9.fn.assert_equal(x, false)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -29,9 +29,9 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    local y = NVIM9.convert.decl_bool(true and false)
+    local y = vim9.convert.decl_bool(true and false)
 
-    NVIM9.fn.assert_equal(y, false)
+    vim9.fn.assert_equal(y, false)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -44,7 +44,7 @@ describe('filename', function()
     -- Actual test
     local z = true or false
 
-    NVIM9.fn.assert_equal(z, true)
+    vim9.fn.assert_equal(z, true)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

@@ -7,7 +7,7 @@
 --  we can't guarantee that local variables will be used by plugins
 -- luacheck: ignore 311
 
-local NVIM9 = require('_vim9script')
+local vim9 = require('_vim9script')
 describe('filename', function()
   -- vim9script
 
@@ -18,7 +18,7 @@ describe('filename', function()
     -- Actual test
     local x = { [==[hello]==], [==[world]==] }
 
-    NVIM9.fn.assert_equal({ 'hello', 'world' }, x)
+    vim9.fn.assert_equal({ 'hello', 'world' }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -31,7 +31,7 @@ describe('filename', function()
     -- Actual test
     local x = { [==[    hello]==], [==[  world]==] }
 
-    NVIM9.fn.assert_equal({ '    hello', '  world' }, x)
+    vim9.fn.assert_equal({ '    hello', '  world' }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -42,9 +42,9 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    local x = NVIM9.heredoc.trim({ [==[    hello]==], [==[world]==] })
+    local x = vim9.heredoc.trim({ [==[    hello]==], [==[world]==] })
 
-    NVIM9.fn.assert_equal({ '    hello', 'world' }, x)
+    vim9.fn.assert_equal({ '    hello', 'world' }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -55,9 +55,9 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    local x = NVIM9.heredoc.trim({ [==[        hello]==], [==[          world]==] })
+    local x = vim9.heredoc.trim({ [==[        hello]==], [==[          world]==] })
 
-    NVIM9.fn.assert_equal({ 'hello', '  world' }, x)
+    vim9.fn.assert_equal({ 'hello', '  world' }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

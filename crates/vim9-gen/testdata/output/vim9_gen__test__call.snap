@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1866
+assertion_line: 1868
 expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unwrap().lua"
 ---
 ----------------------------------------
@@ -12,7 +12,7 @@ expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unw
 --  we can't guarantee that local variables will be used by plugins
 -- luacheck: ignore 311
 
-local NVIM9 = require('_vim9script')
+local vim9 = require('_vim9script')
 local M = {}
 local MyCoolFunc = nil
 local x = nil
@@ -22,6 +22,6 @@ MyCoolFunc = function()
   return 5
 end
 
-x = NVIM9.ops.Plus(MyCoolFunc(), 1)
+x = vim9.ops.Plus(MyCoolFunc(), 1)
 return M
 

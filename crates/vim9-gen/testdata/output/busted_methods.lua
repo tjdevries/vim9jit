@@ -7,7 +7,7 @@
 --  we can't guarantee that local variables will be used by plugins
 -- luacheck: ignore 311
 
-local NVIM9 = require('_vim9script')
+local vim9 = require('_vim9script')
 describe('filename', function()
   -- vim9script
 
@@ -17,9 +17,9 @@ describe('filename', function()
 
     -- Actual test
     local s = 'hello'
-    NVIM9.fn.assert_equal(NVIM9.fn.len(s), 5)
+    vim9.fn.assert_equal(vim9.fn.len(s), 5)
 
-    NVIM9.fn.assert_equal(NVIM9.fn.len('hello'), 5)
+    vim9.fn.assert_equal(vim9.fn.len('hello'), 5)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -30,13 +30,13 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    local x = NVIM9.fn.sort({ 5, 4, 2, 1, 7, 12, 8 })
+    local x = vim9.fn.sort({ 5, 4, 2, 1, 7, 12, 8 })
 
-    NVIM9.fn.assert_equal({ 1, 12, 2, 4, 5, 7, 8 }, x)
+    vim9.fn.assert_equal({ 1, 12, 2, 4, 5, 7, 8 }, x)
 
-    local numeric = NVIM9.fn.sort({ 5, 4, 2, 1, 7, 12, 8 }, 'n')
+    local numeric = vim9.fn.sort({ 5, 4, 2, 1, 7, 12, 8 }, 'n')
 
-    NVIM9.fn.assert_equal({ 1, 2, 4, 5, 7, 8, 12 }, numeric)
+    vim9.fn.assert_equal({ 1, 2, 4, 5, 7, 8, 12 }, numeric)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -48,9 +48,9 @@ describe('filename', function()
 
     -- Actual test
     local x = { 1, 4, 2, 5 }
-    NVIM9.fn_mut('sort', { x }, { replace = 0 })
+    vim9.fn_mut('sort', { x }, { replace = 0 })
 
-    NVIM9.fn.assert_equal({ 1, 2, 4, 5 }, x)
+    vim9.fn.assert_equal({ 1, 2, 4, 5 }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -62,14 +62,14 @@ describe('filename', function()
 
     -- Actual test
     local x = { 1, 4, 2, 5 }
-    NVIM9.fn_mut('sort', { x }, { replace = 0 })
-    NVIM9.fn_mut('filter', {
+    vim9.fn_mut('sort', { x }, { replace = 0 })
+    vim9.fn_mut('filter', {
       x,
       function(_, y)
-        return NVIM9.ops.Modulo(y, 2) == 0
+        return vim9.ops.Modulo(y, 2) == 0
       end,
     }, { replace = 0 })
-    NVIM9.fn.assert_equal({ 2, 4 }, x)
+    vim9.fn.assert_equal({ 2, 4 }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -81,14 +81,14 @@ describe('filename', function()
 
     -- Actual test
     local foo = { 1, 4, 2, 5 }
-    NVIM9.fn_mut('filter', {
-      NVIM9.fn_mut('sort', { foo }, { replace = 0 }),
+    vim9.fn_mut('filter', {
+      vim9.fn_mut('sort', { foo }, { replace = 0 }),
       function(_, y)
-        return NVIM9.ops.Modulo(y, 2) == 0
+        return vim9.ops.Modulo(y, 2) == 0
       end,
     }, { replace = 0 })
 
-    NVIM9.fn.assert_equal({ 2, 4 }, foo)
+    vim9.fn.assert_equal({ 2, 4 }, foo)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -100,7 +100,7 @@ describe('filename', function()
 
     -- Actual test
     local server = { ['filetype'] = true }
-    NVIM9.fn.assert_equal(false, NVIM9.prefix['Bang'](NVIM9.fn.has_key(server, 'filetype')))
+    vim9.fn.assert_equal(false, vim9.prefix['Bang'](vim9.fn.has_key(server, 'filetype')))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

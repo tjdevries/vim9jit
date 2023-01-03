@@ -307,7 +307,7 @@ impl Generate for ContinueCommand {
         assert!(scope.kind != ScopeKind::Function, "continue: While/For");
         assert!(scope.has_continue(), "must have continue...");
 
-        output.write_lua("return NVIM9.ITER_CONTINUE")
+        output.write_lua("return vim9.ITER_CONTINUE")
     }
 }
 
@@ -322,7 +322,7 @@ impl Generate for BreakCommand {
         );
 
         if scope.has_continue() {
-            output.write_lua("return NVIM9.ITER_BREAK")
+            output.write_lua("return vim9.ITER_BREAK")
         } else {
             output.write_lua("break")
         }
@@ -413,15 +413,15 @@ impl Generate for ForCommand {
                         {unpacked}
                         {body}
 
-                        return NVIM9.ITER_DEFAULT
+                        return vim9.ITER_DEFAULT
                     end
 
-                    for _, {ident} in NVIM9.iter({expr}) do
+                    for _, {ident} in vim9.iter({expr}) do
                         {unpacked}
                         local nvim9_status, nvim9_ret = body(_, {ident})
-                        if nvim9_status == NVIM9.ITER_BREAK then
+                        if nvim9_status == vim9.ITER_BREAK then
                             break
-                        elseif nvim9_status == NVIM9.ITER_RETURN then
+                        elseif nvim9_status == vim9.ITER_RETURN then
                             return nvim9_ret
                         end
                     end
@@ -430,7 +430,7 @@ impl Generate for ForCommand {
         } else {
             format!(
                 r#"
-                for _, {ident} in NVIM9.iter({expr}) do
+                for _, {ident} in vim9.iter({expr}) do
                     {body}
                 end
                 "#,
@@ -453,14 +453,14 @@ impl Generate for ImportCommand {
                 Some(name) => {
                     let var = name.gen(state);
                     format!(
-                        "local {var} = NVIM9.import({{ name = '{file}', autoload = {autoload} }})"
+                        "local {var} = vim9.import({{ name = '{file}', autoload = {autoload} }})"
                     )
                 }
                 None => {
                     let filepath = Path::new(file);
                     let stem = filepath.file_stem().unwrap().to_str().unwrap();
                     format!(
-                        "local {stem} = NVIM9.import({{ name = '{file}', autoload = {autoload} }})"
+                        "local {stem} = vim9.import({{ name = '{file}', autoload = {autoload} }})"
                     )
                 }
             },
@@ -468,7 +468,7 @@ impl Generate for ImportCommand {
                 .iter()
                 .map(|name| {
                     let name = name.gen(state);
-                    format!("local {name} = NVIM9.import({{ name = '{file}' }})['{name}']")
+                    format!("local {name} = vim9.import({{ name = '{file}' }})['{name}']")
                 })
                 .collect::<Vec<String>>()
                 .join("\n"),
@@ -643,7 +643,7 @@ impl Generate for Heredoc {
 
         let mut list = format!("{{ {} }}", inner);
         if self.trim {
-            list = format!("NVIM9.heredoc.trim({})", list)
+            list = format!("vim9.heredoc.trim({})", list)
         }
 
         output.write_lua(&format!("local {} = {}", self.name.gen(state), list))
@@ -721,9 +721,9 @@ impl Generate for ReturnCommand {
         output.write_lua(&if scope.has_continue() {
             match &self.expr {
                 Some(expr) => {
-                    format!("return NVIM9.ITER_RETURN, {}", expr.gen(state))
+                    format!("return vim9.ITER_RETURN, {}", expr.gen(state))
                 }
-                None => "return NVIM9.ITER_RETURN".to_string(),
+                None => "return vim9.ITER_RETURN".to_string(),
             }
         } else {
             match &self.expr {
@@ -828,7 +828,7 @@ fn gen_signature(state: &mut State, args: &Signature) -> (String, String) {
                 match p.ty {
                     Some(Type::BoolOrNumber) => {
                         let name = p.name.gen(state);
-                        format!("{name} = NVIM9.bool({name})")
+                        format!("{name} = vim9.bool({name})")
                     }
                     _ => {
                         let name = p.name.gen(state);
@@ -857,7 +857,7 @@ fn statement_lhs(expr: &Expression, state: &mut State) -> String {
     match &expr {
         Expression::Index(idx) => {
             format!(
-                "{}[NVIM9.index_expr({})]",
+                "{}[vim9.index_expr({})]",
                 idx.container.gen(state),
                 match idx.index.as_ref() {
                     IndexType::Item(item) => item.gen(state),
@@ -920,11 +920,11 @@ impl Generate for IfCommand {
         // for most cases of vim, and we only escalate to Bool when we're confident
         // that this what is happening.
         //
-        // This would allow us to remove the NVIM9.bool condition (assuming the type
+        // This would allow us to remove the vim9.bool condition (assuming the type
         // system is correct in vim9script)
         let condition = match guess_type_of_expr(state, &self.condition) {
             Type::Bool => condition,
-            _ => format!("NVIM9.bool({condition})"),
+            _ => format!("vim9.bool({condition})"),
         };
 
         output.write_lua(
@@ -952,7 +952,7 @@ impl Generate for ElseIfCommand {
     fn write_default(&self, state: &mut State, output: &mut Output) {
         output.write_lua(&format!(
             r#"
-        elseif NVIM9.bool({}) then
+        elseif vim9.bool({}) then
             {}
         "#,
             self.condition.gen(state),
@@ -1009,7 +1009,7 @@ impl Generate for ExecuteCommand {
 impl Generate for Vim9ScriptCommand {
     fn write_default(&self, _: &mut State, output: &mut Output) {
         // TODO: Actually connect this
-        // format!("NVIM9.new_script {{ noclear = {} }}", self.noclear)
+        // format!("vim9.new_script {{ noclear = {} }}", self.noclear)
         // write!(state.lua_contents, "-- vim9script")
         output.write_lua("-- vim9script")
     }
@@ -1118,10 +1118,10 @@ impl Generate for VarCommand {
 
         let expr = match self.ty {
             Some(Type::Bool) => {
-                format!("NVIM9.convert.decl_bool({})", self.expr.gen(state))
+                format!("vim9.convert.decl_bool({})", self.expr.gen(state))
             }
             Some(Type::Dict { .. }) => {
-                format!("NVIM9.convert.decl_dict({})", self.expr.gen(state))
+                format!("vim9.convert.decl_dict({})", self.expr.gen(state))
             }
             _ => self.expr.gen(state),
         };
@@ -1292,7 +1292,7 @@ impl Generate for Ternary {
         };
 
         output.write_lua(&format!(
-            "NVIM9.ternary({}, {if_true}, {if_false})",
+            "vim9.ternary({}, {if_true}, {if_false})",
             self.cond.gen(state),
         ))
     }
@@ -1416,7 +1416,7 @@ impl Generate for PrefixExpression {
                         format!("{operator}{right}")
                     }
                     _ => {
-                        format!("NVIM9.prefix['{:?}']({right})", self.operator,)
+                        format!("vim9.prefix['{:?}']({right})", self.operator,)
                     }
                 }
             }
@@ -1431,14 +1431,14 @@ impl Generate for IndexExpression {
         output.write_lua(&match self.index.as_ref() {
             IndexType::Item(item) => {
                 format!(
-                    "NVIM9.index({}, {})",
+                    "vim9.index({}, {})",
                     self.container.gen(state),
                     item.gen(state)
                 )
             }
             IndexType::Slice(slice) => {
                 format!(
-                    "NVIM9.slice({}, {}, {})",
+                    "vim9.slice({}, {}, {})",
                     self.container.gen(state),
                     slice
                         .start
@@ -1596,11 +1596,11 @@ impl Generate for InfixExpression {
                     format!("{left} .. {right}")
                 }
                 _ => {
-                    format!("NVIM9.ops.{:?}({left}, {right})", self.operator)
+                    format!("vim9.ops.{:?}({left}, {right})", self.operator)
                 }
             }
         } else {
-            format!("NVIM9.ops.{:?}({left}, {right})", self.operator)
+            format!("vim9.ops.{:?}({left}, {right})", self.operator)
         })
 
         // match self.operator {
@@ -1695,7 +1695,7 @@ mod generate_program {
 --  we can't guarantee that local variables will be used by plugins
 -- luacheck: ignore 311
 
-local NVIM9 = require('_vim9script')
+local vim9 = require('_vim9script')
 "#,
         );
 

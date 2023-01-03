@@ -7,7 +7,7 @@
 --  we can't guarantee that local variables will be used by plugins
 -- luacheck: ignore 311
 
-local NVIM9 = require('_vim9script')
+local vim9 = require('_vim9script')
 local l = nil
 describe('filename', function()
   -- vim9script
@@ -19,7 +19,7 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn.assert_equal(1, NVIM9.index(l, 0))
+    vim9.fn.assert_equal(1, vim9.index(l, 0))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -31,7 +31,7 @@ describe('filename', function()
 
     -- Actual test
     local index = 1
-    NVIM9.fn.assert_equal(1, NVIM9.index(l, NVIM9.ops.Minus(index, 1)))
+    vim9.fn.assert_equal(1, vim9.index(l, vim9.ops.Minus(index, 1)))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -42,7 +42,7 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn.assert_equal({ 1, 2 }, NVIM9.slice(l, 0, 1))
+    vim9.fn.assert_equal({ 1, 2 }, vim9.slice(l, 0, 1))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -53,7 +53,7 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn.assert_equal({ 2, 3 }, NVIM9.slice(l, 1, nil))
+    vim9.fn.assert_equal({ 2, 3 }, vim9.slice(l, 1, nil))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -64,7 +64,7 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn.assert_equal({ 1, 2 }, NVIM9.slice(l, nil, 1))
+    vim9.fn.assert_equal({ 1, 2 }, vim9.slice(l, nil, 1))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -75,7 +75,7 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn.assert_equal({ 3 }, NVIM9.slice(l, -1, nil))
+    vim9.fn.assert_equal({ 3 }, vim9.slice(l, -1, nil))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -86,7 +86,7 @@ describe('filename', function()
     vim.v.errors = {}
 
     -- Actual test
-    NVIM9.fn.assert_equal({ 3 }, NVIM9.slice(l, -1, nil))
+    vim9.fn.assert_equal({ 3 }, vim9.slice(l, -1, nil))
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
@@ -98,7 +98,7 @@ describe('filename', function()
 
     -- Actual test
     local foo = 'abcd'
-    NVIM9.fn.assert_equal(NVIM9.slice(foo, nil, -2), 'abc')
+    vim9.fn.assert_equal(vim9.slice(foo, nil, -2), 'abc')
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

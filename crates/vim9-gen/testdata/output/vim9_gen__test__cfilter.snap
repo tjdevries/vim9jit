@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1868
+assertion_line: 1870
 expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unwrap().lua"
 ---
 ----------------------------------------
@@ -12,7 +12,7 @@ expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unw
 --  we can't guarantee that local variables will be used by plugins
 -- luacheck: ignore 311
 
-local NVIM9 = require('_vim9script')
+local vim9 = require('_vim9script')
 local M = {}
 local Qf_filter = nil
 -- vim9script
@@ -35,7 +35,7 @@ local Qf_filter = nil
 -- #
 
 Qf_filter = function(qf, searchpat, bang)
-  qf = NVIM9.bool(qf)
+  qf = vim9.bool(qf)
   local Xgetlist = function() end
   local Xsetlist = function() end
   local cmd = ''
@@ -46,7 +46,7 @@ Qf_filter = function(qf, searchpat, bang)
   local Cond = function() end
   local items = {}
 
-  if NVIM9.bool(qf) then
+  if vim9.bool(qf) then
     Xgetlist = function(...)
       return vim.fn['getqflist'](...)
     end
@@ -90,10 +90,10 @@ Qf_filter = function(qf, searchpat, bang)
     cmd = ':Lfilter' .. bang
   end
 
-  firstchar = NVIM9.index(searchpat, 0)
-  lastchar = NVIM9.slice(searchpat, -1, nil)
+  firstchar = vim9.index(searchpat, 0)
+  lastchar = vim9.slice(searchpat, -1, nil)
   if firstchar == lastchar and (firstchar == '/' or firstchar == '"' or firstchar == "'") then
-    pat = NVIM9.slice(searchpat, 1, -2)
+    pat = vim9.slice(searchpat, 1, -2)
     if pat == '' then
       -- # Use the last search pattern
       pat = vim.fn.getreg('/')
@@ -108,17 +108,17 @@ Qf_filter = function(qf, searchpat, bang)
 
   if bang == '!' then
     Cond = function(_, val)
-      return NVIM9.ops.NotRegexpMatches(val.text, pat)
-        and NVIM9.ops.NotRegexpMatches(NVIM9.fn.bufname(val.bufnr), pat)
+      return vim9.ops.NotRegexpMatches(val.text, pat)
+        and vim9.ops.NotRegexpMatches(vim9.fn.bufname(val.bufnr), pat)
     end
   else
     Cond = function(_, val)
-      return NVIM9.ops.RegexpMatches(val.text, pat)
-        or NVIM9.ops.RegexpMatches(NVIM9.fn.bufname(val.bufnr), pat)
+      return vim9.ops.RegexpMatches(val.text, pat)
+        or vim9.ops.RegexpMatches(vim9.fn.bufname(val.bufnr), pat)
     end
   end
 
-  items = NVIM9.fn_mut('filter', { Xgetlist(), Cond }, { replace = 0 })
+  items = vim9.fn_mut('filter', { Xgetlist(), Cond }, { replace = 0 })
   title = cmd .. ' /' .. pat .. '/'
   Xsetlist({}, ' ', { ['title'] = title, ['items'] = items })
 end
