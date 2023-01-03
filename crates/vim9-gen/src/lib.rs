@@ -591,12 +591,23 @@ impl Generate for UserCommand {
     }
 }
 
+fn get_local(state: &State, name: &Identifier) -> String {
+    if state.is_top_level() || !name.is_valid_local() {
+        ""
+    } else {
+        "local"
+    }
+    .to_string()
+}
+
 impl Generate for DeclCommand {
     fn write_default(&self, state: &mut State, output: &mut Output) {
+        let local = get_local(state, &self.name);
+
         // TODO: default value should not be nil for everything here
         // i think?
         output.write_lua(&format!(
-            "local {} = {}",
+            "{local} {} = {}",
             self.name.gen(state),
             match &self.ty {
                 Some(ty) => match ty {
@@ -730,12 +741,7 @@ impl Generate for DefCommand {
 
         let (signature, sig_statements) = gen_signature(state, &self.args);
 
-        let local = if state.is_top_level() || !self.name.is_valid_local() {
-            ""
-        } else {
-            "local"
-        };
-
+        let local = get_local(state, &self.name);
         let result = if scope.deferred > 0 {
             // TODO: Should probably handle errors in default statements or body
             format!(
@@ -1120,12 +1126,13 @@ impl Generate for VarCommand {
             _ => self.expr.gen(state),
         };
 
+        let local = get_local(state, &self.name);
         match &self.name {
             Identifier::Unpacked(unpacked) => {
                 let identifiers: String = identifier_list(state, &unpacked);
-                output.write_lua(&format!("local {identifiers} = unpack({expr})"))
+                output.write_lua(&format!("{local} {identifiers} = unpack({expr})"))
             }
-            _ => output.write_lua(&format!("local {} = {}", self.name.gen(state), expr)),
+            _ => output.write_lua(&format!("{local} {} = {}", self.name.gen(state), expr)),
         }
     }
 }
@@ -1601,7 +1608,7 @@ fn toplevel_ident(s: &mut State, command: &ExCommand) -> Option<String> {
         ExCommand::ExportCommand(e) => toplevel_ident(s, e.command.as_ref()),
         ExCommand::Heredoc(here) => Some(here.name.gen(s)),
         // This might make sense, but I don't think it allows you to do this?
-        ExCommand::Var(_) => None,
+        ExCommand::Var(var) => Some(var.name.gen(s)),
         // These make sense
         ExCommand::Vim9Script(_) => None,
         ExCommand::Echo(_) => None,

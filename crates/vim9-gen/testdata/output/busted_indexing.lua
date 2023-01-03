@@ -4,10 +4,11 @@
 ----------------------------------------
 
 local NVIM9 = require('_vim9script')
+local l = nil
 describe('filename', function()
   -- vim9script
 
-  local l = { 1, 2, 3 }
+  l = { 1, 2, 3 }
 
   it('Test_can_index', function()
     -- Set errors to empty
