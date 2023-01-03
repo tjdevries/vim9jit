@@ -255,19 +255,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
-name = "full_moon"
-version = "0.15.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1bf176fa61b7bfd03d311cf17618bb8cb16115e9077ab591a847c3437c8a6001"
+name = "format"
+version = "0.1.0"
 dependencies = [
- "bytecount",
- "cfg-if",
- "derive_more",
- "full_moon_derive 0.10.0",
- "paste 0.1.18",
- "peg",
- "serde",
- "smol_str",
+ "stylua",
 ]
 
 [[package]]
@@ -279,23 +270,11 @@ dependencies = [
  "bytecount",
  "cfg-if",
  "derive_more",
- "full_moon_derive 0.11.0",
+ "full_moon_derive",
  "logos",
  "paste 0.1.18",
  "serde",
  "smol_str",
-]
-
-[[package]]
-name = "full_moon_derive"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87826a47a649663aa287e57ea9f31450a56fabcd553a2fe17b2f669f1b5e855b"
-dependencies = [
- "indexmap",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -519,33 +498,6 @@ checksum = "d95a7db200b97ef370c8e6de0088252f7e0dfff7d047a28528e47456c0fc98b6"
 dependencies = [
  "proc-macro-hack",
 ]
-
-[[package]]
-name = "peg"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07c0b841ea54f523f7aa556956fbd293bcbe06f2e67d2eb732b7278aaf1d166a"
-dependencies = [
- "peg-macros",
- "peg-runtime",
-]
-
-[[package]]
-name = "peg-macros"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5aa52829b8decbef693af90202711348ab001456803ba2a98eb4ec8fb70844c"
-dependencies = [
- "peg-runtime",
- "proc-macro2",
- "quote",
-]
-
-[[package]]
-name = "peg-runtime"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c719dcf55f09a3a7e764c6649ab594c18a177e3599c467983cdf644bfc0a4088"
 
 [[package]]
 name = "phf"
@@ -812,34 +764,6 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "stylua"
-version = "0.14.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "666a4fdceeb67c81d05cff3e1a2093c55e13fda0f15076dbb57a98f8cdf950c1"
-dependencies = [
- "anyhow",
- "cfg-if",
- "clap 3.2.22",
- "console",
- "crossbeam-channel",
- "env_logger",
- "full_moon 0.15.1",
- "globset",
- "ignore",
- "lazy_static",
- "log",
- "num_cpus",
- "regex",
- "serde",
- "serde_json",
- "similar",
- "thiserror",
- "threadpool",
- "toml",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "stylua"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e8076fae2bdcda68d184a0d5cc2a93c178048f9d7317055862d735b5cb9f366"
@@ -850,7 +774,7 @@ dependencies = [
  "console",
  "crossbeam-channel",
  "env_logger",
- "full_moon 0.16.2",
+ "full_moon",
  "globset",
  "ignore",
  "lazy_static",
@@ -1036,12 +960,11 @@ name = "vim9-gen"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "format",
  "insta",
  "pretty_assertions",
  "rmp",
  "rmpv",
- "stylua 0.14.3",
- "stylua 0.15.3",
  "vim9-lexer",
  "vim9-parser",
  "vimfuncs",

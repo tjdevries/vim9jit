@@ -1,16 +1,5 @@
 use std::{fmt::Write, fs, path::Path};
 
-fn get_stylua_config() -> stylua_lib::Config {
-    stylua_lib::Config::new()
-        .with_column_width(100)
-        .with_line_endings(stylua_lib::LineEndings::Unix)
-        .with_indent_type(stylua_lib::IndentType::Spaces)
-        .with_indent_width(2)
-        .with_quote_style(stylua_lib::QuoteStyle::AutoPreferSingle)
-        .with_call_parentheses(stylua_lib::CallParenType::Always)
-        .with_collapse_simple_statement(stylua_lib::CollapseSimpleStatement::Never)
-}
-
 fn main() -> anyhow::Result<()> {
     println!("cargo:rerun-if-changed=src/lua/");
 
@@ -95,14 +84,7 @@ fn main() -> anyhow::Result<()> {
     writeln!(&mut file, "")?;
     writeln!(&mut file, "return NVIM9")?;
 
-    // Format the final lib
-    let file = stylua_lib::format_code(
-        &file,
-        get_stylua_config(),
-        None,
-        stylua_lib::OutputVerification::None,
-    )
-    .expect(&format!("to format code: {}", file));
+    let file = format::lua(&file).expect(&format!("to format code: {}", file));
 
     let init_lua = luadir.join("_vim9script.lua");
     fs::write(init_lua, file)?;

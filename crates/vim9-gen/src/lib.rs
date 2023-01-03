@@ -1763,47 +1763,13 @@ pub fn eval(program: parser::Program, opts: ParserOpts) -> anyhow::Result<Output
     Ok(output)
 }
 
-fn get_stylua_config() -> stylua_lib::Config {
-    stylua_lib::Config::new()
-        .with_column_width(100)
-        .with_line_endings(stylua_lib::LineEndings::Unix)
-        .with_indent_type(stylua_lib::IndentType::Spaces)
-        .with_indent_width(2)
-        .with_quote_style(stylua_lib::QuoteStyle::AutoPreferSingle)
-        .with_call_parentheses(stylua_lib::CallParenType::Always)
-        .with_collapse_simple_statement(stylua_lib::CollapseSimpleStatement::Never)
-}
-
 pub fn generate(contents: &str, opts: ParserOpts) -> Result<Output, (Output, String)> {
     let lexer = Lexer::new(contents);
     let parser = new_parser(&lexer);
     let program = parser.parse_program();
 
     let mut result = eval(program, opts).unwrap();
-    // println!("{}", result);
-
-    // Format lua code, so we can actually read it.
-    result.lua = match stylua_lib::format_code(
-        &result.lua,
-        get_stylua_config(),
-        None,
-        stylua_lib::OutputVerification::None,
-    ) {
-        Ok(res) => res,
-        Err(err) => return Err((result, err.to_string())),
-    };
-
-    // Format lua code again... cause I think there's some indeterminism
-    // with crazy generated code :'(
-    result.lua = match stylua_lib::format_code(
-        &result.lua,
-        get_stylua_config(),
-        None,
-        stylua_lib::OutputVerification::None,
-    ) {
-        Ok(res) => res,
-        Err(err) => return Err((result, err.to_string())),
-    };
+    result.lua = format::lua(&result.lua).expect("format lua code");
 
     Ok(result)
 }
