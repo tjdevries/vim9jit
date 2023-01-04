@@ -453,14 +453,14 @@ impl Generate for ImportCommand {
                 Some(name) => {
                     let var = name.gen(state);
                     format!(
-                        "local {var} = vim9.import({{ name = '{file}', autoload = {autoload} }})"
+                        "local {var} = vim9.import({{ name = {file:?}, autoload = {autoload} }})"
                     )
                 }
                 None => {
                     let filepath = Path::new(file);
                     let stem = filepath.file_stem().unwrap().to_str().unwrap();
                     format!(
-                        "local {stem} = vim9.import({{ name = '{file}', autoload = {autoload} }})"
+                        "local {stem} = vim9.import({{ name = {file:?}, autoload = {autoload} }})"
                     )
                 }
             },
@@ -468,7 +468,7 @@ impl Generate for ImportCommand {
                 .iter()
                 .map(|name| {
                     let name = name.gen(state);
-                    format!("local {name} = vim9.import({{ name = '{file}' }})['{name}']")
+                    format!("local {name} = vim9.import({{ name = {file:?} }})['{name}']")
                 })
                 .collect::<Vec<String>>()
                 .join("\n"),
@@ -1733,7 +1733,7 @@ impl Generate for Program {
             r#"" Generated vim file by vim9jit. Please do not edit
 let s:path = expand("<script>")
 let s:lua_path = fnamemodify(s:path, ":r") . ".lua"
-let s:nvim_module = luaeval(printf('require("_vim9script").autoload("%s")', s:lua_path))
+let s:nvim_module = luaeval('require("_vim9script").autoload(_A)', s:lua_path)
 "#,
         );
 
