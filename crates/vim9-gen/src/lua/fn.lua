@@ -12,7 +12,7 @@ end
 
 M.extend = function(left, right, expr3)
   if expr3 ~= nil then
-    error "haven't written this code yet"
+    error("haven't written this code yet")
   end
 
   if vim.tbl_islist(right) then
@@ -39,21 +39,22 @@ end
 
 M.prop_type_add = function(...)
   local args = { ... }
-  print("[prop_type_add]", vim.inspect(args))
+  print('[prop_type_add]', vim.inspect(args))
 end
 
 do
-  local patch_overrides = {
-    -- We do have vim9script :) that's this plugin
-    ["vim9script"] = true,
+  local has_overrides = {
+    -- We do have vim9script ;) that's this plugin
+    ['vim9script'] = true,
 
-    -- Include some vim patches that I don't care about
+    -- Include some vim patches that are sometimes required by variuos vim9script plugins
+    -- that we implement via vim9jit
     [ [[patch-8.2.2261]] ] = true,
     [ [[patch-8.2.4257]] ] = true,
   }
 
   M.has = function(patch)
-    if patch_overrides[patch] then
+    if has_overrides[patch] then
       return true
     end
 
@@ -62,7 +63,7 @@ do
 end
 
 --[=[
-
+Currently missing patch, can be removed in the future.
 
 readdirex({directory} [, {expr} [, {dict}]])			*readdirex()*
 		Extended version of |readdir()|.
@@ -120,34 +121,35 @@ end
 
 M.typename = function(val)
   local ty = type(val)
-  if ty == "string" then
-    return "string"
-  elseif ty == "boolean" then
-    return "bool"
-  elseif ty == "number" then
-    return "number"
+  if ty == 'string' then
+    return 'string'
+  elseif ty == 'boolean' then
+    return 'bool'
+  elseif ty == 'number' then
+    return 'number'
   else
-    error(string.format("typename: %s", val))
+    error(string.format('typename: %s', val))
   end
 end
 
--- Popup menu stuff
-
+-- Popup menu stuff: Could be rolled into other plugin later
+-- but currently is here for testing purposes (and implements
+-- some very simple compat layers at the moment)
 do
   local pos_map = {
-    topleft = "NW",
-    topright = "NE",
-    botleft = "SW",
-    botright = "SE",
+    topleft = 'NW',
+    topright = 'NE',
+    botleft = 'SW',
+    botright = 'SE',
   }
 
-  M.popup_menu = function(what, options)
+  M.popup_menu = function(_, options)
     -- print "OPTIONS:"
 
     local buf = vim.api.nvim_create_buf(false, true)
     local win = vim.api.nvim_open_win(buf, true, {
-      relative = "editor",
-      style = "minimal",
+      relative = 'editor',
+      style = 'minimal',
       anchor = pos_map[options.pos],
       height = options.maxheight or options.minheight,
       width = options.maxwidth or options.minwidth,
@@ -158,17 +160,17 @@ do
     if options.filter then
       local loop
       loop = function()
-        vim.cmd [[redraw!]]
+        vim.cmd([[redraw!]])
         local ok, ch = pcall(vim.fn.getcharstr)
         if not ok then
           return
         end -- interrupted
 
-        if ch == "<C-C>" then
+        if ch == '<C-C>' then
           return
         end
 
-        if not require("vim9script").bool(options.filter(nil, ch)) then
+        if not require('vim9script').bool(options.filter(nil, ch)) then
           vim.cmd.normal(ch)
         end
 
@@ -180,37 +182,28 @@ do
 
     return win
   end
-end
 
-M.popup_settext = function(id, text)
-  if type(text) == "string" then
-    -- text = vim.split(text, "\n")
-    error "Haven't handled string yet"
+  M.popup_settext = function(id, text)
+    if type(text) == 'string' then
+      -- text = vim.split(text, "\n")
+      error("Haven't handled string yet")
+    end
+
+    local lines = {}
+    for _, obj in ipairs(text) do
+      table.insert(lines, obj.text)
+    end
+
+    vim.api.nvim_buf_set_lines(vim.api.nvim_win_get_buf(id), 0, -1, false, lines)
   end
 
-  local lines = {}
-  for _, obj in ipairs(text) do
-    table.insert(lines, obj.text)
+  M.popup_filter_menu = function()
+    print('ok, just pretend we filtered the menu')
   end
 
-  vim.api.nvim_buf_set_lines(vim.api.nvim_win_get_buf(id), 0, -1, false, lines)
-end
-
-M.popup_filter_menu = function()
-  print "ok, just pretend we filtered the menu"
-end
-
-M.popup_setoptions = function(id, options)
-  print("setting options...", id)
-end
-
-M.job_start = function(...)
-  return vim.fn["vim9#job#start"](...)
-end
-
-M.job_status = function()
-  -- LOL
-  return "run"
+  M.popup_setoptions = function(id, _)
+    print('setting options...', id)
+  end
 end
 
 M = setmetatable(M, {

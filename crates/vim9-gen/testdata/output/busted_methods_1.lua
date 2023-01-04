@@ -3,7 +3,11 @@
 -- For any bugs, please first consider reporting there.
 ----------------------------------------
 
-local NVIM9 = require('_vim9script')
+-- Ignore "value assigned to a local variable is unused" because
+--  we can't guarantee that local variables will be used by plugins
+-- luacheck: ignore 311
+
+local vim9 = require('_vim9script')
 describe('filename', function()
   it('Test_method_newline', function()
     -- Set errors to empty
@@ -11,14 +15,14 @@ describe('filename', function()
 
     -- Actual test
     local x = { 1, 2, 3 }
-    NVIM9.fn_mut('filter', {
+    vim9.fn_mut('filter', {
       x,
       function(_, y)
         return y == 2
       end,
     }, { replace = 0 })
 
-    NVIM9.fn['assert_equal']({ 2 }, x)
+    vim9.fn.assert_equal({ 2 }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

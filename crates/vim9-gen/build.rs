@@ -1,15 +1,5 @@
 use std::{fmt::Write, fs, path::Path};
 
-fn get_stylua_config() -> stylua_lib::Config {
-    stylua_lib::Config::new()
-        .with_column_width(100)
-        .with_line_endings(stylua_lib::LineEndings::Unix)
-        .with_indent_type(stylua_lib::IndentType::Spaces)
-        .with_indent_width(2)
-        .with_quote_style(stylua_lib::QuoteStyle::AutoPreferSingle)
-        .with_call_parentheses(stylua_lib::CallParenType::Always)
-}
-
 fn main() -> anyhow::Result<()> {
     println!("cargo:rerun-if-changed=src/lua/");
 
@@ -73,35 +63,28 @@ fn main() -> anyhow::Result<()> {
             .expect("to_str");
 
         let contents = fs::read_to_string(&entry)?;
-        let contents = contents.replace("require('_vim9script')", "NVIM9");
-        let contents = contents.replace("require(\"_vim9script\")", "NVIM9");
-        let contents = contents.replace("require \"_vim9script\"", "NVIM9");
+        let contents = contents.replace("require('_vim9script')", "vim9");
+        let contents = contents.replace("require(\"_vim9script\")", "vim9");
+        let contents = contents.replace("require \"_vim9script\"", "vim9");
 
         if name == "_" {
             writeln!(&mut file, "{}\n", contents)?;
         } else if name == "init" {
             // init.lua declares our base module and it's guaranteed to be first.
-            writeln!(&mut file, "local NVIM9 = (function() {} end)()\n", contents)?;
+            writeln!(&mut file, "local vim9 = (function() {} end)()\n", contents)?;
         } else {
             writeln!(
                 &mut file,
-                "NVIM9['{}'] = (function() {} end)()",
+                "vim9['{}'] = (function() {} end)()",
                 name, contents
             )?;
         }
     }
 
     writeln!(&mut file, "")?;
-    writeln!(&mut file, "return NVIM9")?;
+    writeln!(&mut file, "return vim9")?;
 
-    // Format the final lib
-    let file = stylua_lib::format_code(
-        &file,
-        get_stylua_config(),
-        None,
-        stylua_lib::OutputVerification::None,
-    )
-    .expect(&format!("to format code: {}", file));
+    let file = format::lua(&file).expect(&format!("to format code: {}", file));
 
     let init_lua = luadir.join("_vim9script.lua");
     fs::write(init_lua, file)?;

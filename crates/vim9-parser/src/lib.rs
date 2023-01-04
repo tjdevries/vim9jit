@@ -803,8 +803,11 @@ impl Identifier {
         match self {
             Identifier::Raw(_) => true,
             Identifier::Scope(_) => false,
-            Identifier::Unpacked(_) => todo!(),
             Identifier::Ellipsis => false,
+            Identifier::Unpacked(unpacked) => unpacked
+                .identifiers
+                .iter()
+                .all(|ident| ident.is_valid_local()),
         }
     }
 

@@ -8,7 +8,7 @@
 -- to change at any time.
 -------------------------------------------------------------------------------
 
-local NVIM9 = (function()
+local vim9 = (function()
   local M = {}
 
   M.ternary = function(cond, if_true, if_false)
@@ -176,17 +176,17 @@ function! _Vim9ScriptFn(name, args) abort
 endfunction
 ]])
 
-NVIM9['autoload'] = (function()
+vim9['autoload'] = (function()
   return function(path)
     return loadfile(path)()
   end
 end)()
-NVIM9['bool'] = (function()
+vim9['bool'] = (function()
   return function(...)
-    return NVIM9.convert.to_vim_bool(...)
+    return vim9.convert.to_vim_bool(...)
   end
 end)()
-NVIM9['convert'] = (function()
+vim9['convert'] = (function()
   local M = {}
 
   M.decl_bool = function(val)
@@ -239,7 +239,7 @@ NVIM9['convert'] = (function()
 
   return M
 end)()
-NVIM9['fn'] = (function()
+vim9['fn'] = (function()
   local M = {}
 
   M.insert = function(list, item, idx)
@@ -285,17 +285,18 @@ NVIM9['fn'] = (function()
   end
 
   do
-    local patch_overrides = {
-      -- We do have vim9script :) that's this plugin
+    local has_overrides = {
+      -- We do have vim9script ;) that's this plugin
       ['vim9script'] = true,
 
-      -- Include some vim patches that I don't care about
+      -- Include some vim patches that are sometimes required by variuos vim9script plugins
+      -- that we implement via vim9jit
       [ [[patch-8.2.2261]] ] = true,
       [ [[patch-8.2.4257]] ] = true,
     }
 
     M.has = function(patch)
-      if patch_overrides[patch] then
+      if has_overrides[patch] then
         return true
       end
 
@@ -304,7 +305,7 @@ NVIM9['fn'] = (function()
   end
 
   --[=[
-
+Currently missing patch, can be removed in the future.
 
 readdirex({directory} [, {expr} [, {dict}]])			*readdirex()*
 		Extended version of |readdir()|.
@@ -373,8 +374,9 @@ readdirex({directory} [, {expr} [, {dict}]])			*readdirex()*
     end
   end
 
-  -- Popup menu stuff
-
+  -- Popup menu stuff: Could be rolled into other plugin later
+  -- but currently is here for testing purposes (and implements
+  -- some very simple compat layers at the moment)
   do
     local pos_map = {
       topleft = 'NW',
@@ -383,7 +385,7 @@ readdirex({directory} [, {expr} [, {dict}]])			*readdirex()*
       botright = 'SE',
     }
 
-    M.popup_menu = function(what, options)
+    M.popup_menu = function(_, options)
       -- print "OPTIONS:"
 
       local buf = vim.api.nvim_create_buf(false, true)
@@ -422,37 +424,28 @@ readdirex({directory} [, {expr} [, {dict}]])			*readdirex()*
 
       return win
     end
-  end
 
-  M.popup_settext = function(id, text)
-    if type(text) == 'string' then
-      -- text = vim.split(text, "\n")
-      error("Haven't handled string yet")
+    M.popup_settext = function(id, text)
+      if type(text) == 'string' then
+        -- text = vim.split(text, "\n")
+        error("Haven't handled string yet")
+      end
+
+      local lines = {}
+      for _, obj in ipairs(text) do
+        table.insert(lines, obj.text)
+      end
+
+      vim.api.nvim_buf_set_lines(vim.api.nvim_win_get_buf(id), 0, -1, false, lines)
     end
 
-    local lines = {}
-    for _, obj in ipairs(text) do
-      table.insert(lines, obj.text)
+    M.popup_filter_menu = function()
+      print('ok, just pretend we filtered the menu')
     end
 
-    vim.api.nvim_buf_set_lines(vim.api.nvim_win_get_buf(id), 0, -1, false, lines)
-  end
-
-  M.popup_filter_menu = function()
-    print('ok, just pretend we filtered the menu')
-  end
-
-  M.popup_setoptions = function(id, options)
-    print('setting options...', id)
-  end
-
-  M.job_start = function(...)
-    return vim.fn['vim9#job#start'](...)
-  end
-
-  M.job_status = function()
-    -- LOL
-    return 'run'
+    M.popup_setoptions = function(id, _)
+      print('setting options...', id)
+    end
   end
 
   M = setmetatable(M, {
@@ -461,7 +454,7 @@ readdirex({directory} [, {expr} [, {dict}]])			*readdirex()*
 
   return M
 end)()
-NVIM9['heredoc'] = (function()
+vim9['heredoc'] = (function()
   local M = {}
 
   M.trim = function(lines)
@@ -481,7 +474,7 @@ NVIM9['heredoc'] = (function()
 
   return M
 end)()
-NVIM9['import'] = (function()
+vim9['import'] = (function()
   local imported = {}
   imported.autoload = setmetatable({}, {
     __index = function(_, name)
@@ -539,8 +532,8 @@ NVIM9['import'] = (function()
     error('Unhandled case' .. vim.inspect(info) .. vim.inspect(debug_info))
   end
 end)()
-NVIM9['ops'] = (function()
-  local lib = NVIM9
+vim9['ops'] = (function()
+  local lib = vim9
 
   local M = {}
 
@@ -615,8 +608,8 @@ NVIM9['ops'] = (function()
 
   return M
 end)()
-NVIM9['prefix'] = (function()
-  local lib = NVIM9
+vim9['prefix'] = (function()
+  local lib = vim9
 
   local M = {}
 
@@ -631,4 +624,4 @@ NVIM9['prefix'] = (function()
   return M
 end)()
 
-return NVIM9
+return vim9

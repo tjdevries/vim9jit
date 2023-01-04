@@ -2,13 +2,13 @@ local M = {}
 
 M.ternary = function(cond, if_true, if_false)
   if cond then
-    if type(if_true) == "function" then
+    if type(if_true) == 'function' then
       return if_true()
     else
       return if_true
     end
   else
-    if type(if_false) == "function" then
+    if type(if_false) == 'function' then
       return if_false()
     else
       return if_false
@@ -32,7 +32,7 @@ M.fn_mut = function(name, args, info)
 end
 
 M.replace = function(orig, new)
-  if type(orig) == "table" and type(new) == "table" then
+  if type(orig) == 'table' and type(new) == 'table' then
     for k in pairs(orig) do
       orig[k] = nil
     end
@@ -54,22 +54,22 @@ M.index = function(obj, idx)
     else
       return obj[idx + 1]
     end
-  elseif type(obj) == "table" then
+  elseif type(obj) == 'table' then
     return obj[idx]
-  elseif type(obj) == "string" then
+  elseif type(obj) == 'string' then
     return string.sub(obj, idx + 1, idx + 1)
   end
 
-  error("invalid type for indexing: " .. vim.inspect(obj))
+  error('invalid type for indexing: ' .. vim.inspect(obj))
 end
 
 M.index_expr = function(idx)
-  if type(idx) == "string" then
+  if type(idx) == 'string' then
     return idx
-  elseif type(idx) == "number" then
+  elseif type(idx) == 'number' then
     return idx + 1
   else
-    error(string.format("not yet handled: %s", vim.inspect(idx)))
+    error(string.format('not yet handled: %s', vim.inspect(idx)))
   end
 end
 
@@ -81,7 +81,7 @@ M.slice = function(obj, start, finish)
   if start < 0 then
     start = #obj + start
   end
-  assert(type(start) == "number")
+  assert(type(start) == 'number')
 
   if finish == nil then
     finish = #obj
@@ -90,15 +90,15 @@ M.slice = function(obj, start, finish)
   if finish < 0 then
     finish = #obj + finish
   end
-  assert(type(finish) == "number")
+  assert(type(finish) == 'number')
 
   local slicer
   if vim.tbl_islist(obj) then
     slicer = vim.list_slice
-  elseif type(obj) == "string" then
+  elseif type(obj) == 'string' then
     slicer = string.sub
   else
-    error("invalid type for slicing: " .. vim.inspect(obj))
+    error('invalid type for slicing: ' .. vim.inspect(obj))
   end
 
   return slicer(obj, start + 1, finish + 1)
@@ -111,16 +111,16 @@ end
 -- work well for calling ":source X" from within a vimscript/vim9script
 -- function
 M.make_source_cmd = function()
-  local group = vim.api.nvim_create_augroup("vim9script-source", {})
-  vim.api.nvim_create_autocmd("SourceCmd", {
-    pattern = "*.vim",
+  local group = vim.api.nvim_create_augroup('vim9script-source', {})
+  vim.api.nvim_create_autocmd('SourceCmd', {
+    pattern = '*.vim',
     group = group,
     callback = function(a)
       local file = vim.fn.readfile(a.file)
       for _, line in ipairs(file) do
         -- TODO: Or starts with def <something>
         --  You can use def in legacy vim files
-        if vim.startswith(line, "vim9script") then
+        if vim.startswith(line, 'vim9script') then
           -- TODO: Use the rust lib to actually
           -- generate the corresponding lua code and then
           -- execute that (instead of sourcing it directly)
@@ -128,7 +128,7 @@ M.make_source_cmd = function()
         end
       end
 
-      vim.api.nvim_exec(table.concat(file, "\n"), false)
+      vim.api.nvim_exec(table.concat(file, '\n'), false)
     end,
   })
 end

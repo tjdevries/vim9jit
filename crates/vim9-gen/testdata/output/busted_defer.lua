@@ -3,7 +3,11 @@
 -- For any bugs, please first consider reporting there.
 ----------------------------------------
 
-local NVIM9 = require('_vim9script')
+-- Ignore "value assigned to a local variable is unused" because
+--  we can't guarantee that local variables will be used by plugins
+-- luacheck: ignore 311
+
+local vim9 = require('_vim9script')
 local MyDefer = nil
 local RangeDefer = nil
 describe('filename', function()
@@ -44,15 +48,15 @@ describe('filename', function()
     local _, ret = pcall(function()
       local x = {}
       table.insert(nvim9_deferred, 1, function()
-        NVIM9.fn['add'](x, 1)
+        vim9.fn.add(x, 1)
       end)
 
       table.insert(nvim9_deferred, 1, function()
-        NVIM9.fn['add'](x, 2)
+        vim9.fn.add(x, 2)
       end)
 
       table.insert(nvim9_deferred, 1, function()
-        NVIM9.fn['add'](x, 3)
+        vim9.fn.add(x, 3)
       end)
 
       return x
@@ -70,9 +74,9 @@ describe('filename', function()
     local _, ret = pcall(function()
       local x = {}
 
-      for _, i in NVIM9.iter(NVIM9.fn['range'](3)) do
+      for _, i in vim9.iter(vim9.fn.range(3)) do
         table.insert(nvim9_deferred, 1, function()
-          NVIM9.fn['add'](x, i)
+          vim9.fn.add(x, i)
         end)
       end
 
@@ -92,10 +96,10 @@ describe('filename', function()
 
     -- Actual test
     local x = MyDefer()
-    NVIM9.fn['assert_equal']({ 3, 2, 1 }, x)
+    vim9.fn.assert_equal({ 3, 2, 1 }, x)
 
     local y = RangeDefer()
-    NVIM9.fn['assert_equal']({ 3, 2, 1 }, x)
+    vim9.fn.assert_equal({ 3, 2, 1 }, x)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)

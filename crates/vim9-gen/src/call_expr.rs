@@ -248,10 +248,18 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
 
     match func_data {
         FunctionData::ApiFunc { name, args } => {
-            format!("vim.api['{}']({})", name, args.gen(state))
+            if crate::ident::is_safe_str(&name) {
+                format!("vim.api.{}({})", name, args.gen(state))
+            } else {
+                format!("vim.api['{}']({})", name, args.gen(state))
+            }
         }
         FunctionData::VimFunc(VimFunc { name, args }) => {
-            format!("NVIM9.fn['{}']({})", name, args.gen(state))
+            if crate::ident::is_safe_str(&name) {
+                format!("vim9.fn.{}({})", name, args.gen(state))
+            } else {
+                format!("vim9.fn['{}']({})", name, args.gen(state))
+            }
         }
         FunctionData::VimFuncRef { name, arglist, .. } => match arglist {
             Some(arglist) => {
@@ -294,7 +302,7 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
 }
 
 fn generate_mutable_fn_call(name: &str, args: &str, replace: &str) -> String {
-    return format!("NVIM9.fn_mut('{name}', {{ {args} }}, {{ replace = {replace} }})");
+    return format!("vim9.fn_mut('{name}', {{ {args} }}, {{ replace = {replace} }})");
 }
 
 pub fn generate_method(method: &parser::MethodCall, state: &mut State) -> String {

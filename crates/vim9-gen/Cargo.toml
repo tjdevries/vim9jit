@@ -9,9 +9,9 @@ edition = "2021"
 lexer = { path = "../vim9-lexer", package = "vim9-lexer" }
 parser = { path = "../vim9-parser", package = "vim9-parser" }
 vimfuncs = { path = "../vimfuncs" }
+format = { path = "../format" }
 
 anyhow = "1.0.62"
-stylua = "0.14.3"
 
 rmp = "0.8.11"
 rmpv = "1.0.0"
@@ -23,5 +23,5 @@ insta = "1.19.0"
 pretty_assertions = "1.3.0"
 
 [build-dependencies]
-stylua = "0.14.3"
 anyhow = "1.0.62"
+format = { path = "../format" }
