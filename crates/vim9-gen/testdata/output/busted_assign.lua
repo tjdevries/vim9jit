@@ -8,6 +8,7 @@
 -- luacheck: ignore 311
 
 local vim9 = require('_vim9script')
+local M = {}
 describe('filename', function()
   -- vim9script
 
@@ -129,3 +130,4 @@ describe('filename', function()
     assert.are.same({}, vim.v.errors)
   end)
 end)
+return M

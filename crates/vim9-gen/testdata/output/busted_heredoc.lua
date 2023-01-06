@@ -8,6 +8,7 @@
 -- luacheck: ignore 311
 
 local vim9 = require('_vim9script')
+local M = {}
 describe('filename', function()
   -- vim9script
 
@@ -72,3 +73,4 @@ describe('filename', function()
   -- #   assert_equal(["    "hello"", "  world"], x)
   -- # enddef
 end)
+return M

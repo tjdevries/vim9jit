@@ -38,3 +38,30 @@ def Test_insert_inplace()
   reverse(sort(foo))
   assert_equal([3, 2, 1], foo)
 enddef
+
+def Test_can_do_funcref()
+  def MyDoubler(x: number): number
+    return x * 2
+  enddef
+
+  var Doubler = function(MyDoubler, [1])
+  assert_equal(Doubler(), 2)
+enddef
+
+def Test_can_do_str_for_vimfuncs()
+  var Lengther = function('len', ['foo'])
+  assert_equal(Lengther(), 3)
+enddef
+
+
+# Can't do this yet
+# def Test_can_do_forward_funcref()
+#   var something = 'MyDoubler'
+#   var StrDoubler = function(something, [1])
+#
+#   def MyDoubler(x: number): number
+#     return x *2
+#   enddef
+#
+#   assert_equal(StrDoubler(), 2)
+# enddef

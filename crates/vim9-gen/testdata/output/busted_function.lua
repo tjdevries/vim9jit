@@ -8,6 +8,7 @@
 -- luacheck: ignore 311
 
 local vim9 = require('_vim9script')
+local M = {}
 describe('filename', function()
   -- vim9script
 
@@ -79,4 +80,52 @@ describe('filename', function()
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
   end)
+
+  it('Test_can_do_funcref', function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
+
+    local MyDoubler = function(x)
+      return vim9.ops.Multiply(x, 2)
+    end
+
+    local Doubler = function(...)
+      return vim9.fn_ref(M, MyDoubler, vim.deepcopy({ 1 }), ...)
+    end
+
+    vim9.fn.assert_equal(Doubler(), 2)
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  it('Test_can_do_str_for_vimfuncs', function()
+    -- Set errors to empty
+    vim.v.errors = {}
+
+    -- Actual test
+    local Lengther = function(...)
+      return vim9.fn_ref(M, 'len', vim.deepcopy({ 'foo' }), ...)
+    end
+
+    vim9.fn.assert_equal(Lengther(), 3)
+
+    -- Assert that errors is still empty
+    assert.are.same({}, vim.v.errors)
+  end)
+
+  -- # Can't do this yet
+  -- # def Test_can_do_forward_funcref()
+  -- #   var something = 'MyDoubler'
+  -- #   var StrDoubler = function(something, [1])
+  -- #
+  -- #   def MyDoubler(x: number): number
+  -- #     return x *2
+  -- #   enddef
+  -- #
+  -- #   assert_equal(StrDoubler(), 2)
+  -- # enddef
 end)
+return M

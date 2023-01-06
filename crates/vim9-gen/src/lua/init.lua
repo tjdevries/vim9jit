@@ -16,6 +16,29 @@ M.ternary = function(cond, if_true, if_false)
   end
 end
 
+M.fn_ref = function(module, name, copied, ...)
+  for _, val in ipairs({ ... }) do
+    table.insert(copied, val)
+  end
+
+  local funcref = name
+  if type(funcref) == 'function' then
+    return funcref(unpack(copied))
+  elseif type(funcref) == 'string' then
+    if vim.fn.exists('*' .. funcref) == 1 then
+      return vim.fn[funcref](unpack(copied))
+    end
+
+    if module[funcref] then
+      module[funcref](unpack(copied))
+    end
+
+    error('unknown function: ' .. funcref)
+  else
+    error(string.format('unable to call funcref: %s', funcref))
+  end
+end
+
 M.fn_mut = function(name, args, info)
   local result = vim.fn._Vim9ScriptFn(name, args)
   for idx, val in pairs(result[2]) do

@@ -263,26 +263,18 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
         }
         FunctionData::VimFuncRef { name, arglist, .. } => match arglist {
             Some(arglist) => {
+                let arglist = arglist.gen(state);
+                let name = name.gen(state);
+
+                // TODO: How does vim9script handle mutability for funcrefs
+                // and their args? If you pass a list, does it let you mutate
+                // that list and the next call it changes? probably yes...
                 format!(
                     r#"
-                            function(...)
-                              local copied = vim.deepcopy({})
-                              for _, val in ipairs({{...}}) do
-                                table.insert(copied, val)
-                              end
-
-                              local funcref = {}
-                              if type(funcref) == "function" then
-                                return funcref(unpack(copied))
-                              elseif type(funcref) == "string" then
-                                return vim.fn[funcref](unpack(copied))
-                              else
-                                error(string.format("unable to call funcref: %s", funcref))
-                              end
-                            end
-                            "#,
-                    arglist.gen(state),
-                    name.gen(state)
+function(...)
+  return vim9.fn_ref(M, {name}, vim.deepcopy({arglist}), ...)
+end
+                    "#,
                 )
             }
             None => {

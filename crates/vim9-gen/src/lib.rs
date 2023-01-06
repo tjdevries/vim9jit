@@ -1684,7 +1684,7 @@ fn toplevel_ident(s: &mut State, command: &ExCommand) -> Option<String> {
 mod generate_program {
     use super::*;
 
-    pub fn preamble(state: &State, output: &mut Output) {
+    pub fn preamble(_: &State, output: &mut Output) {
         output.write_lua(
             r#"
 ----------------------------------------
@@ -1697,12 +1697,9 @@ mod generate_program {
 -- luacheck: ignore 311
 
 local vim9 = require('_vim9script')
+local M = {}
 "#,
         );
-
-        if state.opts.mode != ParserMode::Test {
-            output.write_lua("local M = {}\n");
-        }
     }
 
     // "hoist" top-level declaractions to top of program, to ensure proper names
@@ -1752,6 +1749,7 @@ let s:nvim_module = luaeval('require("_vim9script").autoload(_A)', s:lua_path)
         }
 
         output.write_lua("end)");
+        output.write_lua("return M");
     }
 }
 
