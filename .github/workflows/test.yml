@@ -18,12 +18,12 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install latest nightly rust
-        uses: actions-rs/toolchain@v1
-        with:
-            toolchain: nightly
-            override: true
-            components: rustfmt, clippy
+      # - name: Install latest nightly rust
+      #   uses: actions-rs/toolchain@v1
+      #   with:
+      #       toolchain: nightly
+      #       override: true
+      #       components: rustfmt, clippy
 
       - name: Run cargo clippy (workspace)
         uses: actions-rs/cargo@v1
