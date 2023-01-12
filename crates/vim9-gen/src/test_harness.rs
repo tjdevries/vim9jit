@@ -10,6 +10,7 @@ use rmpv::{decode::read_value, encode::write_value, Value};
 
 pub fn exec_busted(path: &str) -> Result<()> {
     let child = Command::new("nvim")
+        .current_dir(concat!(env!("CARGO_MANIFEST_DIR"), "/../../"))
         .args(["--headless", "-c", &format!("PlenaryBustedFile {path}")])
         .stdout(Stdio::piped())
         .spawn()?;
