@@ -25,7 +25,7 @@ impl DeferCommand {
                     .into();
 
                 // Create the call expr from the first base expression
-                let right = CallExpression::parse(parser, base).expect("call").into();
+                let right = CallExpression::parse(parser, base).expect("call");
 
                 // Closing on right paren, DO NOT advance
                 parser

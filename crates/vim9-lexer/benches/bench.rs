@@ -6,7 +6,7 @@ extern crate test;
 fn lexer_handler(b: &mut test::Bencher) {
     b.iter(|| {
         let contents = include_str!("/home/tjdevries/git/lsp/src/autoload/lsp/handlers.vim");
-        let lexer = vim9_lexer::Lexer::new(&contents);
+        let lexer = vim9_lexer::Lexer::new(contents);
 
         let mut res = vec![];
         loop {
@@ -18,10 +18,10 @@ fn lexer_handler(b: &mut test::Bencher) {
 
                     res.push(tok);
                 }
-                Err(err) => assert!(false, "error: {:?}", err),
+                Err(err) => panic!("error: {err:?}"),
             }
         }
 
-        assert!(res.len() > 0, "Must have some items");
+        assert!(!res.is_empty(), "Must have some items");
     });
 }

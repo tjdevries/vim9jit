@@ -55,7 +55,7 @@ impl<'a> From<&Token<'a>> for TokenMeta {
     }
 }
 
-impl<'a> From<Ref<'_, Token<'_>>> for TokenMeta {
+impl From<Ref<'_, Token<'_>>> for TokenMeta {
     fn from(t: Ref<'_, Token<'_>>) -> Self {
         Self {
             kind: t.kind.clone(),
@@ -64,7 +64,7 @@ impl<'a> From<Ref<'_, Token<'_>>> for TokenMeta {
     }
 }
 
-impl<'a> From<TokenOwned> for TokenMeta {
+impl From<TokenOwned> for TokenMeta {
     fn from(t: TokenOwned) -> Self {
         Self {
             kind: t.kind,
@@ -110,7 +110,7 @@ impl<'a> From<&Token<'a>> for TokenOwned {
     }
 }
 
-impl<'a> From<Ref<'_, Token<'_>>> for TokenOwned {
+impl From<Ref<'_, Token<'_>>> for TokenOwned {
     fn from(t: Ref<'_, Token<'_>>) -> Self {
         Self {
             kind: t.kind.clone(),
@@ -311,12 +311,12 @@ impl Debug for CallExpression {
     }
 }
 
-impl Into<CallExpression> for &CallCommand {
-    fn into(self) -> CallExpression {
+impl From<&CallCommand> for CallExpression {
+    fn from(val: &CallCommand) -> Self {
         CallExpression {
-            expr: self.expr.clone().into(),
+            expr: val.expr.clone().into(),
             open: Token::fake().into(),
-            args: self.args.clone(),
+            args: val.args.clone(),
             close: Token::fake().into(),
         }
     }
@@ -369,11 +369,11 @@ impl ImportCommand {
                     names
                 },
                 from: parser.expect_identifier_with_text("from")?.into(),
-                file: parser.pop().text.to_string(),
+                file: parser.pop().text,
                 eol: parser.expect_eol()?,
             },
             TokenKind::Identifier | TokenKind::SingleQuoteString | TokenKind::DoubleQuoteString => {
-                let autoload = if parser.front_ref().text.eq("autoload") {
+                let autoload = if parser.front_ref().text.equals("autoload") {
                     parser.next_token();
                     true
                 } else {
@@ -383,9 +383,9 @@ impl ImportCommand {
                 ImportCommand::ImportImplicit {
                     import,
                     autoload,
-                    file: parser.pop().text.to_string(),
+                    file: parser.pop().text,
                     name: {
-                        if parser.front_ref().text.eq("as") {
+                        if parser.front_ref().text.equals("as") {
                             // pop as
                             parser.pop();
 
@@ -418,7 +418,7 @@ impl SharedCommand {
             let tok = parser.pop();
 
             if prev_end > tok.span.start_col {
-                panic!("failed to make shared command: {:#?}", parser);
+                panic!("failed to make shared command: {parser:#?}");
             }
 
             contents += " ".repeat(tok.span.start_col - prev_end).as_str();
@@ -558,11 +558,11 @@ impl<'a> TryFrom<Token<'a>> for Literal {
     }
 }
 
-impl<'a> TryFrom<TokenOwned> for Literal {
+impl TryFrom<TokenOwned> for Literal {
     type Error = anyhow::Error;
 
     fn try_from(token: TokenOwned) -> Result<Self> {
-        let token: TokenOwned = token.into();
+        let token: TokenOwned = token;
         Ok(match token.kind {
             TokenKind::Identifier => Self { token },
             TokenKind::Mul => Self { token },
@@ -771,8 +771,8 @@ impl Debug for Identifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Identifier::Raw(raw) => write!(f, "Raw({})", raw.name),
-            Identifier::Scope(scope) => write!(f, "Scope({:?})", scope),
-            Identifier::Unpacked(unpack) => write!(f, "Unpack({:?})", unpack),
+            Identifier::Scope(scope) => write!(f, "Scope({scope:?})"),
+            Identifier::Unpacked(unpack) => write!(f, "Unpack({unpack:?})"),
             Identifier::Ellipsis => write!(f, "<Ellipsis>"),
         }
     }
@@ -848,7 +848,7 @@ impl Identifier {
                         current
                     );
 
-                    current.text.to_string()
+                    current.text
                 },
             }),
         })
@@ -867,9 +867,9 @@ pub struct RawIdentifier {
     pub name: String,
 }
 
-impl Into<Expression> for RawIdentifier {
-    fn into(self) -> Expression {
-        Expression::Identifier(Identifier::Raw(self))
+impl From<RawIdentifier> for Expression {
+    fn from(val: RawIdentifier) -> Self {
+        Expression::Identifier(Identifier::Raw(val))
     }
 }
 
@@ -1039,11 +1039,9 @@ impl Lambda {
                 } else {
                     Body {
                         commands: {
-                            let mut v = Vec::new();
-                            v.push(ExCommand::Return(ReturnCommand::fake(Some(
+                            vec![ExCommand::Return(ReturnCommand::fake(Some(
                                 parser.parse_expression(Precedence::Lowest)?,
-                            ))));
-                            v
+                            )))]
                         },
                     }
                 }
@@ -1114,11 +1112,11 @@ impl IndexType {
         }
 
         let right = Expression::parse(parser, Precedence::Lowest)?;
-        return Ok(IndexType::Slice(VimSlice {
+        Ok(IndexType::Slice(VimSlice {
             start: left,
             colon,
             finish: Some(right.into()),
-        }));
+        }))
     }
 }
 
@@ -1429,10 +1427,7 @@ impl VarCommand {
     }
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
         let var = parser.expect_token(TokenKind::Identifier)?;
-        anyhow::ensure!(matches!(
-            var.text.to_string().as_str(),
-            "var" | "const" | "final"
-        ));
+        anyhow::ensure!(matches!(var.text.as_str(), "var" | "const" | "final"));
 
         let var: TokenMeta = var.into();
 
@@ -1490,7 +1485,7 @@ impl VarCommand {
                     }
 
                     if parser.front_kind() == TokenKind::EndOfFile {
-                        panic!("Failed to do the stuffs... {:?}", contents);
+                        panic!("Failed to do the stuffs... {contents:?}");
                     }
 
                     parser.next_token();
@@ -1813,13 +1808,13 @@ mod infix_expr {
             container: left,
             dot: parser.expect_token(TokenKind::Dot)?.into(),
             index: RawIdentifier {
-                name: parser.front_owned().text.to_string(),
+                name: parser.front_owned().text,
             },
         }))
     }
 
     pub fn parse_method_call(parser: &Parser, left: Box<Expression>) -> Result<Expression> {
-        MethodCall::parse(&parser, left)
+        MethodCall::parse(parser, left)
     }
 
     pub fn parse_colon(parser: &Parser, left: Box<Expression>) -> Result<Expression> {
@@ -1865,14 +1860,11 @@ mod infix_expr {
         );
 
         if parser.front_kind() == TokenKind::RightBracket {
-            return Ok(Expression::Slice(
-                VimSlice {
-                    start: Some(left),
-                    colon: colon.into(),
-                    finish: None,
-                }
-                .into(),
-            ));
+            return Ok(Expression::Slice(VimSlice {
+                start: Some(left),
+                colon: colon.into(),
+                finish: None,
+            }));
         }
 
         todo!(
@@ -1890,7 +1882,7 @@ mod infix_expr {
             container: left,
             open: parser.expect_token(TokenKind::LeftBracket)?.into(),
             index: IndexType::parse(parser)?.into(),
-            close: parser.ensure_token(TokenKind::RightBracket)?.into(),
+            close: parser.ensure_token(TokenKind::RightBracket)?,
         }))
     }
 
@@ -2062,17 +2054,13 @@ impl<'a> Parser<'a> {
                 break;
             }
 
-            if post_whitespace.is_none() {
-                if !kind.is_whitespace() {
-                    post_whitespace = Some(self.peek_n(peek_index));
-                }
+            if post_whitespace.is_none() && !kind.is_whitespace() {
+                post_whitespace = Some(self.peek_n(peek_index));
             }
 
-            if post_comment.is_none() {
-                if !kind.is_whitespace() && kind != TokenKind::Comment {
-                    post_comment = Some(self.peek_n(peek_index));
-                    break;
-                }
+            if post_comment.is_none() && !kind.is_whitespace() && kind != TokenKind::Comment {
+                post_comment = Some(self.peek_n(peek_index));
+                break;
             }
 
             peek_index += 1;
@@ -2394,7 +2382,7 @@ impl<'a> Parser<'a> {
         let tokens = self.token_buffer.borrow();
         match tokens.len() {
             0 | 1 => panic!("Should always have a least 2 entries"),
-            len if len - 1 >= n => (&tokens[n]).into(),
+            len if len > n => (&tokens[n]).into(),
             len => {
                 drop(tokens);
                 self.fill_buffer(n);
@@ -2424,7 +2412,7 @@ impl<'a> Parser<'a> {
     }
 
     fn command_match(&self, full: &str) -> bool {
-        self.front_ref().text.eq(full)
+        self.front_ref().text.equals(full)
     }
 
     pub fn parse_command(&self) -> Result<ExCommand> {
@@ -2439,7 +2427,7 @@ impl<'a> Parser<'a> {
         // Perhaps return as separate item/note for ExCommand, or return as tuple.
         //  Could additionally be added as ExCommand parent type or something.
         //  Will just be an annoying amount of writing :)
-        if self.front_ref().text.eq("silent") {
+        if self.front_ref().text.equals("silent") {
             self.next_token();
             if self.front_kind() == Bang {
                 self.next_token();
@@ -2457,11 +2445,11 @@ impl<'a> Parser<'a> {
         // generally speaking.
         Ok(match &self.front_kind() {
             // Whitespace
-            EndOfFile => ExCommand::NoOp(self.pop().into()),
-            EndOfLine => ExCommand::NoOp(self.pop().into()),
+            EndOfFile => ExCommand::NoOp(self.pop()),
+            EndOfLine => ExCommand::NoOp(self.pop()),
 
             // Comments
-            Comment => ExCommand::Comment(self.pop().into()),
+            Comment => ExCommand::Comment(self.pop()),
 
             Identifier => {
                 if self.command_match("vim9script") {
@@ -2480,7 +2468,7 @@ impl<'a> Parser<'a> {
                 } else if self.command_match("def") {
                     DefCommand::parse(self)?
                 } else if self.command_match("if") {
-                    return Ok(IfCommand::parse(self)?);
+                    return IfCommand::parse(self);
                 } else if self.command_match("return") {
                     ReturnCommand::parse(self)?
                 } else if self.command_match("finish") {
@@ -2495,21 +2483,24 @@ impl<'a> Parser<'a> {
                     AutocmdCommand::parse(self)?
                 } else if self.command_match("command") {
                     UserCommand::parse(self)?
-                } else if self.command_match("set") || self.command_match("setlocal") {
-                    SharedCommand::parse(self)?
-                } else if self.command_match("nnoremap")
+                } else if
+                // Set commands
+                self.command_match("set") || self.command_match("setlocal") ||
+                // Map commands
+                self.command_match("nnoremap")
                     || self.command_match("inoremap")
                     || self.command_match("anoremenu")
                     || self.command_match("normal")
                 {
+                    // Mapping commands
                     SharedCommand::parse(self)?
                 } else if self.command_match("unlet") {
                     println!("TODO: UNLET");
-                    return Ok(SharedCommand::parse(self)?);
+                    return SharedCommand::parse(self);
                 } else if self.command_match("for") {
                     ForCommand::parse(self)?
                 } else if self.command_match("while") {
-                    return Ok(WhileCommand::parse(self)?);
+                    return WhileCommand::parse(self);
                 } else if self.command_match("try") {
                     TryCommand::parse(self)?
                 } else if self.command_match("defer") {
@@ -2566,8 +2557,7 @@ impl<'a> Parser<'a> {
             let command = match self.parse_command() {
                 Ok(command) => command,
                 Err(err) => panic!(
-                    "\nFailed to parse command.\nCurrent Commands:{:#?}.\nError: {}",
-                    program, err
+                    "\nFailed to parse command.\nCurrent Commands:{program:#?}.\nError: {err}"
                 ),
             };
             // let command = self.parse_command().unwrap();
@@ -2646,7 +2636,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_identifier_list(&self, k: TokenKind) -> Result<Vec<Identifier>> {
-        self.list_parser(k, |p| Identifier::parse_in_expression(p))
+        self.list_parser(k, Identifier::parse_in_expression)
     }
 
     fn parse_expression_list(&self, k: TokenKind) -> Result<Vec<Expression>> {
@@ -2654,7 +2644,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_keyvalue_list(&self, k: TokenKind) -> Result<Vec<KeyValue>> {
-        self.list_parser(k, |p| KeyValue::parse(p))
+        self.list_parser(k, KeyValue::parse)
     }
 
     fn parse_paramter_list(&self) -> Result<Vec<Parameter>> {
@@ -2746,8 +2736,8 @@ fn snapshot_parsing(input: &str) -> String {
     format!("{:#?}", program.commands)
 }
 
-pub fn new_parser<'a>(lexer: &'a Lexer) -> Parser<'a> {
-    Parser::new(&lexer)
+pub fn new_parser(lexer: &Lexer) -> Parser {
+    Parser::new(lexer)
 }
 
 pub fn setup_trace() {

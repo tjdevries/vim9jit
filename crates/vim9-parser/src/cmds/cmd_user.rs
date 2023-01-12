@@ -73,7 +73,7 @@ impl UserCommand {
             command_bar,
             command_nargs,
             command_complete,
-            name: parser.expect_token(TokenKind::Identifier)?.text.to_string(),
+            name: parser.expect_token(TokenKind::Identifier)?.text,
             command: parser.parse_command()?.into(),
             command_keepscript: false,
             command_register: None,

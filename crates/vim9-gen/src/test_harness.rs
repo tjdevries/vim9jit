@@ -10,7 +10,7 @@ use rmpv::{decode::read_value, encode::write_value, Value};
 
 pub fn exec_busted(path: &str) -> Result<()> {
     let child = Command::new("nvim")
-        .args(["--headless", "-c", &format!("PlenaryBustedFile {}", path)])
+        .args(["--headless", "-c", &format!("PlenaryBustedFile {path}")])
         .stdout(Stdio::piped())
         .spawn()?;
 
@@ -29,11 +29,10 @@ pub fn exec_lua(preamble: &str) -> Result<HashMap<String, Value>> {
         r#"
             vim.opt.rtp:append(".")
 
-            {}
-        "#,
-        preamble
+            {preamble}
+        "#
     );
-    println!("{}", contents);
+    println!("{contents}");
 
     // start a neovim job
     let mut child = Command::new("nvim")
@@ -47,23 +46,17 @@ pub fn exec_lua(preamble: &str) -> Result<HashMap<String, Value>> {
         .spawn()?;
 
     let id = Value::Integer(0.into());
-    let msg = Value::Array(
-        vec![
-            0.into(),
-            id.clone(),
-            "nvim_exec_lua".into(),
-            Value::Array(
-                vec![
-                    // lua code to execute
-                    contents.clone().into(),
-                    // lua arguments to send, currently unused
-                    Value::Array(vec![]),
-                ]
-                .into(),
-            ),
-        ]
-        .into(),
-    );
+    let msg = Value::Array(vec![
+        0.into(),
+        id.clone(),
+        "nvim_exec_lua".into(),
+        Value::Array(vec![
+            // lua code to execute
+            contents.clone().into(),
+            // lua arguments to send, currently unused
+            Value::Array(vec![]),
+        ]),
+    ]);
 
     let child_stdin = child.stdin.as_mut().unwrap();
     let child_stdout = child.stdout.as_mut().unwrap();
@@ -91,6 +84,7 @@ pub fn exec_lua(preamble: &str) -> Result<HashMap<String, Value>> {
     }
 
     // Close stdin to finish and avoid indefinite blocking
+    #[allow(clippy::drop_ref)]
     drop(child_stdin);
 
     // Wait til output has completed.
@@ -100,7 +94,7 @@ pub fn exec_lua(preamble: &str) -> Result<HashMap<String, Value>> {
     // We good
     let val = val.as_map().expect("returns a map");
     let val = HashMap::from_iter(
-        val.into_iter()
+        val.iter()
             .map(|(key, value)| (key.as_str().unwrap().to_owned(), value.clone())),
     );
 

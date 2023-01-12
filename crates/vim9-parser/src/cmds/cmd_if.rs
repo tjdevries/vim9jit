@@ -49,7 +49,7 @@ impl IfCommand {
             body: Body::parse_until_any(parser, &if_endings)?,
             elseifs: {
                 let mut elseifs = Vec::new();
-                while parser.front_ref().text.eq("elseif") {
+                while parser.front_ref().text.equals("elseif") {
                     elseifs.push(ElseIfCommand {
                         elseif_tok: parser.pop().into(),
                         condition: Expression::parse(parser, Precedence::Lowest)?,
@@ -61,11 +61,11 @@ impl IfCommand {
                 elseifs
             },
             else_command: {
-                if parser.front_ref().text.eq("else") {
+                if parser.front_ref().text.equals("else") {
                     Some(ElseCommand {
                         else_tok: parser.pop().into(),
-                        else_eol: parser.expect_eol()?.into(),
-                        body: Body::parse_until(parser, "endif")?.into(),
+                        else_eol: parser.expect_eol()?,
+                        body: Body::parse_until(parser, "endif")?,
                     })
                 } else {
                     None
