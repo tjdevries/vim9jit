@@ -1,0 +1,57 @@
+name: Build and Test Rust
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v2
+      - name: Setup | Rust
+        uses: ATiltedTree/setup-rust@v1
+        with:
+          rust-version: stable
+          components: clippy
+      - name: Build | Lint
+        run: cargo clippy
+  compile:
+    name: Compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v2
+      - name: Setup | Rust
+        uses: ATiltedTree/setup-rust@v1
+        with:
+          rust-version: stable
+      - name: Build | Compile
+        run: cargo check
+  test:
+    name: Test
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macOS-latest
+        rust:
+          - stable
+          - beta
+          - nightly
+    runs-on: ${{ matrix.os }}
+    needs: [compile]
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v2
+      - name: Setup | Rust
+        uses: ATiltedTree/setup-rust@v1
+        with:
+          rust-version: ${{ matrix.rust }}
+      - name: Build | Compile
+        run: cargo test
