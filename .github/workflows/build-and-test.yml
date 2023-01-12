@@ -1,6 +1,6 @@
 on: [push]
 
-name: build
+name: build-and-test
 
 jobs:
   check:
@@ -40,12 +40,6 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --workspace
-
-      - name: Run cargo check (workspace)
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
           args: --workspace
 
       - name: Run cargo build (workspace)

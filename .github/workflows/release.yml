@@ -1,0 +1,45 @@
+name: release-tag
+
+on:
+  push:
+    tags:
+      - v*
+
+
+jobs:
+  release-image:
+    name: Release latest version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install latest nightly rust
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly
+            override: true
+            components: rustfmt, clippy
+
+      - name: Run cargo build --release (workspace)
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --workspace --release
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: false
+          title: "Latest Release"
+          files: |
+            ./target/release/vim9jit
