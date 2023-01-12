@@ -34,10 +34,8 @@ fn main() -> anyhow::Result<()> {
 
     let source_lua = Path::new("src/lua");
     let mut entries = Vec::new();
-    for entry in source_lua.read_dir().unwrap() {
-        if let Ok(entry) = entry {
-            entries.push(entry.path());
-        }
+    for entry in source_lua.read_dir().unwrap().flatten() {
+        entries.push(entry.path());
     }
 
     // always sort `init` to the top of the list
@@ -68,23 +66,19 @@ fn main() -> anyhow::Result<()> {
         let contents = contents.replace("require \"_vim9script\"", "vim9");
 
         if name == "_" {
-            writeln!(&mut file, "{}\n", contents)?;
+            writeln!(&mut file, "{contents}\n")?;
         } else if name == "init" {
             // init.lua declares our base module and it's guaranteed to be first.
-            writeln!(&mut file, "local vim9 = (function() {} end)()\n", contents)?;
+            writeln!(&mut file, "local vim9 = (function() {contents} end)()\n")?;
         } else {
-            writeln!(
-                &mut file,
-                "vim9['{}'] = (function() {} end)()",
-                name, contents
-            )?;
+            writeln!(&mut file, "vim9['{name}'] = (function() {contents} end)()",)?;
         }
     }
 
-    writeln!(&mut file, "")?;
+    writeln!(&mut file)?;
     writeln!(&mut file, "return vim9")?;
 
-    let file = format::lua(&file).expect(&format!("to format code: {}", file));
+    let file = format::lua(&file).expect("to format the file");
 
     let init_lua = luadir.join("_vim9script.lua");
     fs::write(init_lua, file)?;

@@ -50,11 +50,8 @@ fn expr_is_func_mutable(arg: &Expression) -> bool {
     }
 }
 
-pub fn mutates(expr: &CallExpression, data: &FunctionData) -> Option<VimFuncMutability> {
-    match data {
-        // FunctionData::VimFunc { .. } => return None,
-        _ => {}
-    };
+pub fn mutates(expr: &CallExpression, _data: &FunctionData) -> Option<VimFuncMutability> {
+    {};
 
     // Check if any args can even be mutated
     //  If there are none, then it doesn't matter if the function
@@ -162,7 +159,7 @@ impl VimFunc {
         //     })
         //     .collect::<Vec<_>>();
 
-        generate_mutable_fn_call(&name, &args, &replaced)
+        generate_mutable_fn_call(name, &args, &replaced)
     }
 }
 
@@ -230,8 +227,8 @@ impl Generate for Vec<Expression> {
 pub fn generate(call: &CallExpression, state: &mut State) -> String {
     let func_data: FunctionData = call.into();
 
-    match mutates(call, &func_data) {
-        Some(mutability) => match func_data {
+    if let Some(mutability) = mutates(call, &func_data) {
+        match func_data {
             FunctionData::ApiFunc { .. } => {}
             FunctionData::GeneratedFunc { .. } => {}
             FunctionData::VimFuncRef { .. } => todo!(),
@@ -242,8 +239,7 @@ pub fn generate(call: &CallExpression, state: &mut State) -> String {
             //          but at the same time, it's nice to just assume that functions
             //          that are expressions are really just generated funcs
             FunctionData::ExprFunc { .. } => {}
-        },
-        None => {}
+        }
     };
 
     match func_data {
@@ -294,7 +290,7 @@ end
 }
 
 fn generate_mutable_fn_call(name: &str, args: &str, replace: &str) -> String {
-    return format!("vim9.fn_mut('{name}', {{ {args} }}, {{ replace = {replace} }})");
+    format!("vim9.fn_mut('{name}', {{ {args} }}, {{ replace = {replace} }})")
 }
 
 pub fn generate_method(method: &parser::MethodCall, state: &mut State) -> String {
@@ -320,7 +316,7 @@ pub fn generate_method(method: &parser::MethodCall, state: &mut State) -> String
                 let name = func_data.name();
                 let args = call.args.gen(state);
                 let replace = mutability.returned.unwrap().to_string();
-                return generate_mutable_fn_call(&name, &args, &replace);
+                return generate_mutable_fn_call(name, &args, &replace);
             }
         }
     }

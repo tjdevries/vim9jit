@@ -51,20 +51,20 @@ impl Default for TokenText<'_> {
     }
 }
 
-impl<'a> Into<String> for TokenText<'a> {
-    fn into(self) -> String {
-        match self {
-            TokenText::Slice(s) => s.into_iter().collect(),
+impl<'a> From<TokenText<'a>> for String {
+    fn from(val: TokenText<'a>) -> Self {
+        match val {
+            TokenText::Slice(s) => s.iter().collect(),
             TokenText::Owned(s) => s,
             TokenText::Empty => "".to_string(),
         }
     }
 }
 
-impl<'a> Into<String> for &TokenText<'a> {
-    fn into(self) -> String {
-        match self {
-            TokenText::Slice(s) => s.into_iter().collect(),
+impl<'a> From<&TokenText<'a>> for String {
+    fn from(val: &TokenText<'a>) -> Self {
+        match val {
+            TokenText::Slice(s) => s.iter().collect(),
             TokenText::Owned(s) => s.clone(),
             TokenText::Empty => "".to_string(),
         }
@@ -77,7 +77,7 @@ impl<'a> Debug for TokenText<'a> {
             TokenText::Slice(s) => {
                 write!(f, "{:?}", s.iter().cloned().collect::<String>())
             }
-            TokenText::Owned(o) => write!(f, "{:?}", o),
+            TokenText::Owned(o) => write!(f, "{o:?}"),
             TokenText::Empty => write!(f, "<Empty>"),
         }
     }
@@ -85,20 +85,19 @@ impl<'a> Debug for TokenText<'a> {
 
 impl<'a> Display for TokenText<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(
+            f,
+            "{}",
+            match self {
+                TokenText::Slice(s) => s.iter().collect::<String>(),
+                TokenText::Owned(s) => s.clone(),
+                TokenText::Empty => "".to_string(),
+            }
+        )
     }
 }
 
 impl<'a> TokenText<'a> {
-    // TODO: It'd be cool if we didn't clone here
-    pub fn to_string(&self) -> String {
-        match self {
-            TokenText::Slice(s) => s.iter().collect::<String>(),
-            TokenText::Owned(s) => s.clone(),
-            TokenText::Empty => "".to_string(),
-        }
-    }
-
     pub fn as_str(&'a self) -> &'a str {
         match self {
             TokenText::Slice(_) => todo!(),
@@ -107,7 +106,7 @@ impl<'a> TokenText<'a> {
         }
     }
 
-    pub fn eq(&self, val: &str) -> bool {
+    pub fn equals(&self, val: &str) -> bool {
         match self {
             TokenText::Slice(s) => {
                 // This seems like I shouldn't have to do this... oh well
@@ -268,11 +267,7 @@ impl TokenKind {
     }
 
     pub fn is_whitespace(&self) -> bool {
-        match self {
-            Self::EndOfLine => true,
-            Self::EndOfFile => true,
-            _ => false,
-        }
+        matches!(self, Self::EndOfLine | Self::EndOfFile)
     }
 
     pub fn is_eof(&self) -> bool {
@@ -410,12 +405,9 @@ impl Lexer {
         // println!("read_char: {:?}", self);
 
         let pos = self.state.borrow().position;
-        match self.chars.get(pos) {
-            Some(_) => {
-                self.state.borrow_mut().position = pos + 1;
-                self.state.borrow_mut().read_position += 1;
-            }
-            None => {}
+        if self.chars.get(pos).is_some() {
+            self.state.borrow_mut().position = pos + 1;
+            self.state.borrow_mut().read_position += 1;
         }
     }
 
@@ -492,7 +484,7 @@ impl Lexer {
         let position = self.position();
 
         while let Some(ch) = self.ch() && ch != &until {
-            if fail(&ch) {
+            if fail(ch) {
                 return Ok(Token {
                     kind: failed,
                     text: TokenText::Slice(self.chars[self.position()..self.position()].into()),
@@ -560,7 +552,7 @@ impl Lexer {
         let position = self.position();
 
         while let Some(ch) = self.ch() && ch != &until {
-            if fail(&ch) {
+            if fail(ch) {
                 return Ok(None);
             }
 
@@ -708,7 +700,7 @@ impl Lexer {
         // Handle sublexers...
         //  there is some goofiness with all this stuff
         if let Some(sublexer) = self.sublexer.take() {
-            let (tok, next_lexer) = sublexer.next_token(&self)?;
+            let (tok, next_lexer) = sublexer.next_token(self)?;
             self.sublexer.set(next_lexer);
             self.read_char();
             return Ok(tok);
@@ -1032,7 +1024,7 @@ impl SubLexer for NormalModeParser {
         match lexer.ch() {
             Some(&ch) => match ch {
                 '!' => Ok((
-                    Token::owned(lexer.handle_bang()?.to_owned()),
+                    Token::owned(lexer.handle_bang()?),
                     Some(Box::new(NormalModeParser {})),
                 )),
                 _ => Ok((Token::owned(lexer.read_line()?), None)),
@@ -1060,7 +1052,7 @@ pub fn snapshot_lexing(input: &str) -> String {
         }
 
         if tok.kind == TokenKind::Illegal {
-            panic!("failure: {:#?}", input);
+            panic!("failure: {input:#?}");
         }
 
         tokens.push_back(tok);
@@ -1083,7 +1075,7 @@ pub fn snapshot_lexing(input: &str) -> String {
 
             output += &" ".repeat(tok.span.start_col);
             output += &"^".repeat(tok.span.end_col - tok.span.start_col);
-            output += &format!(" {:?}", tok);
+            output += &format!(" {tok:?}");
             output += "\n"
         }
     }

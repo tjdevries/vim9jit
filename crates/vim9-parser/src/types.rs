@@ -80,7 +80,7 @@ impl Type {
 
                         Type::List {
                             open: parser.expect_fn(Self::open, true)?.into(),
-                            inner: Type::parse_inner(parser, true, &opts)?.into(),
+                            inner: Type::parse_inner(parser, true, opts)?.into(),
                             close: parser.expect_fn(Self::close, consume)?.into(),
                         }
                     }
@@ -91,7 +91,7 @@ impl Type {
 
                         Type::Dict {
                             open: parser.expect_fn(Self::open, true)?.into(),
-                            inner: Type::parse_inner(parser, true, &opts)?.into(),
+                            inner: Type::parse_inner(parser, true, opts)?.into(),
                             close: parser.expect_fn(Self::close, consume)?.into(),
                         }
                     }

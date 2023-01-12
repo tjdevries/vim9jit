@@ -55,11 +55,11 @@ fn gen_directory(src: &Path, gen: &Path, subdir: &OsStr) -> Result<()> {
         let contents = std::fs::read_to_string(f.path())?;
         let path = f.path();
         let stem = path.file_stem().unwrap();
-        let stem = Path::with_extension(&Path::new(stem), "lua");
+        let stem = Path::with_extension(Path::new(stem), "lua");
         let generated_file = gen_subdir.join(stem);
 
-        println!("plugin: {:?}", f);
-        println!("  filename: {:?}", generated_file);
+        println!("plugin: {f:?}");
+        println!("  filename: {generated_file:?}");
 
         let generated = match gen::generate(
             &contents,
@@ -84,7 +84,7 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     if let Some(dir) = args.dir {
-        println!("dir: {}", dir);
+        println!("dir: {dir}");
 
         let dir_base = Path::new(&dir);
         let dir_src = dir_base.join("src");
@@ -125,13 +125,13 @@ fn main() -> Result<()> {
             .join(file_name)
             .with_extension("lua");
         // let generated_file = Path::with_extension(path, "lua");
-        println!("generated lua: {:?}", generated_file);
+        println!("generated lua: {generated_file:?}");
         std::fs::write(generated_file, generated.lua)?;
-        if generated.vim != "" {
+        if !generated.vim.is_empty() {
             let generated_file = Path::new(&args.outdir)
                 .join(file_name)
                 .with_extension("vim");
-            println!("generated vim: {:?}", generated_file);
+            println!("generated vim: {generated_file:?}");
             std::fs::write(generated_file, generated.vim)?;
         }
 

@@ -56,11 +56,17 @@ impl Output {
     }
 
     pub fn write_lua(&mut self, contents: &str) {
-        let _ = write!(self.lua, "{}", contents);
+        let _ = write!(self.lua, "{contents}");
     }
 
     pub fn write_vim(&mut self, contents: &str) {
-        let _ = write!(self.vim, "{}", contents);
+        let _ = write!(self.vim, "{contents}");
+    }
+}
+
+impl Default for Output {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -94,8 +100,7 @@ impl State {
             .scopes
             .iter_mut()
             .rev()
-            .filter(|s| s.kind == ScopeKind::Function)
-            .next()
+            .find(|s| s.kind == ScopeKind::Function)
             .unwrap();
 
         s.deferred += 1
@@ -105,7 +110,7 @@ impl State {
     where
         F: Fn(&&Scope) -> bool,
     {
-        self.scopes.iter().rev().filter(filter).next()
+        self.scopes.iter().rev().find(filter)
     }
 
     fn with_scope<F, T>(&mut self, kind: ScopeKind, f: F) -> (T, Scope)
@@ -203,11 +208,11 @@ impl Scope {
         match expr {
             Expression::Identifier(ident) => match &ident {
                 Identifier::Raw(raw) => Some(raw.name.clone()),
-                Identifier::Scope(_) => return None,
-                Identifier::Unpacked(_) => return None,
-                Identifier::Ellipsis => return None,
+                Identifier::Scope(_) => None,
+                Identifier::Unpacked(_) => None,
+                Identifier::Ellipsis => None,
             },
-            _ => return None,
+            _ => None,
         }
     }
 
@@ -253,7 +258,7 @@ impl Generate for ExCommand {
         match self {
             ExCommand::NoOp(token) => {
                 if !token.kind.is_whitespace() {
-                    output.write_lua(&format!("\n-- {:?}", token))
+                    output.write_lua(&format!("\n-- {token:?}"))
                 }
             }
             ExCommand::Comment(token) => output.write_lua(&format!("-- {}", token.text)),
@@ -316,9 +321,7 @@ impl Generate for BreakCommand {
         let scope = find_scope!(state, Function | While { .. } | For { .. });
         assert!(
             scope.kind != ScopeKind::Function,
-            "continue: While/For {:#?} // {:?}",
-            self,
-            scope
+            "continue: While/For {self:#?} // {scope:?}"
         );
 
         if scope.has_continue() {
@@ -332,8 +335,7 @@ impl Generate for BreakCommand {
 impl Generate for WhileCommand {
     fn write_default(&self, state: &mut State, output: &mut Output) {
         let has_continue = continue_exists_in_scope(&self.body);
-        let (body, _) =
-            state.with_scope(ScopeKind::While { has_continue }, |s| (&self.body).gen(s));
+        let (body, _) = state.with_scope(ScopeKind::While { has_continue }, |s| self.body.gen(s));
 
         if has_continue {
             // let condition = self.condition.gen(state);
@@ -365,7 +367,7 @@ impl Generate for WhileCommand {
         // ))
         output.write_lua("while ");
         output.write_lua(&self.condition.gen(state));
-        output.write_lua(&format!("\ndo\n{}\nend", body));
+        output.write_lua(&format!("\ndo\n{body}\nend"));
     }
 }
 
@@ -546,7 +548,7 @@ fn make_user_command_arg(state: &State) -> String {
 
 fn to_str_or_nil(s: &Option<String>) -> String {
     if let Some(complete) = s {
-        format!("'{}'", complete)
+        format!("'{complete}'")
     } else {
         "nil".to_string()
     }
@@ -561,7 +563,7 @@ impl Generate for UserCommand {
             Some(nargs) => match nargs.as_str() {
                 "0" => "0".to_string(),
                 "1" => "1".to_string(),
-                _ => format!("'{}'", nargs),
+                _ => format!("'{nargs}'"),
             },
             None => "nil".to_string(),
         };
@@ -637,13 +639,13 @@ impl Generate for Heredoc {
         let inner = self
             .contents
             .iter()
-            .map(|line| format!("[==[{}]==]", line))
+            .map(|line| format!("[==[{line}]==]"))
             .collect::<Vec<String>>()
             .join(", ");
 
-        let mut list = format!("{{ {} }}", inner);
+        let mut list = format!("{{ {inner} }}");
         if self.trim {
-            list = format!("vim9.heredoc.trim({})", list)
+            list = format!("vim9.heredoc.trim({list})")
         }
 
         output.write_lua(&format!("local {} = {}", self.name.gen(state), list))
@@ -704,12 +706,11 @@ impl Generate for AutocmdCommand {
 
         output.write_lua(&format!(
             r#"
-vim.api.nvim_create_autocmd({{ {} }}, {{
-    {}
-    callback = {},
+vim.api.nvim_create_autocmd({{ {event_list} }}, {{
+    {group}
+    callback = {callback},
 }})
-"#,
-            event_list, group, callback
+"#
         ))
     }
 }
@@ -1042,25 +1043,17 @@ fn vim_to_type(ret: &vimfuncs::FuncReturnType) -> Type {
 
 pub fn func_info_for_call(c: &CallExpression) -> Option<vimfuncs::FuncInfo> {
     match c.name() {
-        Some(ident) => {
-            match ident {
-                // TODO: Use our very cool new generated stuff here
-                Identifier::Raw(raw) => {
-                    return vimfuncs::get_func_info(&raw.name);
-                }
-                _ => None,
-            }
-        }
+        Some(Identifier::Raw(raw)) => vimfuncs::get_func_info(&raw.name),
         _ => None,
     }
 }
 
-fn guess_type_of_expr(state: &State, expr: &Expression) -> Type {
+fn guess_type_of_expr(_state: &State, expr: &Expression) -> Type {
     match expr {
         Expression::Number(_) => Type::Number,
         Expression::String(_) => Type::String,
         Expression::Boolean(_) => Type::Bool,
-        Expression::Call(c) => match func_info_for_call(&c) {
+        Expression::Call(c) => match func_info_for_call(c) {
             Some(info) => vim_to_type(&info.return_type),
             _ => Type::Any,
         },
@@ -1073,13 +1066,14 @@ fn guess_type_of_expr(state: &State, expr: &Expression) -> Type {
                 return Type::String;
             }
 
-            let left_ty = guess_type_of_expr(state, infix.left.as_ref());
-            let right_ty = guess_type_of_expr(state, infix.right.as_ref());
+            let left_ty = guess_type_of_expr(_state, infix.left.as_ref());
+            let right_ty = guess_type_of_expr(_state, infix.right.as_ref());
 
-            if matches!(infix.operator, Operator::And | Operator::Or) {
-                if left_ty == Type::Bool && right_ty == Type::Bool {
-                    return Type::Bool;
-                }
+            if matches!(infix.operator, Operator::And | Operator::Or)
+                && left_ty == Type::Bool
+                && right_ty == Type::Bool
+            {
+                return Type::Bool;
             }
 
             if left_ty == Type::Number && right_ty == Type::Number && infix.operator.is_math() {
@@ -1088,7 +1082,7 @@ fn guess_type_of_expr(state: &State, expr: &Expression) -> Type {
 
             Type::Any
         }
-        Expression::Grouped(g) => guess_type_of_expr(state, g.expr.as_ref()),
+        Expression::Grouped(g) => guess_type_of_expr(_state, g.expr.as_ref()),
         _ => Type::Any,
         // Expression::Index(_) => todo!(),
         // Expression::Slice(_) => todo!(),
@@ -1129,7 +1123,7 @@ impl Generate for VarCommand {
         let local = get_local(state, &self.name);
         match &self.name {
             Identifier::Unpacked(unpacked) => {
-                let identifiers: String = identifier_list(state, &unpacked);
+                let identifiers: String = identifier_list(state, unpacked);
                 output.write_lua(&format!("{local} {identifiers} = unpack({expr})"))
             }
             _ => output.write_lua(&format!("{local} {} = {}", self.name.gen(state), expr)),
@@ -1240,11 +1234,11 @@ mod expr_utils {
             Expression::Slice(s) => {
                 let mut has_side_effect = false;
                 if let Some(start) = &s.start {
-                    has_side_effect |= has_possible_sideffects(&start)
+                    has_side_effect |= has_possible_sideffects(start)
                 }
 
                 if let Some(finish) = &s.finish {
-                    has_side_effect |= has_possible_sideffects(&finish)
+                    has_side_effect |= has_possible_sideffects(finish)
                 }
 
                 has_side_effect
@@ -1307,12 +1301,7 @@ impl Generate for MethodCall {
 
 mod ident {
     pub fn str_is_keyword(s: &str) -> bool {
-        match s {
-            "end" => true,
-            "repeat" => true,
-            "for" => true,
-            _ => false,
-        }
+        matches!(s, "end" | "repeat" | "for")
     }
 
     pub fn is_safe_str(name: &str) -> bool {
@@ -1530,8 +1519,7 @@ impl Generate for VimString {
                         if let Some(ch) = cs.next() {
                             if ch == '<' {
                                 output.write_lua(&format!(
-                                    "vim.api.nvim_replace_termcodes(\"{}\", true, true, true)",
-                                    s
+                                    "vim.api.nvim_replace_termcodes(\"{s}\", true, true, true)"
                                 ));
                                 return;
                             }
@@ -1539,16 +1527,16 @@ impl Generate for VimString {
                     }
                 }
 
-                format!("\"{}\"", s)
+                format!("\"{s}\"")
             }
             VimString::Interpolated(interp) => {
-                format!("string.format([=[{}]=])", interp)
+                format!("string.format([=[{interp}]=])")
             }
             VimString::InterpolatedLit(interp) => {
-                format!("string.format([=[{}']=])", interp)
+                format!("string.format([=[{interp}']=])")
             }
             VimString::EnvironmentVariable(env) => {
-                format!("vim.env['{}']", env)
+                format!("vim.env['{env}']")
             }
         })
     }
@@ -1706,7 +1694,7 @@ local M = {}
     pub fn hoist(program: &Program, state: &mut State, output: &mut Output) {
         for command in program.commands.iter() {
             if let Some(toplevel) = toplevel_ident(state, command) {
-                output.write_lua(&format!("local {} = nil\n", toplevel));
+                output.write_lua(&format!("local {toplevel} = nil\n"));
             }
         }
     }

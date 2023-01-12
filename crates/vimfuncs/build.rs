@@ -122,27 +122,20 @@ impl FuncLexer {
         }
 
         FuncToken::Number(
-            usize::from_str_radix(
-                &self.chars[position - 1..self.position]
-                    .iter()
-                    .collect::<String>(),
-                10,
-            )
-            .unwrap(),
+            self.chars[position - 1..self.position]
+                .iter()
+                .collect::<String>()
+                .parse::<usize>()
+                .unwrap(),
         )
     }
 
     fn read_identifier(&mut self) -> FuncToken {
         let position = self.position - 1;
-        loop {
-            match self.peek_char() {
-                Some(ch) => {
-                    self.read_char();
-                    if !(ch.is_alphanumeric() || ch == '_') {
-                        break;
-                    }
-                }
-                None => break,
+        while let Some(ch) = self.peek_char() {
+            self.read_char();
+            if !(ch.is_alphanumeric() || ch == '_') {
+                break;
             }
         }
 
@@ -174,14 +167,9 @@ impl FuncLexer {
             return;
         }
 
-        loop {
-            match self.read_char() {
-                Some(ch) => {
-                    if !ch.is_whitespace() {
-                        break;
-                    }
-                }
-                None => break,
+        while let Some(ch) = self.read_char() {
+            if !ch.is_whitespace() {
+                break;
             }
         }
     }
@@ -325,8 +313,7 @@ impl FuncParser {
             assert_eq!(
                 token_stream.next().expect("internal"),
                 FuncToken::RightBrace,
-                "{:?}",
-                info
+                "{info:?}",
             );
 
             token_stream.next_if(|t| t == &FuncToken::Comma);
@@ -415,7 +402,7 @@ pub enum FuncReturnType {{
     )
     .unwrap();
 
-    write!(&mut lib, ";\n").unwrap();
+    writeln!(&mut lib, ";").unwrap();
 
     write!(
         &mut lib,

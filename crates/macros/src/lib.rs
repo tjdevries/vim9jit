@@ -40,7 +40,7 @@ impl VisitMut for ReplaceQuestions {
 #[proc_macro_attribute]
 pub fn parse_context(_attr: TokenStream, tokens: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(tokens as syn::ItemImpl);
-    for mut item in input.items.iter_mut() {
+    for item in input.items.iter_mut() {
         match &item {
             ImplItem::Const(_) => todo!(),
             ImplItem::Method(_) => {
@@ -48,7 +48,7 @@ pub fn parse_context(_attr: TokenStream, tokens: TokenStream) -> TokenStream {
                     name: *input.self_ty.clone(),
                 };
 
-                replacer.visit_impl_item_mut(&mut item);
+                replacer.visit_impl_item_mut(item);
             }
             ImplItem::Type(_) => todo!(),
             ImplItem::Macro(_) => todo!(),
