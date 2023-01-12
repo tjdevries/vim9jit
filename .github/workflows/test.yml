@@ -25,19 +25,19 @@ jobs:
             override: true
             components: rustfmt, clippy
 
-      - name: Run cargo clippy
+      - name: Run cargo clippy (workspace)
         uses: actions-rs/cargo@v1
         with:
           command: clippy
           args: --workspace
 
-      - name: Run cargo check
+      - name: Run cargo check (workspace)
         uses: actions-rs/cargo@v1
         with:
           command: check
           args: --workspace
 
-      - name: Run cargo build
+      - name: Run cargo build (workspace)
         uses: actions-rs/cargo@v1
         with:
           command: build
