@@ -27,6 +27,34 @@ pub enum ParserMode {
     Standalone,
 }
 
+impl ParserMode {
+    pub fn from_path(path: &Path) -> Self {
+        // TODO: Think about how to guess whether we are generating tests...
+        if path.components().any(|c| c.as_os_str() == "autoload") {
+            ParserMode::Autoload {
+                prefix: path
+                    .components()
+                    .skip_while(|c| c.as_os_str() != "autoload")
+                    .skip(1)
+                    .map(|c| {
+                        match c {
+                            std::path::Component::Normal(comp) => Path::new(comp),
+                            _ => unreachable!(),
+                        }
+                        .file_stem()
+                        .unwrap()
+                        .to_string_lossy()
+                        .to_string()
+                    })
+                    .collect::<Vec<String>>()
+                    .join("#"),
+            }
+        } else {
+            ParserMode::Standalone
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct ParserOpts {
     pub mode: ParserMode,
@@ -209,6 +237,7 @@ impl Scope {
             Expression::Identifier(ident) => match &ident {
                 Identifier::Raw(raw) => Some(raw.name.clone()),
                 Identifier::Scope(_) => None,
+                Identifier::EmptyScope(_) => None,
                 Identifier::Unpacked(_) => None,
                 Identifier::Ellipsis => None,
             },
@@ -1136,11 +1165,26 @@ impl Generate for Identifier {
         match self {
             Identifier::Raw(raw) => raw.write(state, output),
             Identifier::Scope(scoped) => scoped.write(state, output),
+            Identifier::EmptyScope(scoped) => scoped.write(state, output),
             Identifier::Ellipsis => output.write_lua("..."),
             Identifier::Unpacked(_) => {
                 unreachable!("must be handled higher {:#?}", self)
             }
         }
+    }
+}
+
+impl Generate for VimScope {
+    fn write_default(&self, _: &mut State, output: &mut Output) {
+        output.write_lua(match self {
+            VimScope::Global => "vim.g",
+            VimScope::VimVar => "vim.v",
+            VimScope::Tab => "vim.t",
+            VimScope::Window => "vim.w",
+            VimScope::Buffer => "vim.b",
+            VimScope::Script => todo!("Not sure how to handle scriptvar"),
+            VimScope::Local => todo!("Not sure how to handle local"),
+        })
     }
 }
 
@@ -1158,17 +1202,11 @@ impl Generate for ScopedIdentifier {
             }
         }
 
-        let scope = match self.scope {
-            VimScope::Global => "vim.g",
-            VimScope::VimVar => "vim.v",
-            VimScope::Tab => "vim.t",
-            VimScope::Window => "vim.w",
-            VimScope::Buffer => "vim.b",
-            VimScope::Script => todo!("Not sure how to handle scriptvar"),
-            VimScope::Local => todo!("Not sure how to handle local"),
-        };
-
-        output.write_lua(&format!("{}['{}']", scope, self.accessor.gen(state)))
+        output.write_lua(&format!(
+            "{}['{}']",
+            self.scope.gen(state),
+            self.accessor.gen(state)
+        ))
     }
 }
 
@@ -1836,9 +1874,7 @@ mod test {
     busted!(busted_shared, "../testdata/busted/shared.vim");
     busted!(busted_loops, "../testdata/busted/loops.vim");
     busted!(busted_defer, "../testdata/busted/defer.vim");
-
-    // TODO: Fix this
-    // busted!(busted_vimvars, "../testdata/busted/vimvars.vim");
+    busted!(busted_vimvars, "../testdata/busted/vimvars.vim");
 
     busted!(busted_methods, "../testdata/busted/methods.vim");
     busted!(busted_methods_1, "../testdata/busted/methods_1.vim");
@@ -1926,5 +1962,35 @@ mod test {
         .unwrap();
         let eval = exec_lua(&generated.lua).unwrap();
         assert_eq!(eval["x"], 4.into());
+    }
+
+    #[test]
+    fn test_parser_mode_from_path() {
+        assert_eq!(ParserMode::Standalone, ParserMode::from_path(Path::new("")));
+        assert_eq!(
+            ParserMode::Standalone,
+            ParserMode::from_path(Path::new("plugin/something.vim"))
+        );
+
+        assert_eq!(
+            ParserMode::Autoload {
+                prefix: "ccomplete".into()
+            },
+            ParserMode::from_path(Path::new("autoload/ccomplete.vim"))
+        );
+
+        assert_eq!(
+            ParserMode::Autoload {
+                prefix: "ccomplete#nested".into()
+            },
+            ParserMode::from_path(Path::new("autoload/ccomplete/nested.vim"))
+        );
+
+        assert_eq!(
+            ParserMode::Autoload {
+                prefix: "ccomplete#nested".into()
+            },
+            ParserMode::from_path(Path::new("something/autoload/ccomplete/nested.vim"))
+        );
     }
 }

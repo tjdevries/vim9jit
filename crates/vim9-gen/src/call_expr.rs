@@ -15,6 +15,7 @@ fn expr_is_func_mutable(arg: &Expression) -> bool {
         Expression::Identifier(ident) => match ident {
             Identifier::Raw(_) => true,
             Identifier::Scope(_) => true,
+            Identifier::EmptyScope(_) => true,
             Identifier::Unpacked(_) => todo!(),
             Identifier::Ellipsis => true,
         },
@@ -51,8 +52,6 @@ fn expr_is_func_mutable(arg: &Expression) -> bool {
 }
 
 pub fn mutates(expr: &CallExpression, _data: &FunctionData) -> Option<VimFuncMutability> {
-    {};
-
     // Check if any args can even be mutated
     //  If there are none, then it doesn't matter if the function
     //  mutates things or not.
@@ -60,28 +59,24 @@ pub fn mutates(expr: &CallExpression, _data: &FunctionData) -> Option<VimFuncMut
         return None;
     }
 
-    match expr.name() {
-        Some(ident) => match ident {
-            Identifier::Raw(raw) => match raw.name.as_str() {
-                // We have overriden insert
-                "add" | "insert" | "extend" => None,
+    if let Some(Identifier::Raw(raw)) = expr.name() {
+        match raw.name.as_str() {
+            // We have overriden insert
+            "add" | "insert" | "extend" => None,
 
-                "remove" => Some(VimFuncMutability {
-                    returned: None,
-                    modified_args: HashSet::from_iter(vec![0].into_iter()),
-                }),
+            "remove" => Some(VimFuncMutability {
+                returned: None,
+                modified_args: HashSet::from_iter(vec![0].into_iter()),
+            }),
 
-                "reverse" | "sort" | "filter" => Some(VimFuncMutability {
-                    returned: Some(0),
-                    modified_args: HashSet::from_iter(vec![0].into_iter()),
-                }),
-                _ => None,
-            },
-            Identifier::Scope(_) => todo!(),
-            Identifier::Unpacked(_) => None,
-            Identifier::Ellipsis => None,
-        },
-        None => None,
+            "reverse" | "sort" | "filter" => Some(VimFuncMutability {
+                returned: Some(0),
+                modified_args: HashSet::from_iter(vec![0].into_iter()),
+            }),
+            _ => None,
+        }
+    } else {
+        None
     }
 }
 

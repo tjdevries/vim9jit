@@ -17,6 +17,34 @@ struct Args {
     outdir: String,
 }
 
+fn write_file(infile: &Path, outdir: &Path) -> Result<()> {
+    println!("plugin: {infile:?}");
+    let contents = std::fs::read_to_string(infile)?;
+
+    let generated = gen::generate(
+        &contents,
+        gen::ParserOpts {
+            mode: gen::ParserMode::from_path(infile),
+        },
+    )
+    .unwrap_or_else(|err| {
+        eprintln!("  failed to compile: {}", err.1);
+        err.0
+    });
+
+    let vimfile = Path::new(infile.file_name().unwrap());
+
+    let lua_outfile = outdir.join(vimfile).with_extension("lua");
+    std::fs::write(dbg!(lua_outfile), generated.lua)?;
+
+    if !generated.vim.is_empty() {
+        let vim_outfile = Path::new(&outdir).join(vimfile).with_extension("vim");
+        std::fs::write(dbg!(vim_outfile), generated.vim)?;
+    }
+
+    Ok(())
+}
+
 fn gen_directory(src: &Path, gen: &Path, subdir: &OsStr) -> Result<()> {
     // base: /path/src/
     // subdir: autoload,
@@ -52,28 +80,7 @@ fn gen_directory(src: &Path, gen: &Path, subdir: &OsStr) -> Result<()> {
             None => continue,
         }
 
-        let contents = std::fs::read_to_string(f.path())?;
-        let path = f.path();
-        let stem = path.file_stem().unwrap();
-        let stem = Path::with_extension(Path::new(stem), "lua");
-        let generated_file = gen_subdir.join(stem);
-
-        println!("plugin: {f:?}");
-        println!("  filename: {generated_file:?}");
-
-        let generated = match gen::generate(
-            &contents,
-            gen::ParserOpts {
-                mode: gen::ParserMode::Standalone,
-            },
-        ) {
-            Ok(generated) => generated,
-            Err(err) => {
-                println!("  FAILED: {}", err.1);
-                err.0
-            }
-        };
-        std::fs::write(generated_file, generated.lua)?;
+        write_file(&f.path(), &gen_subdir)?;
     }
 
     Ok(())
@@ -86,16 +93,16 @@ fn main() -> Result<()> {
     if let Some(dir) = args.dir {
         println!("dir: {dir}");
 
-        let dir_base = Path::new(&dir);
-        let dir_src = dir_base.join("src");
+        let dir_src = Path::new(&dir);
 
-        let dir_gen = dir_base.join("gen");
+        let dir_gen = Path::new(&args.outdir);
         if !dir_gen.is_dir() {
-            std::fs::create_dir(dir_gen.clone())?;
+            std::fs::create_dir(dir_gen)?;
         }
 
-        gen_directory(&dir_src, &dir_gen, OsStr::new("plugin"))?;
-        gen_directory(&dir_src, &dir_gen, OsStr::new("autoload"))?;
+        gen_directory(dir_src, dir_gen, OsStr::new("plugin"))?;
+        gen_directory(dir_src, dir_gen, OsStr::new("autoload"))?;
+
         return Ok(());
     } else if let Some(file) = args.file {
         let path = Path::new(&file);
@@ -103,39 +110,7 @@ fn main() -> Result<()> {
             return Err(anyhow::anyhow!("not a valid file"));
         }
 
-        let contents = std::fs::read_to_string(path)?;
-        let generated = match gen::generate(
-            &contents,
-            gen::ParserOpts {
-                mode: gen::ParserMode::Autoload {
-                    // TODO: Calculate this correctly...
-                    prefix: "ccomplete".to_string(),
-                },
-            },
-        ) {
-            Ok(generated) => generated,
-            Err(err) => {
-                println!("  FAILED: {}", err.1);
-                err.0
-            }
-        };
-
-        let file_name = path.file_name().unwrap();
-        let generated_file = Path::new(&args.outdir)
-            .join(file_name)
-            .with_extension("lua");
-        // let generated_file = Path::with_extension(path, "lua");
-        println!("generated lua: {generated_file:?}");
-        std::fs::write(generated_file, generated.lua)?;
-        if !generated.vim.is_empty() {
-            let generated_file = Path::new(&args.outdir)
-                .join(file_name)
-                .with_extension("vim");
-            println!("generated vim: {generated_file:?}");
-            std::fs::write(generated_file, generated.vim)?;
-        }
-
-        return Ok(());
+        return write_file(path, Path::new(&args.outdir));
     }
 
     Err(anyhow::anyhow!("Need to pass either --dir or --file"))

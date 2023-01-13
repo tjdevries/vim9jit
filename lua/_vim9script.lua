@@ -265,6 +265,40 @@ end)()
 vim9['fn'] = (function()
   local M = {}
 
+  M.get = function(container, item, default)
+    if default == nil then
+      default = 0
+    end
+
+    if type(container) ~= 'table' then
+      error('container is not a table: ' .. vim.inspect(container))
+    end
+
+    if vim.tbl_isempty(container) then
+      if type(item) == 'number' then
+        item = item + 1
+      end
+
+      local result = container[item]
+      if result == nil then
+        return default
+      else
+        return result
+      end
+    end
+
+    if vim.tbl_islist(container) then
+      error('todo')
+    else
+      local result = container[item]
+      if result == nil then
+        return default
+      else
+        return result
+      end
+    end
+  end
+
   M.insert = function(list, item, idx)
     if idx == nil then
       idx = 1

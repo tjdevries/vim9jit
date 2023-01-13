@@ -762,8 +762,10 @@ impl Parameter {
 #[derive(PartialEq, Clone)]
 pub enum Identifier {
     Raw(RawIdentifier),
-    Scope(ScopedIdentifier),
     Unpacked(UnpackIdentifier),
+    Scope(ScopedIdentifier),
+    EmptyScope(VimScope),
+    // TODO: ScopeAccessed(Box<Expression>)
     Ellipsis,
 }
 
@@ -774,6 +776,7 @@ impl Debug for Identifier {
             Identifier::Scope(scope) => write!(f, "Scope({scope:?})"),
             Identifier::Unpacked(unpack) => write!(f, "Unpack({unpack:?})"),
             Identifier::Ellipsis => write!(f, "<Ellipsis>"),
+            Identifier::EmptyScope(scope) => write!(f, "EmptyScope({scope:?})"),
         }
     }
 }
@@ -803,6 +806,7 @@ impl Identifier {
         match self {
             Identifier::Raw(_) => true,
             Identifier::Scope(_) => false,
+            Identifier::EmptyScope(_) => false,
             Identifier::Ellipsis => false,
             Identifier::Unpacked(unpacked) => unpacked
                 .identifiers
@@ -825,8 +829,9 @@ impl Identifier {
                 Identifier::Scope(ScopedIdentifier {
                     scope: {
                         // TODO: get the right scope
-                        parser.next_token();
-                        VimScope::Global
+                        // parser.next_token();
+                        // VimScope::Global
+                        todo!("does this even happen?");
                     },
                     colon: parser.expect_token(TokenKind::Colon)?.into(),
                     accessor: Identifier::parse_in_expression(parser)?.into(),
@@ -1840,13 +1845,20 @@ mod infix_expr {
             let valid_scope: Result<VimScope> = ident.try_into();
             if let Ok(scope) = valid_scope {
                 if parser.front_kind() == TokenKind::Colon {
-                    return Ok(Expression::Identifier(Identifier::Scope(
-                        ScopedIdentifier {
-                            scope,
-                            colon: parser.expect_token(TokenKind::Colon)?.into(),
-                            accessor: Identifier::parse_in_expression(parser)?.into(),
-                        },
-                    )));
+                    return match parser.peek_kind() {
+                        TokenKind::Identifier
+                        | TokenKind::True
+                        | TokenKind::False
+                        | TokenKind::Null => Ok(Expression::Identifier(Identifier::Scope(
+                            ScopedIdentifier {
+                                scope,
+                                colon: parser.expect_token(TokenKind::Colon)?.into(),
+                                accessor: Identifier::parse_in_expression(parser)?.into(),
+                            },
+                        ))),
+                        TokenKind::LeftBracket => unimplemented!("left bracket after colon"),
+                        _ => Ok(Expression::Identifier(Identifier::EmptyScope(scope))),
+                    };
                 }
             }
         }
