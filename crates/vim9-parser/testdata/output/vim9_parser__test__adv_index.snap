@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2559
+assertion_line: 2834
 expression: snapshot_parsing(contents)
 ---
 [
@@ -52,53 +52,50 @@ expression: snapshot_parsing(contents)
             def_eol: Token(EndOfLine, (3,21)->(3,21)),
             body: Body {
                 commands: [
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: Identifier(
-                                Raw(assert_equal),
-                            ),
-                            open: Token(LeftParen, (4,14)->(4,15)),
-                            args: [
-                                Index(
-                                    IndexExpression {
-                                        container: Identifier(
-                                            Raw(l),
-                                        ),
-                                        open: Token(LeftBracket, (4,16)->(4,17)),
-                                        index: Slice(
-                                            VimSlice {
-                                                start: Some(
-                                                    Prefix(
-                                                        PrefixExpression {
-                                                            token: Token(Minus, (4,17)->(4,18)),
-                                                            operator: Minus,
-                                                            right: Number(
-                                                                Number(1),
-                                                            ),
-                                                        },
-                                                    ),
-                                                ),
-                                                colon: Token(SpacedColon, (4,20)->(4,21)),
-                                                finish: None,
-                                            },
-                                        ),
-                                        close: Token(RightBracket, (4,21)->(4,22)),
-                                    },
-                                ),
-                                Array(
-                                    ArrayLiteral {
-                                        open: Token(LeftBracket, (4,24)->(4,25)),
-                                        elements: [
-                                            Number(
-                                                Number(3),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: Identifier(Raw(assert_equal)) arg: [
+                                    Index(
+                                        IndexExpression {
+                                            container: Identifier(
+                                                Raw(l),
                                             ),
-                                        ],
-                                        close: Token(RightBracket, (4,26)->(4,27)),
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (4,27)->(4,28)),
+                                            open: Token(LeftBracket, (4,16)->(4,17)),
+                                            index: Slice(
+                                                VimSlice {
+                                                    start: Some(
+                                                        Prefix(
+                                                            PrefixExpression {
+                                                                token: Token(Minus, (4,17)->(4,18)),
+                                                                operator: Minus,
+                                                                right: Number(
+                                                                    Number(1),
+                                                                ),
+                                                            },
+                                                        ),
+                                                    ),
+                                                    colon: Token(SpacedColon, (4,20)->(4,21)),
+                                                    finish: None,
+                                                },
+                                            ),
+                                            close: Token(RightBracket, (4,21)->(4,22)),
+                                        },
+                                    ),
+                                    Array(
+                                        ArrayLiteral {
+                                            open: Token(LeftBracket, (4,24)->(4,25)),
+                                            elements: [
+                                                Number(
+                                                    Number(3),
+                                                ),
+                                            ],
+                                            close: Token(RightBracket, (4,26)->(4,27)),
+                                        },
+                                    ),
+                                ],
+                            ),
                             eol: Token(EndOfLine, (4,28)->(4,28)),
                         },
                     ),

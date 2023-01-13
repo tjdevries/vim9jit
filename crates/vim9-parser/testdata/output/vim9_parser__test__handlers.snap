@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2888
+assertion_line: 2848
 expression: snapshot_parsing(contents)
 ---
 [
@@ -296,27 +296,16 @@ expression: snapshot_parsing(contents)
                     Comment(
                         Token(Comment, "# initialize signature help", (32,2)->(32,29)),
                     ),
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(signature),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(signature)), dot: Token(Dot, (33,11)->(33,12)), index: RawIdentifier { name: "SignatureInit" } }) arg: [
+                                    Identifier(
+                                        Raw(lspserver),
                                     ),
-                                    dot: Token(Dot, (33,11)->(33,12)),
-                                    index: RawIdentifier {
-                                        name: "SignatureInit",
-                                    },
-                                },
+                                ],
                             ),
-                            open: Token(LeftParen, (33,25)->(33,26)),
-                            args: [
-                                Identifier(
-                                    Raw(lspserver),
-                                ),
-                            ],
-                            close: Token(RightParen, (33,35)->(33,36)),
                             eol: Token(EndOfLine, (33,36)->(33,36)),
                         },
                     ),
@@ -436,23 +425,12 @@ expression: snapshot_parsing(contents)
                     Comment(
                         Token(Comment, "# send a \"initialized\" notification to server", (41,2)->(41,47)),
                     ),
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(lspserver),
-                                    ),
-                                    dot: Token(Dot, (42,11)->(42,12)),
-                                    index: RawIdentifier {
-                                        name: "sendInitializedNotif",
-                                    },
-                                },
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(lspserver)), dot: Token(Dot, (42,11)->(42,12)), index: RawIdentifier { name: "sendInitializedNotif" } }) arg: [],
                             ),
-                            open: Token(LeftParen, (42,32)->(42,33)),
-                            args: [],
-                            close: Token(RightParen, (42,33)->(42,34)),
                             eol: Token(EndOfLine, (42,34)->(42,34)),
                         },
                     ),
@@ -519,29 +497,18 @@ expression: snapshot_parsing(contents)
                             if_eol: Token(EndOfLine, (47,34)->(47,34)),
                             body: Body {
                                 commands: [
-                                    Call(
-                                        CallCommand {
-                                            call: None,
-                                            expr: DictAccess(
-                                                DictAccess {
-                                                    container: Identifier(
-                                                        Raw(lspserver),
+                                    Eval(
+                                        EvalCommand {
+                                            eval: None,
+                                            expr: Call(
+                                                f: DictAccess(DictAccess { container: Identifier(Raw(lspserver)), dot: Token(Dot, (48,13)->(48,14)), index: RawIdentifier { name: "getDocSymbols" } }) arg: [
+                                                    Register(
+                                                        Register {
+                                                            register: "%",
+                                                        },
                                                     ),
-                                                    dot: Token(Dot, (48,13)->(48,14)),
-                                                    index: RawIdentifier {
-                                                        name: "getDocSymbols",
-                                                    },
-                                                },
+                                                ],
                                             ),
-                                            open: Token(LeftParen, (48,27)->(48,28)),
-                                            args: [
-                                                Register(
-                                                    Register {
-                                                        register: "%",
-                                                    },
-                                                ),
-                                            ],
-                                            close: Token(RightParen, (48,30)->(48,31)),
                                             eol: Token(EndOfLine, (48,31)->(48,31)),
                                         },
                                     ),
@@ -729,38 +696,27 @@ expression: snapshot_parsing(contents)
                             endif_eol: Token(EndOfLine, (62,7)->(62,7)),
                         },
                     ),
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(signature),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(signature)), dot: Token(Dot, (63,11)->(63,12)), index: RawIdentifier { name: "SignatureDisplay" } }) arg: [
+                                    Identifier(
+                                        Raw(lspserver),
                                     ),
-                                    dot: Token(Dot, (63,11)->(63,12)),
-                                    index: RawIdentifier {
-                                        name: "SignatureDisplay",
-                                    },
-                                },
-                            ),
-                            open: Token(LeftParen, (63,28)->(63,29)),
-                            args: [
-                                Identifier(
-                                    Raw(lspserver),
-                                ),
-                                DictAccess(
-                                    DictAccess {
-                                        container: Identifier(
-                                            Raw(reply),
-                                        ),
-                                        dot: Token(Dot, (63,45)->(63,46)),
-                                        index: RawIdentifier {
-                                            name: "result",
+                                    DictAccess(
+                                        DictAccess {
+                                            container: Identifier(
+                                                Raw(reply),
+                                            ),
+                                            dot: Token(Dot, (63,45)->(63,46)),
+                                            index: RawIdentifier {
+                                                name: "result",
+                                            },
                                         },
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (63,52)->(63,53)),
+                                    ),
+                                ],
+                            ),
                             eol: Token(EndOfLine, (63,53)->(63,53)),
                         },
                     ),
@@ -2505,22 +2461,19 @@ expression: snapshot_parsing(contents)
                                     NoOp(
                                         Token(EndOfLine, "\n", (183,0)->(183,0)),
                                     ),
-                                    Call(
-                                        CallCommand {
-                                            call: None,
-                                            expr: Identifier(
-                                                Raw(complete),
+                                    Eval(
+                                        EvalCommand {
+                                            eval: None,
+                                            expr: Call(
+                                                f: Identifier(Raw(complete)) arg: [
+                                                    Identifier(
+                                                        Raw(start_col),
+                                                    ),
+                                                    Identifier(
+                                                        Raw(completeItems),
+                                                    ),
+                                                ],
                                             ),
-                                            open: Token(LeftParen, (184,12)->(184,13)),
-                                            args: [
-                                                Identifier(
-                                                    Raw(start_col),
-                                                ),
-                                                Identifier(
-                                                    Raw(completeItems),
-                                                ),
-                                            ],
-                                            close: Token(RightParen, (184,37)->(184,38)),
                                             eol: Token(EndOfLine, (184,38)->(184,38)),
                                         },
                                     ),
@@ -3034,29 +2987,18 @@ expression: snapshot_parsing(contents)
                                                                     else_eol: Token(EndOfLine, (210,10)->(210,10)),
                                                                     body: Body {
                                                                         commands: [
-                                                                            Call(
-                                                                                CallCommand {
-                                                                                    call: None,
-                                                                                    expr: DictAccess(
-                                                                                        DictAccess {
-                                                                                            container: Identifier(
-                                                                                                Raw(util),
+                                                                            Eval(
+                                                                                EvalCommand {
+                                                                                    eval: None,
+                                                                                    expr: Call(
+                                                                                        f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (211,12)->(211,13)), index: RawIdentifier { name: "ErrMsg" } }) arg: [
+                                                                                            String(
+                                                                                                Interpolated(
+                                                                                                    "Error: Unsupported hover contents type ({reply.result.contents.kind})",
+                                                                                                ),
                                                                                             ),
-                                                                                            dot: Token(Dot, (211,12)->(211,13)),
-                                                                                            index: RawIdentifier {
-                                                                                                name: "ErrMsg",
-                                                                                            },
-                                                                                        },
+                                                                                        ],
                                                                                     ),
-                                                                                    open: Token(LeftParen, (211,19)->(211,20)),
-                                                                                    args: [
-                                                                                        String(
-                                                                                            Interpolated(
-                                                                                                "Error: Unsupported hover contents type ({reply.result.contents.kind})",
-                                                                                            ),
-                                                                                        ),
-                                                                                    ],
-                                                                                    close: Token(RightParen, (211,92)->(211,93)),
                                                                                     eol: Token(EndOfLine, (211,93)->(211,93)),
                                                                                 },
                                                                             ),
@@ -3177,29 +3119,18 @@ expression: snapshot_parsing(contents)
                                                     else_eol: Token(EndOfLine, (217,8)->(217,8)),
                                                     body: Body {
                                                         commands: [
-                                                            Call(
-                                                                CallCommand {
-                                                                    call: None,
-                                                                    expr: DictAccess(
-                                                                        DictAccess {
-                                                                            container: Identifier(
-                                                                                Raw(util),
+                                                            Eval(
+                                                                EvalCommand {
+                                                                    eval: None,
+                                                                    expr: Call(
+                                                                        f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (218,10)->(218,11)), index: RawIdentifier { name: "ErrMsg" } }) arg: [
+                                                                            String(
+                                                                                Interpolated(
+                                                                                    "Error: Unsupported hover contents ({reply.result.contents})",
+                                                                                ),
                                                                             ),
-                                                                            dot: Token(Dot, (218,10)->(218,11)),
-                                                                            index: RawIdentifier {
-                                                                                name: "ErrMsg",
-                                                                            },
-                                                                        },
+                                                                        ],
                                                                     ),
-                                                                    open: Token(LeftParen, (218,17)->(218,18)),
-                                                                    args: [
-                                                                        String(
-                                                                            Interpolated(
-                                                                                "Error: Unsupported hover contents ({reply.result.contents})",
-                                                                            ),
-                                                                        ),
-                                                                    ],
-                                                                    close: Token(RightParen, (218,80)->(218,81)),
                                                                     eol: Token(EndOfLine, (218,81)->(218,81)),
                                                                 },
                                                             ),
@@ -3553,29 +3484,18 @@ expression: snapshot_parsing(contents)
                                     else_eol: Token(EndOfLine, (235,6)->(235,6)),
                                     body: Body {
                                         commands: [
-                                            Call(
-                                                CallCommand {
-                                                    call: None,
-                                                    expr: DictAccess(
-                                                        DictAccess {
-                                                            container: Identifier(
-                                                                Raw(util),
+                                            Eval(
+                                                EvalCommand {
+                                                    eval: None,
+                                                    expr: Call(
+                                                        f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (236,8)->(236,9)), index: RawIdentifier { name: "ErrMsg" } }) arg: [
+                                                            String(
+                                                                Interpolated(
+                                                                    "Error: Unsupported hover contents ({reply.result.contents})",
+                                                                ),
                                                             ),
-                                                            dot: Token(Dot, (236,8)->(236,9)),
-                                                            index: RawIdentifier {
-                                                                name: "ErrMsg",
-                                                            },
-                                                        },
+                                                        ],
                                                     ),
-                                                    open: Token(LeftParen, (236,15)->(236,16)),
-                                                    args: [
-                                                        String(
-                                                            Interpolated(
-                                                                "Error: Unsupported hover contents ({reply.result.contents})",
-                                                            ),
-                                                        ),
-                                                    ],
-                                                    close: Token(RightParen, (236,78)->(236,79)),
                                                     eol: Token(EndOfLine, (236,79)->(236,79)),
                                                 },
                                             ),
@@ -3649,65 +3569,56 @@ expression: snapshot_parsing(contents)
                                             eol: Token(EndOfLine, (244,34)->(244,34)),
                                         },
                                     ),
-                                    Call(
-                                        CallCommand {
-                                            call: None,
-                                            expr: Identifier(
-                                                Raw(deletebufline),
-                                            ),
-                                            open: Token(LeftParen, (245,17)->(245,18)),
-                                            args: [
-                                                Call(
-                                                    f: Identifier(Raw(bufnr)) arg: [],
-                                                ),
-                                                Number(
-                                                    Number(1),
-                                                ),
-                                                String(
-                                                    SingleQuote(
-                                                        "$",
+                                    Eval(
+                                        EvalCommand {
+                                            eval: None,
+                                            expr: Call(
+                                                f: Identifier(Raw(deletebufline)) arg: [
+                                                    Call(
+                                                        f: Identifier(Raw(bufnr)) arg: [],
                                                     ),
-                                                ),
-                                            ],
-                                            close: Token(RightParen, (245,33)->(245,34)),
+                                                    Number(
+                                                        Number(1),
+                                                    ),
+                                                    String(
+                                                        SingleQuote(
+                                                            "$",
+                                                        ),
+                                                    ),
+                                                ],
+                                            ),
                                             eol: Token(EndOfLine, (245,34)->(245,34)),
                                         },
                                     ),
-                                    Call(
-                                        CallCommand {
-                                            call: None,
-                                            expr: Identifier(
-                                                Raw(append),
+                                    Eval(
+                                        EvalCommand {
+                                            eval: None,
+                                            expr: Call(
+                                                f: Identifier(Raw(append)) arg: [
+                                                    Number(
+                                                        Number(0),
+                                                    ),
+                                                    Identifier(
+                                                        Raw(hoverText),
+                                                    ),
+                                                ],
                                             ),
-                                            open: Token(LeftParen, (246,10)->(246,11)),
-                                            args: [
-                                                Number(
-                                                    Number(0),
-                                                ),
-                                                Identifier(
-                                                    Raw(hoverText),
-                                                ),
-                                            ],
-                                            close: Token(RightParen, (246,23)->(246,24)),
                                             eol: Token(EndOfLine, (246,24)->(246,24)),
                                         },
                                     ),
-                                    Call(
-                                        CallCommand {
-                                            call: None,
-                                            expr: Identifier(
-                                                Raw(cursor),
+                                    Eval(
+                                        EvalCommand {
+                                            eval: None,
+                                            expr: Call(
+                                                f: Identifier(Raw(cursor)) arg: [
+                                                    Number(
+                                                        Number(1),
+                                                    ),
+                                                    Number(
+                                                        Number(1),
+                                                    ),
+                                                ],
                                             ),
-                                            open: Token(LeftParen, (247,10)->(247,11)),
-                                            args: [
-                                                Number(
-                                                    Number(1),
-                                                ),
-                                                Number(
-                                                    Number(1),
-                                                ),
-                                            ],
-                                            close: Token(RightParen, (247,15)->(247,16)),
                                             eol: Token(EndOfLine, (247,16)->(247,16)),
                                         },
                                     ),
@@ -3861,29 +3772,18 @@ expression: snapshot_parsing(contents)
                             if_eol: Token(EndOfLine, (257,26)->(257,26)),
                             body: Body {
                                 commands: [
-                                    Call(
-                                        CallCommand {
-                                            call: None,
-                                            expr: DictAccess(
-                                                DictAccess {
-                                                    container: Identifier(
-                                                        Raw(util),
+                                    Eval(
+                                        EvalCommand {
+                                            eval: None,
+                                            expr: Call(
+                                                f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (258,8)->(258,9)), index: RawIdentifier { name: "WarnMsg" } }) arg: [
+                                                    String(
+                                                        SingleQuote(
+                                                            "Error: No references found",
+                                                        ),
                                                     ),
-                                                    dot: Token(Dot, (258,8)->(258,9)),
-                                                    index: RawIdentifier {
-                                                        name: "WarnMsg",
-                                                    },
-                                                },
+                                                ],
                                             ),
-                                            open: Token(LeftParen, (258,16)->(258,17)),
-                                            args: [
-                                                String(
-                                                    SingleQuote(
-                                                        "Error: No references found",
-                                                    ),
-                                                ),
-                                            ],
-                                            close: Token(RightParen, (258,45)->(258,46)),
                                             eol: Token(EndOfLine, (258,46)->(258,46)),
                                         },
                                     ),
@@ -3929,38 +3829,27 @@ expression: snapshot_parsing(contents)
                     NoOp(
                         Token(EndOfLine, "\n", (262,0)->(262,0)),
                     ),
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(symbol),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(symbol)), dot: Token(Dot, (263,8)->(263,9)), index: RawIdentifier { name: "ShowReferences" } }) arg: [
+                                    Identifier(
+                                        Raw(lspserver),
                                     ),
-                                    dot: Token(Dot, (263,8)->(263,9)),
-                                    index: RawIdentifier {
-                                        name: "ShowReferences",
-                                    },
-                                },
-                            ),
-                            open: Token(LeftParen, (263,23)->(263,24)),
-                            args: [
-                                Identifier(
-                                    Raw(lspserver),
-                                ),
-                                DictAccess(
-                                    DictAccess {
-                                        container: Identifier(
-                                            Raw(reply),
-                                        ),
-                                        dot: Token(Dot, (263,40)->(263,41)),
-                                        index: RawIdentifier {
-                                            name: "result",
+                                    DictAccess(
+                                        DictAccess {
+                                            container: Identifier(
+                                                Raw(reply),
+                                            ),
+                                            dot: Token(Dot, (263,40)->(263,41)),
+                                            index: RawIdentifier {
+                                                name: "result",
+                                            },
                                         },
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (263,47)->(263,48)),
+                                    ),
+                                ],
+                            ),
                             eol: Token(EndOfLine, (263,48)->(263,48)),
                         },
                     ),
@@ -4307,204 +4196,201 @@ expression: snapshot_parsing(contents)
                                             endif_eol: Token(EndOfLine, (288,9)->(288,9)),
                                         },
                                     ),
-                                    Call(
-                                        CallCommand {
-                                            call: None,
-                                            expr: Identifier(
-                                                Raw(prop_add),
-                                            ),
-                                            open: Token(LeftParen, (289,12)->(289,13)),
-                                            args: [
-                                                Infix(
-                                                    InfixExpression {
-                                                        token: Token(Plus, "+", (289,36)->(289,37)),
-                                                        operator: Plus,
-                                                        left: DictAccess(
-                                                            DictAccess {
-                                                                container: DictAccess(
-                                                                    DictAccess {
-                                                                        container: DictAccess(
-                                                                            DictAccess {
-                                                                                container: Identifier(
-                                                                                    Raw(docHL),
-                                                                                ),
-                                                                                dot: Token(Dot, (289,18)->(289,19)),
-                                                                                index: RawIdentifier {
-                                                                                    name: "range",
+                                    Eval(
+                                        EvalCommand {
+                                            eval: None,
+                                            expr: Call(
+                                                f: Identifier(Raw(prop_add)) arg: [
+                                                    Infix(
+                                                        InfixExpression {
+                                                            token: Token(Plus, "+", (289,36)->(289,37)),
+                                                            operator: Plus,
+                                                            left: DictAccess(
+                                                                DictAccess {
+                                                                    container: DictAccess(
+                                                                        DictAccess {
+                                                                            container: DictAccess(
+                                                                                DictAccess {
+                                                                                    container: Identifier(
+                                                                                        Raw(docHL),
+                                                                                    ),
+                                                                                    dot: Token(Dot, (289,18)->(289,19)),
+                                                                                    index: RawIdentifier {
+                                                                                        name: "range",
+                                                                                    },
                                                                                 },
+                                                                            ),
+                                                                            dot: Token(Dot, (289,24)->(289,25)),
+                                                                            index: RawIdentifier {
+                                                                                name: "start",
                                                                             },
-                                                                        ),
-                                                                        dot: Token(Dot, (289,24)->(289,25)),
-                                                                        index: RawIdentifier {
-                                                                            name: "start",
                                                                         },
+                                                                    ),
+                                                                    dot: Token(Dot, (289,30)->(289,31)),
+                                                                    index: RawIdentifier {
+                                                                        name: "line",
                                                                     },
-                                                                ),
-                                                                dot: Token(Dot, (289,30)->(289,31)),
-                                                                index: RawIdentifier {
-                                                                    name: "line",
                                                                 },
-                                                            },
-                                                        ),
-                                                        right: Number(
-                                                            Number(1),
-                                                        ),
-                                                    },
-                                                ),
-                                                Infix(
-                                                    InfixExpression {
-                                                        token: Token(Plus, "+", (290,50)->(290,51)),
-                                                        operator: Plus,
-                                                        left: Call(
-                                                            f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (290,6)->(290,7)), index: RawIdentifier { name: "GetLineByteFromPos" } }) arg: [
-                                                                Identifier(
-                                                                    Raw(bnr),
-                                                                ),
-                                                                DictAccess(
-                                                                    DictAccess {
-                                                                        container: DictAccess(
-                                                                            DictAccess {
-                                                                                container: Identifier(
-                                                                                    Raw(docHL),
-                                                                                ),
-                                                                                dot: Token(Dot, (290,36)->(290,37)),
-                                                                                index: RawIdentifier {
-                                                                                    name: "range",
+                                                            ),
+                                                            right: Number(
+                                                                Number(1),
+                                                            ),
+                                                        },
+                                                    ),
+                                                    Infix(
+                                                        InfixExpression {
+                                                            token: Token(Plus, "+", (290,50)->(290,51)),
+                                                            operator: Plus,
+                                                            left: Call(
+                                                                f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (290,6)->(290,7)), index: RawIdentifier { name: "GetLineByteFromPos" } }) arg: [
+                                                                    Identifier(
+                                                                        Raw(bnr),
+                                                                    ),
+                                                                    DictAccess(
+                                                                        DictAccess {
+                                                                            container: DictAccess(
+                                                                                DictAccess {
+                                                                                    container: Identifier(
+                                                                                        Raw(docHL),
+                                                                                    ),
+                                                                                    dot: Token(Dot, (290,36)->(290,37)),
+                                                                                    index: RawIdentifier {
+                                                                                        name: "range",
+                                                                                    },
                                                                                 },
+                                                                            ),
+                                                                            dot: Token(Dot, (290,42)->(290,43)),
+                                                                            index: RawIdentifier {
+                                                                                name: "start",
                                                                             },
-                                                                        ),
-                                                                        dot: Token(Dot, (290,42)->(290,43)),
-                                                                        index: RawIdentifier {
-                                                                            name: "start",
                                                                         },
-                                                                    },
-                                                                ),
-                                                            ],
-                                                        ),
-                                                        right: Number(
-                                                            Number(1),
-                                                        ),
-                                                    },
-                                                ),
-                                                Dict(
-                                                    DictLiteral {
-                                                        open: Token(LeftBrace, (291,2)->(291,3)),
-                                                        elements: [
-                                                            KeyValue {
-                                                                key: Literal(
-                                                                    Literal {
-                                                                        token: Token(Identifier, "end_lnum", (291,3)->(291,11)),
-                                                                    },
-                                                                ),
-                                                                colon: Token(SpacedColon, (291,11)->(291,13)),
-                                                                value: Infix(
-                                                                    InfixExpression {
-                                                                        token: Token(Plus, "+", (291,34)->(291,35)),
-                                                                        operator: Plus,
-                                                                        left: DictAccess(
-                                                                            DictAccess {
-                                                                                container: DictAccess(
-                                                                                    DictAccess {
-                                                                                        container: DictAccess(
-                                                                                            DictAccess {
-                                                                                                container: Identifier(
-                                                                                                    Raw(docHL),
-                                                                                                ),
-                                                                                                dot: Token(Dot, (291,18)->(291,19)),
-                                                                                                index: RawIdentifier {
-                                                                                                    name: "range",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                            right: Number(
+                                                                Number(1),
+                                                            ),
+                                                        },
+                                                    ),
+                                                    Dict(
+                                                        DictLiteral {
+                                                            open: Token(LeftBrace, (291,2)->(291,3)),
+                                                            elements: [
+                                                                KeyValue {
+                                                                    key: Literal(
+                                                                        Literal {
+                                                                            token: Token(Identifier, "end_lnum", (291,3)->(291,11)),
+                                                                        },
+                                                                    ),
+                                                                    colon: Token(SpacedColon, (291,11)->(291,13)),
+                                                                    value: Infix(
+                                                                        InfixExpression {
+                                                                            token: Token(Plus, "+", (291,34)->(291,35)),
+                                                                            operator: Plus,
+                                                                            left: DictAccess(
+                                                                                DictAccess {
+                                                                                    container: DictAccess(
+                                                                                        DictAccess {
+                                                                                            container: DictAccess(
+                                                                                                DictAccess {
+                                                                                                    container: Identifier(
+                                                                                                        Raw(docHL),
+                                                                                                    ),
+                                                                                                    dot: Token(Dot, (291,18)->(291,19)),
+                                                                                                    index: RawIdentifier {
+                                                                                                        name: "range",
+                                                                                                    },
                                                                                                 },
+                                                                                            ),
+                                                                                            dot: Token(Dot, (291,24)->(291,25)),
+                                                                                            index: RawIdentifier {
+                                                                                                name: "end",
                                                                                             },
-                                                                                        ),
-                                                                                        dot: Token(Dot, (291,24)->(291,25)),
-                                                                                        index: RawIdentifier {
-                                                                                            name: "end",
                                                                                         },
+                                                                                    ),
+                                                                                    dot: Token(Dot, (291,28)->(291,29)),
+                                                                                    index: RawIdentifier {
+                                                                                        name: "line",
                                                                                     },
-                                                                                ),
-                                                                                dot: Token(Dot, (291,28)->(291,29)),
-                                                                                index: RawIdentifier {
-                                                                                    name: "line",
                                                                                 },
-                                                                            },
-                                                                        ),
-                                                                        right: Number(
-                                                                            Number(1),
-                                                                        ),
-                                                                    },
-                                                                ),
-                                                            },
-                                                            KeyValue {
-                                                                key: Literal(
-                                                                    Literal {
-                                                                        token: Token(Identifier, "end_col", (292,4)->(292,11)),
-                                                                    },
-                                                                ),
-                                                                colon: Token(SpacedColon, (292,11)->(292,13)),
-                                                                value: Infix(
-                                                                    InfixExpression {
-                                                                        token: Token(Plus, "+", (292,59)->(292,60)),
-                                                                        operator: Plus,
-                                                                        left: Call(
-                                                                            f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (292,17)->(292,18)), index: RawIdentifier { name: "GetLineByteFromPos" } }) arg: [
-                                                                                Identifier(
-                                                                                    Raw(bnr),
-                                                                                ),
-                                                                                DictAccess(
-                                                                                    DictAccess {
-                                                                                        container: DictAccess(
-                                                                                            DictAccess {
-                                                                                                container: Identifier(
-                                                                                                    Raw(docHL),
-                                                                                                ),
-                                                                                                dot: Token(Dot, (292,47)->(292,48)),
-                                                                                                index: RawIdentifier {
-                                                                                                    name: "range",
+                                                                            ),
+                                                                            right: Number(
+                                                                                Number(1),
+                                                                            ),
+                                                                        },
+                                                                    ),
+                                                                },
+                                                                KeyValue {
+                                                                    key: Literal(
+                                                                        Literal {
+                                                                            token: Token(Identifier, "end_col", (292,4)->(292,11)),
+                                                                        },
+                                                                    ),
+                                                                    colon: Token(SpacedColon, (292,11)->(292,13)),
+                                                                    value: Infix(
+                                                                        InfixExpression {
+                                                                            token: Token(Plus, "+", (292,59)->(292,60)),
+                                                                            operator: Plus,
+                                                                            left: Call(
+                                                                                f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (292,17)->(292,18)), index: RawIdentifier { name: "GetLineByteFromPos" } }) arg: [
+                                                                                    Identifier(
+                                                                                        Raw(bnr),
+                                                                                    ),
+                                                                                    DictAccess(
+                                                                                        DictAccess {
+                                                                                            container: DictAccess(
+                                                                                                DictAccess {
+                                                                                                    container: Identifier(
+                                                                                                        Raw(docHL),
+                                                                                                    ),
+                                                                                                    dot: Token(Dot, (292,47)->(292,48)),
+                                                                                                    index: RawIdentifier {
+                                                                                                        name: "range",
+                                                                                                    },
                                                                                                 },
+                                                                                            ),
+                                                                                            dot: Token(Dot, (292,53)->(292,54)),
+                                                                                            index: RawIdentifier {
+                                                                                                name: "end",
                                                                                             },
-                                                                                        ),
-                                                                                        dot: Token(Dot, (292,53)->(292,54)),
-                                                                                        index: RawIdentifier {
-                                                                                            name: "end",
                                                                                         },
-                                                                                    },
-                                                                                ),
-                                                                            ],
-                                                                        ),
-                                                                        right: Number(
-                                                                            Number(1),
-                                                                        ),
-                                                                    },
-                                                                ),
-                                                            },
-                                                            KeyValue {
-                                                                key: Literal(
-                                                                    Literal {
-                                                                        token: Token(Identifier, "bufnr", (293,4)->(293,9)),
-                                                                    },
-                                                                ),
-                                                                colon: Token(SpacedColon, (293,9)->(293,11)),
-                                                                value: Identifier(
-                                                                    Raw(bnr),
-                                                                ),
-                                                            },
-                                                            KeyValue {
-                                                                key: Literal(
-                                                                    Literal {
-                                                                        token: Token(Identifier, "type", (294,4)->(294,8)),
-                                                                    },
-                                                                ),
-                                                                colon: Token(SpacedColon, (294,8)->(294,10)),
-                                                                value: Identifier(
-                                                                    Raw(propName),
-                                                                ),
-                                                            },
-                                                        ],
-                                                        close: Token(RightBrace, (294,18)->(294,19)),
-                                                    },
-                                                ),
-                                            ],
-                                            close: Token(RightParen, (294,19)->(294,20)),
+                                                                                    ),
+                                                                                ],
+                                                                            ),
+                                                                            right: Number(
+                                                                                Number(1),
+                                                                            ),
+                                                                        },
+                                                                    ),
+                                                                },
+                                                                KeyValue {
+                                                                    key: Literal(
+                                                                        Literal {
+                                                                            token: Token(Identifier, "bufnr", (293,4)->(293,9)),
+                                                                        },
+                                                                    ),
+                                                                    colon: Token(SpacedColon, (293,9)->(293,11)),
+                                                                    value: Identifier(
+                                                                        Raw(bnr),
+                                                                    ),
+                                                                },
+                                                                KeyValue {
+                                                                    key: Literal(
+                                                                        Literal {
+                                                                            token: Token(Identifier, "type", (294,4)->(294,8)),
+                                                                        },
+                                                                    ),
+                                                                    colon: Token(SpacedColon, (294,8)->(294,10)),
+                                                                    value: Identifier(
+                                                                        Raw(propName),
+                                                                    ),
+                                                                },
+                                                            ],
+                                                            close: Token(RightBrace, (294,18)->(294,19)),
+                                                        },
+                                                    ),
+                                                ],
+                                            ),
                                             eol: Token(EndOfLine, (294,20)->(294,20)),
                                         },
                                     ),
@@ -5677,33 +5563,30 @@ expression: snapshot_parsing(contents)
                                             if_eol: Token(EndOfLine, (363,34)->(363,34)),
                                             body: Body {
                                                 commands: [
-                                                    Call(
-                                                        CallCommand {
-                                                            call: None,
-                                                            expr: Identifier(
-                                                                Raw(ProcessDocSymbolTable),
-                                                            ),
-                                                            open: Token(LeftParen, (364,27)->(364,28)),
-                                                            args: [
-                                                                DictAccess(
-                                                                    DictAccess {
-                                                                        container: Identifier(
-                                                                            Raw(symbol),
-                                                                        ),
-                                                                        dot: Token(Dot, (364,34)->(364,35)),
-                                                                        index: RawIdentifier {
-                                                                            name: "children",
+                                                    Eval(
+                                                        EvalCommand {
+                                                            eval: None,
+                                                            expr: Call(
+                                                                f: Identifier(Raw(ProcessDocSymbolTable)) arg: [
+                                                                    DictAccess(
+                                                                        DictAccess {
+                                                                            container: Identifier(
+                                                                                Raw(symbol),
+                                                                            ),
+                                                                            dot: Token(Dot, (364,34)->(364,35)),
+                                                                            index: RawIdentifier {
+                                                                                name: "children",
+                                                                            },
                                                                         },
-                                                                    },
-                                                                ),
-                                                                Identifier(
-                                                                    Raw(childSymbols),
-                                                                ),
-                                                                Identifier(
-                                                                    Raw(symbolLineTable),
-                                                                ),
-                                                            ],
-                                                            close: Token(RightParen, (364,74)->(364,75)),
+                                                                    ),
+                                                                    Identifier(
+                                                                        Raw(childSymbols),
+                                                                    ),
+                                                                    Identifier(
+                                                                        Raw(symbolLineTable),
+                                                                    ),
+                                                                ],
+                                                            ),
                                                             eol: Token(EndOfLine, (364,75)->(364,75)),
                                                         },
                                                     ),
@@ -6095,33 +5978,22 @@ expression: snapshot_parsing(contents)
                                     Comment(
                                         Token(Comment, "# No symbols defined for this file. Clear the outline window.", (386,4)->(386,65)),
                                     ),
-                                    Call(
-                                        CallCommand {
-                                            call: None,
-                                            expr: DictAccess(
-                                                DictAccess {
-                                                    container: Identifier(
-                                                        Raw(outline),
+                                    Eval(
+                                        EvalCommand {
+                                            eval: None,
+                                            expr: Call(
+                                                f: DictAccess(DictAccess { container: Identifier(Raw(outline)), dot: Token(Dot, (387,11)->(387,12)), index: RawIdentifier { name: "UpdateOutlineWindow" } }) arg: [
+                                                    Identifier(
+                                                        Raw(fname),
                                                     ),
-                                                    dot: Token(Dot, (387,11)->(387,12)),
-                                                    index: RawIdentifier {
-                                                        name: "UpdateOutlineWindow",
-                                                    },
-                                                },
+                                                    Identifier(
+                                                        Raw(symbolTypeTable),
+                                                    ),
+                                                    Identifier(
+                                                        Raw(symbolLineTable),
+                                                    ),
+                                                ],
                                             ),
-                                            open: Token(LeftParen, (387,31)->(387,32)),
-                                            args: [
-                                                Identifier(
-                                                    Raw(fname),
-                                                ),
-                                                Identifier(
-                                                    Raw(symbolTypeTable),
-                                                ),
-                                                Identifier(
-                                                    Raw(symbolLineTable),
-                                                ),
-                                            ],
-                                            close: Token(RightParen, (387,71)->(387,72)),
                                             eol: Token(EndOfLine, (387,72)->(387,72)),
                                         },
                                     ),
@@ -6186,33 +6058,30 @@ expression: snapshot_parsing(contents)
                                     Comment(
                                         Token(Comment, "# SymbolInformation[]", (392,4)->(392,25)),
                                     ),
-                                    Call(
-                                        CallCommand {
-                                            call: None,
-                                            expr: Identifier(
-                                                Raw(ProcessSymbolInfoTable),
-                                            ),
-                                            open: Token(LeftParen, (393,26)->(393,27)),
-                                            args: [
-                                                DictAccess(
-                                                    DictAccess {
-                                                        container: Identifier(
-                                                            Raw(reply),
-                                                        ),
-                                                        dot: Token(Dot, (393,32)->(393,33)),
-                                                        index: RawIdentifier {
-                                                            name: "result",
+                                    Eval(
+                                        EvalCommand {
+                                            eval: None,
+                                            expr: Call(
+                                                f: Identifier(Raw(ProcessSymbolInfoTable)) arg: [
+                                                    DictAccess(
+                                                        DictAccess {
+                                                            container: Identifier(
+                                                                Raw(reply),
+                                                            ),
+                                                            dot: Token(Dot, (393,32)->(393,33)),
+                                                            index: RawIdentifier {
+                                                                name: "result",
+                                                            },
                                                         },
-                                                    },
-                                                ),
-                                                Identifier(
-                                                    Raw(symbolTypeTable),
-                                                ),
-                                                Identifier(
-                                                    Raw(symbolLineTable),
-                                                ),
-                                            ],
-                                            close: Token(RightParen, (393,73)->(393,74)),
+                                                    ),
+                                                    Identifier(
+                                                        Raw(symbolTypeTable),
+                                                    ),
+                                                    Identifier(
+                                                        Raw(symbolLineTable),
+                                                    ),
+                                                ],
+                                            ),
                                             eol: Token(EndOfLine, (393,74)->(393,74)),
                                         },
                                     ),
@@ -6228,33 +6097,30 @@ expression: snapshot_parsing(contents)
                                             Comment(
                                                 Token(Comment, "# DocumentSymbol[]", (395,4)->(395,22)),
                                             ),
-                                            Call(
-                                                CallCommand {
-                                                    call: None,
-                                                    expr: Identifier(
-                                                        Raw(ProcessDocSymbolTable),
-                                                    ),
-                                                    open: Token(LeftParen, (396,25)->(396,26)),
-                                                    args: [
-                                                        DictAccess(
-                                                            DictAccess {
-                                                                container: Identifier(
-                                                                    Raw(reply),
-                                                                ),
-                                                                dot: Token(Dot, (396,31)->(396,32)),
-                                                                index: RawIdentifier {
-                                                                    name: "result",
+                                            Eval(
+                                                EvalCommand {
+                                                    eval: None,
+                                                    expr: Call(
+                                                        f: Identifier(Raw(ProcessDocSymbolTable)) arg: [
+                                                            DictAccess(
+                                                                DictAccess {
+                                                                    container: Identifier(
+                                                                        Raw(reply),
+                                                                    ),
+                                                                    dot: Token(Dot, (396,31)->(396,32)),
+                                                                    index: RawIdentifier {
+                                                                        name: "result",
+                                                                    },
                                                                 },
-                                                            },
-                                                        ),
-                                                        Identifier(
-                                                            Raw(symbolTypeTable),
-                                                        ),
-                                                        Identifier(
-                                                            Raw(symbolLineTable),
-                                                        ),
-                                                    ],
-                                                    close: Token(RightParen, (396,72)->(396,73)),
+                                                            ),
+                                                            Identifier(
+                                                                Raw(symbolTypeTable),
+                                                            ),
+                                                            Identifier(
+                                                                Raw(symbolLineTable),
+                                                            ),
+                                                        ],
+                                                    ),
                                                     eol: Token(EndOfLine, (396,73)->(396,73)),
                                                 },
                                             ),
@@ -6384,33 +6250,22 @@ expression: snapshot_parsing(contents)
                             eol: Token(EndOfLine, (400,74)->(400,74)),
                         },
                     ),
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(outline),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(outline)), dot: Token(Dot, (401,9)->(401,10)), index: RawIdentifier { name: "UpdateOutlineWindow" } }) arg: [
+                                    Identifier(
+                                        Raw(fname),
                                     ),
-                                    dot: Token(Dot, (401,9)->(401,10)),
-                                    index: RawIdentifier {
-                                        name: "UpdateOutlineWindow",
-                                    },
-                                },
+                                    Identifier(
+                                        Raw(symbolTypeTable),
+                                    ),
+                                    Identifier(
+                                        Raw(symbolLineTable),
+                                    ),
+                                ],
                             ),
-                            open: Token(LeftParen, (401,29)->(401,30)),
-                            args: [
-                                Identifier(
-                                    Raw(fname),
-                                ),
-                                Identifier(
-                                    Raw(symbolTypeTable),
-                                ),
-                                Identifier(
-                                    Raw(symbolLineTable),
-                                ),
-                            ],
-                            close: Token(RightParen, (401,69)->(401,70)),
                             eol: Token(EndOfLine, (401,70)->(401,70)),
                         },
                     ),
@@ -6505,29 +6360,18 @@ expression: snapshot_parsing(contents)
                                     Comment(
                                         Token(Comment, "# no action can be performed", (408,4)->(408,32)),
                                     ),
-                                    Call(
-                                        CallCommand {
-                                            call: None,
-                                            expr: DictAccess(
-                                                DictAccess {
-                                                    container: Identifier(
-                                                        Raw(util),
+                                    Eval(
+                                        EvalCommand {
+                                            eval: None,
+                                            expr: Call(
+                                                f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (409,8)->(409,9)), index: RawIdentifier { name: "WarnMsg" } }) arg: [
+                                                    String(
+                                                        SingleQuote(
+                                                            "No code action is available",
+                                                        ),
                                                     ),
-                                                    dot: Token(Dot, (409,8)->(409,9)),
-                                                    index: RawIdentifier {
-                                                        name: "WarnMsg",
-                                                    },
-                                                },
+                                                ],
                                             ),
-                                            open: Token(LeftParen, (409,16)->(409,17)),
-                                            args: [
-                                                String(
-                                                    SingleQuote(
-                                                        "No code action is available",
-                                                    ),
-                                                ),
-                                            ],
-                                            close: Token(RightParen, (409,46)->(409,47)),
                                             eol: Token(EndOfLine, (409,47)->(409,47)),
                                         },
                                     ),
@@ -6549,38 +6393,27 @@ expression: snapshot_parsing(contents)
                     NoOp(
                         Token(EndOfLine, "\n", (412,0)->(412,0)),
                     ),
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(codeaction),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(codeaction)), dot: Token(Dot, (413,12)->(413,13)), index: RawIdentifier { name: "ApplyCodeAction" } }) arg: [
+                                    Identifier(
+                                        Raw(lspserver),
                                     ),
-                                    dot: Token(Dot, (413,12)->(413,13)),
-                                    index: RawIdentifier {
-                                        name: "ApplyCodeAction",
-                                    },
-                                },
-                            ),
-                            open: Token(LeftParen, (413,28)->(413,29)),
-                            args: [
-                                Identifier(
-                                    Raw(lspserver),
-                                ),
-                                DictAccess(
-                                    DictAccess {
-                                        container: Identifier(
-                                            Raw(reply),
-                                        ),
-                                        dot: Token(Dot, (413,45)->(413,46)),
-                                        index: RawIdentifier {
-                                            name: "result",
+                                    DictAccess(
+                                        DictAccess {
+                                            container: Identifier(
+                                                Raw(reply),
+                                            ),
+                                            dot: Token(Dot, (413,45)->(413,46)),
+                                            index: RawIdentifier {
+                                                name: "result",
+                                            },
                                         },
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (413,52)->(413,53)),
+                                    ),
+                                ],
+                            ),
                             eol: Token(EndOfLine, (413,53)->(413,53)),
                         },
                     ),
@@ -8142,29 +7975,18 @@ expression: snapshot_parsing(contents)
                                             if_eol: Token(EndOfLine, (518,48)->(518,48)),
                                             body: Body {
                                                 commands: [
-                                                    Call(
-                                                        CallCommand {
-                                                            call: None,
-                                                            expr: DictAccess(
-                                                                DictAccess {
-                                                                    container: Identifier(
-                                                                        Raw(util),
+                                                    Eval(
+                                                        EvalCommand {
+                                                            eval: None,
+                                                            expr: Call(
+                                                                f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (519,10)->(519,11)), index: RawIdentifier { name: "WarnMsg" } }) arg: [
+                                                                    String(
+                                                                        SingleQuote(
+                                                                            "No incoming calls",
+                                                                        ),
                                                                     ),
-                                                                    dot: Token(Dot, (519,10)->(519,11)),
-                                                                    index: RawIdentifier {
-                                                                        name: "WarnMsg",
-                                                                    },
-                                                                },
+                                                                ],
                                                             ),
-                                                            open: Token(LeftParen, (519,18)->(519,19)),
-                                                            args: [
-                                                                String(
-                                                                    SingleQuote(
-                                                                        "No incoming calls",
-                                                                    ),
-                                                                ),
-                                                            ],
-                                                            close: Token(RightParen, (519,38)->(519,39)),
                                                             eol: Token(EndOfLine, (519,39)->(519,39)),
                                                         },
                                                     ),
@@ -8177,29 +7999,18 @@ expression: snapshot_parsing(contents)
                                                     else_eol: Token(EndOfLine, (520,8)->(520,8)),
                                                     body: Body {
                                                         commands: [
-                                                            Call(
-                                                                CallCommand {
-                                                                    call: None,
-                                                                    expr: DictAccess(
-                                                                        DictAccess {
-                                                                            container: Identifier(
-                                                                                Raw(util),
+                                                            Eval(
+                                                                EvalCommand {
+                                                                    eval: None,
+                                                                    expr: Call(
+                                                                        f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (521,10)->(521,11)), index: RawIdentifier { name: "WarnMsg" } }) arg: [
+                                                                            String(
+                                                                                SingleQuote(
+                                                                                    "No outgoing calls",
+                                                                                ),
                                                                             ),
-                                                                            dot: Token(Dot, (521,10)->(521,11)),
-                                                                            index: RawIdentifier {
-                                                                                name: "WarnMsg",
-                                                                            },
-                                                                        },
+                                                                        ],
                                                                     ),
-                                                                    open: Token(LeftParen, (521,18)->(521,19)),
-                                                                    args: [
-                                                                        String(
-                                                                            SingleQuote(
-                                                                                "No outgoing calls",
-                                                                            ),
-                                                                        ),
-                                                                    ],
-                                                                    close: Token(RightParen, (521,38)->(521,39)),
                                                                     eol: Token(EndOfLine, (521,39)->(521,39)),
                                                                 },
                                                             ),
@@ -8520,47 +8331,44 @@ expression: snapshot_parsing(contents)
                             if_eol: Token(EndOfLine, (538,46)->(538,46)),
                             body: Body {
                                 commands: [
-                                    Call(
-                                        CallCommand {
-                                            call: None,
-                                            expr: Identifier(
-                                                Scope(ScopedIdentifier { scope: Global, colon: Token(Colon, (539,5)->(539,6)), accessor: Raw(LspGetIncomingCalls) }),
-                                            ),
-                                            open: Token(LeftParen, (539,25)->(539,26)),
-                                            args: [
-                                                Index(
-                                                    IndexExpression {
-                                                        container: DictAccess(
-                                                            DictAccess {
-                                                                container: Identifier(
-                                                                    Raw(reply),
-                                                                ),
-                                                                dot: Token(Dot, (539,31)->(539,32)),
-                                                                index: RawIdentifier {
-                                                                    name: "result",
-                                                                },
-                                                            },
-                                                        ),
-                                                        open: Token(LeftBracket, (539,38)->(539,39)),
-                                                        index: Item(
-                                                            Infix(
-                                                                InfixExpression {
-                                                                    token: Token(Minus, "-", (539,46)->(539,47)),
-                                                                    operator: Minus,
-                                                                    left: Identifier(
-                                                                        Raw(choice),
+                                    Eval(
+                                        EvalCommand {
+                                            eval: None,
+                                            expr: Call(
+                                                f: Identifier(Scope(ScopedIdentifier { scope: Global, colon: Token(Colon, (539,5)->(539,6)), accessor: Raw(LspGetIncomingCalls) })) arg: [
+                                                    Index(
+                                                        IndexExpression {
+                                                            container: DictAccess(
+                                                                DictAccess {
+                                                                    container: Identifier(
+                                                                        Raw(reply),
                                                                     ),
-                                                                    right: Number(
-                                                                        Number(1),
-                                                                    ),
+                                                                    dot: Token(Dot, (539,31)->(539,32)),
+                                                                    index: RawIdentifier {
+                                                                        name: "result",
+                                                                    },
                                                                 },
                                                             ),
-                                                        ),
-                                                        close: Token(RightBracket, (539,49)->(539,50)),
-                                                    },
-                                                ),
-                                            ],
-                                            close: Token(RightParen, (539,50)->(539,51)),
+                                                            open: Token(LeftBracket, (539,38)->(539,39)),
+                                                            index: Item(
+                                                                Infix(
+                                                                    InfixExpression {
+                                                                        token: Token(Minus, "-", (539,46)->(539,47)),
+                                                                        operator: Minus,
+                                                                        left: Identifier(
+                                                                            Raw(choice),
+                                                                        ),
+                                                                        right: Number(
+                                                                            Number(1),
+                                                                        ),
+                                                                    },
+                                                                ),
+                                                            ),
+                                                            close: Token(RightBracket, (539,49)->(539,50)),
+                                                        },
+                                                    ),
+                                                ],
+                                            ),
                                             eol: Token(EndOfLine, (539,51)->(539,51)),
                                         },
                                     ),
@@ -8573,47 +8381,44 @@ expression: snapshot_parsing(contents)
                                     else_eol: Token(EndOfLine, (540,6)->(540,6)),
                                     body: Body {
                                         commands: [
-                                            Call(
-                                                CallCommand {
-                                                    call: None,
-                                                    expr: Identifier(
-                                                        Scope(ScopedIdentifier { scope: Global, colon: Token(Colon, (541,5)->(541,6)), accessor: Raw(LspGetOutgoingCalls) }),
-                                                    ),
-                                                    open: Token(LeftParen, (541,25)->(541,26)),
-                                                    args: [
-                                                        Index(
-                                                            IndexExpression {
-                                                                container: DictAccess(
-                                                                    DictAccess {
-                                                                        container: Identifier(
-                                                                            Raw(reply),
-                                                                        ),
-                                                                        dot: Token(Dot, (541,31)->(541,32)),
-                                                                        index: RawIdentifier {
-                                                                            name: "result",
-                                                                        },
-                                                                    },
-                                                                ),
-                                                                open: Token(LeftBracket, (541,38)->(541,39)),
-                                                                index: Item(
-                                                                    Infix(
-                                                                        InfixExpression {
-                                                                            token: Token(Minus, "-", (541,46)->(541,47)),
-                                                                            operator: Minus,
-                                                                            left: Identifier(
-                                                                                Raw(choice),
+                                            Eval(
+                                                EvalCommand {
+                                                    eval: None,
+                                                    expr: Call(
+                                                        f: Identifier(Scope(ScopedIdentifier { scope: Global, colon: Token(Colon, (541,5)->(541,6)), accessor: Raw(LspGetOutgoingCalls) })) arg: [
+                                                            Index(
+                                                                IndexExpression {
+                                                                    container: DictAccess(
+                                                                        DictAccess {
+                                                                            container: Identifier(
+                                                                                Raw(reply),
                                                                             ),
-                                                                            right: Number(
-                                                                                Number(1),
-                                                                            ),
+                                                                            dot: Token(Dot, (541,31)->(541,32)),
+                                                                            index: RawIdentifier {
+                                                                                name: "result",
+                                                                            },
                                                                         },
                                                                     ),
-                                                                ),
-                                                                close: Token(RightBracket, (541,49)->(541,50)),
-                                                            },
-                                                        ),
-                                                    ],
-                                                    close: Token(RightParen, (541,50)->(541,51)),
+                                                                    open: Token(LeftBracket, (541,38)->(541,39)),
+                                                                    index: Item(
+                                                                        Infix(
+                                                                            InfixExpression {
+                                                                                token: Token(Minus, "-", (541,46)->(541,47)),
+                                                                                operator: Minus,
+                                                                                left: Identifier(
+                                                                                    Raw(choice),
+                                                                                ),
+                                                                                right: Number(
+                                                                                    Number(1),
+                                                                                ),
+                                                                            },
+                                                                        ),
+                                                                    ),
+                                                                    close: Token(RightBracket, (541,49)->(541,50)),
+                                                                },
+                                                            ),
+                                                        ],
+                                                    ),
                                                     eol: Token(EndOfLine, (541,51)->(541,51)),
                                                 },
                                             ),
@@ -8731,35 +8536,24 @@ expression: snapshot_parsing(contents)
                     NoOp(
                         Token(EndOfLine, "\n", (551,0)->(551,0)),
                     ),
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(callhier),
-                                    ),
-                                    dot: Token(Dot, (552,10)->(552,11)),
-                                    index: RawIdentifier {
-                                        name: "IncomingCalls",
-                                    },
-                                },
-                            ),
-                            open: Token(LeftParen, (552,24)->(552,25)),
-                            args: [
-                                DictAccess(
-                                    DictAccess {
-                                        container: Identifier(
-                                            Raw(reply),
-                                        ),
-                                        dot: Token(Dot, (552,30)->(552,31)),
-                                        index: RawIdentifier {
-                                            name: "result",
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(callhier)), dot: Token(Dot, (552,10)->(552,11)), index: RawIdentifier { name: "IncomingCalls" } }) arg: [
+                                    DictAccess(
+                                        DictAccess {
+                                            container: Identifier(
+                                                Raw(reply),
+                                            ),
+                                            dot: Token(Dot, (552,30)->(552,31)),
+                                            index: RawIdentifier {
+                                                name: "result",
+                                            },
                                         },
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (552,37)->(552,38)),
+                                    ),
+                                ],
+                            ),
                             eol: Token(EndOfLine, (552,38)->(552,38)),
                         },
                     ),
@@ -8869,35 +8663,24 @@ expression: snapshot_parsing(contents)
                     NoOp(
                         Token(EndOfLine, "\n", (561,0)->(561,0)),
                     ),
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(callhier),
-                                    ),
-                                    dot: Token(Dot, (562,10)->(562,11)),
-                                    index: RawIdentifier {
-                                        name: "OutgoingCalls",
-                                    },
-                                },
-                            ),
-                            open: Token(LeftParen, (562,24)->(562,25)),
-                            args: [
-                                DictAccess(
-                                    DictAccess {
-                                        container: Identifier(
-                                            Raw(reply),
-                                        ),
-                                        dot: Token(Dot, (562,30)->(562,31)),
-                                        index: RawIdentifier {
-                                            name: "result",
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(callhier)), dot: Token(Dot, (562,10)->(562,11)), index: RawIdentifier { name: "OutgoingCalls" } }) arg: [
+                                    DictAccess(
+                                        DictAccess {
+                                            container: Identifier(
+                                                Raw(reply),
+                                            ),
+                                            dot: Token(Dot, (562,30)->(562,31)),
+                                            index: RawIdentifier {
+                                                name: "result",
+                                            },
                                         },
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (562,37)->(562,38)),
+                                    ),
+                                ],
+                            ),
                             eol: Token(EndOfLine, (562,38)->(562,38)),
                         },
                     ),
@@ -9188,44 +8971,22 @@ expression: snapshot_parsing(contents)
                                     if_eol: Token(EndOfLine, (586,44)->(586,44)),
                                     body: Body {
                                         commands: [
-                                            Call(
-                                                CallCommand {
-                                                    call: None,
-                                                    expr: Index(
-                                                        IndexExpression {
-                                                            container: Identifier(
-                                                                Raw(lsp_reply_handlers),
+                                            Eval(
+                                                EvalCommand {
+                                                    eval: None,
+                                                    expr: Call(
+                                                        f: Index(IndexExpression { container: Identifier(Raw(lsp_reply_handlers)), open: Token(LeftBracket, (587,22)->(587,23)), index: Item(DictAccess(DictAccess { container: Identifier(Raw(req)), dot: Token(Dot, (587,26)->(587,27)), index: RawIdentifier { name: "method" } })), close: Token(RightBracket, (587,33)->(587,34)) }) arg: [
+                                                            Identifier(
+                                                                Raw(lspserver),
                                                             ),
-                                                            open: Token(LeftBracket, (587,22)->(587,23)),
-                                                            index: Item(
-                                                                DictAccess(
-                                                                    DictAccess {
-                                                                        container: Identifier(
-                                                                            Raw(req),
-                                                                        ),
-                                                                        dot: Token(Dot, (587,26)->(587,27)),
-                                                                        index: RawIdentifier {
-                                                                            name: "method",
-                                                                        },
-                                                                    },
-                                                                ),
+                                                            Identifier(
+                                                                Raw(req),
                                                             ),
-                                                            close: Token(RightBracket, (587,33)->(587,34)),
-                                                        },
+                                                            Identifier(
+                                                                Raw(reply),
+                                                            ),
+                                                        ],
                                                     ),
-                                                    open: Token(LeftParen, (587,34)->(587,35)),
-                                                    args: [
-                                                        Identifier(
-                                                            Raw(lspserver),
-                                                        ),
-                                                        Identifier(
-                                                            Raw(req),
-                                                        ),
-                                                        Identifier(
-                                                            Raw(reply),
-                                                        ),
-                                                    ],
-                                                    close: Token(RightParen, (587,56)->(587,57)),
                                                     eol: Token(EndOfLine, (587,57)->(587,57)),
                                                 },
                                             ),
@@ -9238,29 +8999,18 @@ expression: snapshot_parsing(contents)
                                             else_eol: Token(EndOfLine, (588,6)->(588,6)),
                                             body: Body {
                                                 commands: [
-                                                    Call(
-                                                        CallCommand {
-                                                            call: None,
-                                                            expr: DictAccess(
-                                                                DictAccess {
-                                                                    container: Identifier(
-                                                                        Raw(util),
+                                                    Eval(
+                                                        EvalCommand {
+                                                            eval: None,
+                                                            expr: Call(
+                                                                f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (589,8)->(589,9)), index: RawIdentifier { name: "ErrMsg" } }) arg: [
+                                                                    String(
+                                                                        Interpolated(
+                                                                            "Error: Unsupported reply received from LSP server: {reply->string()} for request: {req->string()}",
+                                                                        ),
                                                                     ),
-                                                                    dot: Token(Dot, (589,8)->(589,9)),
-                                                                    index: RawIdentifier {
-                                                                        name: "ErrMsg",
-                                                                    },
-                                                                },
+                                                                ],
                                                             ),
-                                                            open: Token(LeftParen, (589,15)->(589,16)),
-                                                            args: [
-                                                                String(
-                                                                    Interpolated(
-                                                                        "Error: Unsupported reply received from LSP server: {reply->string()} for request: {req->string()}",
-                                                                    ),
-                                                                ),
-                                                            ],
-                                                            close: Token(RightParen, (589,116)->(589,117)),
                                                             eol: Token(EndOfLine, (589,117)->(589,117)),
                                                         },
                                                     ),
@@ -9332,65 +9082,54 @@ expression: snapshot_parsing(contents)
             def_eol: Token(EndOfLine, (596,66)->(596,66)),
             body: Body {
                 commands: [
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(diag),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(diag)), dot: Token(Dot, (597,6)->(597,7)), index: RawIdentifier { name: "DiagNotification" } }) arg: [
+                                    Identifier(
+                                        Raw(lspserver),
                                     ),
-                                    dot: Token(Dot, (597,6)->(597,7)),
-                                    index: RawIdentifier {
-                                        name: "DiagNotification",
-                                    },
-                                },
+                                    DictAccess(
+                                        DictAccess {
+                                            container: DictAccess(
+                                                DictAccess {
+                                                    container: Identifier(
+                                                        Raw(reply),
+                                                    ),
+                                                    dot: Token(Dot, (597,40)->(597,41)),
+                                                    index: RawIdentifier {
+                                                        name: "params",
+                                                    },
+                                                },
+                                            ),
+                                            dot: Token(Dot, (597,47)->(597,48)),
+                                            index: RawIdentifier {
+                                                name: "uri",
+                                            },
+                                        },
+                                    ),
+                                    DictAccess(
+                                        DictAccess {
+                                            container: DictAccess(
+                                                DictAccess {
+                                                    container: Identifier(
+                                                        Raw(reply),
+                                                    ),
+                                                    dot: Token(Dot, (597,58)->(597,59)),
+                                                    index: RawIdentifier {
+                                                        name: "params",
+                                                    },
+                                                },
+                                            ),
+                                            dot: Token(Dot, (597,65)->(597,66)),
+                                            index: RawIdentifier {
+                                                name: "diagnostics",
+                                            },
+                                        },
+                                    ),
+                                ],
                             ),
-                            open: Token(LeftParen, (597,23)->(597,24)),
-                            args: [
-                                Identifier(
-                                    Raw(lspserver),
-                                ),
-                                DictAccess(
-                                    DictAccess {
-                                        container: DictAccess(
-                                            DictAccess {
-                                                container: Identifier(
-                                                    Raw(reply),
-                                                ),
-                                                dot: Token(Dot, (597,40)->(597,41)),
-                                                index: RawIdentifier {
-                                                    name: "params",
-                                                },
-                                            },
-                                        ),
-                                        dot: Token(Dot, (597,47)->(597,48)),
-                                        index: RawIdentifier {
-                                            name: "uri",
-                                        },
-                                    },
-                                ),
-                                DictAccess(
-                                    DictAccess {
-                                        container: DictAccess(
-                                            DictAccess {
-                                                container: Identifier(
-                                                    Raw(reply),
-                                                ),
-                                                dot: Token(Dot, (597,58)->(597,59)),
-                                                index: RawIdentifier {
-                                                    name: "params",
-                                                },
-                                            },
-                                        ),
-                                        dot: Token(Dot, (597,65)->(597,66)),
-                                        index: RawIdentifier {
-                                            name: "diagnostics",
-                                        },
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (597,77)->(597,78)),
                             eol: Token(EndOfLine, (597,78)->(597,78)),
                         },
                     ),
@@ -9946,34 +9685,23 @@ expression: snapshot_parsing(contents)
                     NoOp(
                         Token(EndOfLine, "\n", (629,0)->(629,0)),
                     ),
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(util),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (630,6)->(630,7)), index: RawIdentifier { name: "TraceLog" } }) arg: [
+                                    Boolean(
+                                        VimBoolean {
+                                            value: false,
+                                        },
                                     ),
-                                    dot: Token(Dot, (630,6)->(630,7)),
-                                    index: RawIdentifier {
-                                        name: "TraceLog",
-                                    },
-                                },
+                                    String(
+                                        Interpolated(
+                                            "[{mtype}]: {reply.params.message}",
+                                        ),
+                                    ),
+                                ],
                             ),
-                            open: Token(LeftParen, (630,15)->(630,16)),
-                            args: [
-                                Boolean(
-                                    VimBoolean {
-                                        value: false,
-                                    },
-                                ),
-                                String(
-                                    Interpolated(
-                                        "[{mtype}]: {reply.params.message}",
-                                    ),
-                                ),
-                            ],
-                            close: Token(RightParen, (630,59)->(630,60)),
                             eol: Token(EndOfLine, (630,60)->(630,60)),
                         },
                     ),
@@ -10027,29 +9755,18 @@ expression: snapshot_parsing(contents)
             def_eol: Token(EndOfLine, (634,67)->(634,67)),
             body: Body {
                 commands: [
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(util),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (635,6)->(635,7)), index: RawIdentifier { name: "ErrMsg" } }) arg: [
+                                    String(
+                                        Interpolated(
+                                            "Error: Unsupported notification message received from the LSP server ({lspserver.path}), message = {reply->string()}",
+                                        ),
                                     ),
-                                    dot: Token(Dot, (635,6)->(635,7)),
-                                    index: RawIdentifier {
-                                        name: "ErrMsg",
-                                    },
-                                },
+                                ],
                             ),
-                            open: Token(LeftParen, (635,13)->(635,14)),
-                            args: [
-                                String(
-                                    Interpolated(
-                                        "Error: Unsupported notification message received from the LSP server ({lspserver.path}), message = {reply->string()}",
-                                    ),
-                                ),
-                            ],
-                            close: Token(RightParen, (635,133)->(635,134)),
                             eol: Token(EndOfLine, (635,134)->(635,134)),
                         },
                     ),
@@ -10161,22 +9878,19 @@ expression: snapshot_parsing(contents)
                             if_eol: Token(EndOfLine, (642,40)->(642,40)),
                             body: Body {
                                 commands: [
-                                    Call(
-                                        CallCommand {
-                                            call: None,
-                                            expr: Identifier(
-                                                Raw(ProcessUnsupportedNotif),
+                                    Eval(
+                                        EvalCommand {
+                                            eval: None,
+                                            expr: Call(
+                                                f: Identifier(Raw(ProcessUnsupportedNotif)) arg: [
+                                                    Identifier(
+                                                        Raw(lspserver),
+                                                    ),
+                                                    Identifier(
+                                                        Raw(reply),
+                                                    ),
+                                                ],
                                             ),
-                                            open: Token(LeftParen, (643,24)->(643,25)),
-                                            args: [
-                                                Identifier(
-                                                    Raw(lspserver),
-                                                ),
-                                                Identifier(
-                                                    Raw(reply),
-                                                ),
-                                            ],
-                                            close: Token(RightParen, (643,41)->(643,42)),
                                             eol: Token(EndOfLine, (643,42)->(643,42)),
                                         },
                                     ),
@@ -10453,41 +10167,19 @@ expression: snapshot_parsing(contents)
                                     if_eol: Token(EndOfLine, (666,46)->(666,46)),
                                     body: Body {
                                         commands: [
-                                            Call(
-                                                CallCommand {
-                                                    call: None,
-                                                    expr: Index(
-                                                        IndexExpression {
-                                                            container: Identifier(
-                                                                Raw(lsp_notif_handlers),
+                                            Eval(
+                                                EvalCommand {
+                                                    eval: None,
+                                                    expr: Call(
+                                                        f: Index(IndexExpression { container: Identifier(Raw(lsp_notif_handlers)), open: Token(LeftBracket, (667,22)->(667,23)), index: Item(DictAccess(DictAccess { container: Identifier(Raw(reply)), dot: Token(Dot, (667,28)->(667,29)), index: RawIdentifier { name: "method" } })), close: Token(RightBracket, (667,35)->(667,36)) }) arg: [
+                                                            Identifier(
+                                                                Raw(lspserver),
                                                             ),
-                                                            open: Token(LeftBracket, (667,22)->(667,23)),
-                                                            index: Item(
-                                                                DictAccess(
-                                                                    DictAccess {
-                                                                        container: Identifier(
-                                                                            Raw(reply),
-                                                                        ),
-                                                                        dot: Token(Dot, (667,28)->(667,29)),
-                                                                        index: RawIdentifier {
-                                                                            name: "method",
-                                                                        },
-                                                                    },
-                                                                ),
+                                                            Identifier(
+                                                                Raw(reply),
                                                             ),
-                                                            close: Token(RightBracket, (667,35)->(667,36)),
-                                                        },
+                                                        ],
                                                     ),
-                                                    open: Token(LeftParen, (667,36)->(667,37)),
-                                                    args: [
-                                                        Identifier(
-                                                            Raw(lspserver),
-                                                        ),
-                                                        Identifier(
-                                                            Raw(reply),
-                                                        ),
-                                                    ],
-                                                    close: Token(RightParen, (667,53)->(667,54)),
                                                     eol: Token(EndOfLine, (667,54)->(667,54)),
                                                 },
                                             ),
@@ -10500,29 +10192,18 @@ expression: snapshot_parsing(contents)
                                             else_eol: Token(EndOfLine, (668,6)->(668,6)),
                                             body: Body {
                                                 commands: [
-                                                    Call(
-                                                        CallCommand {
-                                                            call: None,
-                                                            expr: DictAccess(
-                                                                DictAccess {
-                                                                    container: Identifier(
-                                                                        Raw(util),
+                                                    Eval(
+                                                        EvalCommand {
+                                                            eval: None,
+                                                            expr: Call(
+                                                                f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (669,8)->(669,9)), index: RawIdentifier { name: "ErrMsg" } }) arg: [
+                                                                    String(
+                                                                        Interpolated(
+                                                                            "Error: Unsupported notification received from LSP server {reply->string()}",
+                                                                        ),
                                                                     ),
-                                                                    dot: Token(Dot, (669,8)->(669,9)),
-                                                                    index: RawIdentifier {
-                                                                        name: "ErrMsg",
-                                                                    },
-                                                                },
+                                                                ],
                                                             ),
-                                                            open: Token(LeftParen, (669,15)->(669,16)),
-                                                            args: [
-                                                                String(
-                                                                    Interpolated(
-                                                                        "Error: Unsupported notification received from LSP server {reply->string()}",
-                                                                    ),
-                                                                ),
-                                                            ],
-                                                            close: Token(RightParen, (669,93)->(669,94)),
                                                             eol: Token(EndOfLine, (669,94)->(669,94)),
                                                         },
                                                     ),
@@ -10703,90 +10384,68 @@ expression: snapshot_parsing(contents)
                             endif_eol: Token(EndOfLine, (684,7)->(684,7)),
                         },
                     ),
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(textedit),
-                                    ),
-                                    dot: Token(Dot, (685,10)->(685,11)),
-                                    index: RawIdentifier {
-                                        name: "ApplyWorkspaceEdit",
-                                    },
-                                },
-                            ),
-                            open: Token(LeftParen, (685,29)->(685,30)),
-                            args: [
-                                DictAccess(
-                                    DictAccess {
-                                        container: Identifier(
-                                            Raw(workspaceEditParams),
-                                        ),
-                                        dot: Token(Dot, (685,49)->(685,50)),
-                                        index: RawIdentifier {
-                                            name: "edit",
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(textedit)), dot: Token(Dot, (685,10)->(685,11)), index: RawIdentifier { name: "ApplyWorkspaceEdit" } }) arg: [
+                                    DictAccess(
+                                        DictAccess {
+                                            container: Identifier(
+                                                Raw(workspaceEditParams),
+                                            ),
+                                            dot: Token(Dot, (685,49)->(685,50)),
+                                            index: RawIdentifier {
+                                                name: "edit",
+                                            },
                                         },
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (685,54)->(685,55)),
+                                    ),
+                                ],
+                            ),
                             eol: Token(EndOfLine, (685,55)->(685,55)),
                         },
                     ),
                     Comment(
                         Token(Comment, "# TODO: Need to return the proper result of the edit operation", (686,2)->(686,64)),
                     ),
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(lspserver),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(lspserver)), dot: Token(Dot, (687,11)->(687,12)), index: RawIdentifier { name: "sendResponse" } }) arg: [
+                                    Identifier(
+                                        Raw(request),
                                     ),
-                                    dot: Token(Dot, (687,11)->(687,12)),
-                                    index: RawIdentifier {
-                                        name: "sendResponse",
-                                    },
-                                },
+                                    Dict(
+                                        DictLiteral {
+                                            open: Token(LeftBrace, (687,34)->(687,35)),
+                                            elements: [
+                                                KeyValue {
+                                                    key: Literal(
+                                                        Literal {
+                                                            token: Token(Identifier, "applied", (687,35)->(687,42)),
+                                                        },
+                                                    ),
+                                                    colon: Token(SpacedColon, (687,42)->(687,44)),
+                                                    value: Boolean(
+                                                        VimBoolean {
+                                                            value: true,
+                                                        },
+                                                    ),
+                                                },
+                                            ],
+                                            close: Token(RightBrace, (687,48)->(687,49)),
+                                        },
+                                    ),
+                                    Dict(
+                                        DictLiteral {
+                                            open: Token(LeftBrace, (687,51)->(687,52)),
+                                            elements: [],
+                                            close: Token(RightBrace, (687,52)->(687,53)),
+                                        },
+                                    ),
+                                ],
                             ),
-                            open: Token(LeftParen, (687,24)->(687,25)),
-                            args: [
-                                Identifier(
-                                    Raw(request),
-                                ),
-                                Dict(
-                                    DictLiteral {
-                                        open: Token(LeftBrace, (687,34)->(687,35)),
-                                        elements: [
-                                            KeyValue {
-                                                key: Literal(
-                                                    Literal {
-                                                        token: Token(Identifier, "applied", (687,35)->(687,42)),
-                                                    },
-                                                ),
-                                                colon: Token(SpacedColon, (687,42)->(687,44)),
-                                                value: Boolean(
-                                                    VimBoolean {
-                                                        value: true,
-                                                    },
-                                                ),
-                                            },
-                                        ],
-                                        close: Token(RightBrace, (687,48)->(687,49)),
-                                    },
-                                ),
-                                Dict(
-                                    DictLiteral {
-                                        open: Token(LeftBrace, (687,51)->(687,52)),
-                                        elements: [],
-                                        close: Token(RightBrace, (687,52)->(687,53)),
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (687,53)->(687,54)),
                             eol: Token(EndOfLine, (687,54)->(687,54)),
                         },
                     ),
@@ -10846,41 +10505,30 @@ expression: snapshot_parsing(contents)
             def_eol: Token(EndOfLine, (693,72)->(693,72)),
             body: Body {
                 commands: [
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(lspserver),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(lspserver)), dot: Token(Dot, (694,11)->(694,12)), index: RawIdentifier { name: "sendResponse" } }) arg: [
+                                    Identifier(
+                                        Raw(request),
                                     ),
-                                    dot: Token(Dot, (694,11)->(694,12)),
-                                    index: RawIdentifier {
-                                        name: "sendResponse",
-                                    },
-                                },
+                                    Dict(
+                                        DictLiteral {
+                                            open: Token(LeftBrace, (694,34)->(694,35)),
+                                            elements: [],
+                                            close: Token(RightBrace, (694,35)->(694,36)),
+                                        },
+                                    ),
+                                    Dict(
+                                        DictLiteral {
+                                            open: Token(LeftBrace, (694,38)->(694,39)),
+                                            elements: [],
+                                            close: Token(RightBrace, (694,39)->(694,40)),
+                                        },
+                                    ),
+                                ],
                             ),
-                            open: Token(LeftParen, (694,24)->(694,25)),
-                            args: [
-                                Identifier(
-                                    Raw(request),
-                                ),
-                                Dict(
-                                    DictLiteral {
-                                        open: Token(LeftBrace, (694,34)->(694,35)),
-                                        elements: [],
-                                        close: Token(RightBrace, (694,35)->(694,36)),
-                                    },
-                                ),
-                                Dict(
-                                    DictLiteral {
-                                        open: Token(LeftBrace, (694,38)->(694,39)),
-                                        elements: [],
-                                        close: Token(RightBrace, (694,39)->(694,40)),
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (694,40)->(694,41)),
                             eol: Token(EndOfLine, (694,41)->(694,41)),
                         },
                     ),
@@ -10940,41 +10588,30 @@ expression: snapshot_parsing(contents)
             def_eol: Token(EndOfLine, (700,70)->(700,70)),
             body: Body {
                 commands: [
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(lspserver),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(lspserver)), dot: Token(Dot, (701,11)->(701,12)), index: RawIdentifier { name: "sendResponse" } }) arg: [
+                                    Identifier(
+                                        Raw(request),
                                     ),
-                                    dot: Token(Dot, (701,11)->(701,12)),
-                                    index: RawIdentifier {
-                                        name: "sendResponse",
-                                    },
-                                },
+                                    Dict(
+                                        DictLiteral {
+                                            open: Token(LeftBrace, (701,34)->(701,35)),
+                                            elements: [],
+                                            close: Token(RightBrace, (701,35)->(701,36)),
+                                        },
+                                    ),
+                                    Dict(
+                                        DictLiteral {
+                                            open: Token(LeftBrace, (701,38)->(701,39)),
+                                            elements: [],
+                                            close: Token(RightBrace, (701,39)->(701,40)),
+                                        },
+                                    ),
+                                ],
                             ),
-                            open: Token(LeftParen, (701,24)->(701,25)),
-                            args: [
-                                Identifier(
-                                    Raw(request),
-                                ),
-                                Dict(
-                                    DictLiteral {
-                                        open: Token(LeftBrace, (701,34)->(701,35)),
-                                        elements: [],
-                                        close: Token(RightBrace, (701,35)->(701,36)),
-                                    },
-                                ),
-                                Dict(
-                                    DictLiteral {
-                                        open: Token(LeftBrace, (701,38)->(701,39)),
-                                        elements: [],
-                                        close: Token(RightBrace, (701,39)->(701,40)),
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (701,40)->(701,41)),
                             eol: Token(EndOfLine, (701,41)->(701,41)),
                         },
                     ),
@@ -11034,41 +10671,30 @@ expression: snapshot_parsing(contents)
             def_eol: Token(EndOfLine, (707,72)->(707,72)),
             body: Body {
                 commands: [
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(lspserver),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(lspserver)), dot: Token(Dot, (708,11)->(708,12)), index: RawIdentifier { name: "sendResponse" } }) arg: [
+                                    Identifier(
+                                        Raw(request),
                                     ),
-                                    dot: Token(Dot, (708,11)->(708,12)),
-                                    index: RawIdentifier {
-                                        name: "sendResponse",
-                                    },
-                                },
+                                    Dict(
+                                        DictLiteral {
+                                            open: Token(LeftBrace, (708,34)->(708,35)),
+                                            elements: [],
+                                            close: Token(RightBrace, (708,35)->(708,36)),
+                                        },
+                                    ),
+                                    Dict(
+                                        DictLiteral {
+                                            open: Token(LeftBrace, (708,38)->(708,39)),
+                                            elements: [],
+                                            close: Token(RightBrace, (708,39)->(708,40)),
+                                        },
+                                    ),
+                                ],
                             ),
-                            open: Token(LeftParen, (708,24)->(708,25)),
-                            args: [
-                                Identifier(
-                                    Raw(request),
-                                ),
-                                Dict(
-                                    DictLiteral {
-                                        open: Token(LeftBrace, (708,34)->(708,35)),
-                                        elements: [],
-                                        close: Token(RightBrace, (708,35)->(708,36)),
-                                    },
-                                ),
-                                Dict(
-                                    DictLiteral {
-                                        open: Token(LeftBrace, (708,38)->(708,39)),
-                                        elements: [],
-                                        close: Token(RightBrace, (708,39)->(708,40)),
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (708,40)->(708,41)),
                             eol: Token(EndOfLine, (708,41)->(708,41)),
                         },
                     ),
@@ -11119,29 +10745,18 @@ expression: snapshot_parsing(contents)
             def_eol: Token(EndOfLine, (711,67)->(711,67)),
             body: Body {
                 commands: [
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: DictAccess(
-                                DictAccess {
-                                    container: Identifier(
-                                        Raw(util),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (712,6)->(712,7)), index: RawIdentifier { name: "ErrMsg" } }) arg: [
+                                    String(
+                                        Interpolated(
+                                            "Error: Unsupported request message received from the LSP server ({lspserver.path}), message = {request->string()}",
+                                        ),
                                     ),
-                                    dot: Token(Dot, (712,6)->(712,7)),
-                                    index: RawIdentifier {
-                                        name: "ErrMsg",
-                                    },
-                                },
+                                ],
                             ),
-                            open: Token(LeftParen, (712,13)->(712,14)),
-                            args: [
-                                String(
-                                    Interpolated(
-                                        "Error: Unsupported request message received from the LSP server ({lspserver.path}), message = {request->string()}",
-                                    ),
-                                ),
-                            ],
-                            close: Token(RightParen, (712,130)->(712,131)),
                             eol: Token(EndOfLine, (712,131)->(712,131)),
                         },
                     ),
@@ -11341,41 +10956,19 @@ expression: snapshot_parsing(contents)
                                     if_eol: Token(EndOfLine, (729,48)->(729,48)),
                                     body: Body {
                                         commands: [
-                                            Call(
-                                                CallCommand {
-                                                    call: None,
-                                                    expr: Index(
-                                                        IndexExpression {
-                                                            container: Identifier(
-                                                                Raw(lspRequestHandlers),
+                                            Eval(
+                                                EvalCommand {
+                                                    eval: None,
+                                                    expr: Call(
+                                                        f: Index(IndexExpression { container: Identifier(Raw(lspRequestHandlers)), open: Token(LeftBracket, (730,22)->(730,23)), index: Item(DictAccess(DictAccess { container: Identifier(Raw(request)), dot: Token(Dot, (730,30)->(730,31)), index: RawIdentifier { name: "method" } })), close: Token(RightBracket, (730,37)->(730,38)) }) arg: [
+                                                            Identifier(
+                                                                Raw(lspserver),
                                                             ),
-                                                            open: Token(LeftBracket, (730,22)->(730,23)),
-                                                            index: Item(
-                                                                DictAccess(
-                                                                    DictAccess {
-                                                                        container: Identifier(
-                                                                            Raw(request),
-                                                                        ),
-                                                                        dot: Token(Dot, (730,30)->(730,31)),
-                                                                        index: RawIdentifier {
-                                                                            name: "method",
-                                                                        },
-                                                                    },
-                                                                ),
+                                                            Identifier(
+                                                                Raw(request),
                                                             ),
-                                                            close: Token(RightBracket, (730,37)->(730,38)),
-                                                        },
+                                                        ],
                                                     ),
-                                                    open: Token(LeftParen, (730,38)->(730,39)),
-                                                    args: [
-                                                        Identifier(
-                                                            Raw(lspserver),
-                                                        ),
-                                                        Identifier(
-                                                            Raw(request),
-                                                        ),
-                                                    ],
-                                                    close: Token(RightParen, (730,57)->(730,58)),
                                                     eol: Token(EndOfLine, (730,58)->(730,58)),
                                                 },
                                             ),
@@ -11388,29 +10981,18 @@ expression: snapshot_parsing(contents)
                                             else_eol: Token(EndOfLine, (731,6)->(731,6)),
                                             body: Body {
                                                 commands: [
-                                                    Call(
-                                                        CallCommand {
-                                                            call: None,
-                                                            expr: DictAccess(
-                                                                DictAccess {
-                                                                    container: Identifier(
-                                                                        Raw(util),
+                                                    Eval(
+                                                        EvalCommand {
+                                                            eval: None,
+                                                            expr: Call(
+                                                                f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (732,8)->(732,9)), index: RawIdentifier { name: "ErrMsg" } }) arg: [
+                                                                    String(
+                                                                        Interpolated(
+                                                                            "Error: Unsupported request message received from the LSP server ({lspserver.path}), message = {request->string()}",
+                                                                        ),
                                                                     ),
-                                                                    dot: Token(Dot, (732,8)->(732,9)),
-                                                                    index: RawIdentifier {
-                                                                        name: "ErrMsg",
-                                                                    },
-                                                                },
+                                                                ],
                                                             ),
-                                                            open: Token(LeftParen, (732,15)->(732,16)),
-                                                            args: [
-                                                                String(
-                                                                    Interpolated(
-                                                                        "Error: Unsupported request message received from the LSP server ({lspserver.path}), message = {request->string()}",
-                                                                    ),
-                                                                ),
-                                                            ],
-                                                            close: Token(RightParen, (732,132)->(732,133)),
                                                             eol: Token(EndOfLine, (732,133)->(732,133)),
                                                         },
                                                     ),
@@ -11737,30 +11319,19 @@ expression: snapshot_parsing(contents)
                                                                     if_eol: Token(EndOfLine, (752,31)->(752,31)),
                                                                     body: Body {
                                                                         commands: [
-                                                                            Call(
-                                                                                CallCommand {
-                                                                                    call: None,
-                                                                                    expr: DictAccess(
-                                                                                        DictAccess {
-                                                                                            container: Identifier(
-                                                                                                Raw(lspserver),
+                                                                            Eval(
+                                                                                EvalCommand {
+                                                                                    eval: None,
+                                                                                    expr: Call(
+                                                                                        f: DictAccess(DictAccess { container: Identifier(Raw(lspserver)), dot: Token(Dot, (753,10)->(753,11)), index: RawIdentifier { name: "processReply" } }) arg: [
+                                                                                            Identifier(
+                                                                                                Raw(req),
                                                                                             ),
-                                                                                            dot: Token(Dot, (753,10)->(753,11)),
-                                                                                            index: RawIdentifier {
-                                                                                                name: "processReply",
-                                                                                            },
-                                                                                        },
+                                                                                            Identifier(
+                                                                                                Raw(msg),
+                                                                                            ),
+                                                                                        ],
                                                                                     ),
-                                                                                    open: Token(LeftParen, (753,23)->(753,24)),
-                                                                                    args: [
-                                                                                        Identifier(
-                                                                                            Raw(req),
-                                                                                        ),
-                                                                                        Identifier(
-                                                                                            Raw(msg),
-                                                                                        ),
-                                                                                    ],
-                                                                                    close: Token(RightParen, (753,32)->(753,33)),
                                                                                     eol: Token(EndOfLine, (753,33)->(753,33)),
                                                                                 },
                                                                             ),
@@ -11940,29 +11511,18 @@ expression: snapshot_parsing(contents)
                                                                                             endif_eol: Token(EndOfLine, (760,6)->(760,6)),
                                                                                         },
                                                                                     ),
-                                                                                    Call(
-                                                                                        CallCommand {
-                                                                                            call: None,
-                                                                                            expr: DictAccess(
-                                                                                                DictAccess {
-                                                                                                    container: Identifier(
-                                                                                                        Raw(util),
+                                                                                    Eval(
+                                                                                        EvalCommand {
+                                                                                            eval: None,
+                                                                                            expr: Call(
+                                                                                                f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (761,5)->(761,6)), index: RawIdentifier { name: "ErrMsg" } }) arg: [
+                                                                                                    String(
+                                                                                                        Interpolated(
+                                                                                                            "Error(LSP): request {req.method} failed ({emsg})",
+                                                                                                        ),
                                                                                                     ),
-                                                                                                    dot: Token(Dot, (761,5)->(761,6)),
-                                                                                                    index: RawIdentifier {
-                                                                                                        name: "ErrMsg",
-                                                                                                    },
-                                                                                                },
+                                                                                                ],
                                                                                             ),
-                                                                                            open: Token(LeftParen, (761,12)->(761,13)),
-                                                                                            args: [
-                                                                                                String(
-                                                                                                    Interpolated(
-                                                                                                        "Error(LSP): request {req.method} failed ({emsg})",
-                                                                                                    ),
-                                                                                                ),
-                                                                                            ],
-                                                                                            close: Token(RightParen, (761,64)->(761,65)),
                                                                                             eol: Token(EndOfLine, (761,65)->(761,65)),
                                                                                         },
                                                                                     ),
@@ -12029,27 +11589,16 @@ expression: snapshot_parsing(contents)
                                                     Comment(
                                                         Token(Comment, "# request message from the server", (765,4)->(765,37)),
                                                     ),
-                                                    Call(
-                                                        CallCommand {
-                                                            call: None,
-                                                            expr: DictAccess(
-                                                                DictAccess {
-                                                                    container: Identifier(
-                                                                        Raw(lspserver),
+                                                    Eval(
+                                                        EvalCommand {
+                                                            eval: None,
+                                                            expr: Call(
+                                                                f: DictAccess(DictAccess { container: Identifier(Raw(lspserver)), dot: Token(Dot, (766,13)->(766,14)), index: RawIdentifier { name: "processRequest" } }) arg: [
+                                                                    Identifier(
+                                                                        Raw(msg),
                                                                     ),
-                                                                    dot: Token(Dot, (766,13)->(766,14)),
-                                                                    index: RawIdentifier {
-                                                                        name: "processRequest",
-                                                                    },
-                                                                },
+                                                                ],
                                                             ),
-                                                            open: Token(LeftParen, (766,28)->(766,29)),
-                                                            args: [
-                                                                Identifier(
-                                                                    Raw(msg),
-                                                                ),
-                                                            ],
-                                                            close: Token(RightParen, (766,32)->(766,33)),
                                                             eol: Token(EndOfLine, (766,33)->(766,33)),
                                                         },
                                                     ),
@@ -12079,27 +11628,16 @@ expression: snapshot_parsing(contents)
                                                     Comment(
                                                         Token(Comment, "# notification message from the server", (768,4)->(768,42)),
                                                     ),
-                                                    Call(
-                                                        CallCommand {
-                                                            call: None,
-                                                            expr: DictAccess(
-                                                                DictAccess {
-                                                                    container: Identifier(
-                                                                        Raw(lspserver),
+                                                    Eval(
+                                                        EvalCommand {
+                                                            eval: None,
+                                                            expr: Call(
+                                                                f: DictAccess(DictAccess { container: Identifier(Raw(lspserver)), dot: Token(Dot, (769,13)->(769,14)), index: RawIdentifier { name: "processNotif" } }) arg: [
+                                                                    Identifier(
+                                                                        Raw(msg),
                                                                     ),
-                                                                    dot: Token(Dot, (769,13)->(769,14)),
-                                                                    index: RawIdentifier {
-                                                                        name: "processNotif",
-                                                                    },
-                                                                },
+                                                                ],
                                                             ),
-                                                            open: Token(LeftParen, (769,26)->(769,27)),
-                                                            args: [
-                                                                Identifier(
-                                                                    Raw(msg),
-                                                                ),
-                                                            ],
-                                                            close: Token(RightParen, (769,30)->(769,31)),
                                                             eol: Token(EndOfLine, (769,31)->(769,31)),
                                                         },
                                                     ),
@@ -12113,29 +11651,18 @@ expression: snapshot_parsing(contents)
                                             else_eol: Token(EndOfLine, (770,6)->(770,6)),
                                             body: Body {
                                                 commands: [
-                                                    Call(
-                                                        CallCommand {
-                                                            call: None,
-                                                            expr: DictAccess(
-                                                                DictAccess {
-                                                                    container: Identifier(
-                                                                        Raw(util),
+                                                    Eval(
+                                                        EvalCommand {
+                                                            eval: None,
+                                                            expr: Call(
+                                                                f: DictAccess(DictAccess { container: Identifier(Raw(util)), dot: Token(Dot, (771,8)->(771,9)), index: RawIdentifier { name: "ErrMsg" } }) arg: [
+                                                                    String(
+                                                                        Interpolated(
+                                                                            "Error(LSP): Unsupported message ({msg->string()})",
+                                                                        ),
                                                                     ),
-                                                                    dot: Token(Dot, (771,8)->(771,9)),
-                                                                    index: RawIdentifier {
-                                                                        name: "ErrMsg",
-                                                                    },
-                                                                },
+                                                                ],
                                                             ),
-                                                            open: Token(LeftParen, (771,15)->(771,16)),
-                                                            args: [
-                                                                String(
-                                                                    Interpolated(
-                                                                        "Error(LSP): Unsupported message ({msg->string()})",
-                                                                    ),
-                                                                ),
-                                                            ],
-                                                            close: Token(RightParen, (771,68)->(771,69)),
                                                             eol: Token(EndOfLine, (771,69)->(771,69)),
                                                         },
                                                     ),

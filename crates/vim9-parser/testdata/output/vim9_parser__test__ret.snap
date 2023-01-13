@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2856
+assertion_line: 2815
 expression: snapshot_parsing(contents)
 ---
 [
@@ -48,15 +48,12 @@ expression: snapshot_parsing(contents)
     NoOp(
         Token(EndOfLine, "\n", (5,0)->(5,0)),
     ),
-    Call(
-        CallCommand {
-            call: None,
-            expr: Identifier(
-                Raw(MyFunc),
+    Eval(
+        EvalCommand {
+            eval: None,
+            expr: Call(
+                f: Identifier(Raw(MyFunc)) arg: [],
             ),
-            open: Token(LeftParen, (6,6)->(6,7)),
-            args: [],
-            close: Token(RightParen, (6,7)->(6,8)),
             eol: Token(EndOfLine, (6,8)->(6,8)),
         },
     ),

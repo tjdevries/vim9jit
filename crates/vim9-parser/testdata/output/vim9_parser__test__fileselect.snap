@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2674
+assertion_line: 2843
 expression: snapshot_parsing(contents)
 ---
 [
@@ -349,9 +349,7 @@ expression: snapshot_parsing(contents)
             name: "Fileselect",
             command: Call(
                 CallCommand {
-                    call: Some(
-                        Token(Identifier, (39,43)->(39,47)),
-                    ),
+                    call: Token(Identifier, (39,43)->(39,47)),
                     expr: Identifier(
                         Raw(TshowMenu),
                     ),

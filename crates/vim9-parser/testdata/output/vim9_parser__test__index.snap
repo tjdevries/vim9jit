@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2563
+assertion_line: 2833
 expression: snapshot_parsing(contents)
 ---
 [
@@ -55,33 +55,30 @@ expression: snapshot_parsing(contents)
             def_eol: Token(EndOfLine, (4,20)->(4,20)),
             body: Body {
                 commands: [
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: Identifier(
-                                Raw(assert_equal),
-                            ),
-                            open: Token(LeftParen, (5,14)->(5,15)),
-                            args: [
-                                Number(
-                                    Number(1),
-                                ),
-                                Index(
-                                    IndexExpression {
-                                        container: Identifier(
-                                            Raw(l),
-                                        ),
-                                        open: Token(LeftBracket, (5,19)->(5,20)),
-                                        index: Item(
-                                            Number(
-                                                Number(0),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: Identifier(Raw(assert_equal)) arg: [
+                                    Number(
+                                        Number(1),
+                                    ),
+                                    Index(
+                                        IndexExpression {
+                                            container: Identifier(
+                                                Raw(l),
                                             ),
-                                        ),
-                                        close: Token(RightBracket, (5,21)->(5,22)),
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (5,22)->(5,23)),
+                                            open: Token(LeftBracket, (5,19)->(5,20)),
+                                            index: Item(
+                                                Number(
+                                                    Number(0),
+                                                ),
+                                            ),
+                                            close: Token(RightBracket, (5,21)->(5,22)),
+                                        },
+                                    ),
+                                ],
+                            ),
                             eol: Token(EndOfLine, (5,23)->(5,23)),
                         },
                     ),
@@ -119,42 +116,39 @@ expression: snapshot_parsing(contents)
                             eol: Token(EndOfLine, (9,15)->(9,15)),
                         },
                     ),
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: Identifier(
-                                Raw(assert_equal),
-                            ),
-                            open: Token(LeftParen, (10,14)->(10,15)),
-                            args: [
-                                Number(
-                                    Number(1),
-                                ),
-                                Index(
-                                    IndexExpression {
-                                        container: Identifier(
-                                            Raw(l),
-                                        ),
-                                        open: Token(LeftBracket, (10,19)->(10,20)),
-                                        index: Item(
-                                            Infix(
-                                                InfixExpression {
-                                                    token: Token(Minus, "-", (10,26)->(10,27)),
-                                                    operator: Minus,
-                                                    left: Identifier(
-                                                        Raw(index),
-                                                    ),
-                                                    right: Number(
-                                                        Number(1),
-                                                    ),
-                                                },
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: Identifier(Raw(assert_equal)) arg: [
+                                    Number(
+                                        Number(1),
+                                    ),
+                                    Index(
+                                        IndexExpression {
+                                            container: Identifier(
+                                                Raw(l),
                                             ),
-                                        ),
-                                        close: Token(RightBracket, (10,29)->(10,30)),
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (10,30)->(10,31)),
+                                            open: Token(LeftBracket, (10,19)->(10,20)),
+                                            index: Item(
+                                                Infix(
+                                                    InfixExpression {
+                                                        token: Token(Minus, "-", (10,26)->(10,27)),
+                                                        operator: Minus,
+                                                        left: Identifier(
+                                                            Raw(index),
+                                                        ),
+                                                        right: Number(
+                                                            Number(1),
+                                                        ),
+                                                    },
+                                                ),
+                                            ),
+                                            close: Token(RightBracket, (10,29)->(10,30)),
+                                        },
+                                    ),
+                                ],
+                            ),
                             eol: Token(EndOfLine, (10,31)->(10,31)),
                         },
                     ),
@@ -180,54 +174,51 @@ expression: snapshot_parsing(contents)
             def_eol: Token(EndOfLine, (13,15)->(13,15)),
             body: Body {
                 commands: [
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: Identifier(
-                                Raw(assert_equal),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: Identifier(Raw(assert_equal)) arg: [
+                                    Array(
+                                        ArrayLiteral {
+                                            open: Token(LeftBracket, (14,15)->(14,16)),
+                                            elements: [
+                                                Number(
+                                                    Number(1),
+                                                ),
+                                                Number(
+                                                    Number(2),
+                                                ),
+                                            ],
+                                            close: Token(RightBracket, (14,20)->(14,21)),
+                                        },
+                                    ),
+                                    Index(
+                                        IndexExpression {
+                                            container: Identifier(
+                                                Raw(l),
+                                            ),
+                                            open: Token(LeftBracket, (14,24)->(14,25)),
+                                            index: Slice(
+                                                VimSlice {
+                                                    start: Some(
+                                                        Number(
+                                                            Number(0),
+                                                        ),
+                                                    ),
+                                                    colon: Token(SpacedColon, (14,27)->(14,29)),
+                                                    finish: Some(
+                                                        Number(
+                                                            Number(1),
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                            close: Token(RightBracket, (14,30)->(14,31)),
+                                        },
+                                    ),
+                                ],
                             ),
-                            open: Token(LeftParen, (14,14)->(14,15)),
-                            args: [
-                                Array(
-                                    ArrayLiteral {
-                                        open: Token(LeftBracket, (14,15)->(14,16)),
-                                        elements: [
-                                            Number(
-                                                Number(1),
-                                            ),
-                                            Number(
-                                                Number(2),
-                                            ),
-                                        ],
-                                        close: Token(RightBracket, (14,20)->(14,21)),
-                                    },
-                                ),
-                                Index(
-                                    IndexExpression {
-                                        container: Identifier(
-                                            Raw(l),
-                                        ),
-                                        open: Token(LeftBracket, (14,24)->(14,25)),
-                                        index: Slice(
-                                            VimSlice {
-                                                start: Some(
-                                                    Number(
-                                                        Number(0),
-                                                    ),
-                                                ),
-                                                colon: Token(SpacedColon, (14,27)->(14,29)),
-                                                finish: Some(
-                                                    Number(
-                                                        Number(1),
-                                                    ),
-                                                ),
-                                            },
-                                        ),
-                                        close: Token(RightBracket, (14,30)->(14,31)),
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (14,31)->(14,32)),
                             eol: Token(EndOfLine, (14,32)->(14,32)),
                         },
                     ),
@@ -253,50 +244,47 @@ expression: snapshot_parsing(contents)
             def_eol: Token(EndOfLine, (17,15)->(17,15)),
             body: Body {
                 commands: [
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: Identifier(
-                                Raw(assert_equal),
-                            ),
-                            open: Token(LeftParen, (18,14)->(18,15)),
-                            args: [
-                                Array(
-                                    ArrayLiteral {
-                                        open: Token(LeftBracket, (18,15)->(18,16)),
-                                        elements: [
-                                            Number(
-                                                Number(2),
-                                            ),
-                                            Number(
-                                                Number(3),
-                                            ),
-                                        ],
-                                        close: Token(RightBracket, (18,20)->(18,21)),
-                                    },
-                                ),
-                                Index(
-                                    IndexExpression {
-                                        container: Identifier(
-                                            Raw(l),
-                                        ),
-                                        open: Token(LeftBracket, (18,24)->(18,25)),
-                                        index: Slice(
-                                            VimSlice {
-                                                start: Some(
-                                                    Number(
-                                                        Number(1),
-                                                    ),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: Identifier(Raw(assert_equal)) arg: [
+                                    Array(
+                                        ArrayLiteral {
+                                            open: Token(LeftBracket, (18,15)->(18,16)),
+                                            elements: [
+                                                Number(
+                                                    Number(2),
                                                 ),
-                                                colon: Token(SpacedColon, (18,27)->(18,29)),
-                                                finish: None,
-                                            },
-                                        ),
-                                        close: Token(RightBracket, (18,29)->(18,30)),
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (18,30)->(18,31)),
+                                                Number(
+                                                    Number(3),
+                                                ),
+                                            ],
+                                            close: Token(RightBracket, (18,20)->(18,21)),
+                                        },
+                                    ),
+                                    Index(
+                                        IndexExpression {
+                                            container: Identifier(
+                                                Raw(l),
+                                            ),
+                                            open: Token(LeftBracket, (18,24)->(18,25)),
+                                            index: Slice(
+                                                VimSlice {
+                                                    start: Some(
+                                                        Number(
+                                                            Number(1),
+                                                        ),
+                                                    ),
+                                                    colon: Token(SpacedColon, (18,27)->(18,29)),
+                                                    finish: None,
+                                                },
+                                            ),
+                                            close: Token(RightBracket, (18,29)->(18,30)),
+                                        },
+                                    ),
+                                ],
+                            ),
                             eol: Token(EndOfLine, (18,31)->(18,31)),
                         },
                     ),
@@ -322,50 +310,47 @@ expression: snapshot_parsing(contents)
             def_eol: Token(EndOfLine, (21,16)->(21,16)),
             body: Body {
                 commands: [
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: Identifier(
-                                Raw(assert_equal),
-                            ),
-                            open: Token(LeftParen, (22,14)->(22,15)),
-                            args: [
-                                Array(
-                                    ArrayLiteral {
-                                        open: Token(LeftBracket, (22,15)->(22,16)),
-                                        elements: [
-                                            Number(
-                                                Number(1),
-                                            ),
-                                            Number(
-                                                Number(2),
-                                            ),
-                                        ],
-                                        close: Token(RightBracket, (22,20)->(22,21)),
-                                    },
-                                ),
-                                Index(
-                                    IndexExpression {
-                                        container: Identifier(
-                                            Raw(l),
-                                        ),
-                                        open: Token(LeftBracket, (22,24)->(22,25)),
-                                        index: Slice(
-                                            VimSlice {
-                                                start: None,
-                                                colon: Token(SpacedColon, (22,25)->(22,27)),
-                                                finish: Some(
-                                                    Number(
-                                                        Number(1),
-                                                    ),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: Identifier(Raw(assert_equal)) arg: [
+                                    Array(
+                                        ArrayLiteral {
+                                            open: Token(LeftBracket, (22,15)->(22,16)),
+                                            elements: [
+                                                Number(
+                                                    Number(1),
                                                 ),
-                                            },
-                                        ),
-                                        close: Token(RightBracket, (22,28)->(22,29)),
-                                    },
-                                ),
-                            ],
-                            close: Token(RightParen, (22,29)->(22,30)),
+                                                Number(
+                                                    Number(2),
+                                                ),
+                                            ],
+                                            close: Token(RightBracket, (22,20)->(22,21)),
+                                        },
+                                    ),
+                                    Index(
+                                        IndexExpression {
+                                            container: Identifier(
+                                                Raw(l),
+                                            ),
+                                            open: Token(LeftBracket, (22,24)->(22,25)),
+                                            index: Slice(
+                                                VimSlice {
+                                                    start: None,
+                                                    colon: Token(SpacedColon, (22,25)->(22,27)),
+                                                    finish: Some(
+                                                        Number(
+                                                            Number(1),
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
+                                            close: Token(RightBracket, (22,28)->(22,29)),
+                                        },
+                                    ),
+                                ],
+                            ),
                             eol: Token(EndOfLine, (22,30)->(22,30)),
                         },
                     ),

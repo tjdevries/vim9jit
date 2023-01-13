@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2871
+assertion_line: 2830
 expression: snapshot_parsing(contents)
 ---
 [
@@ -42,22 +42,19 @@ expression: snapshot_parsing(contents)
                             eol: Token(EndOfLine, (3,24)->(3,24)),
                         },
                     ),
-                    Call(
-                        CallCommand {
-                            call: None,
-                            expr: Identifier(
-                                Raw(assert_equal),
+                    Eval(
+                        EvalCommand {
+                            eval: None,
+                            expr: Call(
+                                f: Identifier(Raw(assert_equal)) arg: [
+                                    Identifier(
+                                        Scope(ScopedIdentifier { scope: VimVar, colon: Token(Colon, (4,16)->(4,17)), accessor: Raw(true) }),
+                                    ),
+                                    Identifier(
+                                        Raw(bool1),
+                                    ),
+                                ],
                             ),
-                            open: Token(LeftParen, (4,14)->(4,15)),
-                            args: [
-                                Identifier(
-                                    Scope(ScopedIdentifier { scope: VimVar, colon: Token(Colon, (4,16)->(4,17)), accessor: Raw(true) }),
-                                ),
-                                Identifier(
-                                    Raw(bool1),
-                                ),
-                            ],
-                            close: Token(RightParen, (4,28)->(4,29)),
                             eol: Token(EndOfLine, (4,29)->(4,29)),
                         },
                     ),

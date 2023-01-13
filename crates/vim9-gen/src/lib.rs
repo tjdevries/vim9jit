@@ -9,10 +9,10 @@ use parser::{
     DeferCommand, DictAccess, DictLiteral, EchoCommand, ElseCommand, ElseIfCommand, ExCommand,
     ExecuteCommand, Expandable, ExportCommand, Expression, ForCommand, GroupedExpression, Heredoc,
     Identifier, IfCommand, ImportCommand, IndexExpression, IndexType, InfixExpression, Lambda,
-    Literal, MethodCall, MutationStatement, Operator, PrefixExpression, Program, RawIdentifier,
-    Register, ReturnCommand, ScopedIdentifier, SharedCommand, Signature, StatementCommand, Ternary,
-    TryCommand, Type, UnpackIdentifier, UserCommand, VarCommand, Vim9ScriptCommand, VimBoolean,
-    VimKey, VimNumber, VimOption, VimScope, VimString, WhileCommand,
+    Literal, MethodCall, MultiCommand, MutationStatement, Operator, PrefixExpression, Program,
+    RawIdentifier, Register, ReturnCommand, ScopedIdentifier, SharedCommand, Signature,
+    StatementCommand, Ternary, TryCommand, Type, UnpackIdentifier, UserCommand, VarCommand,
+    Vim9ScriptCommand, VimBoolean, VimKey, VimNumber, VimOption, VimScope, VimString, WhileCommand,
 };
 
 pub mod call_expr;
@@ -316,6 +316,7 @@ impl Generate for ExCommand {
             ExCommand::Defer(defer) => defer.write(state, output),
             ExCommand::Execute(exec) => exec.write(state, output),
             ExCommand::Eval(eval) => output.write_lua(&format!("{};", eval.expr.gen(state))),
+            ExCommand::MultiCommand(multi) => multi.write(state, output),
             _ => todo!("Have not yet handled: {:?}", self),
         }
     }
@@ -997,6 +998,15 @@ impl Generate for ElseCommand {
     }
 }
 
+impl Generate for MultiCommand {
+    fn write_default(&self, state: &mut State, output: &mut Output) {
+        self.commands.iter().for_each(|c| {
+            c.write_default(state, output);
+            output.write_lua("\n");
+        })
+    }
+}
+
 impl Generate for Body {
     fn write_default(&self, state: &mut State, output: &mut Output) {
         (&self).write(state, output)
@@ -1005,14 +1015,11 @@ impl Generate for Body {
 
 impl Generate for &Body {
     fn write_default(&self, state: &mut State, output: &mut Output) {
-        output.write_lua(
-            &self
-                .commands
-                .iter()
-                .map(|cmd| cmd.gen(state))
-                .collect::<Vec<String>>()
-                .join("\n"),
-        )
+        self.commands.iter().for_each(|c| {
+            c.write_default(state, output);
+            output.write_lua("\n");
+            // TODO: write vimscript?
+        })
     }
 }
 
@@ -1704,6 +1711,7 @@ fn toplevel_ident(s: &mut State, command: &ExCommand) -> Option<String> {
         ExCommand::Comment(_) => None,
         ExCommand::NoOp(_) => None,
         ExCommand::Defer(_) => None,
+        ExCommand::MultiCommand(_) => todo!(),
     }
 }
 
@@ -1892,6 +1900,7 @@ mod test {
     snapshot!(test_autocmd, "../testdata/snapshots/autocmd.vim");
     snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
     snapshot!(test_export, "../testdata/snapshots/export.vim");
+    snapshot!(test_command, "../testdata/snapshots/command.vim");
     // snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
 
     #[test]

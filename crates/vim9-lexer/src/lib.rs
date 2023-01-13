@@ -237,6 +237,7 @@ pub enum TokenKind {
     Register,
 
     // Delimiters
+    Bar,
     Comma,
     Colon,
     SpacedColon,
@@ -724,7 +725,7 @@ impl Lexer {
                     '+' => self.handle_plus(),
                     '*' => self.if_peek('=', Mul, MulEquals),
                     '/' => self.if_peek('=', Div, DivEquals),
-                    '|' => self.if_peek('|', Illegal, Or),
+                    '|' => self.if_peek('|', Bar, Or),
                     '&' => self.if_peek('&', Ampersand, And),
                     '%' => self.if_peek('=', Percent, PercentEquals),
                     '\\' => {
@@ -1113,6 +1114,7 @@ mod test {
     snapshot!(test_types, "../testdata/snapshots/types.vim");
     snapshot!(test_methods, "../testdata/snapshots/methods.vim");
     snapshot!(test_normal, "../testdata/snapshots/normal.vim");
+    snapshot!(test_commands, "../testdata/snapshots/commands.vim");
 
     // snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
 

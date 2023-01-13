@@ -152,6 +152,7 @@ pub enum ExCommand {
     SharedCommand(SharedCommand),
     ExportCommand(ExportCommand),
     ImportCommand(ImportCommand),
+    MultiCommand(MultiCommand),
     Skip,
     EndOfFile,
 
@@ -179,6 +180,11 @@ impl Vim9ScriptCommand {
             eol: parser.expect_eol()?,
         })
     }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct MultiCommand {
+    pub commands: Vec<ExCommand>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -1562,7 +1568,7 @@ impl EvalCommand {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CallCommand {
-    call: Option<TokenMeta>,
+    call: TokenMeta,
     pub expr: Expression,
     open: TokenMeta,
     pub args: Vec<Expression>,
@@ -1573,10 +1579,7 @@ pub struct CallCommand {
 impl CallCommand {
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
         Ok(ExCommand::Call(CallCommand {
-            call: parser
-                .expect_identifier_with_text("call")
-                .ok()
-                .map(|t| t.into()),
+            call: parser.expect_identifier_with_text("call")?.into(),
             expr: Expression::parse(parser, Precedence::Call)?,
             open: parser.ensure_token(TokenKind::LeftParen)?,
             args: parser.parse_expression_list(TokenKind::RightParen)?,
@@ -1586,11 +1589,7 @@ impl CallCommand {
     }
 
     pub fn matches(parser: &Parser) -> bool {
-        parser.line_contains_kind(TokenKind::LeftParen)
-            // && parser.line_contains_kind(TokenKind::RightParen)
-            && !parser.line_contains_any(|t| {
-                t.kind.is_assignment() || t.kind == TokenKind::MethodArrow
-            })
+        parser.command_match("call")
     }
 }
 
@@ -2155,6 +2154,9 @@ impl<'a> Parser<'a> {
                 Precedence::Lowest
             }
 
+            // I think?
+            TokenKind::Bar => Precedence::Lowest,
+
             _ => {
                 return Err(anyhow::anyhow!(
                     "Unexpected precendence kind: {:?} // {:#?}",
@@ -2260,6 +2262,10 @@ impl<'a> Parser<'a> {
             || curkind == TokenKind::Comment
         {
             Ok(self.pop().into())
+        } else if curkind == TokenKind::Bar {
+            // If we run into a Bar, then don't consume the bar.
+            //  Just return a fake one and stay on that bar.
+            Ok(self.front_owned().into())
         } else {
             Err(anyhow::anyhow!("expected eol or eof, got: {:#?}", self))
         }
@@ -2455,7 +2461,7 @@ impl<'a> Parser<'a> {
         //
         // This is the desired behavior for `parse` which will consume until the end of line
         // generally speaking.
-        Ok(match &self.front_kind() {
+        let mut command = match &self.front_kind() {
             // Whitespace
             EndOfFile => ExCommand::NoOp(self.pop()),
             EndOfLine => ExCommand::NoOp(self.pop()),
@@ -2539,7 +2545,9 @@ impl<'a> Parser<'a> {
                     // var sum = 1
                     // :sum = sum + 1
                     StatementCommand::parse(self)?
-                } else if self.line_contains_kind(MethodArrow) {
+                } else if self.line_contains_kind(MethodArrow)
+                    || self.line_contains_kind(TokenKind::LeftParen)
+                {
                     EvalCommand::parse(self)?
                 } else {
                     SharedCommand::parse(self)?
@@ -2559,7 +2567,19 @@ impl<'a> Parser<'a> {
             Decrement | Increment => EvalCommand::parse(self)?,
 
             _ => return Err(anyhow::anyhow!("TODO: Parser kind: {:#?}", self)),
-        })
+        };
+
+        if self.front_kind() == TokenKind::Bar {
+            let mut commands = vec![command];
+            while self.front_kind() == TokenKind::Bar {
+                self.next_token();
+                commands.push(self.parse_command()?);
+            }
+
+            command = ExCommand::MultiCommand(MultiCommand { commands });
+        }
+
+        Ok(command)
     }
 
     pub fn parse_program(&self) -> Program {
@@ -2815,6 +2835,7 @@ mod test {
     snap!(test_autocmd, "../testdata/snapshots/autocmd.vim");
     snap!(test_unpack, "../testdata/snapshots/unpack.vim");
     snap!(test_methods, "../testdata/snapshots/methods.vim");
+    snap!(test_commands, "../testdata/snapshots/commands.vim");
 
     // https://github.com/yegappan/lsp test suite
     snap!(test_handlers, "../../shared/snapshots/lsp_handlers.vim");

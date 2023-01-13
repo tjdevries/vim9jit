@@ -1,0 +1,195 @@
+---
+source: crates/vim9-parser/src/lib.rs
+assertion_line: 2845
+expression: snapshot_parsing(contents)
+---
+[
+    Vim9Script(
+        Vim9ScriptCommand {
+            noclear: false,
+            eol: Token(EndOfLine, (0,10)->(0,10)),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (1,0)->(1,0)),
+    ),
+    Comment(
+        Token(Comment, "# Able to parse multiple commands in one", (2,0)->(2,40)),
+    ),
+    UserCommand(
+        UserCommand {
+            tok: Token(Identifier, (3,0)->(3,7)),
+            bang: true,
+            command_bang: false,
+            command_bar: false,
+            command_keepscript: false,
+            command_register: None,
+            command_nargs: None,
+            command_compl: None,
+            command_range: None,
+            command_addr: None,
+            command_complete: None,
+            name: "BarredCommand",
+            command: MultiCommand(
+                MultiCommand {
+                    commands: [
+                        Echo(
+                            EchoCommand {
+                                echo: Token(Identifier, (3,23)->(3,27)),
+                                expr: String(
+                                    DoubleQuote(
+                                        "x",
+                                    ),
+                                ),
+                                eol: Token(Bar, (3,32)->(3,33)),
+                            },
+                        ),
+                        Echo(
+                            EchoCommand {
+                                echo: Token(Identifier, (3,34)->(3,38)),
+                                expr: String(
+                                    DoubleQuote(
+                                        "y",
+                                    ),
+                                ),
+                                eol: Token(EndOfLine, (3,42)->(3,42)),
+                            },
+                        ),
+                    ],
+                },
+            ),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (4,0)->(4,0)),
+    ),
+    Comment(
+        Token(Comment, "# Able to parse multiple function calls", (5,0)->(5,39)),
+    ),
+    UserCommand(
+        UserCommand {
+            tok: Token(Identifier, (6,0)->(6,7)),
+            bang: true,
+            command_bang: false,
+            command_bar: false,
+            command_keepscript: false,
+            command_register: None,
+            command_nargs: None,
+            command_compl: None,
+            command_range: None,
+            command_addr: None,
+            command_complete: None,
+            name: "FuncCommand",
+            command: MultiCommand(
+                MultiCommand {
+                    commands: [
+                        Eval(
+                            EvalCommand {
+                                eval: None,
+                                expr: Call(
+                                    f: DictAccess(DictAccess { container: Call(f: DictAccess(DictAccess { container: Identifier(Raw(x)), dot: Token(Dot, (6,22)->(6,23)), index: RawIdentifier { name: "Something" } }) arg: []), dot: Token(Dot, (6,34)->(6,35)), index: RawIdentifier { name: "Another" } }) arg: [],
+                                ),
+                                eol: Token(Bar, (6,45)->(6,46)),
+                            },
+                        ),
+                        Eval(
+                            EvalCommand {
+                                eval: None,
+                                expr: Call(
+                                    f: Identifier(Raw(AnotherThing)) arg: [],
+                                ),
+                                eol: Token(EndOfLine, (6,61)->(6,61)),
+                            },
+                        ),
+                    ],
+                },
+            ),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (7,0)->(7,0)),
+    ),
+    Comment(
+        Token(Comment, "# Able to parse multiple calls in one command", (8,0)->(8,45)),
+    ),
+    UserCommand(
+        UserCommand {
+            tok: Token(Identifier, (9,0)->(9,7)),
+            bang: true,
+            command_bang: false,
+            command_bar: false,
+            command_keepscript: false,
+            command_register: None,
+            command_nargs: None,
+            command_compl: None,
+            command_range: None,
+            command_addr: None,
+            command_complete: None,
+            name: "MinitermToggle",
+            command: Eval(
+                EvalCommand {
+                    eval: None,
+                    expr: Call(
+                        f: DictAccess(DictAccess { container: Call(f: DictAccess(DictAccess { container: Identifier(Raw(miniterm)), dot: Token(Dot, (9,36)->(9,37)), index: RawIdentifier { name: "GetManager" } }) arg: []), dot: Token(Dot, (9,49)->(9,50)), index: RawIdentifier { name: "ToggleTerminal" } }) arg: [],
+                    ),
+                    eol: Token(EndOfLine, (9,66)->(9,66)),
+                },
+            ),
+        },
+    ),
+    NoOp(
+        Token(EndOfLine, "\n", (10,0)->(10,0)),
+    ),
+    UserCommand(
+        UserCommand {
+            tok: Token(Identifier, (11,0)->(11,7)),
+            bang: true,
+            command_bang: false,
+            command_bar: false,
+            command_keepscript: false,
+            command_register: None,
+            command_nargs: None,
+            command_compl: None,
+            command_range: None,
+            command_addr: None,
+            command_complete: None,
+            name: "MinitermToggle",
+            command: MultiCommand(
+                MultiCommand {
+                    commands: [
+                        Eval(
+                            EvalCommand {
+                                eval: None,
+                                expr: Call(
+                                    f: DictAccess(DictAccess { container: Call(f: DictAccess(DictAccess { container: Identifier(Raw(miniterm)), dot: Token(Dot, (11,36)->(11,37)), index: RawIdentifier { name: "GetManager" } }) arg: []), dot: Token(Dot, (11,49)->(11,50)), index: RawIdentifier { name: "ToggleTerminal" } }) arg: [],
+                                ),
+                                eol: Token(Bar, (11,67)->(11,68)),
+                            },
+                        ),
+                        Eval(
+                            EvalCommand {
+                                eval: None,
+                                expr: Call(
+                                    f: Identifier(Scope(ScopedIdentifier { scope: Global, colon: Token(Colon, (11,70)->(11,71)), accessor: Raw(AttachWipeoutHandler) })) arg: [
+                                        DictAccess(
+                                            DictAccess {
+                                                container: Call(
+                                                    f: DictAccess(DictAccess { container: Identifier(Raw(miniterm)), dot: Token(Dot, (11,100)->(11,101)), index: RawIdentifier { name: "GetManager" } }) arg: [],
+                                                ),
+                                                dot: Token(Dot, (11,113)->(11,114)),
+                                                index: RawIdentifier {
+                                                    name: "current",
+                                                },
+                                            },
+                                        ),
+                                    ],
+                                ),
+                                eol: Token(EndOfLine, (11,122)->(11,122)),
+                            },
+                        ),
+                    ],
+                },
+            ),
+        },
+    ),
+]

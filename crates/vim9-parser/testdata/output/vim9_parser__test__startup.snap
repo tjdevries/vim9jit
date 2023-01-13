@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2891
+assertion_line: 2851
 expression: snapshot_parsing(contents)
 ---
 [
@@ -280,26 +280,23 @@ expression: snapshot_parsing(contents)
                                                     if_eol: Token(EndOfLine, (19,44)->(19,44)),
                                                     body: Body {
                                                         commands: [
-                                                            Call(
-                                                                CallCommand {
-                                                                    call: None,
-                                                                    expr: Identifier(
-                                                                        Raw(add),
+                                                            Eval(
+                                                                EvalCommand {
+                                                                    eval: None,
+                                                                    expr: Call(
+                                                                        f: Identifier(Raw(add)) arg: [
+                                                                            Identifier(
+                                                                                Raw(result),
+                                                                            ),
+                                                                            Array(
+                                                                                ArrayLiteral {
+                                                                                    open: Token(LeftBracket, (20,18)->(20,19)),
+                                                                                    elements: [],
+                                                                                    close: Token(RightBracket, (20,19)->(20,20)),
+                                                                                },
+                                                                            ),
+                                                                        ],
                                                                     ),
-                                                                    open: Token(LeftParen, (20,9)->(20,10)),
-                                                                    args: [
-                                                                        Identifier(
-                                                                            Raw(result),
-                                                                        ),
-                                                                        Array(
-                                                                            ArrayLiteral {
-                                                                                open: Token(LeftBracket, (20,18)->(20,19)),
-                                                                                elements: [],
-                                                                                close: Token(RightBracket, (20,19)->(20,20)),
-                                                                            },
-                                                                        ),
-                                                                    ],
-                                                                    close: Token(RightParen, (20,20)->(20,21)),
                                                                     eol: Token(EndOfLine, (20,21)->(20,21)),
                                                                 },
                                                             ),
@@ -979,22 +976,19 @@ expression: snapshot_parsing(contents)
                                                     if_eol: Token(EndOfLine, (52,30)->(52,30)),
                                                     body: Body {
                                                         commands: [
-                                                            Call(
-                                                                CallCommand {
-                                                                    call: None,
-                                                                    expr: Identifier(
-                                                                        Raw(add),
+                                                            Eval(
+                                                                EvalCommand {
+                                                                    eval: None,
+                                                                    expr: Call(
+                                                                        f: Identifier(Raw(add)) arg: [
+                                                                            Identifier(
+                                                                                Raw(types),
+                                                                            ),
+                                                                            Identifier(
+                                                                                Raw(sourcing_event_type),
+                                                                            ),
+                                                                        ],
                                                                     ),
-                                                                    open: Token(LeftParen, (53,9)->(53,10)),
-                                                                    args: [
-                                                                        Identifier(
-                                                                            Raw(types),
-                                                                        ),
-                                                                        Identifier(
-                                                                            Raw(sourcing_event_type),
-                                                                        ),
-                                                                    ],
-                                                                    close: Token(RightParen, (53,36)->(53,37)),
                                                                     eol: Token(EndOfLine, (53,37)->(53,37)),
                                                                 },
                                                             ),
@@ -1023,22 +1017,19 @@ expression: snapshot_parsing(contents)
                                                     if_eol: Token(EndOfLine, (55,27)->(55,27)),
                                                     body: Body {
                                                         commands: [
-                                                            Call(
-                                                                CallCommand {
-                                                                    call: None,
-                                                                    expr: Identifier(
-                                                                        Raw(add),
+                                                            Eval(
+                                                                EvalCommand {
+                                                                    eval: None,
+                                                                    expr: Call(
+                                                                        f: Identifier(Raw(add)) arg: [
+                                                                            Identifier(
+                                                                                Raw(types),
+                                                                            ),
+                                                                            Identifier(
+                                                                                Raw(other_event_type),
+                                                                            ),
+                                                                        ],
                                                                     ),
-                                                                    open: Token(LeftParen, (56,9)->(56,10)),
-                                                                    args: [
-                                                                        Identifier(
-                                                                            Raw(types),
-                                                                        ),
-                                                                        Identifier(
-                                                                            Raw(other_event_type),
-                                                                        ),
-                                                                    ],
-                                                                    close: Token(RightParen, (56,33)->(56,34)),
                                                                     eol: Token(EndOfLine, (56,34)->(56,34)),
                                                                 },
                                                             ),
@@ -1089,39 +1080,36 @@ expression: snapshot_parsing(contents)
                                                     if_eol: Token(EndOfLine, (58,37)->(58,37)),
                                                     body: Body {
                                                         commands: [
-                                                            Call(
-                                                                CallCommand {
-                                                                    call: None,
-                                                                    expr: Identifier(
-                                                                        Raw(add),
-                                                                    ),
-                                                                    open: Token(LeftParen, (59,9)->(59,10)),
-                                                                    args: [
-                                                                        Index(
-                                                                            IndexExpression {
-                                                                                container: Identifier(
-                                                                                    Raw(result),
-                                                                                ),
-                                                                                open: Token(LeftBracket, (59,16)->(59,17)),
-                                                                                index: Item(
-                                                                                    Prefix(
-                                                                                        PrefixExpression {
-                                                                                            token: Token(Minus, (59,17)->(59,18)),
-                                                                                            operator: Minus,
-                                                                                            right: Number(
-                                                                                                Number(1),
-                                                                                            ),
-                                                                                        },
+                                                            Eval(
+                                                                EvalCommand {
+                                                                    eval: None,
+                                                                    expr: Call(
+                                                                        f: Identifier(Raw(add)) arg: [
+                                                                            Index(
+                                                                                IndexExpression {
+                                                                                    container: Identifier(
+                                                                                        Raw(result),
                                                                                     ),
-                                                                                ),
-                                                                                close: Token(RightBracket, (59,19)->(59,20)),
-                                                                            },
-                                                                        ),
-                                                                        Identifier(
-                                                                            Raw(item),
-                                                                        ),
-                                                                    ],
-                                                                    close: Token(RightParen, (59,26)->(59,27)),
+                                                                                    open: Token(LeftBracket, (59,16)->(59,17)),
+                                                                                    index: Item(
+                                                                                        Prefix(
+                                                                                            PrefixExpression {
+                                                                                                token: Token(Minus, (59,17)->(59,18)),
+                                                                                                operator: Minus,
+                                                                                                right: Number(
+                                                                                                    Number(1),
+                                                                                                ),
+                                                                                            },
+                                                                                        ),
+                                                                                    ),
+                                                                                    close: Token(RightBracket, (59,19)->(59,20)),
+                                                                                },
+                                                                            ),
+                                                                            Identifier(
+                                                                                Raw(item),
+                                                                            ),
+                                                                        ],
+                                                                    ),
                                                                     eol: Token(EndOfLine, (59,27)->(59,27)),
                                                                 },
                                                             ),
@@ -1783,55 +1771,52 @@ expression: snapshot_parsing(contents)
                                                                                                     if_eol: Token(EndOfLine, (103,34)->(103,34)),
                                                                                                     body: Body {
                                                                                                         commands: [
-                                                                                                            Call(
-                                                                                                                CallCommand {
-                                                                                                                    call: None,
-                                                                                                                    expr: Identifier(
-                                                                                                                        Raw(add),
-                                                                                                                    ),
-                                                                                                                    open: Token(LeftParen, (104,15)->(104,16)),
-                                                                                                                    args: [
-                                                                                                                        Index(
-                                                                                                                            IndexExpression {
-                                                                                                                                container: Index(
-                                                                                                                                    IndexExpression {
-                                                                                                                                        container: Identifier(
-                                                                                                                                            Raw(lookup),
-                                                                                                                                        ),
-                                                                                                                                        open: Token(LeftBracket, (104,22)->(104,23)),
-                                                                                                                                        index: Item(
-                                                                                                                                            Identifier(
-                                                                                                                                                Raw(key),
+                                                                                                            Eval(
+                                                                                                                EvalCommand {
+                                                                                                                    eval: None,
+                                                                                                                    expr: Call(
+                                                                                                                        f: Identifier(Raw(add)) arg: [
+                                                                                                                            Index(
+                                                                                                                                IndexExpression {
+                                                                                                                                    container: Index(
+                                                                                                                                        IndexExpression {
+                                                                                                                                            container: Identifier(
+                                                                                                                                                Raw(lookup),
                                                                                                                                             ),
+                                                                                                                                            open: Token(LeftBracket, (104,22)->(104,23)),
+                                                                                                                                            index: Item(
+                                                                                                                                                Identifier(
+                                                                                                                                                    Raw(key),
+                                                                                                                                                ),
+                                                                                                                                            ),
+                                                                                                                                            close: Token(RightBracket, (104,26)->(104,27)),
+                                                                                                                                        },
+                                                                                                                                    ),
+                                                                                                                                    open: Token(LeftBracket, (104,27)->(104,28)),
+                                                                                                                                    index: Item(
+                                                                                                                                        Identifier(
+                                                                                                                                            Raw(tfield),
                                                                                                                                         ),
-                                                                                                                                        close: Token(RightBracket, (104,26)->(104,27)),
-                                                                                                                                    },
-                                                                                                                                ),
-                                                                                                                                open: Token(LeftBracket, (104,27)->(104,28)),
-                                                                                                                                index: Item(
-                                                                                                                                    Identifier(
-                                                                                                                                        Raw(tfield),
                                                                                                                                     ),
-                                                                                                                                ),
-                                                                                                                                close: Token(RightBracket, (104,34)->(104,35)),
-                                                                                                                            },
-                                                                                                                        ),
-                                                                                                                        Index(
-                                                                                                                            IndexExpression {
-                                                                                                                                container: Identifier(
-                                                                                                                                    Raw(item),
-                                                                                                                                ),
-                                                                                                                                open: Token(LeftBracket, (104,41)->(104,42)),
-                                                                                                                                index: Item(
-                                                                                                                                    Identifier(
-                                                                                                                                        Raw(tfield),
+                                                                                                                                    close: Token(RightBracket, (104,34)->(104,35)),
+                                                                                                                                },
+                                                                                                                            ),
+                                                                                                                            Index(
+                                                                                                                                IndexExpression {
+                                                                                                                                    container: Identifier(
+                                                                                                                                        Raw(item),
                                                                                                                                     ),
-                                                                                                                                ),
-                                                                                                                                close: Token(RightBracket, (104,48)->(104,49)),
-                                                                                                                            },
-                                                                                                                        ),
-                                                                                                                    ],
-                                                                                                                    close: Token(RightParen, (104,49)->(104,50)),
+                                                                                                                                    open: Token(LeftBracket, (104,41)->(104,42)),
+                                                                                                                                    index: Item(
+                                                                                                                                        Identifier(
+                                                                                                                                            Raw(tfield),
+                                                                                                                                        ),
+                                                                                                                                    ),
+                                                                                                                                    close: Token(RightBracket, (104,48)->(104,49)),
+                                                                                                                                },
+                                                                                                                            ),
+                                                                                                                        ],
+                                                                                                                    ),
                                                                                                                     eol: Token(EndOfLine, (104,50)->(104,50)),
                                                                                                                 },
                                                                                                             ),
@@ -2639,22 +2624,19 @@ expression: snapshot_parsing(contents)
                                     eol: Token(EndOfLine, (139,19)->(139,19)),
                                 },
                             ),
-                            Call(
-                                CallCommand {
-                                    call: None,
-                                    expr: Identifier(
-                                        Raw(sort),
+                            Eval(
+                                EvalCommand {
+                                    eval: None,
+                                    expr: Call(
+                                        f: Identifier(Raw(sort)) arg: [
+                                            Identifier(
+                                                Raw(result),
+                                            ),
+                                            Identifier(
+                                                Raw(Compare),
+                                            ),
+                                        ],
                                     ),
-                                    open: Token(LeftParen, (140,6)->(140,7)),
-                                    args: [
-                                        Identifier(
-                                            Raw(result),
-                                        ),
-                                        Identifier(
-                                            Raw(Compare),
-                                        ),
-                                    ],
-                                    close: Token(RightParen, (140,22)->(140,23)),
                                     eol: Token(EndOfLine, (140,23)->(140,23)),
                                 },
                             ),

@@ -1,6 +1,6 @@
 ---
 source: crates/vim9-parser/src/lib.rs
-assertion_line: 2592
+assertion_line: 2824
 expression: snapshot_parsing(contents)
 ---
 [
@@ -294,93 +294,90 @@ expression: snapshot_parsing(contents)
     NoOp(
         Token(EndOfLine, "\n", (32,0)->(32,0)),
     ),
-    Call(
-        CallCommand {
-            call: None,
-            expr: Identifier(
-                Raw(prop_add),
-            ),
-            open: Token(LeftParen, (33,8)->(33,9)),
-            args: [
-                Call(
-                    f: Identifier(Raw(line)) arg: [
-                        String(
-                            SingleQuote(
-                                ".",
+    Eval(
+        EvalCommand {
+            eval: None,
+            expr: Call(
+                f: Identifier(Raw(prop_add)) arg: [
+                    Call(
+                        f: Identifier(Raw(line)) arg: [
+                            String(
+                                SingleQuote(
+                                    ".",
+                                ),
                             ),
-                        ),
-                    ],
-                ),
-                Identifier(
-                    Raw(col),
-                ),
-                Dict(
-                    DictLiteral {
-                        open: Token(LeftBrace, (33,25)->(33,26)),
-                        elements: [
-                            KeyValue {
-                                key: Literal(
-                                    Literal {
-                                        token: Token(Identifier, "type", (33,26)->(33,30)),
-                                    },
-                                ),
-                                colon: Token(SpacedColon, (33,30)->(33,32)),
-                                value: String(
-                                    SingleQuote(
-                                        "LspOutlineHighlight",
-                                    ),
-                                ),
-                            },
-                            KeyValue {
-                                key: Literal(
-                                    Literal {
-                                        token: Token(Identifier, "length", (34,10)->(34,16)),
-                                    },
-                                ),
-                                colon: Token(SpacedColon, (34,16)->(34,18)),
-                                value: MethodCall(
-                                    MethodCall {
-                                        left: DictAccess(
-                                            DictAccess {
-                                                container: Index(
-                                                    IndexExpression {
-                                                        container: DictAccess(
-                                                            DictAccess {
-                                                                container: Identifier(
-                                                                    Scope(ScopedIdentifier { scope: Window, colon: Token(Colon, (34,19)->(34,20)), accessor: Raw(lspSymbols) }),
-                                                                ),
-                                                                dot: Token(Dot, (34,30)->(34,31)),
-                                                                index: RawIdentifier {
-                                                                    name: "lnumTable",
-                                                                },
-                                                            },
-                                                        ),
-                                                        open: Token(LeftBracket, (34,40)->(34,41)),
-                                                        index: Item(
-                                                            Identifier(
-                                                                Raw(lnum),
-                                                            ),
-                                                        ),
-                                                        close: Token(RightBracket, (34,45)->(34,46)),
-                                                    },
-                                                ),
-                                                dot: Token(Dot, (34,46)->(34,47)),
-                                                index: RawIdentifier {
-                                                    name: "name",
-                                                },
-                                            },
-                                        ),
-                                        tok: Token(MethodArrow, (34,51)->(34,53)),
-                                        right: f: Identifier(Raw(len)) arg: [],
-                                    },
-                                ),
-                            },
                         ],
-                        close: Token(RightBrace, (34,58)->(34,59)),
-                    },
-                ),
-            ],
-            close: Token(RightParen, (34,59)->(34,60)),
+                    ),
+                    Identifier(
+                        Raw(col),
+                    ),
+                    Dict(
+                        DictLiteral {
+                            open: Token(LeftBrace, (33,25)->(33,26)),
+                            elements: [
+                                KeyValue {
+                                    key: Literal(
+                                        Literal {
+                                            token: Token(Identifier, "type", (33,26)->(33,30)),
+                                        },
+                                    ),
+                                    colon: Token(SpacedColon, (33,30)->(33,32)),
+                                    value: String(
+                                        SingleQuote(
+                                            "LspOutlineHighlight",
+                                        ),
+                                    ),
+                                },
+                                KeyValue {
+                                    key: Literal(
+                                        Literal {
+                                            token: Token(Identifier, "length", (34,10)->(34,16)),
+                                        },
+                                    ),
+                                    colon: Token(SpacedColon, (34,16)->(34,18)),
+                                    value: MethodCall(
+                                        MethodCall {
+                                            left: DictAccess(
+                                                DictAccess {
+                                                    container: Index(
+                                                        IndexExpression {
+                                                            container: DictAccess(
+                                                                DictAccess {
+                                                                    container: Identifier(
+                                                                        Scope(ScopedIdentifier { scope: Window, colon: Token(Colon, (34,19)->(34,20)), accessor: Raw(lspSymbols) }),
+                                                                    ),
+                                                                    dot: Token(Dot, (34,30)->(34,31)),
+                                                                    index: RawIdentifier {
+                                                                        name: "lnumTable",
+                                                                    },
+                                                                },
+                                                            ),
+                                                            open: Token(LeftBracket, (34,40)->(34,41)),
+                                                            index: Item(
+                                                                Identifier(
+                                                                    Raw(lnum),
+                                                                ),
+                                                            ),
+                                                            close: Token(RightBracket, (34,45)->(34,46)),
+                                                        },
+                                                    ),
+                                                    dot: Token(Dot, (34,46)->(34,47)),
+                                                    index: RawIdentifier {
+                                                        name: "name",
+                                                    },
+                                                },
+                                            ),
+                                            tok: Token(MethodArrow, (34,51)->(34,53)),
+                                            right: f: Identifier(Raw(len)) arg: [],
+                                        },
+                                    ),
+                                },
+                            ],
+                            close: Token(RightBrace, (34,58)->(34,59)),
+                        },
+                    ),
+                ],
+            ),
             eol: Token(EndOfLine, (34,60)->(34,60)),
         },
     ),

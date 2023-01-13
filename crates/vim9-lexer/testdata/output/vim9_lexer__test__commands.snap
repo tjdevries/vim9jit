@@ -1,0 +1,23 @@
+---
+source: crates/vim9-lexer/src/lib.rs
+assertion_line: 1117
+expression: snapshot_lexing(contents)
+---
+vim9script
+^^^^^^^^^^ Token(Identifier, "vim9script", (0,0)->(0,10))
+           Token(EndOfLine, "\n", (0,10)->(0,10))
+
+ Token(EndOfLine, "\n", (1,0)->(1,0))
+# Able to parse multiple commands in one
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Token(Comment, "# Able to parse multiple commands in one", (2,0)->(2,40))
+command! BarredCommand echo "x" | echo "y"
+^^^^^^^ Token(Identifier, "command", (3,0)->(3,7))
+       ^ Token(Bang, "!", (3,7)->(3,8))
+         ^^^^^^^^^^^^^ Token(Identifier, "BarredCommand", (3,9)->(3,22))
+                       ^^^^ Token(Identifier, "echo", (3,23)->(3,27))
+                              Token(DoubleQuoteString, "x", (3,29)->(3,29))
+                                ^ Token(Bar, "|", (3,32)->(3,33))
+                                  ^^^^ Token(Identifier, "echo", (3,34)->(3,38))
+                                         Token(DoubleQuoteString, "y", (3,40)->(3,40))
+                                           Token(EndOfLine, "\n", (3,42)->(3,42))
+
