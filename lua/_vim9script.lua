@@ -274,28 +274,19 @@ vim9['fn'] = (function()
       error('container is not a table: ' .. vim.inspect(container))
     end
 
-    if vim.tbl_isempty(container) then
+    if vim.tbl_isempty(container) and getmetatable(container) then
+    -- pass, this is the case of a map with metatables
+    elseif vim.tbl_islist(container) then
       if type(item) == 'number' then
         item = item + 1
       end
-
-      local result = container[item]
-      if result == nil then
-        return default
-      else
-        return result
-      end
     end
 
-    if vim.tbl_islist(container) then
-      error('todo')
+    local result = container[item]
+    if result == nil then
+      return default
     else
-      local result = container[item]
-      if result == nil then
-        return default
-      else
-        return result
-      end
+      return result
     end
   end
 
