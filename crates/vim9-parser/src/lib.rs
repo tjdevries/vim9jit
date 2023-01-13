@@ -260,9 +260,14 @@ pub struct ExecuteCommand {
 
 #[parse_context]
 impl ExecuteCommand {
+    pub fn matches(parser: &Parser) -> bool {
+        parser.command_match("execute") || parser.command_match("exec")
+    }
+
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
         Ok(ExCommand::Execute(ExecuteCommand {
-            execute: parser.expect_identifier_with_text("execute")?.into(),
+            // execute: parser.expect_identifier_with_text("execute")?.into(),
+            execute: parser.expect_token(TokenKind::Identifier)?.into(),
             expr: Expression::parse(parser, Precedence::Lowest)?,
             eol: parser.expect_eol()?,
         }))
@@ -835,9 +840,9 @@ impl Identifier {
                 Identifier::Scope(ScopedIdentifier {
                     scope: {
                         // TODO: get the right scope
-                        // parser.next_token();
-                        // VimScope::Global
-                        todo!("does this even happen?");
+                        parser.next_token();
+                        VimScope::Global
+                        // todo!("does this even happen?");
                     },
                     colon: parser.expect_token(TokenKind::Colon)?.into(),
                     accessor: Identifier::parse_in_expression(parser)?.into(),
@@ -2472,7 +2477,7 @@ impl<'a> Parser<'a> {
             Identifier => {
                 if self.command_match("vim9script") {
                     ExCommand::Vim9Script(Vim9ScriptCommand::parse(self)?)
-                } else if self.command_match("execute") {
+                } else if ExecuteCommand::matches(self) {
                     ExecuteCommand::parse(self)?
                 } else if VarCommand::matches(self) {
                     VarCommand::parse(self)?
@@ -2842,6 +2847,10 @@ mod test {
     snap!(test_selection, "../../shared/snapshots/lsp_selection.vim");
     snap!(test_fileselect, "../../shared/snapshots/lsp_fileselect.vim");
     snap!(test_startup, "../../shared/snapshots/startup9.vim");
+    snap!(
+        test_miniterm_autoload,
+        "../../shared/snapshots/miniterm_autoload.vim"
+    );
 
     #[test]
     fn test_peek_n() {

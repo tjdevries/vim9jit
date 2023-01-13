@@ -1,0 +1,39 @@
+---
+source: crates/vim9-lexer/src/lib.rs
+assertion_line: 1118
+expression: snapshot_lexing(contents)
+---
+vim9script
+^^^^^^^^^^ Token(Identifier, "vim9script", (0,0)->(0,10))
+           Token(EndOfLine, "\n", (0,10)->(0,10))
+
+ Token(EndOfLine, "\n", (1,0)->(1,0))
+var x = $SHELL
+^^^ Token(Identifier, "var", (2,0)->(2,3))
+    ^ Token(Identifier, "x", (2,4)->(2,5))
+      ^ Token(Equal, "=", (2,6)->(2,7))
+         ^^^^ Token(EnvironmentVariable, "SHELL", (2,9)->(2,13))
+               Token(EndOfLine, "\n", (2,14)->(2,14))
+var x = job_start($SHELL , "")
+^^^ Token(Identifier, "var", (3,0)->(3,3))
+    ^ Token(Identifier, "x", (3,4)->(3,5))
+      ^ Token(Equal, "=", (3,6)->(3,7))
+        ^^^^^^^^^ Token(Identifier, "job_start", (3,8)->(3,17))
+                 ^ Token(LeftParen, "(", (3,17)->(3,18))
+                   ^^^^ Token(EnvironmentVariable, "SHELL", (3,19)->(3,23))
+                         ^ Token(Comma, ",", (3,25)->(3,26))
+                             Token(DoubleQuoteString, "", (3,28)->(3,28))
+                             ^ Token(RightParen, ")", (3,29)->(3,30))
+                               Token(EndOfLine, "\n", (3,30)->(3,30))
+var x = job_start($SHELL, "")
+^^^ Token(Identifier, "var", (4,0)->(4,3))
+    ^ Token(Identifier, "x", (4,4)->(4,5))
+      ^ Token(Equal, "=", (4,6)->(4,7))
+        ^^^^^^^^^ Token(Identifier, "job_start", (4,8)->(4,17))
+                 ^ Token(LeftParen, "(", (4,17)->(4,18))
+                   ^^^^ Token(EnvironmentVariable, "SHELL", (4,19)->(4,23))
+                        ^ Token(Comma, ",", (4,24)->(4,25))
+                            Token(DoubleQuoteString, "", (4,27)->(4,27))
+                            ^ Token(RightParen, ")", (4,28)->(4,29))
+                              Token(EndOfLine, "\n", (4,29)->(4,29))
+

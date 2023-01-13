@@ -511,17 +511,22 @@ impl Generate for ImportCommand {
 impl Generate for ExportCommand {
     fn write_default(&self, state: &mut State, output: &mut Output) {
         let exported = self.command.gen(state);
-        let ident = match self.command.as_ref() {
-            ExCommand::Var(var) => var.name.gen(state),
-            ExCommand::Def(def) => def.name.gen(state),
-            // ExCommand::Heredoc(_) => todo!(),
-            // ExCommand::Decl(_) => todo!(),
-            _ => {
-                unreachable!("not a valid export command: {:#?}", self.command)
-            }
-        };
 
-        output.write_lua(&format!("{exported};\nM['{ident}'] = {ident};"))
+        if toplevel_ident(state, &self.command).is_none() {
+            output.write_lua(&format!("{exported};\n"))
+        } else {
+            let ident = match self.command.as_ref() {
+                ExCommand::Var(var) => var.name.gen(state),
+                ExCommand::Def(def) => def.name.gen(state),
+                // ExCommand::Heredoc(_) => todo!(),
+                // ExCommand::Decl(_) => todo!(),
+                _ => {
+                    unreachable!("not a valid export command: {:#?}", self.command)
+                }
+            };
+
+            output.write_lua(&format!("{exported};\nM['{ident}'] = {ident};"))
+        }
     }
 
     fn write_autoload(&self, state: &mut State, output: &mut Output) {
@@ -551,6 +556,12 @@ impl Generate for ExportCommand {
                     .map(|p| "a:".to_string() + &p.name.gen(state))
                     .collect::<Vec<String>>()
                     .join(", ");
+
+                if let Identifier::Scope(scoped) = &def.name {
+                    let ident = scoped.accessor.gen(state);
+                    let scoped = scoped.gen(state);
+                    output.write_lua(&format!("M['{ident}'] = {scoped}"));
+                }
 
                 output.write_vim(&format!(
                     r#"
@@ -1807,7 +1818,10 @@ pub fn generate(contents: &str, opts: ParserOpts) -> Result<Output, (Output, Str
     let program = parser.parse_program();
 
     let mut result = eval(program, opts).unwrap();
-    result.lua = format::lua(&result.lua).expect("format lua code");
+    match format::lua(&result.lua) {
+        Ok(lua) => result.lua = lua,
+        Err(err) => return Err((result, err.1)),
+    }
 
     Ok(result)
 }
@@ -1901,6 +1915,10 @@ mod test {
     snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
     snapshot!(test_export, "../testdata/snapshots/export.vim");
     snapshot!(test_command, "../testdata/snapshots/command.vim");
+    snapshot!(
+        test_miniterm,
+        "../../shared/snapshots/miniterm_autoload.vim"
+    );
     // snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
 
     #[test]

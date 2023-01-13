@@ -496,6 +496,10 @@ readdirex({directory} [, {expr} [, {dict}]])			*readdirex()*
     end
   end
 
+  M.term_start = function(...)
+    return vim.fn.termopen(...)
+  end
+
   M = setmetatable(M, {
     __index = vim.fn,
   })

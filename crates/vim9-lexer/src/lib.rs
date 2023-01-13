@@ -917,13 +917,13 @@ impl Lexer {
                 self.read_char();
 
                 let position = self.position();
-                while let Some(&ch) = self.ch() && is_identifier(ch) {
+                while let Some(&ch) = self.peek_char() && is_identifier(ch) {
                     self.read_char();
                 }
 
                 Token {
                     kind: TokenKind::EnvironmentVariable,
-                    text: TokenText::Slice(self.chars[position..self.position()].into()),
+                    text: TokenText::Slice(self.chars[position..self.position() + 1].into()),
                     span: self.make_span(position, self.position())?,
                 }
             }
@@ -1115,6 +1115,7 @@ mod test {
     snapshot!(test_methods, "../testdata/snapshots/methods.vim");
     snapshot!(test_normal, "../testdata/snapshots/normal.vim");
     snapshot!(test_commands, "../testdata/snapshots/commands.vim");
+    snapshot!(test_env, "../testdata/snapshots/env.vim");
 
     // snapshot!(test_cfilter, "../testdata/snapshots/cfilter.vim");
 
@@ -1122,4 +1123,8 @@ mod test {
     snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
     snapshot!(test_handlers, "../../shared/snapshots/lsp_handlers.vim");
     snapshot!(test_selection, "../../shared/snapshots/lsp_selection.vim");
+    snapshot!(
+        test_miniterm,
+        "../../shared/snapshots/miniterm_autoload.vim"
+    );
 }

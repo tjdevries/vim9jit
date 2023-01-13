@@ -1,0 +1,298 @@
+---
+source: crates/vim9-gen/src/lib.rs
+assertion_line: 1912
+expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unwrap().lua"
+---
+----------------------------------------
+-- This file is generated via github.com/tjdevries/vim9jit
+-- For any bugs, please first consider reporting there.
+----------------------------------------
+
+-- Ignore "value assigned to a local variable is unused" because
+--  we can't guarantee that local variables will be used by plugins
+-- luacheck: ignore 311
+
+local vim9 = require('_vim9script')
+local M = {}
+local Terminal = nil
+local TerminalManager = nil
+local Assert = nil
+local manager = nil
+-- vim9script
+
+-- # Thanks to https://github.com/hahdookin/miniterm.vim for the test file
+
+-- # Configuration
+-- # g:miniterm_proportion = get(g:, "miniterm_proportion", 0.28)
+-- # g:miniterm_position = get(g:, "miniterm_position", "bottom")
+
+-- # These two functions handle destroying buffers.
+-- # Slight workaround to event handling while also
+-- # being able to reference the "manager" in the
+-- # event handling code.
+
+vim.g['AttachWipeoutHandler'] = function(term)
+  vim.api.nvim_command(
+    'autocmd BufWipeout <buffer='
+      .. term.bufnr
+      .. '> vim9 miniterm#GetManager().RemoveBufnr('
+      .. term.bufnr
+      .. ') | miniterm#GetManager().UpdateState()'
+  )
+  vim.api.nvim_command(
+    'autocmd BufDelete <buffer='
+      .. term.bufnr
+      .. '> vim9 miniterm#GetManager().RemoveBufnr('
+      .. term.bufnr
+      .. ') | miniterm#GetManager().UpdateState()'
+  )
+end
+
+-- # Terminal class
+
+Terminal = function()
+  local Res = vim9.convert.decl_dict({ ['bufnr'] = 0, ['winnr'] = 0, ['open'] = 0 })
+
+  Res.bufnr = vim9.fn.term_start(vim.env['SHELL'], { ['hidden'] = 1, ['term_kill'] = 'hup' })
+  vim9.fn.setbufvar(Res.bufnr, '&buflisted', 0)
+
+  return Res
+end
+
+-- # Terminal manager class
+
+TerminalManager = function()
+  local Res = vim9.convert.decl_dict({ ['terminals'] = {}, ['current'] = {} })
+
+  -- # Whether or not the manager has a current terminal
+
+  local HasCurrent = function()
+    return vim9.prefix['Bang'](vim9.fn.empty(Res.current))
+  end
+
+  Res.HasCurrent = HasCurrent
+
+  -- # Open the current terminal
+
+  local OpenCurrent = function()
+    vim.api.nvim_command('bot sbuffer ' .. Res.current.bufnr)
+    vim.api.nvim_command(
+      'resize ' .. vim9.fn.float2nr(vim9.ops.Multiply(vim.o['lines'], vim.g['miniterm_proportion']))
+    )
+    pcall(vim.cmd, [[ setlocal winfixheight ]])
+    pcall(vim.cmd, [[ setlocal nonumber norelativenumber ]])
+    pcall(vim.cmd, [[ setlocal hidden ]])
+    Res.current.winnr = vim9.fn.win_getid()
+    Res.current.open = 1
+  end
+
+  Res.OpenCurrent = OpenCurrent
+
+  -- # Close the current terminal
+
+  local CloseCurrent = function()
+    vim9.fn.win_execute(Res.current.winnr, 'close!')
+    Res.current.open = 0
+  end
+
+  Res.CloseCurrent = CloseCurrent
+
+  -- # Returns what index the terminal is in the list
+
+  local IndexOfTerm = function(term)
+    local index = -1
+
+    for _, i in vim9.iter(vim9.fn.range(vim9.fn.len(Res.terminals))) do
+      local t = vim9.index(Res.terminals, i)
+      if t.bufnr == term.bufnr then
+        index = i
+        break
+      end
+    end
+
+    return index
+  end
+
+  Res.IndexOfTerm = IndexOfTerm
+
+  -- # Removes a terminal with bufnr from list if it exists
+
+  local RemoveBufnr = function(bufnr)
+    for _, i in vim9.iter(vim9.fn.range(vim9.fn.len(Res.terminals))) do
+      local t = vim9.index(Res.terminals, i)
+      if t.bufnr == bufnr then
+        vim9.fn_mut('remove', { Res.terminals, i }, { replace = nil })
+        break
+      end
+    end
+  end
+
+  Res.RemoveBufnr = RemoveBufnr
+
+  -- # Create a new terminal and set it as the current
+
+  local CreateNewCurrent = function()
+    local term = Terminal()
+    -- #term.SetName("MT" .. Res.terminals->len())
+    vim9.fn.add(Res.terminals, term)
+    Res.current = term
+  end
+
+  Res.CreateNewCurrent = CreateNewCurrent
+
+  -- #   - if first time (no current terminal buffer):
+  -- #       - run "Toggle" logic
+  -- #   - else
+  -- #       - if terminal window is open
+  -- #           - close that terminal window
+  -- #       - create new terminal buffer
+  -- #       - open new terminal window
+
+  local NewTerminal = function()
+    if vim9.bool(vim9.prefix['Bang'](Res.HasCurrent())) then
+      Res.ToggleTerminal()
+    else
+      if vim9.bool(Res.current.open) then
+        Res.CloseCurrent()
+      end
+      Res.CreateNewCurrent()
+
+      Res.OpenCurrent()
+    end
+  end
+
+  Res.NewTerminal = NewTerminal
+
+  -- #   - if first time (no current terminal buffer):
+  -- #       - create a new terminal buffer
+  -- #       - set new buffer as current
+  -- #   - if terminal window is open:
+  -- #       - close terminal window
+  -- #   - else if terminal window isnt open:
+  -- #       - open terminal window
+
+  local ToggleTerminal = function()
+    if vim9.bool(vim9.prefix['Bang'](Res.HasCurrent())) then
+      Res.CreateNewCurrent()
+    end
+    if vim9.bool(Res.current.open) then
+      Res.CloseCurrent()
+    else
+      Res.OpenCurrent()
+    end
+  end
+
+  Res.ToggleTerminal = ToggleTerminal
+
+  -- # Get index of current terminal in terminal list
+
+  local CurrentIndex = function()
+    return Res.IndexOfTerm(Res.current)
+  end
+
+  Res.CurrentIndex = CurrentIndex
+
+  -- # Swap current terminal to another based on an index offset
+
+  local OffsetTerminal = function(offset)
+    if vim9.fn.len(Res.terminals) > 0 then
+      local next_index =
+        vim9.ops.Modulo((vim9.ops.Plus(Res.CurrentIndex(), offset)), vim9.fn.len(Res.terminals))
+      while next_index < 0 do
+        next_index = vim9.ops.Plus(next_index, vim9.fn.len(Res.terminals))
+      end
+      Res.CloseCurrent()
+      Res.current = vim9.index(Res.terminals, next_index)
+      Res.OpenCurrent()
+    end
+  end
+
+  Res.OffsetTerminal = OffsetTerminal
+
+  -- # Delete the current terminal window and do NOT reopen
+
+  local DeleteCurrent = function()
+    if vim9.bool(Res.HasCurrent()) then
+      -- # Wipe current's buffer
+      vim.api.nvim_command('bwipeout! ' .. Res.current.bufnr)
+    end
+  end
+
+  Res.DeleteCurrent = DeleteCurrent
+
+  -- # Wipe all buffers managed by this
+
+  local DeleteAll = function()
+    local buf_nums = vim9.fn.mapnew(Res.terminals, function(_, v)
+      return v.bufnr
+    end)
+
+    for _, buf_num in vim9.iter(buf_nums) do
+      vim.api.nvim_command('bwipeout! ' .. buf_num)
+    end
+
+    Res.current = {}
+
+    Assert(vim9.fn.len(Res.terminals) == 0, "DeleteAll did not clear manager's terminals list")
+    Res.terminals = {}
+  end
+
+  Res.DeleteAll = DeleteAll
+
+  -- # Prints out all active terminals
+  -- # i.e. 0 1 [2] 3
+  -- # if terminal at index 2 is the current
+
+  local ListTerminals = function()
+    if vim9.fn.len(Res.terminals) == 0 then
+      print('No terminals active')
+      return
+    end
+    local indices = {}
+
+    for _, i in vim9.iter(vim9.fn.range(vim9.fn.len(Res.terminals))) do
+      local term = vim9.index(Res.terminals, i)
+      if term.bufnr == Res.current.bufnr then
+        vim9.fn.add(indices, '[' .. i .. ']')
+      else
+        vim9.fn.add(indices, i)
+      end
+    end
+
+    print(vim9.fn.join(indices, ' '))
+  end
+
+  Res.ListTerminals = ListTerminals
+
+  local UpdateState = function()
+    if vim9.bool(vim9.fn.empty(Res.terminals)) then
+      Res.current = {}
+    else
+      Res.current = vim9.index(Res.terminals, 0)
+      Res.OpenCurrent()
+    end
+  end
+
+  Res.UpdateState = UpdateState
+
+  return Res
+end
+
+-- ####################################
+-- # Helpers
+
+Assert = function(cond, msg)
+  cond = vim9.bool(cond)
+  if vim9.bool(vim9.prefix['Bang'](cond)) then
+    pcall(vim.cmd, [[ throw msg ]])
+  end
+end
+
+manager = TerminalManager()
+
+vim.g['GetManager'] = function()
+  return manager
+end
+
+return M
+
