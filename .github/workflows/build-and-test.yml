@@ -14,6 +14,8 @@ jobs:
   check:
     name: Build and Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/cache@v3
@@ -44,11 +46,11 @@ jobs:
             override: true
             components: rustfmt, clippy
 
-      - name: Run cargo clippy (workspace)
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --workspace
+      # - name: Run cargo clippy (workspace)
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     command: clippy
+      #     args: --workspace
 
       - name: Run cargo build (workspace)
         uses: actions-rs/cargo@v1

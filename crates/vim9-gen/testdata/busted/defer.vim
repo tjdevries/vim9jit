@@ -55,5 +55,5 @@ def Test_defer()
   assert_equal([3, 2, 1], x)
 
   var y = RangeDefer()
-  assert_equal([3, 2, 1], x)
+  assert_equal([2, 1, 0], y)
 enddef

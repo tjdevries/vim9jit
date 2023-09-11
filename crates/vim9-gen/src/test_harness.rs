@@ -97,7 +97,7 @@ pub fn exec_lua(preamble: &str) -> Result<HashMap<String, Value>> {
     drop(child_stdin);
 
     // Wait til output has completed.
-    let _ = child.wait_with_output()?;
+    child.wait_with_output()?;
 
     // TODO: For some reason we get a weird 256 wait status on my machine...
     // assert!(
