@@ -38,8 +38,7 @@ impl IfCommand {
                 "elseif".to_string(),
                 "else".to_string(),
                 "endif".to_string(),
-            ]
-            .into_iter(),
+            ],
         );
 
         Ok(ExCommand::If(IfCommand {

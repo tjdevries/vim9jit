@@ -68,12 +68,12 @@ pub fn mutates(expr: &CallExpression, _data: &FunctionData) -> Option<VimFuncMut
 
                 "remove" => Some(VimFuncMutability {
                     returned: None,
-                    modified_args: HashSet::from_iter(vec![0].into_iter()),
+                    modified_args: HashSet::from_iter(vec![0]),
                 }),
 
                 "reverse" | "sort" | "filter" => Some(VimFuncMutability {
                     returned: Some(0),
-                    modified_args: HashSet::from_iter(vec![0].into_iter()),
+                    modified_args: HashSet::from_iter(vec![0]),
                 }),
                 _ => None,
             },

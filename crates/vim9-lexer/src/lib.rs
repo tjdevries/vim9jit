@@ -38,18 +38,15 @@ impl Debug for Span {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Default)]
 pub enum TokenText<'a> {
     Slice(&'a [char]),
     Owned(String),
+    #[default]
     Empty,
 }
 
-impl Default for TokenText<'_> {
-    fn default() -> Self {
-        TokenText::Empty
-    }
-}
+
 
 impl<'a> From<TokenText<'a>> for String {
     fn from(val: TokenText<'a>) -> Self {
