@@ -21,18 +21,7 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install latest nightly rust
-        uses: actions-rs/toolchain@v1
-        with:
-            toolchain: nightly
-            override: true
-            components: rustfmt, clippy
-
-      - name: Run cargo build --release (workspace)
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --workspace --release
+      - run: cargo build --workspace --release
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
