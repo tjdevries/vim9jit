@@ -1768,12 +1768,37 @@ pub fn generate(contents: &str, opts: ParserOpts) -> Result<Output, (Output, Str
 
 #[cfg(test)]
 mod test {
-    use std::{fs::File, io::Write};
+    use std::{fs::File, io::Write, process::Command};
 
     use pretty_assertions::assert_eq;
 
     use super::*;
     use crate::test_harness::{exec_busted, exec_lua};
+
+    fn ensure_plenary_downloaded() {
+        static DOWNLOADED: std::sync::Once = std::sync::Once::new();
+        // Download and install Plenary if needed
+        DOWNLOADED.call_once(|| {
+            let path = std::env::var("HOME").expect("to have a home var")
+                + "/.local/share/nvim/site/pack/vendor/start/plenary.nvim";
+
+            if Path::new(&path).exists() {
+                return;
+            }
+
+            // Download git repo
+            let status = Command::new("git")
+                .arg("clone")
+                .arg("--depth")
+                .arg("1")
+                .arg("https://github.com/nvim-lua/plenary.nvim")
+                .arg(path)
+                .status()
+                .expect("failed to execute git command");
+
+            assert!(status.success());
+        });
+    }
 
     macro_rules! snapshot {
         ($name:tt, $path:tt) => {
@@ -1802,6 +1827,8 @@ mod test {
         ($name:tt, $path:tt) => {
             #[test]
             fn $name() {
+                ensure_plenary_downloaded();
+
                 let vim_contents = include_str!($path);
                 let lua_contents = generate(
                     vim_contents,
