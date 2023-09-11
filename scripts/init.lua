@@ -1,7 +1,7 @@
 -- Add target dir, if not exists
 vim.fn.mkdir('target', 'p')
 
-if not vim.uv.fs_stat('target/plenary.nvim') then
+if not vim.loop.fs_stat('target/plenary.nvim') then
   vim
     .system({ 'git', 'clone', 'https://github.com/nvim-lua/plenary.nvim', 'target/plenary.nvim' })
     :wait()
