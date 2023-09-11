@@ -18,15 +18,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - run: rustup toolchain install stable --profile minimal
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: Install Neovim
         uses: rhysd/action-setup-vim@v1
@@ -39,27 +34,7 @@ jobs:
           mkdir -p ~/.local/share/nvim/site/pack/vendor/start
           git clone --depth 1 https://github.com/nvim-lua/plenary.nvim ~/.local/share/nvim/site/pack/vendor/start/plenary.nvim
 
-      - name: Install latest nightly rust
-        uses: actions-rs/toolchain@v1
-        with:
-            toolchain: nightly
-            override: true
-            components: rustfmt, clippy
-
-      # - name: Run cargo clippy (workspace)
-      #   uses: actions-rs/cargo@v1
-      #   with:
-      #     command: clippy
-      #     args: --workspace
-
-      - name: Run cargo build (workspace)
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --workspace
-
-      - name: Run cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --workspace
+      - run: cargo fmt --check
+      - run: cargo clippy --workspace -- -Dwarnings
+      - run: cargo build --workspace
+      - run: cargo test --workspace
