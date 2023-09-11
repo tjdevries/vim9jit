@@ -17,13 +17,11 @@ pub struct TryCommand {
 
 impl TryCommand {
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
-        let try_endings: HashSet<String> = HashSet::from_iter(
-            vec![
-                "catch".to_string(),
-                "finally".to_string(),
-                "endtry".to_string(),
-            ],
-        );
+        let try_endings: HashSet<String> = HashSet::from_iter(vec![
+            "catch".to_string(),
+            "finally".to_string(),
+            "endtry".to_string(),
+        ]);
 
         Ok(ExCommand::Try(TryCommand {
             try_: parser.expect_identifier_with_text("try")?.into(),
