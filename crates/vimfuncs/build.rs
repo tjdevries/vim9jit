@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{env, fs::File, io::Write, path::Path};
 
 use anyhow::Result;
 
@@ -326,7 +326,8 @@ impl FuncParser {
 fn main() -> Result<()> {
     println!("cargo:rerun-if-changed=data/global_functions.txt");
 
-    let mut lib = std::fs::File::create(concat!(env!("CARGO_MANIFEST_DIR"), "/src/lib.rs"))?;
+    let out_path = Path::new(&env::var_os("OUT_DIR").unwrap()).join("generated_functions.rs");
+    let mut lib = File::create(&out_path)?;
 
     // Write our struct definitions out here:
     writeln!(

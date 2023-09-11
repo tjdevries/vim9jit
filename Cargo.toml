@@ -24,3 +24,8 @@ members = [
     "crates/vimfuncs",
     "crates/format/",
 ]
+default-members = [
+    "crates/vim9-lexer",
+    "crates/vim9-parser",
+    "crates/vim9-gen",
+]
