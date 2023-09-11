@@ -43,7 +43,7 @@ pub fn parse_context(_attr: TokenStream, tokens: TokenStream) -> TokenStream {
     for item in input.items.iter_mut() {
         match &item {
             ImplItem::Const(_) => todo!(),
-            ImplItem::Method(_) => {
+            ImplItem::Fn(_) => {
                 let mut replacer = ReplaceQuestions {
                     name: *input.self_ty.clone(),
                 };

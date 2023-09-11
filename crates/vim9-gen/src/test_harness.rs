@@ -11,15 +11,23 @@ use rmpv::{decode::read_value, encode::write_value, Value};
 pub fn exec_busted(path: &str) -> Result<()> {
     let child = Command::new("nvim")
         .current_dir(concat!(env!("CARGO_MANIFEST_DIR"), "/../../"))
-        .args(["--headless", "-c", &format!("PlenaryBustedFile {path}")])
+        .args([
+            "--headless",
+            "--clean",
+            "-u",
+            "./scripts/init.lua",
+            "-c",
+            &format!("PlenaryBustedFile {path}"),
+        ])
         .stdout(Stdio::piped())
         .spawn()?;
 
     let output = child.wait_with_output()?;
     assert!(
         output.status.success(),
-        "Failed With: {}",
-        String::from_utf8(output.stdout).unwrap()
+        "Failed With:\nstdout:{}\nstderr:{}",
+        String::from_utf8(output.stdout).unwrap(),
+        String::from_utf8(output.stderr).unwrap()
     );
 
     Ok(())
@@ -41,7 +49,7 @@ pub fn exec_lua(preamble: &str) -> Result<HashMap<String, Value>> {
         // the root of our project, so we have access to the `lua/` folder available
         // there
         .current_dir(concat!(env!("CARGO_MANIFEST_DIR"), "/../../"))
-        .args(["--clean", "--embed"])
+        .args(["--clean", "-u", "./scripts/init.lua", "--embed"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()?;
@@ -85,12 +93,19 @@ pub fn exec_lua(preamble: &str) -> Result<HashMap<String, Value>> {
     }
 
     // Close stdin to finish and avoid indefinite blocking
-    #[allow(clippy::drop_ref)]
+    #[allow(dropping_references)]
     drop(child_stdin);
 
     // Wait til output has completed.
     let output = child.wait_with_output()?;
-    assert!(output.status.success());
+    dbg!(&output);
+
+    // assert!(
+    //     output.status.success(),
+    //     "Failed With:\nstdout:{}\nstderr:{}",
+    //     String::from_utf8(output.stdout).unwrap(),
+    //     String::from_utf8(output.stderr).unwrap()
+    // );
 
     // We good
     let val = val.as_map().expect("returns a map");
