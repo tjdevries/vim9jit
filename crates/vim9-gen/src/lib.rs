@@ -1,5 +1,3 @@
-#![feature(iter_intersperse)]
-
 use std::{collections::HashMap, fmt::Write as _, path::Path};
 
 use lexer::Lexer;
@@ -1020,8 +1018,8 @@ fn identifier_list(state: &mut State, unpacked: &UnpackIdentifier) -> String {
     unpacked
         .identifiers
         .iter()
-        .map(|i| i.gen(state))
-        .intersperse(", ".to_string())
+        .flat_map(|i| [i.gen(state), ", ".to_string()])
+        .take((2 * unpacked.identifiers.len()).saturating_sub(1))
         .collect()
 }
 
