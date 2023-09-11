@@ -1,4 +1,3 @@
-#![feature(let_chains)]
 #![allow(unreachable_code)]
 
 use std::{
@@ -45,8 +44,6 @@ pub enum TokenText<'a> {
     #[default]
     Empty,
 }
-
-
 
 impl<'a> From<TokenText<'a>> for String {
     fn from(val: TokenText<'a>) -> Self {
@@ -436,7 +433,7 @@ impl Lexer {
             self.read_char();
 
             // read the rest of the number
-            while let Some(ch) = self.ch() && ch.is_numeric() {
+            while self.ch().is_some_and(|ch| ch.is_numeric()) {
                 self.read_char();
             }
 
@@ -470,7 +467,7 @@ impl Lexer {
         F: Fn(&char) -> bool,
     {
         self.read_char();
-        if let Some(ch) = self.ch() && ch == &until {
+        if self.ch().is_some_and(|&ch| ch == until) {
             return Ok(Token {
                 kind: passed,
                 text: TokenText::Slice(self.chars[self.position()..self.position()].into()),
@@ -480,7 +477,7 @@ impl Lexer {
 
         let position = self.position();
 
-        while let Some(ch) = self.ch() && ch != &until {
+        while let Some(ch) = self.ch().filter(|&&ch| ch != until) {
             if fail(ch) {
                 return Ok(Token {
                     kind: failed,
@@ -538,7 +535,7 @@ impl Lexer {
         F: Fn(&char) -> bool,
     {
         self.read_char();
-        if let Some(ch) = self.ch() && ch == &until {
+        if self.ch().is_some_and(|&ch| ch == until) {
             return Ok(Some(Token {
                 kind,
                 text: TokenText::Slice(self.chars[self.position()..self.position()].into()),
@@ -548,7 +545,7 @@ impl Lexer {
 
         let position = self.position();
 
-        while let Some(ch) = self.ch() && ch != &until {
+        while let Some(ch) = self.ch().filter(|&&ch| ch != until) {
             if fail(ch) {
                 return Ok(None);
             }
@@ -575,7 +572,7 @@ impl Lexer {
 
     fn read_identifier(&self) -> Result<Token> {
         let position = self.position();
-        while let Some(ch) = self.ch() && is_identifier(*ch) {
+        while self.ch().is_some_and(|&ch| is_identifier(ch)) {
             self.read_char();
         }
 
@@ -632,9 +629,9 @@ impl Lexer {
             return;
         }
 
-        while let Some(&ch) = self.ch() && ch.is_ascii_whitespace() {
+        while let Some(&ch) = self.ch().filter(|&&ch| ch.is_ascii_whitespace()) {
             if ch == '\n' {
-                return
+                return;
             }
 
             self.read_char();
@@ -913,7 +910,7 @@ impl Lexer {
                 self.read_char();
 
                 let position = self.position();
-                while let Some(&ch) = self.ch() && is_identifier(ch) {
+                while self.ch().is_some_and(|&ch| is_identifier(ch)) {
                     self.read_char();
                 }
 
@@ -967,9 +964,9 @@ impl Lexer {
         F: Fn(char) -> bool,
     {
         let mut n = 1;
-        while let Some(peeked) = self.peek_n(n) && *peeked != '\n' {
-            if f(*peeked) {
-                return true
+        while let Some(&peeked) = self.peek_n(n).filter(|&&peeked| peeked != '\n') {
+            if f(peeked) {
+                return true;
             }
 
             n += 1;
