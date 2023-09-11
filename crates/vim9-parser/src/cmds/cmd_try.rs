@@ -22,8 +22,7 @@ impl TryCommand {
                 "catch".to_string(),
                 "finally".to_string(),
                 "endtry".to_string(),
-            ]
-            .into_iter(),
+            ],
         );
 
         Ok(ExCommand::Try(TryCommand {
