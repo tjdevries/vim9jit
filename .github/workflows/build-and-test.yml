@@ -1,13 +1,21 @@
-on: [push]
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
 
 name: build-and-test
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
+  cancel-in-progress: true
 
 jobs:
   check:
     name: Build and Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions/cache@v3
         with:
           path: |
@@ -19,10 +27,10 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install Neovim
-        shell: bash
-        run: |
-            wget -q https://github.com/neovim/neovim/releases/download/nightly/nvim-linux64.deb -O /tmp/nvim.deb
-            sudo dpkg -i /tmp/nvim.deb
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: nightly
 
       - name: Install plenary.nvim (for testing)
         run: |
