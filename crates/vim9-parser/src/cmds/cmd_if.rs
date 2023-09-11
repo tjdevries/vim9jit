@@ -33,13 +33,11 @@ pub struct ElseCommand {
 
 impl IfCommand {
     pub fn parse(parser: &Parser) -> Result<ExCommand> {
-        let if_endings: HashSet<String> = HashSet::from_iter(
-            vec![
-                "elseif".to_string(),
-                "else".to_string(),
-                "endif".to_string(),
-            ],
-        );
+        let if_endings: HashSet<String> = HashSet::from_iter(vec![
+            "elseif".to_string(),
+            "else".to_string(),
+            "endif".to_string(),
+        ]);
 
         Ok(ExCommand::If(IfCommand {
             if_tok: parser.expect_identifier_with_text("if")?.into(),
