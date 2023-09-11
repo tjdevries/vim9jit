@@ -100,7 +100,7 @@ describe('filename', function()
     vim9.fn.assert_equal({ 3, 2, 1 }, x)
 
     local y = RangeDefer()
-    vim9.fn.assert_equal({ 3, 2, 1 }, x)
+    vim9.fn.assert_equal({ 2, 1, 0 }, y)
 
     -- Assert that errors is still empty
     assert.are.same({}, vim.v.errors)
