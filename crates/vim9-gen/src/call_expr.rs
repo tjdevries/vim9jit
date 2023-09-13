@@ -63,7 +63,7 @@ pub fn mutates(expr: &CallExpression, _data: &FunctionData) -> Option<VimFuncMut
     match expr.name() {
         Some(ident) => match ident {
             Identifier::Raw(raw) => match raw.name.as_str() {
-                // We have overriden insert
+                // We have overridden insert
                 "add" | "insert" | "extend" => None,
 
                 "remove" => Some(VimFuncMutability {

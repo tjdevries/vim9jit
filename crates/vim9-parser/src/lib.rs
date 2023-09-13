@@ -701,7 +701,7 @@ impl Signature {
 
         Ok(Self {
             open: parser.ensure_token(TokenKind::LeftParen)?.into(),
-            params: parser.parse_paramter_list()?,
+            params: parser.parse_parameter_list()?,
             close: parser.expect_token(TokenKind::RightParen)?.into(),
         })
     }
@@ -1364,7 +1364,7 @@ pub enum Precedence {
     Product,
     Modulo,
 
-    /// PrefixExpr7 has a separate precendence:
+    /// PrefixExpr7 has a separate precedence:
     ///
     /// When using -> the |expr7| operators will be applied first, thus:  
     ///  -1.234->string()
@@ -2145,7 +2145,7 @@ impl<'a> Parser<'a> {
 
             _ => {
                 return Err(anyhow::anyhow!(
-                    "Unexpected precendence kind: {:?} // {:#?}",
+                    "Unexpected precedence kind: {:?} // {:#?}",
                     kind,
                     self
                 ));
@@ -2208,7 +2208,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expression(&self, prec: Precedence) -> Result<Expression> {
-        // info!("parseing expr: {:#?}", prec);
+        // info!("parsing expr: {:#?}", prec);
 
         self.skip_whitespace();
 
@@ -2647,7 +2647,7 @@ impl<'a> Parser<'a> {
         self.list_parser(k, KeyValue::parse)
     }
 
-    fn parse_paramter_list(&self) -> Result<Vec<Parameter>> {
+    fn parse_parameter_list(&self) -> Result<Vec<Parameter>> {
         self.list_parser(TokenKind::RightParen, |p| Parameter::parse(self))
 
         // let mut params = Vec::new();
