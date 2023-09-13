@@ -7,5 +7,3 @@ the rest of the vimscript to Neovim's vimscript interpreter. In general, this re
 style syntax, as well as doing things with `import` and a few more items.
 
 For examples of some of the "transpiled" code, you can check: ./crates/vim9-gen/testdata/output/ 
-
-Subject to change. We'll be exploring this quite a bit over the next month (Sept 2022 - Oct 2022)

@@ -147,7 +147,7 @@ macro_rules! find_scope {
         let scope = $state.find_relevant_scope(|s| matches!(s.kind, $m));
         match scope {
             Some(scope) => scope,
-            None => panic!("Unexpect failure to find scope: {:#?}", $state),
+            None => panic!("Unexpected failure to find scope: {:#?}", $state),
         }
     }};
 }
