@@ -1,10 +1,11 @@
+use std::iter::Peekable;
+use std::str::Chars;
 use std::{env, fs::File, io::Write, path::Path};
 
 use anyhow::Result;
 
-pub struct FuncLexer {
-    position: usize,
-    chars: Vec<char>,
+pub struct FuncLexer<'a> {
+    chars: Peekable<Chars<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -18,6 +19,7 @@ pub enum FuncToken {
     Number(usize),
     String(String),
     IfDef(IfDef),
+    Skip,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -26,135 +28,118 @@ pub struct IfDef {
     pub proc_else: Box<FuncToken>,
 }
 
-impl FuncToken {
-    fn string(self) -> String {
-        match self {
-            FuncToken::String(s) => s,
-            _ => unreachable!("{:?}", self),
-        }
-    }
-
-    fn number(self) -> usize {
-        match self {
-            FuncToken::Number(s) => s,
-            _ => unreachable!("{:?}", self),
-        }
-    }
-
-    fn identifier(self) -> String {
-        match self {
-            FuncToken::Identifier(s) => s,
-            _ => unreachable!("{:?}", self),
-        }
-    }
-}
-
-impl FuncLexer {
-    pub fn new(input: &str) -> Self {
+impl<'a> FuncLexer<'a> {
+    pub fn new(input: &'a str) -> Self {
         Self {
-            position: 0,
-            chars: input.chars().collect(),
+            chars: input.chars().peekable(),
         }
     }
 
     pub fn lex(&mut self) -> Vec<FuncToken> {
         let mut result = vec![];
 
-        loop {
-            let ch = self.read_char();
-            match ch {
-                Some(ch) => {
-                    let tok = match ch {
-                        '{' => FuncToken::LeftBrace,
-                        '}' => FuncToken::RightBrace,
-                        '(' => FuncToken::LeftParen,
-                        ')' => FuncToken::RightParen,
-                        ',' => FuncToken::Comma,
-                        '"' => self.read_string(),
-                        '#' => self.read_ifdef(),
-                        ch if ch.is_numeric() => self.read_number(),
-                        ch if ch.is_alphabetic() => self.read_identifier(),
-                        ch if ch.is_whitespace() => continue,
-                        ';' => continue,
-                        '/' => {
-                            self.skip_line();
-                            continue;
-                        }
-                        ch => todo!("unhandled: {:?}", ch),
-                    };
+        while let Some(ch) = self.chars.next() {
+            let tok = match ch {
+                '{' => self.process_left_brace(),
+                '}' => self.process_right_brace(),
+                '(' => self.process_left_paren(),
+                ')' => self.process_right_paren(),
+                ',' => self.process_comma(),
+                '"' => self.process_quotation(),
+                '#' => self.process_hash(),
+                ch if ch.is_numeric() => self.process_number(Some(ch)),
+                ch if ch.is_alphabetic() => self.process_alphabets(Some(ch)),
+                ch if ch.is_whitespace() => self.process_whitespace(),
+                ';' => self.process_semi_colon(),
+                '/' if *self.chars.peek().unwrap() == '/' => self.process_double_forward_slash(),
+                ch => todo!("unhandled: {:?}", ch),
+            };
 
-                    result.push(tok);
-                }
-                None => break,
+            if tok != FuncToken::Skip {
+                result.push(tok);
             }
         }
 
         result
     }
 
-    fn read_char(&mut self) -> Option<char> {
-        let ch = self.chars.get(self.position).cloned();
-        self.position += 1;
-
-        ch
+    fn process_left_brace(&mut self) -> FuncToken {
+        FuncToken::LeftBrace
     }
 
-    fn peek_char(&self) -> Option<char> {
-        self.chars.get(self.position + 1).cloned()
+    fn process_right_brace(&mut self) -> FuncToken {
+        FuncToken::RightBrace
     }
 
-    fn read_string(&mut self) -> FuncToken {
-        let position = self.position;
-        while self.read_char() != Some('"') {}
-
-        FuncToken::String(String::from_iter(&self.chars[position..self.position - 1]))
+    fn process_left_paren(&mut self) -> FuncToken {
+        FuncToken::LeftParen
     }
 
-    fn read_number(&mut self) -> FuncToken {
-        let position = self.position;
-        loop {
-            let ch = self.ch();
-            if !ch.is_numeric() || ch == ',' {
-                break;
-            } else {
-                self.read_char();
-            }
+    fn process_right_paren(&mut self) -> FuncToken {
+        FuncToken::RightParen
+    }
+
+    fn process_comma(&mut self) -> FuncToken {
+        FuncToken::Comma
+    }
+
+    fn process_quotation(&mut self) -> FuncToken {
+        let is_terminal = |ch: char| ch == '"';
+        let value = self.read_until_iter_terminal(is_terminal);
+        let value = String::from_iter(value);
+
+        FuncToken::String(value)
+    }
+
+    fn process_number(&mut self, first_ch: Option<char>) -> FuncToken {
+        let is_terminal = |ch: char| !ch.is_numeric();
+        let mut value = self.read_until_peek_terminal(is_terminal);
+        if let Some(ch) = first_ch {
+            value.insert(0, ch);
         }
+        let value = String::from_iter(value).parse().unwrap();
 
-        FuncToken::Number(
-            self.chars[position - 1..self.position]
-                .iter()
-                .collect::<String>()
-                .parse::<usize>()
-                .unwrap(),
-        )
+        FuncToken::Number(value)
     }
 
-    fn read_identifier(&mut self) -> FuncToken {
-        let position = self.position - 1;
-        while let Some(ch) = self.peek_char() {
-            self.read_char();
-            if !(ch.is_alphanumeric() || ch == '_') {
-                break;
-            }
+    fn process_alphabets(&mut self, first_ch: Option<char>) -> FuncToken {
+        let is_terminal = |ch: char| !(ch.is_alphanumeric() || ch == '_');
+        let mut value = self.read_until_peek_terminal(is_terminal);
+        if let Some(ch) = first_ch {
+            value.insert(0, ch);
         }
+        let value = String::from_iter(value);
 
-        FuncToken::Identifier(String::from_iter(&self.chars[position..self.position]))
+        FuncToken::Identifier(value)
     }
 
-    fn read_ifdef(&mut self) -> FuncToken {
+    fn process_whitespace(&mut self) -> FuncToken {
+        self.skip_whitespaces();
+        FuncToken::Skip
+    }
+
+    fn process_semi_colon(&mut self) -> FuncToken {
+        FuncToken::Skip
+    }
+
+    fn process_double_forward_slash(&mut self) -> FuncToken {
+        self.skip_line();
+        FuncToken::Skip
+    }
+
+    fn process_hash(&mut self) -> FuncToken {
         // read #ifdef ...
         self.skip_line();
-        self.skip_whitespace();
-        let proc_if = self.read_identifier().into();
-        self.skip_whitespace();
+        self.skip_whitespaces();
+        let proc_if = self.process_alphabets(None).into();
+        self.skip_whitespaces();
 
         // read #else
         self.skip_line();
 
-        self.skip_whitespace();
-        let proc_else = self.read_identifier().into();
-        self.skip_whitespace();
+        self.skip_whitespaces();
+        let proc_else = self.process_alphabets(None).into();
+        self.skip_whitespaces();
 
         // read #endif
         self.skip_line();
@@ -162,24 +147,39 @@ impl FuncLexer {
         FuncToken::IfDef(IfDef { proc_if, proc_else })
     }
 
-    fn skip_whitespace(&mut self) {
-        if !self.ch().is_whitespace() {
-            return;
-        }
-
-        while let Some(ch) = self.read_char() {
-            if !ch.is_whitespace() {
-                break;
-            }
-        }
+    fn skip_whitespaces(&mut self) {
+        let is_terminal = |ch: char| !ch.is_whitespace();
+        self.read_until_peek_terminal(is_terminal);
     }
 
     fn skip_line(&mut self) {
-        while self.read_char() != Some('\n') {}
+        let is_terminal = |ch: char| ch == '\n';
+        self.read_until_iter_terminal(is_terminal);
     }
 
-    fn ch(&self) -> char {
-        self.chars[self.position]
+    fn read_until_peek_terminal(&mut self, is_peek_terminal: fn(char) -> bool) -> Vec<char> {
+        let mut result = vec![];
+        while let Some(ch) = self.chars.peek() {
+            if is_peek_terminal(*ch) {
+                break;
+            }
+
+            result.push(*ch);
+            self.chars.next();
+        }
+        result
+    }
+
+    fn read_until_iter_terminal(&mut self, is_iter_terminal: fn(char) -> bool) -> Vec<char> {
+        let mut result = vec![];
+        for ch in self.chars.by_ref() {
+            if is_iter_terminal(ch) {
+                break;
+            }
+
+            result.push(ch);
+        }
+        result
     }
 }
 
@@ -255,32 +255,59 @@ impl FuncParser {
 
             assert_eq!(token_stream.next().expect("internal"), FuncToken::LeftBrace);
 
-            info.push(FuncInfo {
-                name: token_stream.next().unwrap().string(),
-                min_args: after_comma!().number(),
-                max_args: after_comma!().number(),
-                method_arg: match after_comma!() {
-                    FuncToken::Identifier(s) => match s.as_str() {
-                        "FEARG_1" => Some(1),
-                        "FEARG_2" => Some(2),
-                        "FEARG_3" => Some(3),
-                        "FEARG_4" => Some(4),
-                        _ => unimplemented!("invalid identifier"),
-                    },
-                    FuncToken::Number(s) => match s {
-                        0 => None,
-                        _ => unreachable!("invalid number"),
-                    },
-                    _ => unreachable!("not valid method_arg"),
+            let name = match token_stream.next().unwrap() {
+                FuncToken::String(name) => name,
+                _ => unreachable!("not valid name"),
+            };
+
+            let min_args = match after_comma!() {
+                FuncToken::Number(number) => number,
+                _ => unreachable!("not valid min_args"),
+            };
+
+            let max_args = match after_comma!() {
+                FuncToken::Number(number) => number,
+                _ => unreachable!("not valid max_args"),
+            };
+
+            let method_arg = match after_comma!() {
+                FuncToken::Identifier(s) => match s.as_str() {
+                    "FEARG_1" => Some(1),
+                    "FEARG_2" => Some(2),
+                    "FEARG_3" => Some(3),
+                    "FEARG_4" => Some(4),
+                    _ => unimplemented!("invalid identifier"),
                 },
-                arg_check: after_comma!().identifier(),
+                FuncToken::Number(s) => match s {
+                    0 => None,
+                    _ => unreachable!("invalid number"),
+                },
+                _ => unreachable!("not valid method_arg"),
+            };
+
+            let arg_check = match after_comma!() {
+                FuncToken::Identifier(identifier) => identifier,
+                _ => unreachable!("not valid arg_check"),
+            };
+
+            info.push(FuncInfo {
+                name,
+                min_args,
+                max_args,
+                method_arg,
+                arg_check,
                 return_type: {
                     token_stream.next();
 
                     // TODO: Handle the rest of these that we care about.
                     // It doesn't have to be perfect, but it could still provide
                     // some useful information for us when doing type resolution.
-                    match token_stream.next().unwrap().identifier().as_str() {
+                    let identifier = match token_stream.next().unwrap() {
+                        FuncToken::Identifier(identifier) => identifier,
+                        _ => unreachable!("not a valid return identifier"),
+                    };
+
+                    match identifier.as_str() {
                         "ret_any" => FuncReturnType::Any,
                         "ret_bool" => FuncReturnType::Bool,
                         "ret_number" => FuncReturnType::Number,
