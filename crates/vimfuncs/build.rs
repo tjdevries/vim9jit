@@ -71,7 +71,7 @@ impl<'a> FuncLexer<'a> {
                 '"' => self.process_quotation(),
                 '#' => self.process_hash(),
                 ch if ch.is_numeric() => self.process_number(),
-                ch if ch.is_alphabetic() => self.process_alphabets(),
+                ch if ch.is_alphabetic() => self.process_identifier(),
                 ch if ch.is_whitespace() => self.process_whitespace(),
                 ';' => self.process_semi_colon(),
                 '/' => self.process_double_forward_slash(),
@@ -128,7 +128,7 @@ impl<'a> FuncLexer<'a> {
         FuncToken::Number(value)
     }
 
-    fn process_alphabets(&mut self) -> FuncToken {
+    fn process_identifier(&mut self) -> FuncToken {
         let is_terminal = |ch: char| !(ch.is_alphanumeric() || ch == '_');
         let value = self.read_until_peek_terminal(is_terminal);
         let value = String::from_iter(value);
@@ -157,14 +157,14 @@ impl<'a> FuncLexer<'a> {
         self.chars.next();
         self.skip_line();
         self.skip_whitespace();
-        let proc_if = self.process_alphabets().into();
+        let proc_if = self.process_identifier().into();
         self.skip_whitespace();
 
         // read #else
         self.skip_line();
 
         self.skip_whitespace();
-        let proc_else = self.process_alphabets().into();
+        let proc_else = self.process_identifier().into();
         self.skip_whitespace();
 
         // read #endif
