@@ -28,6 +28,29 @@ pub struct IfDef {
     pub proc_else: Box<FuncToken>,
 }
 
+impl FuncToken {
+    fn string(self) -> String {
+        match self {
+            FuncToken::String(s) => s,
+            _ => unreachable!("{:?}", self),
+        }
+    }
+
+    fn number(self) -> usize {
+        match self {
+            FuncToken::Number(s) => s,
+            _ => unreachable!("{:?}", self),
+        }
+    }
+
+    fn identifier(self) -> String {
+        match self {
+            FuncToken::Identifier(s) => s,
+            _ => unreachable!("{:?}", self),
+        }
+    }
+}
+
 impl<'a> FuncLexer<'a> {
     pub fn new(input: &'a str) -> Self {
         Self {
@@ -114,7 +137,7 @@ impl<'a> FuncLexer<'a> {
     }
 
     fn process_whitespace(&mut self) -> FuncToken {
-        self.skip_whitespaces();
+        self.skip_whitespace();
         FuncToken::Skip
     }
 
@@ -130,16 +153,16 @@ impl<'a> FuncLexer<'a> {
     fn process_hash(&mut self) -> FuncToken {
         // read #ifdef ...
         self.skip_line();
-        self.skip_whitespaces();
+        self.skip_whitespace();
         let proc_if = self.process_alphabets(None).into();
-        self.skip_whitespaces();
+        self.skip_whitespace();
 
         // read #else
         self.skip_line();
 
-        self.skip_whitespaces();
+        self.skip_whitespace();
         let proc_else = self.process_alphabets(None).into();
-        self.skip_whitespaces();
+        self.skip_whitespace();
 
         // read #endif
         self.skip_line();
@@ -147,7 +170,7 @@ impl<'a> FuncLexer<'a> {
         FuncToken::IfDef(IfDef { proc_if, proc_else })
     }
 
-    fn skip_whitespaces(&mut self) {
+    fn skip_whitespace(&mut self) {
         let is_terminal = |ch: char| !ch.is_whitespace();
         self.read_until_peek_terminal(is_terminal);
     }
@@ -255,59 +278,32 @@ impl FuncParser {
 
             assert_eq!(token_stream.next().expect("internal"), FuncToken::LeftBrace);
 
-            let name = match token_stream.next().unwrap() {
-                FuncToken::String(name) => name,
-                _ => unreachable!("not valid name"),
-            };
-
-            let min_args = match after_comma!() {
-                FuncToken::Number(number) => number,
-                _ => unreachable!("not valid min_args"),
-            };
-
-            let max_args = match after_comma!() {
-                FuncToken::Number(number) => number,
-                _ => unreachable!("not valid max_args"),
-            };
-
-            let method_arg = match after_comma!() {
-                FuncToken::Identifier(s) => match s.as_str() {
-                    "FEARG_1" => Some(1),
-                    "FEARG_2" => Some(2),
-                    "FEARG_3" => Some(3),
-                    "FEARG_4" => Some(4),
-                    _ => unimplemented!("invalid identifier"),
-                },
-                FuncToken::Number(s) => match s {
-                    0 => None,
-                    _ => unreachable!("invalid number"),
-                },
-                _ => unreachable!("not valid method_arg"),
-            };
-
-            let arg_check = match after_comma!() {
-                FuncToken::Identifier(identifier) => identifier,
-                _ => unreachable!("not valid arg_check"),
-            };
-
             info.push(FuncInfo {
-                name,
-                min_args,
-                max_args,
-                method_arg,
-                arg_check,
+                name: token_stream.next().unwrap().string(),
+                min_args: after_comma!().number(),
+                max_args: after_comma!().number(),
+                method_arg: match after_comma!() {
+                    FuncToken::Identifier(s) => match s.as_str() {
+                        "FEARG_1" => Some(1),
+                        "FEARG_2" => Some(2),
+                        "FEARG_3" => Some(3),
+                        "FEARG_4" => Some(4),
+                        _ => unimplemented!("invalid identifier"),
+                    },
+                    FuncToken::Number(s) => match s {
+                        0 => None,
+                        _ => unreachable!("invalid number"),
+                    },
+                    _ => unreachable!("not valid method_arg"),
+                },
+                arg_check: after_comma!().identifier(),
                 return_type: {
                     token_stream.next();
 
                     // TODO: Handle the rest of these that we care about.
                     // It doesn't have to be perfect, but it could still provide
                     // some useful information for us when doing type resolution.
-                    let identifier = match token_stream.next().unwrap() {
-                        FuncToken::Identifier(identifier) => identifier,
-                        _ => unreachable!("not a valid return identifier"),
-                    };
-
-                    match identifier.as_str() {
+                    match token_stream.next().unwrap().identifier().as_str() {
                         "ret_any" => FuncReturnType::Any,
                         "ret_bool" => FuncReturnType::Bool,
                         "ret_number" => FuncReturnType::Number,
