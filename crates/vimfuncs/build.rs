@@ -61,7 +61,7 @@ impl<'a> FuncLexer<'a> {
     pub fn lex(&mut self) -> Vec<FuncToken> {
         let mut result = vec![];
 
-        while let Some(ch) = self.chars.next() {
+        while let Some(ch) = self.chars.peek() {
             let tok = match ch {
                 '{' => self.process_left_brace(),
                 '}' => self.process_right_brace(),
@@ -70,11 +70,11 @@ impl<'a> FuncLexer<'a> {
                 ',' => self.process_comma(),
                 '"' => self.process_quotation(),
                 '#' => self.process_hash(),
-                ch if ch.is_numeric() => self.process_number(Some(ch)),
-                ch if ch.is_alphabetic() => self.process_alphabets(Some(ch)),
+                ch if ch.is_numeric() => self.process_number(),
+                ch if ch.is_alphabetic() => self.process_alphabets(),
                 ch if ch.is_whitespace() => self.process_whitespace(),
                 ';' => self.process_semi_colon(),
-                '/' if *self.chars.peek().unwrap() == '/' => self.process_double_forward_slash(),
+                '/' => self.process_double_forward_slash(),
                 ch => todo!("unhandled: {:?}", ch),
             };
 
@@ -87,26 +87,32 @@ impl<'a> FuncLexer<'a> {
     }
 
     fn process_left_brace(&mut self) -> FuncToken {
+        self.chars.next();
         FuncToken::LeftBrace
     }
 
     fn process_right_brace(&mut self) -> FuncToken {
+        self.chars.next();
         FuncToken::RightBrace
     }
 
     fn process_left_paren(&mut self) -> FuncToken {
+        self.chars.next();
         FuncToken::LeftParen
     }
 
     fn process_right_paren(&mut self) -> FuncToken {
+        self.chars.next();
         FuncToken::RightParen
     }
 
     fn process_comma(&mut self) -> FuncToken {
+        self.chars.next();
         FuncToken::Comma
     }
 
     fn process_quotation(&mut self) -> FuncToken {
+        self.chars.next();
         let is_terminal = |ch: char| ch == '"';
         let value = self.read_until_iter_terminal(is_terminal);
         let value = String::from_iter(value);
@@ -114,23 +120,17 @@ impl<'a> FuncLexer<'a> {
         FuncToken::String(value)
     }
 
-    fn process_number(&mut self, first_ch: Option<char>) -> FuncToken {
+    fn process_number(&mut self) -> FuncToken {
         let is_terminal = |ch: char| !ch.is_numeric();
-        let mut value = self.read_until_peek_terminal(is_terminal);
-        if let Some(ch) = first_ch {
-            value.insert(0, ch);
-        }
+        let value = self.read_until_peek_terminal(is_terminal);
         let value = String::from_iter(value).parse().unwrap();
 
         FuncToken::Number(value)
     }
 
-    fn process_alphabets(&mut self, first_ch: Option<char>) -> FuncToken {
+    fn process_alphabets(&mut self) -> FuncToken {
         let is_terminal = |ch: char| !(ch.is_alphanumeric() || ch == '_');
-        let mut value = self.read_until_peek_terminal(is_terminal);
-        if let Some(ch) = first_ch {
-            value.insert(0, ch);
-        }
+        let value = self.read_until_peek_terminal(is_terminal);
         let value = String::from_iter(value);
 
         FuncToken::Identifier(value)
@@ -142,26 +142,29 @@ impl<'a> FuncLexer<'a> {
     }
 
     fn process_semi_colon(&mut self) -> FuncToken {
+        self.chars.next();
         FuncToken::Skip
     }
 
     fn process_double_forward_slash(&mut self) -> FuncToken {
+        self.chars.next();
         self.skip_line();
         FuncToken::Skip
     }
 
     fn process_hash(&mut self) -> FuncToken {
         // read #ifdef ...
+        self.chars.next();
         self.skip_line();
         self.skip_whitespace();
-        let proc_if = self.process_alphabets(None).into();
+        let proc_if = self.process_alphabets().into();
         self.skip_whitespace();
 
         // read #else
         self.skip_line();
 
         self.skip_whitespace();
-        let proc_else = self.process_alphabets(None).into();
+        let proc_else = self.process_alphabets().into();
         self.skip_whitespace();
 
         // read #endif
