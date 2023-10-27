@@ -1,10 +1,11 @@
+use std::iter::Peekable;
+use std::str::Chars;
 use std::{env, fs::File, io::Write, path::Path};
 
 use anyhow::Result;
 
-pub struct FuncLexer {
-    position: usize,
-    chars: Vec<char>,
+pub struct FuncLexer<'a> {
+    chars: Peekable<Chars<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -18,6 +19,7 @@ pub enum FuncToken {
     Number(usize),
     String(String),
     IfDef(IfDef),
+    Skip,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -49,111 +51,120 @@ impl FuncToken {
     }
 }
 
-impl FuncLexer {
-    pub fn new(input: &str) -> Self {
+impl<'a> FuncLexer<'a> {
+    pub fn new(input: &'a str) -> Self {
         Self {
-            position: 0,
-            chars: input.chars().collect(),
+            chars: input.chars().peekable(),
         }
     }
 
     pub fn lex(&mut self) -> Vec<FuncToken> {
         let mut result = vec![];
 
-        loop {
-            let ch = self.read_char();
-            match ch {
-                Some(ch) => {
-                    let tok = match ch {
-                        '{' => FuncToken::LeftBrace,
-                        '}' => FuncToken::RightBrace,
-                        '(' => FuncToken::LeftParen,
-                        ')' => FuncToken::RightParen,
-                        ',' => FuncToken::Comma,
-                        '"' => self.read_string(),
-                        '#' => self.read_ifdef(),
-                        ch if ch.is_numeric() => self.read_number(),
-                        ch if ch.is_alphabetic() => self.read_identifier(),
-                        ch if ch.is_whitespace() => continue,
-                        ';' => continue,
-                        '/' => {
-                            self.skip_line();
-                            continue;
-                        }
-                        ch => todo!("unhandled: {:?}", ch),
-                    };
+        while let Some(ch) = self.chars.peek() {
+            let tok = match ch {
+                '{' => self.process_left_brace(),
+                '}' => self.process_right_brace(),
+                '(' => self.process_left_paren(),
+                ')' => self.process_right_paren(),
+                ',' => self.process_comma(),
+                '"' => self.process_quotation(),
+                '#' => self.process_hash(),
+                ch if ch.is_numeric() => self.process_number(),
+                ch if ch.is_alphabetic() => self.process_identifier(),
+                ch if ch.is_whitespace() => self.process_whitespace(),
+                ';' => self.process_semi_colon(),
+                '/' => self.process_double_forward_slash(),
+                ch => todo!("unhandled: {:?}", ch),
+            };
 
-                    result.push(tok);
-                }
-                None => break,
+            if tok != FuncToken::Skip {
+                result.push(tok);
             }
         }
 
         result
     }
 
-    fn read_char(&mut self) -> Option<char> {
-        let ch = self.chars.get(self.position).cloned();
-        self.position += 1;
-
-        ch
+    fn process_left_brace(&mut self) -> FuncToken {
+        self.chars.next();
+        FuncToken::LeftBrace
     }
 
-    fn peek_char(&self) -> Option<char> {
-        self.chars.get(self.position + 1).cloned()
+    fn process_right_brace(&mut self) -> FuncToken {
+        self.chars.next();
+        FuncToken::RightBrace
     }
 
-    fn read_string(&mut self) -> FuncToken {
-        let position = self.position;
-        while self.read_char() != Some('"') {}
-
-        FuncToken::String(String::from_iter(&self.chars[position..self.position - 1]))
+    fn process_left_paren(&mut self) -> FuncToken {
+        self.chars.next();
+        FuncToken::LeftParen
     }
 
-    fn read_number(&mut self) -> FuncToken {
-        let position = self.position;
-        loop {
-            let ch = self.ch();
-            if !ch.is_numeric() || ch == ',' {
-                break;
-            } else {
-                self.read_char();
-            }
-        }
-
-        FuncToken::Number(
-            self.chars[position - 1..self.position]
-                .iter()
-                .collect::<String>()
-                .parse::<usize>()
-                .unwrap(),
-        )
+    fn process_right_paren(&mut self) -> FuncToken {
+        self.chars.next();
+        FuncToken::RightParen
     }
 
-    fn read_identifier(&mut self) -> FuncToken {
-        let position = self.position - 1;
-        while let Some(ch) = self.peek_char() {
-            self.read_char();
-            if !(ch.is_alphanumeric() || ch == '_') {
-                break;
-            }
-        }
-
-        FuncToken::Identifier(String::from_iter(&self.chars[position..self.position]))
+    fn process_comma(&mut self) -> FuncToken {
+        self.chars.next();
+        FuncToken::Comma
     }
 
-    fn read_ifdef(&mut self) -> FuncToken {
+    fn process_quotation(&mut self) -> FuncToken {
+        self.chars.next();
+        let is_terminal = |ch: char| ch == '"';
+        let value = self.read_until_iter_terminal(is_terminal);
+        let value = String::from_iter(value);
+
+        FuncToken::String(value)
+    }
+
+    fn process_number(&mut self) -> FuncToken {
+        let is_terminal = |ch: char| !ch.is_numeric();
+        let value = self.read_until_peek_terminal(is_terminal);
+        let value = String::from_iter(value).parse().unwrap();
+
+        FuncToken::Number(value)
+    }
+
+    fn process_identifier(&mut self) -> FuncToken {
+        let is_terminal = |ch: char| !(ch.is_alphanumeric() || ch == '_');
+        let value = self.read_until_peek_terminal(is_terminal);
+        let value = String::from_iter(value);
+
+        FuncToken::Identifier(value)
+    }
+
+    fn process_whitespace(&mut self) -> FuncToken {
+        self.skip_whitespace();
+        FuncToken::Skip
+    }
+
+    fn process_semi_colon(&mut self) -> FuncToken {
+        self.chars.next();
+        FuncToken::Skip
+    }
+
+    fn process_double_forward_slash(&mut self) -> FuncToken {
+        self.chars.next();
+        self.skip_line();
+        FuncToken::Skip
+    }
+
+    fn process_hash(&mut self) -> FuncToken {
         // read #ifdef ...
+        self.chars.next();
         self.skip_line();
         self.skip_whitespace();
-        let proc_if = self.read_identifier().into();
+        let proc_if = self.process_identifier().into();
         self.skip_whitespace();
 
         // read #else
         self.skip_line();
 
         self.skip_whitespace();
-        let proc_else = self.read_identifier().into();
+        let proc_else = self.process_identifier().into();
         self.skip_whitespace();
 
         // read #endif
@@ -163,23 +174,38 @@ impl FuncLexer {
     }
 
     fn skip_whitespace(&mut self) {
-        if !self.ch().is_whitespace() {
-            return;
-        }
-
-        while let Some(ch) = self.read_char() {
-            if !ch.is_whitespace() {
-                break;
-            }
-        }
+        let is_terminal = |ch: char| !ch.is_whitespace();
+        self.read_until_peek_terminal(is_terminal);
     }
 
     fn skip_line(&mut self) {
-        while self.read_char() != Some('\n') {}
+        let is_terminal = |ch: char| ch == '\n';
+        self.read_until_iter_terminal(is_terminal);
     }
 
-    fn ch(&self) -> char {
-        self.chars[self.position]
+    fn read_until_peek_terminal(&mut self, is_peek_terminal: fn(char) -> bool) -> Vec<char> {
+        let mut result = vec![];
+        while let Some(ch) = self.chars.peek() {
+            if is_peek_terminal(*ch) {
+                break;
+            }
+
+            result.push(*ch);
+            self.chars.next();
+        }
+        result
+    }
+
+    fn read_until_iter_terminal(&mut self, is_iter_terminal: fn(char) -> bool) -> Vec<char> {
+        let mut result = vec![];
+        for ch in self.chars.by_ref() {
+            if is_iter_terminal(ch) {
+                break;
+            }
+
+            result.push(ch);
+        }
+        result
     }
 }
 
