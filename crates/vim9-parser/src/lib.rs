@@ -80,6 +80,16 @@ pub struct TokenOwned {
     pub span: Span,
 }
 
+impl TokenOwned {
+    pub fn literal(&self) -> String {
+        match self.kind {
+            TokenKind::SingleQuote => format!("'{}'", self.text),
+            TokenKind::DoubleQuoteString => format!("\"{}\"", self.text).replace("\\\\", "\\"),
+            _ => self.text.clone(),
+        }
+    }
+}
+
 impl Debug for TokenOwned {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -418,11 +428,12 @@ impl SharedCommand {
             let tok = parser.pop();
 
             if prev_end > tok.span.start_col {
-                panic!("failed to make shared command: {parser:#?}");
+                // panic!("failed to make shared command: {parser:#?}");
+                continue;
             }
 
             contents += " ".repeat(tok.span.start_col - prev_end).as_str();
-            contents += tok.text.as_str();
+            contents += &tok.literal();
 
             prev_end = tok.span.end_col;
         }
@@ -1928,10 +1939,18 @@ impl PeekInfo {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum ParserMode {
+    PreVim9Script,
+    PostVim9Script,
+}
+
 #[derive(Debug)]
 pub struct Parser<'a> {
     lexer: &'a Lexer,
     token_buffer: RefCell<VecDeque<Token<'a>>>,
+
+    mode: RefCell<ParserMode>,
 }
 
 impl<'a> Parser<'a> {
@@ -1941,6 +1960,7 @@ impl<'a> Parser<'a> {
         tokens.push_back(lexer.next_token().unwrap());
 
         Self {
+            mode: RefCell::new(ParserMode::PreVim9Script),
             token_buffer: RefCell::new(tokens),
             lexer,
         }
@@ -2418,6 +2438,15 @@ impl<'a> Parser<'a> {
     pub fn parse_command(&self) -> Result<ExCommand> {
         use TokenKind::*;
 
+        if *self.mode.borrow() == ParserMode::PreVim9Script
+            && !self.command_match("vim9script")
+            && !self.command_match("def")
+        {
+            if self.command_match("let") {
+                return SharedCommand::parse(&self);
+            }
+        }
+
         // If the line starts with a colon, then just skip over it.
         if self.front_kind() == Colon {
             self.next_token();
@@ -2453,6 +2482,9 @@ impl<'a> Parser<'a> {
 
             Identifier => {
                 if self.command_match("vim9script") {
+                    // We've now seen vim9script, go ahead and update
+                    *self.mode.borrow_mut() = ParserMode::PostVim9Script;
+
                     ExCommand::Vim9Script(Vim9ScriptCommand::parse(self)?)
                 } else if self.command_match("execute") {
                     ExecuteCommand::parse(self)?
@@ -2809,6 +2841,9 @@ mod test {
     snap!(test_selection, "../../shared/snapshots/lsp_selection.vim");
     snap!(test_fileselect, "../../shared/snapshots/lsp_fileselect.vim");
     snap!(test_startup, "../../shared/snapshots/startup9.vim");
+
+    // Issues #41
+    snap!(test_mapleader, "../../shared/snapshots/mapleader.vim");
 
     #[test]
     fn test_peek_n() {

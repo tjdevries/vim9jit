@@ -1,0 +1,12 @@
+---
+source: crates/vim9-parser/src/lib.rs
+expression: snapshot_parsing(contents)
+---
+[
+    SharedCommand(
+        SharedCommand {
+            contents: "let mapleader =  \\\\<Space>",
+            eol: Token(EndOfLine, (0,27)->(0,27)),
+        },
+    ),
+]

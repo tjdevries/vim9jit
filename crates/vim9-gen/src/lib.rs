@@ -1883,6 +1883,9 @@ mod test {
     snapshot!(test_export, "../testdata/snapshots/export.vim");
     // snapshot!(test_matchparen, "../../shared/snapshots/matchparen.vim");
 
+    // Issues #41
+    snapshot!(test_mapleader, "../../shared/snapshots/mapleader.vim");
+
     #[test]
     fn test_simple_def() {
         let contents = r#"
