@@ -1680,7 +1680,7 @@ mod generate_program {
 
 -- Ignore "value assigned to a local variable is unused" because
 --  we can't guarantee that local variables will be used by plugins
--- luacheck: ignore 311
+-- luacheck: ignore
 --- @diagnostic disable
 
 local vim9 = require('_vim9script')
