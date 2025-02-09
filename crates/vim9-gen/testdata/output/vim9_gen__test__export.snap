@@ -1,7 +1,7 @@
 ---
 source: crates/vim9-gen/src/lib.rs
-assertion_line: 1871
-expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unwrap().lua"
+assertion_line: 1884
+expression: "generate(contents, ParserOpts\n{ mode : ParserMode :: Standalone, }).unwrap().lua"
 ---
 ----------------------------------------
 -- This file is generated via github.com/tjdevries/vim9jit
@@ -11,6 +11,7 @@ expression: "generate(contents, ParserOpts { mode: ParserMode::Standalone }).unw
 -- Ignore "value assigned to a local variable is unused" because
 --  we can't guarantee that local variables will be used by plugins
 -- luacheck: ignore 311
+--- @diagnostic disable
 
 local vim9 = require('_vim9script')
 local M = {}

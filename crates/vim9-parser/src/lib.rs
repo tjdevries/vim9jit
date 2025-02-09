@@ -37,7 +37,7 @@ impl Debug for TokenMeta {
     }
 }
 
-impl<'a> From<Token<'a>> for TokenMeta {
+impl From<Token<'_>> for TokenMeta {
     fn from(t: Token) -> Self {
         Self {
             kind: t.kind,
@@ -46,7 +46,7 @@ impl<'a> From<Token<'a>> for TokenMeta {
     }
 }
 
-impl<'a> From<&Token<'a>> for TokenMeta {
+impl From<&Token<'_>> for TokenMeta {
     fn from(t: &Token) -> Self {
         Self {
             kind: t.kind.clone(),
@@ -556,7 +556,7 @@ pub struct Literal {
     pub token: TokenOwned,
 }
 
-impl<'a> TryFrom<Token<'a>> for Literal {
+impl TryFrom<Token<'_>> for Literal {
     type Error = anyhow::Error;
 
     fn try_from(token: Token) -> Result<Self> {
@@ -2441,10 +2441,9 @@ impl<'a> Parser<'a> {
         if *self.mode.borrow() == ParserMode::PreVim9Script
             && !self.command_match("vim9script")
             && !self.command_match("def")
+            && self.command_match("let")
         {
-            if self.command_match("let") {
-                return SharedCommand::parse(&self);
-            }
+            return SharedCommand::parse(self);
         }
 
         // If the line starts with a colon, then just skip over it.

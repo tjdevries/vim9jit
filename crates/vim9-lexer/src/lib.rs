@@ -65,7 +65,7 @@ impl<'a> From<&TokenText<'a>> for String {
     }
 }
 
-impl<'a> Debug for TokenText<'a> {
+impl Debug for TokenText<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TokenText::Slice(s) => {
@@ -77,7 +77,7 @@ impl<'a> Debug for TokenText<'a> {
     }
 }
 
-impl<'a> Display for TokenText<'a> {
+impl Display for TokenText<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
