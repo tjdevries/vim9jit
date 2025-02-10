@@ -8,6 +8,41 @@ use std::{
 
 use anyhow::{Context, Result};
 
+macro_rules! todo_pos {
+    ($self: ident) => {
+        todo!("{:?}", $self.make_pos($self.position()))
+    };
+
+    ($self: ident, $fmt: literal) => {
+        todo!(concat!("{:?}: ", $fmt), $self.make_pos($self.position()))
+    };
+
+    ($self: ident, $fmt: literal, $($arg: expr),+) => {
+        todo!(concat!("{:?}: ", $fmt), $self.make_pos($self.position()), $($arg),+)
+    };
+}
+
+//#[derive(Clone, PartialEq)]
+pub struct Pos {
+    pub start_row: usize,
+    pub start_col: usize,
+}
+
+impl Pos {
+    pub fn empty() -> Self {
+        Self {
+            start_row: 0,
+            start_col: 0,
+        }
+    }
+}
+
+impl Debug for Pos {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{},{}", self.start_row, self.start_col)
+    }
+}
+
 #[derive(Clone, PartialEq)]
 pub struct Span {
     pub start_row: usize,
@@ -395,6 +430,22 @@ impl Lexer {
         })
     }
 
+    fn make_pos(&self, start: usize) -> Result<Pos> {
+        let start_row = self
+            .lines
+            .iter()
+            .enumerate()
+            .find_map(|(line, &ch)| (ch > start).then_some(line))
+            .ok_or_else(|| anyhow::anyhow!("input: {}", start))
+            .context("start_row")?
+            - 1;
+
+        Ok(Pos {
+            start_row,
+            start_col: start - self.lines[start_row],
+        })
+    }
+
     pub fn read_char(&self) {
         // println!("read_char: {:?}", self);
 
@@ -765,7 +816,7 @@ impl Lexer {
                             Ok(Token {
                                 kind: Illegal,
                                 // text: TokenText::Ch(ch),
-                                text: todo!(),
+                                text: todo_pos!(self, "{:?}", ch),
                                 span: self.make_span(self.position(), self.position())?,
                             })
                         }
@@ -923,7 +974,7 @@ impl Lexer {
             _ => Token {
                 kind: TokenKind::Illegal,
                 // text: TokenText::Ch(self.ch.unwrap()),
-                text: todo!(),
+                text: todo_pos!(self, "{:?}", self.peek_char().unwrap()),
                 span: self.make_span(self.position(), self.position())?,
             },
         })
