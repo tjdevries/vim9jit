@@ -3,7 +3,7 @@
 use std::{
     cell::{Cell, RefCell},
     collections::VecDeque,
-    fmt::{Debug, Display},
+    fmt::{Debug, Display, Write},
 };
 
 use anyhow::{Context, Result};
@@ -79,15 +79,16 @@ impl Debug for TokenText<'_> {
 
 impl Display for TokenText<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                TokenText::Slice(s) => s.iter().collect::<String>(),
-                TokenText::Owned(s) => s.clone(),
-                TokenText::Empty => "".to_string(),
+        match self {
+            TokenText::Slice(s) => {
+                for c in *s {
+                    f.write_char(*c)?;
+                }
+                Ok(())
             }
-        )
+            TokenText::Owned(s) => write!(f, "{s}"),
+            TokenText::Empty => Ok(()),
+        }
     }
 }
 
@@ -102,10 +103,7 @@ impl<'a> TokenText<'a> {
 
     pub fn equals(&self, val: &str) -> bool {
         match self {
-            TokenText::Slice(s) => {
-                // This seems like I shouldn't have to do this... oh well
-                val.chars().collect::<Vec<char>>() == *s
-            }
+            TokenText::Slice(s) => s.iter().copied().eq(val.chars()),
             TokenText::Owned(s) => s.as_str() == val,
             TokenText::Empty => false,
         }
@@ -1054,8 +1052,7 @@ pub fn snapshot_lexing(input: &str) -> String {
 
     let mut output = String::new();
     for (row, line) in input.lines().enumerate() {
-        output += line;
-        output += "\n";
+        let _ = writeln!(output, "{line}");
 
         while let Some(tok) = tokens.pop_front() {
             if tok.span.start_row != tok.span.end_row {
@@ -1067,10 +1064,12 @@ pub fn snapshot_lexing(input: &str) -> String {
                 break;
             }
 
-            output += &" ".repeat(tok.span.start_col);
-            output += &"^".repeat(tok.span.end_col - tok.span.start_col);
-            output += &format!(" {tok:?}");
-            output += "\n"
+            let _ = writeln!(
+                output,
+                "{indent}{span} {tok:?}",
+                indent = " ".repeat(tok.span.start_col),
+                span = "^".repeat(tok.span.end_col - tok.span.start_col),
+            );
         }
     }
 
